@@ -1,0 +1,10 @@
+# ==========================================
+# SPRING BOOT CONFIGURATION FILES
+# ==========================================
+**/application-*.yml
+**/application-*.yaml
+**/application-*.properties
+
+!**/application-sample.yml
+!**/application-sample.yaml
+!**/application-sample.properties

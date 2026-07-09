@@ -1,0 +1,166 @@
+# Server config
+server:
+    port: 8080
+
+# App config
+app:
+    system-admin:
+        email: superadmin@app.com
+        password: 123456
+
+    cors:
+        allowed-origins:
+            - "http://localhost:5173"
+            - "http://localhost:3000"
+            - "http://localhost:3090"
+            - "http://127.0.0.1:5500"
+    jwt:
+        access-token-expiration-ms: 3600000 # 1 hour
+        refresh-token-expiration-ms: 604800000 # 7 days
+    security:
+        algo: HMAC
+    mq:
+        retry:
+            default-max-attempts: 3
+            default-backoff-ms: 2000
+            default-multiplier: 1.5
+        consumers:
+            sim-import:
+                concurrency: 5
+    async-tasks:
+        excel:
+            export-sim:
+                chunk-rows: 10000
+                max-concurrent: 2
+
+# Spring config
+spring:
+    application:
+        name: spring_app
+
+    datasource:
+        url: jdbc:postgresql://localhost:5432/spring_app_db
+        username: postgres
+        # password:
+        driver-class-name: org.postgresql.Driver
+        type: com.zaxxer.hikari.HikariDataSource
+        hikari:
+            pool-name: SpringAppHikariPool
+            maximum-pool-size: 20
+            minimum-idle: 5
+            connection-timeout: 30000
+            idle-timeout: 600000
+            max-lifetime: 1800000
+            auto-commit: false  
+    jpa:
+        show-sql: true
+        hibernate:
+            # ddl-auto: create
+            ddl-auto: validate
+        properties:
+            hibernate:
+                "[format_sql]": true
+                "[highlight_sql]": true
+
+    liquibase:
+        enabled: true
+        change-log: classpath:db/changelog/db.changelog-master.yaml
+
+    servlet:
+        multipart:
+            max-file-size: 500MB
+            max-request-size: 500MB
+
+    jackson:
+        serialization:
+            indent-output: true
+
+    data:
+        redis:
+            host: 127.0.0.1
+            port: 6379
+            # password: ""
+            lettuce:
+                pool:
+                    max-active: 8
+                    max-idle: 8
+                    min-idle: 0
+                    max-wait: -1ms
+            connect-timeout: 30000
+
+    threads:
+        virtual:
+            enabled: true
+
+    kafka:
+        bootstrap-servers: localhost:9193
+
+        consumer:
+            group-id: sim-group
+            auto-offset-reset: earliest
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+            properties:
+                "[spring.json.add.type.headers]": false
+                "[partitioner.class]": com.app.config.kafka.GlobalConsistentPartitioner
+
+# Swagger
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+
+# Logger
+logging:
+    level:
+        "[org.hibernate.SQL]": DEBUG
+        "[org.hibernate.orm.jdbc.bind]": TRACE
+
+        "[org.springframework.jdbc.core]": DEBUG
+        "[java.sql.Connection]": TRACE
+        "[java.sql]": TRACE
+        "[org.springframework.kafka]": DEBUG
+
+# Rate limitter
+resilience4j:
+    circuitbreaker:
+        instances:
+            checkRandom:
+                register-health-indicator: true
+                sliding-window-size: 20
+                permitted-number-of-calls-in-half-open-state: 5
+                sliding-window-type: COUNT_BASED
+                minimum-number-of-calls: 10
+                wait-duration-in-open-state: 5s
+                failure-rate-threshold: 50
+                event-consumer-buffer-size: 10
+                record-exceptions:
+                    - org.springframework.web.client.HttpServerErrorException
+                ignore-exceptions:
+                    - com.app.core.exception.MyException
+    ratelimiter:
+        instances:
+            default:
+                limit-for-period: 6000
+                limit-refresh-period: 1s
+                timeout-duration: 0
+                register-health-indicator: true
+                event-consumer-buffer-size: 100
+
+# Management
+management:
+    health:
+        circuitbreakers:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include:
+                    - "*"
+    endpoint:
+        health:
+            show-details: always
+        prometheus:
+            access: unrestricted
