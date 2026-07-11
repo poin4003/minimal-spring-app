@@ -7,7 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.app.features.sims.entity.SimEntity;
 import com.app.features.sims.entity.SimEntity_;
-import com.app.features.sims.filter.SimFilterCriteria;
+import com.app.features.sims.schema.filter.SimFilterCriteria;
 
 import jakarta.persistence.criteria.Predicate;
 

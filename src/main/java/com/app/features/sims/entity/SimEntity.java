@@ -2,11 +2,16 @@ package com.app.features.sims.entity;
 
 import java.util.UUID;
 
-import com.app.core.db.BaseEntity;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.app.core.db.BaseAuditEntity;
 import com.app.features.sims.enums.SimStatusEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @Table(name = "sim")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SimEntity extends BaseEntity {
+public class SimEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -27,7 +32,9 @@ public class SimEntity extends BaseEntity {
     @Column(name = "phone_number", unique = true, nullable = false)
     private String phoneNumber;
 
-    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
     private SimStatusEnum status;
 
     @Column(name = "selling_price")

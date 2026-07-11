@@ -20,7 +20,7 @@ public abstract class BaseUserDetailEntity extends BaseAuditEntity implements Us
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(name = "user_status")
+    @Column(name = "status", nullable = false)
     private UserStatusEnum status;
 
     @Override

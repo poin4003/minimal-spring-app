@@ -27,17 +27,12 @@ import com.alibaba.excel.EasyExcel;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.response.ApiResult;
-import com.app.features.sims.api.v1.dto.query.SimFilterDto;
-import com.app.features.sims.api.v1.dto.request.CreateSimDto;
-import com.app.features.sims.api.v1.dto.response.SimDto;
-import com.app.features.sims.cqrs.command.CreateSimCmd;
-import com.app.features.sims.cqrs.query.GetManySimQuery;
-import com.app.features.sims.cqrs.query.GetSimByIdQuery;
-import com.app.features.sims.cqrs.result.SimResult;
 import com.app.features.sims.excel.dto.SimExcelExport;
+import com.app.features.sims.schema.filter.SimFilterCriteria;
+import com.app.features.sims.schema.payload.CreateSimPayload;
+import com.app.features.sims.schema.result.SimResult;
 import com.app.features.sims.service.SimService;
 
-import an.awesome.pipelinr.Pipeline;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -56,20 +51,17 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "SIM Management V1", description = "Sim docs")
 public class SimController {
 
-    private final Pipeline pipeline;
-    private final SimService simService;
+    private final SimService simSvc;
     private final ModelMapper mapper;
 
     @PostMapping("")
     @Operation(summary = "Create a new SIM", description = "Create a new SIM")
     @ResponseStatus(HttpStatus.CREATED)
     @Secured(PermissionConstants.SIM_CREATE)
-    public ApiResult<SimDto> createSim(@Valid @RequestBody CreateSimDto req) {
-        CreateSimCmd cmd = mapper.map(req, CreateSimCmd.class);
+    public ApiResult<SimResult> createSim(@Valid @RequestBody CreateSimPayload req) {
+        SimResult result = simSvc.createSim(req);
 
-        SimResult result = pipeline.send(cmd);
-
-        return ApiResult.ok(mapper.map(result, SimDto.class), "Create sim success!");
+        return ApiResult.ok(result, "Create sim success!");
     }
 
     @PostMapping(value = "/import_sim", consumes = { "multipart/form-data" })
@@ -81,34 +73,20 @@ public class SimController {
             throw ExceptionFactory.notFound("Please, send request with file");
         }
 
-        simService.importSimsFromExcel(file);
+        simSvc.importSimsFromExcel(file);
 
         return ApiResult.ok(null, "File import sim already in progress");
-    }
-
-    @PostMapping("/test/excel")
-    @Operation(summary = "Create a new excel", description = "Create a new excel")
-    public void createExcel() {
-        try {
-            simService.processExcelDataAnalytics();
-        } catch (Exception e) {
-            System.out.println("Exception");
-        }
     }
 
     @GetMapping("")
     @Operation(summary = "Get list of SIM", description = "Get list of SIM")
     @Secured(PermissionConstants.SIM_VIEW)
-    public ApiResult<Page<SimDto>> getManySims(
-            @ParameterObject SimFilterDto req,
+    public ApiResult<Page<SimResult>> getManySims(
+            @ParameterObject SimFilterCriteria req,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        GetManySimQuery query = mapper.map(req, GetManySimQuery.class);
+        Page<SimResult> results = simSvc.getManySim(req, pageable);
 
-        query.setPageable(pageable);
-
-        Page<SimResult> results = pipeline.send(query);
-
-        Page<SimDto> response = results.map(result -> mapper.map(result, SimDto.class));
+        Page<SimResult> response = results.map(result -> mapper.map(result, SimResult.class));
 
         return ApiResult.ok(response, "Get many sim success");
     }
@@ -120,9 +98,9 @@ public class SimController {
     })
     @Secured(PermissionConstants.SIM_EXPORT)
     public void exportAllSimToExcel(
-            @ParameterObject SimFilterDto req,
+            @ParameterObject SimFilterCriteria req,
             HttpServletResponse res) throws IOException {
-        List<SimExcelExport> dataToExport = simService.getAllSimExcelExport(req);
+        List<SimExcelExport> dataToExport = simSvc.getAllSimExcelExport(req);
 
         String fileName = URLEncoder.encode("simList", "UTF-8").replaceAll("\\+", "%20");
 
@@ -142,13 +120,9 @@ public class SimController {
     @GetMapping("/{id}")
     @Operation(summary = "Get SIM by ID", description = "Get SIM by ID")
     @Secured(PermissionConstants.SIM_VIEW)
-    public ApiResult<SimDto> getSimById(@PathVariable UUID id) {
-        log.info("Controller:-> getSimById | {}", id);
+    public ApiResult<SimResult> getSimById(@PathVariable UUID id) {
+        SimResult result = simSvc.getSimById(id);
 
-        GetSimByIdQuery query = new GetSimByIdQuery(id);
-
-        SimResult result = pipeline.send(query);
-
-        return ApiResult.ok(mapper.map(result, SimDto.class), "Get sim success");
+        return ApiResult.ok(result, "Get sim success");
     }
 }

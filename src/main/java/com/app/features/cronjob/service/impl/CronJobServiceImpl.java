@@ -1,12 +1,11 @@
 package com.app.features.cronjob.service.impl;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -16,53 +15,42 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
-import com.app.core.cache.RedisService;
 import com.app.features.cronjob.entity.CronJobConfigEntity;
 import com.app.features.cronjob.enums.CronjobStatusEnum;
 import com.app.features.cronjob.repository.CronJobConfigRepository;
 import com.app.features.cronjob.scheduler.JobHandler;
 import com.app.features.cronjob.service.CronJobService;
 
-// import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.core.LockConfiguration;
-import net.javacrumbs.shedlock.core.LockingTaskExecutor;
 
 @Slf4j
 @Service
 public class CronJobServiceImpl implements CronJobService {
 
     private final TaskScheduler taskScheduler;
-    private final LockingTaskExecutor lockingTaskExecutor;
     private final CronJobConfigRepository jobConfigRepo;
     private final Map<String, JobHandler> jobHandlerMap;
 
-    private final Map<String, ScheduledFuture<?>> scheduledTasks = new HashMap<>();
-
-    private final RedisService redisService;
-    private static final String CRON_STATUS_PREFIX = "cronjob:status";
+    private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> jobStatusMap = new ConcurrentHashMap<>();
+    private final Map<String, AtomicBoolean> jobLocks = new ConcurrentHashMap<>();
 
     public CronJobServiceImpl(
             TaskScheduler taskScheduler,
-            LockingTaskExecutor lockingTaskExecutor,
             CronJobConfigRepository jobConfigRepo,
-            List<JobHandler> jobHandlers,
-            RedisService redisService) {
+            List<JobHandler> jobHandlers) {
+
         this.taskScheduler = taskScheduler;
-        this.lockingTaskExecutor = lockingTaskExecutor;
         this.jobConfigRepo = jobConfigRepo;
-        this.redisService = redisService;
 
         this.jobHandlerMap = jobHandlers.stream()
-                .collect(Collectors.toMap(JobHandler::getSupportedJobType, Function.identity()));
+                .collect(Collectors.toMap(jobHandler -> jobHandler.getSupportedJobType(), Function.identity()));
     }
 
-    // @PostConstruct
     @Override
     public void refreshJobs() {
         log.info("Refreshing dynamic jobs from Database...");
 
-        // Get all active jobs
         List<CronJobConfigEntity> configs = jobConfigRepo.findByStatus(CronjobStatusEnum.ACTIVE);
 
         scheduledTasks.forEach((k, v) -> {
@@ -70,6 +58,7 @@ public class CronJobServiceImpl implements CronJobService {
             log.debug("Cancelled job: {}", k);
         });
         scheduledTasks.clear();
+        jobLocks.clear();
 
         for (CronJobConfigEntity config : configs) {
             scheduleSingleJob(config);
@@ -83,7 +72,7 @@ public class CronJobServiceImpl implements CronJobService {
             String jobName = config.getName();
 
             if (!isJobEnabled(jobName)) {
-                log.warn("Job [{}] is DISABLED in Redis. Skipping.", jobName);
+                log.warn("Job [{}] is DISABLED. Skipping.", jobName);
                 return;
             }
 
@@ -94,25 +83,27 @@ public class CronJobServiceImpl implements CronJobService {
             }
 
             Runnable lockableTask = () -> {
-                Duration lockAtMost = Duration.parse(config.getLockAtMostFor());
-                Duration lockAtLeast = Duration.parse(config.getLockAtLeastFor());
+                AtomicBoolean isRunning = jobLocks.computeIfAbsent(jobName, k -> new AtomicBoolean(false));
 
-                LockConfiguration lockConfig = new LockConfiguration(
-                        Instant.now(),
-                        jobName,
-                        lockAtMost,
-                        lockAtLeast);
-                lockingTaskExecutor.executeWithLock((Runnable) () -> {
-                    log.info("Starting job: {}", jobName);
-                    handler.execute();
-                    log.info("Finished job: {}", jobName);
-                }, lockConfig);
+                if (isRunning.compareAndSet(false, true)) {
+                    try {
+                        log.info("Starting job: {}", jobName);
+                        handler.execute();
+                        log.info("Finished job: {}", jobName);
+                    } catch (Exception e) {
+                        log.error("Error executing job: {}", jobName, e);
+                    } finally {
+                        isRunning.set(false);
+                    }
+                } else {
+                    log.warn("Job [{}] is still running. Skipping this execution tick.", jobName);
+                }
             };
 
             ScheduledFuture<?> future = taskScheduler.schedule(
                     lockableTask,
                     new CronTrigger(
-                            Objects.requireNonNull(config.getExpression(), "Cronjob Express must not be null")));
+                            Objects.requireNonNull(config.getExpression(), "Cronjob Expression must not be null")));
 
             scheduledTasks.put(jobName, future);
             log.info("Scheduled job [{}] - cron [{}] - type [{}]", jobName, config.getExpression(),
@@ -125,18 +116,13 @@ public class CronJobServiceImpl implements CronJobService {
 
     @Override
     public boolean isJobEnabled(String jobName) {
-        String key = CRON_STATUS_PREFIX + jobName;
-        String status = redisService.getString(key);
-
-        return status == null || Boolean.parseBoolean(status);
+        return jobStatusMap.getOrDefault(jobName, true);
     }
 
     @Override
     public void setJobStatus(String jobName, boolean enabled) {
-        String key = CRON_STATUS_PREFIX + jobName;
-        redisService.setString(key, String.valueOf(enabled));
+        jobStatusMap.put(jobName, enabled);
         log.info("Manual OP: set cronjob '{}' status to {}", jobName, enabled);
-
         refreshJobs();
     }
 

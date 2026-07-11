@@ -45,6 +45,7 @@ public class CronJobConfigEntity extends BaseAuditEntity {
     private String lockAtLeastFor;
 
     @Enumerated(EnumType.STRING)
-    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM) 
+    @Column(nullable = false)
     private CronjobStatusEnum status;
 }
