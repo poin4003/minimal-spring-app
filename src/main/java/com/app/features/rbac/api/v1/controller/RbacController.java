@@ -24,27 +24,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.app.core.constant.PermissionConstants;
 import com.app.core.response.ApiResult;
-import com.app.features.rbac.api.v1.dto.query.PermissionFilterDto;
-import com.app.features.rbac.api.v1.dto.query.RoleFilterDto;
-import com.app.features.rbac.api.v1.dto.request.CreateRoleDto;
-import com.app.features.rbac.api.v1.dto.request.RolePermissionsDto;
-import com.app.features.rbac.api.v1.dto.request.UpdateRoleDto;
-import com.app.features.rbac.api.v1.dto.request.UserRolesDto;
-import com.app.features.rbac.api.v1.dto.response.PermissionDto;
-import com.app.features.rbac.api.v1.dto.response.RoleDto;
-import com.app.features.rbac.cqrs.command.AssignPermToRoleCmd;
-import com.app.features.rbac.cqrs.command.AssignRoleToUserCmd;
-import com.app.features.rbac.cqrs.command.CreateRoleCmd;
-import com.app.features.rbac.cqrs.command.DeleteRoleCmd;
-import com.app.features.rbac.cqrs.command.RemovePermFromRoleCmd;
-import com.app.features.rbac.cqrs.command.RemoveRoleFromUserCmd;
-import com.app.features.rbac.cqrs.command.UpdateRoleCmd;
-import com.app.features.rbac.cqrs.query.GetManyPermissionsQuery;
-import com.app.features.rbac.cqrs.query.GetManyRolesQuery;
-import com.app.features.rbac.cqrs.result.PermissionResult;
-import com.app.features.rbac.cqrs.result.RoleResult;
+import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
+import com.app.features.rbac.schema.filter.RoleFilterCriteria;
+import com.app.features.rbac.schema.payload.CreateRolePayload;
+import com.app.features.rbac.schema.payload.RolePermissionsPayload;
+import com.app.features.rbac.schema.payload.UpdateRolePayload;
+import com.app.features.rbac.schema.payload.UserRolesPayload;
+import com.app.features.rbac.schema.result.PermissionResult;
+import com.app.features.rbac.schema.result.RoleResult;
+import com.app.features.rbac.service.RbacService;
 
-import an.awesome.pipelinr.Pipeline;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,89 +47,81 @@ import lombok.RequiredArgsConstructor;
 @Tag(name = "RBAC Management V1", description = "RBAC docs")
 public class RbacController {
 
+    private final RbacService rbacSvc;
     private final ModelMapper mapper;
-    private final Pipeline pipeline;
 
     @PostMapping("/role")
     @ResponseStatus(HttpStatus.CREATED)
-    public ApiResult<RoleDto> createRole(@Valid @RequestBody CreateRoleDto req) {
-        RoleResult result = pipeline.send(new CreateRoleCmd(req.getName(), req.getKey()));
+    public ApiResult<RoleResult> createRole(@Valid @RequestBody CreateRolePayload req) {
+        RoleResult result = rbacSvc.createRole(req);
 
-        return ApiResult.ok(mapper.map(result, RoleDto.class), "Create role success!");
+        return ApiResult.ok(result, "Create role success!");
     }
 
     @PatchMapping("/role/{id}")
-    public ApiResult<RoleDto> updateRole(
+    public ApiResult<RoleResult> updateRole(
             @PathVariable UUID roleId,
-            @Valid @RequestBody UpdateRoleDto req) {
-        RoleResult result = pipeline.send(new UpdateRoleCmd(roleId, req.getName(), req.getKey()));
+            @Valid @RequestBody UpdateRolePayload req) {
+        RoleResult result = rbacSvc.updateRole(roleId, req);
 
-        return ApiResult.ok(mapper.map(result, RoleDto.class), "Update role sucess!");
+        return ApiResult.ok(result, "Update role sucess!");
     }
 
     @DeleteMapping("/role")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResult<Void> deleteRole(
             @PathVariable UUID roleId) {
-        pipeline.send(new DeleteRoleCmd(roleId));
+        rbacSvc.deleteRole(roleId);
 
         return ApiResult.ok(null, "Delete role success!");
     }
 
     @GetMapping("/role")
-    public ApiResult<Page<RoleDto>> getManyRoles(
-            @ParameterObject RoleFilterDto req,
+    public ApiResult<Page<RoleResult>> getManyRoles(
+            @ParameterObject RoleFilterCriteria req,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        GetManyRolesQuery query = mapper.map(req, GetManyRolesQuery.class);
+        Page<RoleResult> results = rbacSvc.getManyRoles(req, pageable);
 
-        query.setPageable(pageable);
-
-        Page<RoleResult> results = pipeline.send(query);
-
-        Page<RoleDto> res = results.map(result -> mapper.map(result, RoleDto.class));
+        Page<RoleResult> res = results.map(result -> mapper.map(result, RoleResult.class));
 
         return ApiResult.ok(res, "Get many role success!");
     }
 
     @GetMapping("/permisision")
-    public ApiResult<Page<PermissionDto>> getManyPermissions(
-            @ParameterObject PermissionFilterDto req,
+    public ApiResult<Page<PermissionResult>> getManyPermissions(
+            @ParameterObject PermissionFilterCriteria req,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        GetManyPermissionsQuery query = mapper.map(req, GetManyPermissionsQuery.class);
+        Page<PermissionResult> results = rbacSvc.getManyPermissions(req, pageable);
 
-        query.setPageable(pageable);
-
-        Page<PermissionResult> results = pipeline.send(query);
-
-        Page<PermissionDto> res = results.map(result -> mapper.map(result, PermissionDto.class));
+        Page<PermissionResult> res = results.map(result -> mapper.map(result, PermissionResult.class));
 
         return ApiResult.ok(res, "Get many permission success!");
     }
 
     @PostMapping("/assign-roles")
-    public ApiResult<Void> assignRolesToUser(@Valid @RequestBody UserRolesDto req) {
-        pipeline.send(new AssignRoleToUserCmd(req.getUserId(), req.getRoleIds()));
+    public ApiResult<Void> assignRolesToUser(@Valid @RequestBody UserRolesPayload req) {
+        rbacSvc.assignRoleToUser(req.getUserId(), req.getRoleIds());
 
         return ApiResult.ok(null, "Assign roles to user success!");
     }
 
     @PostMapping("/remove-roles")
-    public ApiResult<Void> removeRolesFromUser(@Valid @RequestBody UserRolesDto req) {
-        pipeline.send(new RemoveRoleFromUserCmd(req.getUserId(), req.getRoleIds()));
+    public ApiResult<Void> removeRolesFromUser(@Valid @RequestBody UserRolesPayload req) {
+        rbacSvc.removeRoleFromUser(req.getUserId(), req.getRoleIds());
 
         return ApiResult.ok(null, "Remove roles from user success!");
     }
 
     @PostMapping("assign-permissions")
-    public ApiResult<Void> assignPermissionsToRole(@Valid @RequestBody RolePermissionsDto req) {
-        pipeline.send(new AssignPermToRoleCmd(req.getRoleId(), req.getPermIds()));
+    public ApiResult<Void> assignPermissionsToRole(@Valid @RequestBody RolePermissionsPayload req) {
+        rbacSvc.assignPermToRole(req.getRoleId(), req.getPermIds());
 
         return ApiResult.ok(null, "Assign permission to role success!");
     }
 
     @PostMapping("remove-permissions")
-    public ApiResult<Void> removePermissionsFromRole(@Valid @RequestBody RolePermissionsDto req) {
-        pipeline.send(new RemovePermFromRoleCmd(req.getRoleId(), req.getPermIds()));
+    public ApiResult<Void> removePermissionsFromRole(@Valid @RequestBody RolePermissionsPayload req) {
+        rbacSvc.assignPermToRole(req.getRoleId(), req.getPermIds());
 
         return ApiResult.ok(null, "Remove permissions from role success!");
     }

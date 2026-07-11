@@ -93,7 +93,7 @@ public class UserBaseEntity extends BaseUserDetailEntity {
     }
 
     @Override
-    public UserStatusEnum getUserStatus() {
+    public UserStatusEnum getStatus() {
         return this.status;
     }
 

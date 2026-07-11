@@ -6,13 +6,10 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.repository.query.Param;
 
 import com.app.features.rbac.entity.PermissionEntity;
 
-import io.lettuce.core.dynamic.annotation.Param;
-
-@Repository
 public interface PermissionRepository
                 extends JpaRepository<PermissionEntity, UUID>, JpaSpecificationExecutor<PermissionEntity> {
 

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.app.features.rbac.entity.RoleEntity;
 import com.app.features.rbac.entity.RoleEntity_;
-import com.app.features.rbac.filter.RoleFilterCriteria;
+import com.app.features.rbac.schema.filter.RoleFilterCriteria;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.entity.UserBaseEntity_;
 

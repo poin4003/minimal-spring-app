@@ -2,7 +2,7 @@ package com.app.features.sims.entity;
 
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseEntity;
 import com.app.features.sims.enums.SimStatusEnum;
 
 import jakarta.persistence.Column;

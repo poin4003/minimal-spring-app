@@ -3,7 +3,7 @@ package com.app.features.webhook.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseEntity;
 import com.app.features.webhook.enums.WebhookDeliveryAttemptStatus;
 
 import jakarta.persistence.Column;

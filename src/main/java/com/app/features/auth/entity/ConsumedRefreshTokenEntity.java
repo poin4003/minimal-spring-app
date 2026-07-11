@@ -3,7 +3,7 @@ package com.app.features.auth.entity;
 import java.time.Instant;
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseAuditEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,7 +22,7 @@ import lombok.EqualsAndHashCode;
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ConsumedRefreshTokenEntity extends BaseEntity {
+public class ConsumedRefreshTokenEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

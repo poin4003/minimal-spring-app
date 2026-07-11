@@ -1,6 +1,6 @@
 package com.app.config.jwt;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -37,16 +37,16 @@ public class JwtTokenProvider {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getAccessTokenExpirationMs();
 
-            Key key = jwtCrypto.getKey(privateKeyStr);
+            SecretKey key = jwtCrypto.getKey(privateKeyStr);
 
             Map<String, Object> claims = objectMapper.convertValue(payload, new TypeReference<Map<String, Object>>() {
             });
 
             return Jwts.builder()
-                    .setClaims(claims)
-                    .setSubject(userId.toString())
-                    .setIssuedAt(new Date(now))
-                    .setExpiration(new Date(expiryDate))
+                    .claims(claims)
+                    .subject(userId.toString())
+                    .issuedAt(new Date(now))
+                    .expiration(new Date(expiryDate))
                     .signWith(key, jwtCrypto.getAlgorithm())
                     .compact();
         } catch (Exception e) {
@@ -59,12 +59,12 @@ public class JwtTokenProvider {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getRefreshTokenExpirationMs();
 
-            Key key = jwtCrypto.getKey(privateKeyStr);
+            SecretKey key = jwtCrypto.getKey(privateKeyStr);
 
             return Jwts.builder()
-                    .setSubject(userId.toString())
-                    .setIssuedAt(new Date(now))
-                    .setExpiration(new Date(expiryDate))
+                    .subject(userId.toString())
+                    .issuedAt(new Date(now))
+                    .expiration(new Date(expiryDate))
                     .signWith(key, jwtCrypto.getAlgorithm())
                     .compact();
         } catch (Exception e) {
@@ -75,10 +75,11 @@ public class JwtTokenProvider {
     public UUID getUserIdFromTokenUnverified(String token) {
         try {
             String tokenWithoutSignature = token.substring(0, token.lastIndexOf('.') + 1);
-            Claims claims = Jwts.parserBuilder()
+            Claims claims = Jwts.parser()
+                    .unsecured()
                     .build()
-                    .parseClaimsJwt(tokenWithoutSignature)
-                    .getBody();
+                    .parseUnsecuredClaims(tokenWithoutSignature)
+                    .getPayload();
 
             String sub = claims.getSubject();
 
@@ -90,12 +91,12 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token, String publicKeyStr) {
         try {
-            Key key = jwtCrypto.getKey(publicKeyStr);
+            SecretKey key = jwtCrypto.getKey(publicKeyStr);
 
-            Jwts.parserBuilder()
-                    .setSigningKey(key)
+            Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
 
             return true;
         } catch (Exception e) {
@@ -105,13 +106,13 @@ public class JwtTokenProvider {
 
     public Date getExpiryDateFromToken(String token, String publicKeyStr) {
         try {
-            Key key = jwtCrypto.getKey(publicKeyStr);
+            SecretKey key = jwtCrypto.getKey(publicKeyStr);
 
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
+            return Jwts.parser()
+                    .verifyWith(key)
                     .build()
-                    .parseClaimsJws(token)
-                    .getBody()
+                    .parseSignedClaims(token)
+                    .getPayload()
                     .getExpiration();
 
         } catch (Exception e) {
@@ -120,12 +121,12 @@ public class JwtTokenProvider {
     }
 
     public Claims getAllClaimsFromToken(String token, String publicKeyStr) throws Exception {
-        Key key = jwtCrypto.getKey(publicKeyStr);
+        SecretKey key = jwtCrypto.getKey(publicKeyStr);
 
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+        return Jwts.parser()
+                .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

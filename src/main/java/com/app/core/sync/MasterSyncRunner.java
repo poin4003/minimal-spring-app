@@ -21,8 +21,7 @@ public class MasterSyncRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         log.info("================ [SYNC] MASTER DATA SYNC STARTED ================");
 
-        syncService.sort(Comparator.comparingInt(SyncableDataService::getOrder));
-
+        syncService.sort(Comparator.comparingInt(s -> s.getOrder()));
         for (SyncableDataService service : syncService) {
             try {
                 long start = System.currentTimeMillis();

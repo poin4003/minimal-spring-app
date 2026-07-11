@@ -9,7 +9,7 @@ import com.app.features.rbac.entity.PermissionEntity;
 import com.app.features.rbac.entity.PermissionEntity_;
 import com.app.features.rbac.entity.RoleEntity;
 import com.app.features.rbac.entity.RoleEntity_;
-import com.app.features.rbac.filter.PermissionFilterCriteria;
+import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;

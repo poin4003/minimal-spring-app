@@ -1,10 +1,21 @@
 package com.app.features.user.service;
 
-import com.app.features.user.entity.UserBaseEntity;
+import java.util.UUID;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import com.app.features.user.schema.payload.CreateUserPayload;
+import com.app.features.user.schema.result.UserDetailResult;
+import com.app.features.user.schema.result.UserResult;
 
 public interface UserService {
 
-    void checkEmailUnique(String email);
+    UserResult createUser(CreateUserPayload payload);
 
-    UserBaseEntity getOrInitDefaultSystemAdmin();
+    Page<UserResult> getManyUser(Pageable pageable);
+
+    UserDetailResult getUserDetailById(UUID userId);
+
+    void checkEmailUnique(String email);
 }

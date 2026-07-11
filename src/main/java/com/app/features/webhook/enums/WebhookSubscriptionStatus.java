@@ -1,7 +1,7 @@
 package com.app.features.webhook.enums;
 
 import com.app.core.annotation.DatabaseEnum;
-import com.app.core.base.BaseEnum;
+import com.app.core.db.BaseEnum;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -2,7 +2,7 @@ package com.app.features.auth.entity;
 
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseAuditEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class KeyStoreEntity extends BaseEntity {
+public class KeyStoreEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

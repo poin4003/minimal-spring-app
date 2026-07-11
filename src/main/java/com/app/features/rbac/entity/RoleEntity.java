@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseAuditEntity;
 import com.app.features.user.entity.UserBaseEntity;
 
 import jakarta.persistence.Entity;
@@ -23,7 +23,7 @@ import lombok.ToString;
 @Table(name = "role")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class RoleEntity extends BaseEntity {
+public class RoleEntity extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

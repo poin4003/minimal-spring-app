@@ -49,7 +49,7 @@ public class CronJobSync implements SyncableDataService {
         List<CronJobConfigEntity> existingJobs = cronJobRepo.findAll();
 
         Map<String, CronJobConfigEntity> existingJobMap = existingJobs.stream()
-                .collect(Collectors.toMap(CronJobConfigEntity::getJobType, Function.identity()));
+                .collect(Collectors.toMap(job -> job.getJobType(), Function.identity()));
 
         int insertCount = 0;
         int updateCount = 0;

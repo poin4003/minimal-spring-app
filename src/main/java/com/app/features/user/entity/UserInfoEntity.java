@@ -2,7 +2,7 @@ package com.app.features.user.entity;
 
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseAuditEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 @Table(name = "user_info")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserInfoEntity extends BaseEntity {
+public class UserInfoEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

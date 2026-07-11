@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import jakarta.persistence.CascadeType;

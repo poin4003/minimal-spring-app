@@ -1,23 +1,19 @@
 package com.app.features.auth.api.v1.controller;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.app.core.annotation.ClientIp;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
-import com.app.features.auth.api.v1.dto.request.LoginDto;
-import com.app.features.auth.api.v1.dto.request.RefreshTokenDto;
-import com.app.features.auth.api.v1.dto.response.LoginResponseDto;
-import com.app.features.auth.cqrs.command.LoginCmd;
-import com.app.features.auth.cqrs.command.LogoutCmd;
-import com.app.features.auth.cqrs.command.RefreshTokenCmd;
-import com.app.features.auth.cqrs.result.LoginResult;
+import com.app.features.auth.schema.payload.LoginPayload;
+import com.app.features.auth.schema.payload.RefreshTokenPayload;
+import com.app.features.auth.schema.result.LoginResult;
+import com.app.features.auth.service.AuthService;
 
-import an.awesome.pipelinr.Pipeline;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,44 +26,28 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Authentication V1", description = "Auth docs")
 public class AuthController {
 
-    private final Pipeline pipeline;
-    private final ModelMapper mapper;
+    private final AuthService authService;
 
     @PostMapping("/login")
-    public ApiResult<LoginResponseDto> login(
-            @Valid @RequestBody LoginDto req
-    // @ClientIp String ipAddress
-    ) {
-        String ipAddress = "192.168.1.100";
-
-        LoginCmd cmd = new LoginCmd(
-                req.getEmail(),
-                req.getPassword(),
-                ipAddress);
-
-        LoginResult result = pipeline.send(cmd);
-
-        return ApiResult.ok(mapper.map(result, LoginResponseDto.class), "Login success");
+    public ApiResult<LoginResult> login(
+            @Valid @RequestBody LoginPayload req,
+            @ClientIp String ipAddress) {
+        LoginResult result = authService.login(req, ipAddress);
+        return ApiResult.ok(result, "Login success");
     }
 
     @PostMapping("/refresh")
-    public ApiResult<LoginResponseDto> refreshToken(
-            @RequestBody RefreshTokenDto req) {
-        RefreshTokenCmd cmd = new RefreshTokenCmd(req.getRefreshToken());
+    public ApiResult<LoginResult> refreshToken(
+            @RequestBody RefreshTokenPayload req) {
 
-        LoginResult result = pipeline.send(cmd);
-
-        return ApiResult.ok(mapper.map(result, LoginResponseDto.class), "Refresh token success");
+        LoginResult result = authService.refreshToken(req);
+        return ApiResult.ok(result, "Refresh token success");
     }
 
     @PostMapping("/logout")
     public ApiResult<Void> logout(@AuthenticationPrincipal UserPrincipal currentUser) {
         if (currentUser != null && currentUser.getKeyStore() != null) {
-            LogoutCmd cmd = new LogoutCmd(
-                    currentUser.getKeyStore().getKeyStoreId(),
-                    currentUser.getUserId());
-
-            pipeline.send(cmd);
+            authService.logout(currentUser.getKeyStore().getKeyStoreId(), currentUser.getUserId());
         }
         return ApiResult.ok(null, "Logout success");
     }

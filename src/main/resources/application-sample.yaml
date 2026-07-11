@@ -4,10 +4,6 @@ server:
 
 # App config
 app:
-    system-admin:
-        email: superadmin@app.com
-        password: 123456
-
     cors:
         allowed-origins:
             - "http://localhost:5173"
@@ -15,23 +11,9 @@ app:
             - "http://localhost:3090"
             - "http://127.0.0.1:5500"
     jwt:
+        secret-key: "1234567890123456789012345678901234567890" # (Ít nhất 32 ký tự / 256-bit cho thuật toán HS256)
         access-token-expiration-ms: 3600000 # 1 hour
         refresh-token-expiration-ms: 604800000 # 7 days
-    security:
-        algo: HMAC
-    mq:
-        retry:
-            default-max-attempts: 3
-            default-backoff-ms: 2000
-            default-multiplier: 1.5
-        consumers:
-            sim-import:
-                concurrency: 5
-    async-tasks:
-        excel:
-            export-sim:
-                chunk-rows: 10000
-                max-concurrent: 2
 
 # Spring config
 spring:
@@ -39,19 +21,23 @@ spring:
         name: spring_app
 
     datasource:
-        url: jdbc:postgresql://localhost:5432/spring_app_db
-        username: postgres
-        # password:
-        driver-class-name: org.postgresql.Driver
-        type: com.zaxxer.hikari.HikariDataSource
-        hikari:
-            pool-name: SpringAppHikariPool
-            maximum-pool-size: 20
-            minimum-idle: 5
-            connection-timeout: 30000
-            idle-timeout: 600000
-            max-lifetime: 1800000
-            auto-commit: false  
+        url: jdbc:h2:file:./data/minimal_db;AUTO_SERVER=TRUE
+        driverClassName: org.h2.Driver
+        username: sa
+        password:
+
+    h2:
+        console:
+            enabled: true
+            path: /h2-console
+
+    flyway:
+        enabled: true
+        baseline-on-migrate: true
+
+    thymeleaf:
+        cache: false
+
     jpa:
         show-sql: true
         hibernate:
@@ -62,10 +48,6 @@ spring:
                 "[format_sql]": true
                 "[highlight_sql]": true
 
-    liquibase:
-        enabled: true
-        change-log: classpath:db/changelog/db.changelog-master.yaml
-
     servlet:
         multipart:
             max-file-size: 500MB
@@ -75,37 +57,9 @@ spring:
         serialization:
             indent-output: true
 
-    data:
-        redis:
-            host: 127.0.0.1
-            port: 6379
-            # password: ""
-            lettuce:
-                pool:
-                    max-active: 8
-                    max-idle: 8
-                    min-idle: 0
-                    max-wait: -1ms
-            connect-timeout: 30000
-
     threads:
         virtual:
             enabled: true
-
-    kafka:
-        bootstrap-servers: localhost:9193
-
-        consumer:
-            group-id: sim-group
-            auto-offset-reset: earliest
-            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-
-        producer:
-            key-serializer: org.apache.kafka.common.serialization.StringSerializer
-            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-            properties:
-                "[spring.json.add.type.headers]": false
-                "[partitioner.class]": com.app.config.kafka.GlobalConsistentPartitioner
 
 # Swagger
 springdoc:
@@ -121,46 +75,11 @@ logging:
         "[org.springframework.jdbc.core]": DEBUG
         "[java.sql.Connection]": TRACE
         "[java.sql]": TRACE
-        "[org.springframework.kafka]": DEBUG
 
-# Rate limitter
-resilience4j:
-    circuitbreaker:
-        instances:
-            checkRandom:
-                register-health-indicator: true
-                sliding-window-size: 20
-                permitted-number-of-calls-in-half-open-state: 5
-                sliding-window-type: COUNT_BASED
-                minimum-number-of-calls: 10
-                wait-duration-in-open-state: 5s
-                failure-rate-threshold: 50
-                event-consumer-buffer-size: 10
-                record-exceptions:
-                    - org.springframework.web.client.HttpServerErrorException
-                ignore-exceptions:
-                    - com.app.core.exception.MyException
-    ratelimiter:
-        instances:
-            default:
-                limit-for-period: 6000
-                limit-refresh-period: 1s
-                timeout-duration: 0
-                register-health-indicator: true
-                event-consumer-buffer-size: 100
-
-# Management
-management:
-    health:
-        circuitbreakers:
+org:
+    jobrunr:
+        background-job-server:
             enabled: true
-    endpoints:
-        web:
-            exposure:
-                include:
-                    - "*"
-    endpoint:
-        health:
-            show-details: always
-        prometheus:
-            access: unrestricted
+        dashboard:
+            enabled: true
+            port: 8000

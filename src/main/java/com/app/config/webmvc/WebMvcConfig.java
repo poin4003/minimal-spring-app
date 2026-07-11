@@ -8,8 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.app.config.processor.ClientIpResolver;
 
-import org.springframework.lang.NonNull;
-
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -19,7 +17,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private final ClientIpResolver clientIpResolver;
     
     @Override
-    public void addArgumentResolvers(@NonNull List<HandlerMethodArgumentResolver> resolvers) {
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
         resolvers.add(clientIpResolver);
     }
 }

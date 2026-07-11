@@ -3,7 +3,7 @@ package com.app.features.rbac.entity;
 import java.util.List;
 import java.util.UUID;
 
-import com.app.core.base.BaseEntity;
+import com.app.core.db.BaseAuditEntity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -19,7 +19,7 @@ import lombok.ToString;
 @Table(name = "permission")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class PermissionEntity extends BaseEntity {
+public class PermissionEntity extends BaseAuditEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

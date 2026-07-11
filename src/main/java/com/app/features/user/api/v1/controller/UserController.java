@@ -22,16 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
-import com.app.features.user.api.v1.dto.request.CreateUserDto;
-import com.app.features.user.api.v1.dto.response.UserDetailDto;
-import com.app.features.user.api.v1.dto.response.UserDto;
-import com.app.features.user.cqrs.command.CreateUserCmd;
-import com.app.features.user.cqrs.query.GetManyUserQuery;
-import com.app.features.user.cqrs.query.GetUserByIdQuery;
-import com.app.features.user.cqrs.result.UserDetailResult;
-import com.app.features.user.cqrs.result.UserResult;
+import com.app.features.user.schema.payload.CreateUserPayload;
+import com.app.features.user.schema.result.UserDetailResult;
+import com.app.features.user.schema.result.UserResult;
+import com.app.features.user.service.UserService;
 
-import an.awesome.pipelinr.Pipeline;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -45,55 +40,44 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "USER Management V1", description = "User docs")
 public class UserController {
 
+    private final UserService userSvc;
     private final ModelMapper mapper;
-    private final Pipeline pipeline;
 
     @PostMapping("/")
     @Operation(summary = "Create new user")
     @ResponseStatus(HttpStatus.CREATED)
     @Secured(PermissionConstants.USER_CREATE)
-    public ApiResult<UserDto> createUser(
-            @Valid @RequestBody CreateUserDto req) {
-        CreateUserCmd cmd = mapper.map(req, CreateUserCmd.class);
+    public ApiResult<UserResult> createUser(
+            @Valid @RequestBody CreateUserPayload req) {
+        UserResult result = userSvc.createUser(req);
 
-        UserResult result = pipeline.send(cmd);
-
-        return ApiResult.ok(mapper.map(result, UserDto.class), "Create user sucess!");
+        return ApiResult.ok(result, "Create user sucess!");
     }
 
     @GetMapping("/")
     @Operation(summary = "Get many user")
     @Secured(PermissionConstants.USER_VIEW)
-    public ApiResult<Page<UserDto>> getManyUsers(
+    public ApiResult<Page<UserResult>> getManyUsers(
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<UserResult> results = userSvc.getManyUser(pageable);
 
-        GetManyUserQuery query = new GetManyUserQuery();
-
-        query.setPageable(pageable);
-
-        Page<UserResult> results = pipeline.send(query);
-
-        Page<UserDto> res = results.map(result -> mapper.map(result, UserDto.class));
+        Page<UserResult> res = results.map(result -> mapper.map(result, UserResult.class));
 
         return ApiResult.ok(res, "Get many user success");
     }
 
     @GetMapping("/{userId}")
     @Secured(PermissionConstants.USER_VIEW)
-    public ApiResult<UserDetailDto> getUserById(@PathVariable UUID userId) {
-        GetUserByIdQuery query = new GetUserByIdQuery(userId);
+    public ApiResult<UserDetailResult> getUserById(@PathVariable UUID userId) {
+        UserDetailResult result = userSvc.getUserDetailById(userId);
 
-        UserDetailResult result = pipeline.send(query);
-
-        return ApiResult.ok(mapper.map(result, UserDetailDto.class), "Get user principal success!");
+        return ApiResult.ok(result, "Get user principal success!");
     }
 
     @GetMapping("/info")
-    public ApiResult<UserDetailDto> getUserInfo(@AuthenticationPrincipal UserPrincipal currentUser) {
-        GetUserByIdQuery query = new GetUserByIdQuery(currentUser.getUserId());
+    public ApiResult<UserDetailResult> getUserInfo(@AuthenticationPrincipal UserPrincipal currentUser) {
+        UserDetailResult result = userSvc.getUserDetailById(currentUser.getUserId());
 
-        UserDetailResult result = pipeline.send(query);
-
-        return ApiResult.ok(mapper.map(result, UserDetailDto.class), "Get user principal success!");
+        return ApiResult.ok(mapper.map(result, UserDetailResult.class), "Get user principal success!");
     }
 }
