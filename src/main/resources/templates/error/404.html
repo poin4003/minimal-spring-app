@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 Not Found</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+</head>
+<body class="bg-body-tertiary">
+    <main class="min-vh-100 d-flex align-items-center py-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="card shadow-sm border-0 text-center">
+                        <div class="card-body p-5">
+                            <div class="display-4 fw-bold text-warning mb-3">404</div>
+                            <h1 class="h3 mb-3">Page not found</h1>
+                            <p class="text-secondary mb-4">
+                                The page or resource you requested does not exist.
+                            </p>
+
+                            <div class="d-flex justify-content-center">
+                                <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                                    Back
+                                </button>
+                            </div>
+
+                            <div class="mt-4 small text-secondary">
+                                <span th:if="${path != null}">
+                                    Path: <code th:text="${path}">/missing-page</code>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

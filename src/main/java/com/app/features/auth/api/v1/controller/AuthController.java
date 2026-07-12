@@ -46,8 +46,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ApiResult<Void> logout(@AuthenticationPrincipal UserPrincipal currentUser) {
-        if (currentUser != null && currentUser.getKeyStore() != null) {
-            authService.logout(currentUser.getKeyStore().getKeyStoreId(), currentUser.getUserId());
+        if (currentUser != null) {
+            authService.logout(currentUser.getUserId());
         }
         return ApiResult.ok(null, "Logout success");
     }

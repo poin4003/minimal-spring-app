@@ -12,5 +12,5 @@ public interface AuthService {
 
     LoginResult refreshToken(RefreshTokenPayload req);
 
-    void logout(UUID keyStoreId, UUID userId);
+    void logout(UUID userId);
 }

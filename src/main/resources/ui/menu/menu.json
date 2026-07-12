@@ -1,0 +1,40 @@
+[
+  {
+    "id": "dashboard",
+    "label": "Dashboard",
+    "path": "/admin"
+  },
+  {
+    "id": "user-management",
+    "label": "User Management",
+    "children": [
+      {
+        "id": "users",
+        "label": "Users",
+        "path": "/admin/users"
+      },
+      {
+        "id": "roles",
+        "label": "Roles",
+        "path": "/admin/rbac/roles"
+      },
+      {
+        "id": "permissions",
+        "label": "Permissions",
+        "path": "/admin/rbac/permissions"
+      }
+    ]
+  },
+  {
+    "id": "jobs",
+    "label": "Jobs",
+    "children": [
+      {
+        "id": "cronjobs",
+        "label": "Cronjobs",
+        "path": "/admin/cronjobs",
+        "disabled": true
+      }
+    ]
+  }
+]

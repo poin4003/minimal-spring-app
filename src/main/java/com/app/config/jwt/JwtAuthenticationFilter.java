@@ -10,6 +10,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.app.config.settings.AppProperties;
 import com.app.core.security.KeyStoreResult;
 import com.app.core.security.UserPrincipal;
 import com.app.features.auth.service.KeyStoreService;
@@ -17,6 +18,7 @@ import com.app.features.auth.service.KeyStoreService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final ObjectMapper objectMapper;
     private final UserDetailsService userDetailsService;
     private final KeyStoreService keyStoreService;
+    private final AppProperties appProperties;
 
     @Override
     protected void doFilterInternal(
@@ -74,8 +77,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
 
-        if (bearerToken != null && bearerToken.startsWith("Bearer")) {
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+
+        String accessTokenCookieName = appProperties.getAuth().getCookie().getAccessTokenName();
+        for (Cookie cookie : cookies) {
+            if (accessTokenCookieName.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
         }
 
         return null;

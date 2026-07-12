@@ -4,6 +4,12 @@ server:
 
 # App config
 app:
+    auth:
+        cookie:
+            access-token-name: ACCESS_TOKEN
+            path: /
+            same-site: Lax
+            secure: false
     cors:
         allowed-origins:
             - "http://localhost:5173"
@@ -14,6 +20,30 @@ app:
         secret-key: "1234567890123456789012345678901234567890" # At least 256 bits (32 characters) for HS256
         access-token-expiration-ms: 3600000 # 1 hour
         refresh-token-expiration-ms: 604800000 # 7 days
+    security:
+        api-public-paths:
+            - /api/v1/auth/**
+        web-public-paths:
+            - /login
+            - /logout
+            - /error
+            - /favicon.ico
+            - /vendor/**
+            - /swagger-ui/**
+            - /v3/api-docs/**
+            - /h2-console/**
+            - /css/**
+            - /js/**
+            - /images/**
+        csrf-ignore-paths:
+            - /api/**
+            - /h2-console/**
+    ui:
+        login-path: /login
+        home-path: /admin
+        login-title: Sign in
+        logout-path: /logout
+        application-title: Minimal Spring App
 
 # Spring config
 spring:
@@ -40,6 +70,10 @@ spring:
             bootstrapAdminName: '${BOOTSTRAP_ADMIN_NAME:Tài khoản Super Admin}'
 
     thymeleaf:
+        enabled: true
+        prefix: classpath:/templates/
+        suffix: .html
+        mode: HTML
         cache: false
 
     jpa:

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<ul class="app-menu list-unstyled mb-0" th:fragment="tree(items)">
+    <li th:each="item : ${items}" class="app-menu-item">
+        <a th:if="${#lists.isEmpty(item.children)}"
+           th:href="${item.disabled or item.path == null ? '#' : item.path}"
+           class="app-menu-link d-flex align-items-center text-decoration-none"
+           th:classappend="${item.active} ? ' active' : ''"
+           th:attr="aria-disabled=${item.disabled}">
+            <span th:text="${item.label}">Dashboard</span>
+        </a>
+
+        <div th:unless="${#lists.isEmpty(item.children)}">
+            <button type="button"
+                    class="app-menu-toggle btn w-100 text-start d-flex align-items-center justify-content-between"
+                    th:classappend="${item.open} ? ' active' : ''"
+                    data-bs-toggle="collapse"
+                    th:data-bs-target="${'#menu-' + item.id}"
+                    th:attr="aria-expanded=${item.open},aria-controls=${'menu-' + item.id}">
+                <span th:text="${item.label}">User Management</span>
+                <span class="app-menu-caret">&gt;</span>
+            </button>
+
+            <div class="collapse app-menu-children"
+                 th:id="${'menu-' + item.id}"
+                 th:classappend="${item.open} ? ' show' : ''">
+                <div th:replace="~{fragments/menu :: tree(${item.children})}"></div>
+            </div>
+        </div>
+    </li>
+</ul>
+</body>
+</html>

@@ -1,31 +1,36 @@
 package com.app.config.exception;
 
-import java.nio.file.AccessDeniedException;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.app.core.exception.MyException;
 import com.app.core.response.ApiResult;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MyException.class)
+    @ResponseBody
     public ResponseEntity<ApiResult<Void>> handleMyException(MyException ex) {
         log.error("MyException [{}]: {}", ex.getError(), ex.getMessage());
 
@@ -34,6 +39,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(BadCredentialsException.class)
+    @ResponseBody
     public ResponseEntity<ApiResult<Void>> handleBadCredentials(BadCredentialsException ex) {
         log.warn("Login failed: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -41,6 +47,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
+    @ResponseBody
     public ResponseEntity<ApiResult<Void>> handleValidationException(Exception ex) {
         String errorDetails = "";
 
@@ -64,6 +71,7 @@ public class GlobalExceptionHandler {
             MissingPathVariableException.class,
             MissingServletRequestPartException.class
     })
+    @ResponseBody
     public ResponseEntity<ApiResult<Void>> handleMissingParams(Exception ex) {
         log.warn("Missing Parameter: {}", ex.getMessage());
         ApiResult<Void> response = ApiResult.error("MISSING_PARAM", "Missing param.");
@@ -74,19 +82,60 @@ public class GlobalExceptionHandler {
             AuthorizationDeniedException.class,
             AccessDeniedException.class
     })
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ApiResult<Void> handleAccessDeniedException(Exception ex) {
+    public Object handleAccessDeniedException(Exception ex, HttpServletRequest request) {
         log.warn("[Security] Access Denied: {}", ex.getMessage());
 
-        return ApiResult.error(
-                "PERMISSION_ERROR",
-                "You are not authorized to perform this action.");
+        if (isHtmlRequest(request)) {
+            ModelAndView modelAndView = new ModelAndView("error/403");
+            modelAndView.setStatus(HttpStatus.FORBIDDEN);
+            modelAndView.addObject("path", request.getRequestURI());
+            return modelAndView;
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResult.error(
+                        "PERMISSION_ERROR",
+                        "You are not authorized to perform this action."));
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public Object handleNoResourceFoundException(NoResourceFoundException ex, HttpServletRequest request) {
+        log.warn("Resource not found: {}", ex.getMessage());
+
+        if (isHtmlRequest(request)) {
+            ModelAndView modelAndView = new ModelAndView("error/404");
+            modelAndView.setStatus(HttpStatus.NOT_FOUND);
+            modelAndView.addObject("path", request.getRequestURI());
+            return modelAndView;
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResult.error("NOT_FOUND", "Resource not found."));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResult<Void>> handleAllUncaughtException(Exception ex) {
+    public Object handleAllUncaughtException(Exception ex, HttpServletRequest request) {
         log.error("Unknown Internal Error: ", ex);
+
+        if (isHtmlRequest(request)) {
+            ModelAndView modelAndView = new ModelAndView("error/error");
+            modelAndView.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            modelAndView.addObject("path", request.getRequestURI());
+            return modelAndView;
+        }
+
         ApiResult<Void> response = ApiResult.error("INTERNAL_SERVER_ERROR", "Unknown system error.");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    private boolean isHtmlRequest(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        return accept != null
+                && accept.contains("text/html")
+                && !request.getRequestURI().startsWith("/api/");
     }
 }

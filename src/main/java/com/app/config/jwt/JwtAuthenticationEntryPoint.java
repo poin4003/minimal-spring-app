@@ -1,5 +1,6 @@
 package com.app.config.jwt;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -24,7 +25,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
-            AuthenticationException authException) {
+            AuthenticationException authException) throws IOException {
+
+        if (!request.getRequestURI().startsWith("/api/")) {
+            response.sendRedirect(request.getContextPath() + "/login");
+            return;
+        }
 
         RuntimeException exception = ExceptionFactory.tokenInvalid("No access or invalid token");
 

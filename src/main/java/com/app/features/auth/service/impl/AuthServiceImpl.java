@@ -113,14 +113,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void logout(UUID keyStoreId, UUID userId) {
+    public void logout(UUID userId) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
 
         user.setLogoutTime(LocalDateTime.now());
         userBaseRepo.save(user);
 
-        keyStoreRepo.deleteById(keyStoreId);
+        keyStoreRepo.deleteByUserId(userId);
     }
 
     private LoginResult generateAndSaveTokens(UUID userId, String userEmail) {
