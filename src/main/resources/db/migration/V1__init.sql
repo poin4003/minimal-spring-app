@@ -1,6 +1,7 @@
 -- Initial schema for the minimal Spring Boot project.
 -- Scope: API + H2 + JobRunr-ready application tables only.
--- Excludes legacy tables from sample.sql and does not seed data.
+-- Excludes legacy tables from sample.sql.
+-- Seeds a bootstrap super-admin user; permissions are attached by RBAC sync on app startup.
 
 CREATE DOMAIN UserStatusEnum AS VARCHAR(8)
     CHECK (VALUE IN ('ACTIVE', 'INACTIVE', 'LOCKED'));
@@ -85,8 +86,7 @@ CREATE TABLE user_roles (
 CREATE TABLE key_store (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
-    public_key VARCHAR(255),
-    private_key VARCHAR(255),
+    signing_key VARCHAR(255) NOT NULL,
     refresh_token VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -147,3 +147,27 @@ CREATE TABLE cronjob_config (
 );
 
 CREATE UNIQUE INDEX uk_cronjob_config_job_type ON cronjob_config(job_type);
+
+INSERT INTO role (id, name, role_key) VALUES (
+    'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01',
+    'Super Admin',
+    'SUPER_ADMIN'
+);
+
+INSERT INTO user_base (id, email, password, status, del_flag) VALUES (
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    '${bootstrapAdminEmail}',
+    '${bootstrapAdminPasswordHash}',
+    'ACTIVE',
+    '0'
+);
+
+INSERT INTO user_info (id, username) VALUES (
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    '${bootstrapAdminName}'
+);
+
+INSERT INTO user_roles (user_id, role_id) VALUES (
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
+    'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01'
+);

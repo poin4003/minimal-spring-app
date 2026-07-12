@@ -1,6 +1,0 @@
-#FileLock
-#Sun Jul 12 14:30:28 ICT 2026
-hostName=ThinkPad
-id=19f553c12543d10141b999e8bf6898aba62b208ed7d
-method=file
-server=192.168.1.8\:50555

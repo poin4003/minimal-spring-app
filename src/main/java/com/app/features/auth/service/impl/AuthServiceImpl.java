@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.app.config.jwt.JwtPayload;
 import com.app.config.jwt.JwtTokenProvider;
-import com.app.config.jwt.KeyPairDto;
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.security.UserPrincipal;
 import com.app.features.auth.entity.ConsumedRefreshTokenEntity;
@@ -92,7 +91,7 @@ public class AuthServiceImpl implements AuthService {
             throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
         }
 
-        if (!jwtTokenProvider.validateToken(tokenStr, keyStore.getPublicKey())) {
+        if (!jwtTokenProvider.validateToken(tokenStr, keyStore.getSigningKey())) {
             throw ExceptionFactory.permissionError("RefreshToken Expired or Invalid Signature");
         }
 
@@ -102,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         history.setTokenValue(tokenStr);
         history.setUsedAt(Instant.now());
 
-        Date expiryDate = jwtTokenProvider.getExpiryDateFromToken(tokenStr, keyStore.getPublicKey());
+        Date expiryDate = jwtTokenProvider.getExpiryDateFromToken(tokenStr, keyStore.getSigningKey());
         history.setExpiryDate(expiryDate.toInstant());
         consumedRefreshTokenRepo.save(history);
 
@@ -125,30 +124,26 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private LoginResult generateAndSaveTokens(UUID userId, String userEmail) {
-        KeyPairDto newKeyPairDto = jwtTokenProvider.generateKeyPair();
-        String newPrivateKey = newKeyPairDto.getPrivateKey();
-        String newPublicKey = newKeyPairDto.getPublicKey();
+        String signingKey = jwtTokenProvider.generateSigningKey();
 
         JwtPayload payload = JwtPayload.builder()
                 .userEmail(userEmail)
                 .build();
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, payload, newPrivateKey);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, newPrivateKey);
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, payload, signingKey);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, signingKey);
 
         Optional<KeyStoreEntity> existingOpt = keyStoreRepo.findByUserId(userId);
 
         if (existingOpt.isPresent()) {
             KeyStoreEntity existing = existingOpt.get();
-            existing.setPublicKey(newPublicKey);
-            existing.setPrivateKey(newPrivateKey);
+            existing.setSigningKey(signingKey);
             existing.setRefreshToken(newRefreshToken);
             keyStoreRepo.save(existing);
         } else {
             KeyStoreEntity keyStore = new KeyStoreEntity();
             keyStore.setUserId(userId);
-            keyStore.setPublicKey(newPublicKey);
-            keyStore.setPrivateKey(newPrivateKey);
+            keyStore.setSigningKey(signingKey);
             keyStore.setRefreshToken(newRefreshToken);
             keyStoreRepo.save(keyStore);
         }

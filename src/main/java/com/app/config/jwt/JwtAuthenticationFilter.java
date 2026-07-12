@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     KeyStoreResult keyStore = keyStoreService.getKeyStoreByUserId(userId);
 
                     if (keyStore != null)  {
-                        Claims claims = jwtTokenProvider.getAllClaimsFromToken(token, keyStore.getPublicKey());
+                        Claims claims = jwtTokenProvider.getAllClaimsFromToken(token, keyStore.getSigningKey());
 
                         JwtPayload payload = objectMapper.convertValue(claims, JwtPayload.class);
 

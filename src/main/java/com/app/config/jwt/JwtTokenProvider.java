@@ -3,6 +3,7 @@ package com.app.config.jwt;
 import java.io.OutputStream;
 import java.io.Reader;
 import javax.crypto.SecretKey;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -30,20 +31,20 @@ public class JwtTokenProvider {
 
     private final JwtCryptoService jwtCrypto;
 
-    public KeyPairDto generateKeyPair() {
+    public String generateSigningKey() {
         try {
-            return jwtCrypto.generateKey();
+            return jwtCrypto.generateSigningKey();
         } catch (Exception e) {
-            throw new RuntimeException("Error generating HMAC keys", e);
+            throw new RuntimeException("Error generating HMAC signing key", e);
         }
     }
 
-    public String generateAccessToken(UUID userId, JwtPayload payload, String privateKeyStr) {
+    public String generateAccessToken(UUID userId, JwtPayload payload, String signingKey) {
         try {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getAccessTokenExpirationMs();
 
-            SecretKey key = jwtCrypto.getKey(privateKeyStr);
+            SecretKey key = jwtCrypto.toSecretKey(signingKey);
 
             Map<String, Object> claims = objectMapper.convertValue(payload, new TypeReference<Map<String, Object>>() {
             });
@@ -61,12 +62,12 @@ public class JwtTokenProvider {
         }
     }
 
-    public String generateRefreshToken(UUID userId, String privateKeyStr) {
+    public String generateRefreshToken(UUID userId, String signingKey) {
         try {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getRefreshTokenExpirationMs();
 
-            SecretKey key = jwtCrypto.getKey(privateKeyStr);
+            SecretKey key = jwtCrypto.toSecretKey(signingKey);
 
             return Jwts.builder()
                     .json(jwtSerializer())
@@ -82,25 +83,26 @@ public class JwtTokenProvider {
 
     public UUID getUserIdFromTokenUnverified(String token) {
         try {
-            String tokenWithoutSignature = token.substring(0, token.lastIndexOf('.') + 1);
-            Claims claims = Jwts.parser()
-                    .json(jwtDeserializer())
-                    .unsecured()
-                    .build()
-                    .parseUnsecuredClaims(tokenWithoutSignature)
-                    .getPayload();
+            String[] parts = token.split("\\.");
+            if (parts.length < 2) {
+                return null;
+            }
 
-            String sub = claims.getSubject();
+            Map<String, Object> payload = objectMapper.readValue(
+                    Base64.getUrlDecoder().decode(parts[1]),
+                    new TypeReference<Map<String, Object>>() {
+                    });
 
-            return UUID.fromString(sub);
+            Object sub = payload.get("sub");
+            return sub != null ? UUID.fromString(sub.toString()) : null;
         } catch (Exception e) {
             return null;
         }
     }
 
-    public boolean validateToken(String token, String publicKeyStr) {
+    public boolean validateToken(String token, String signingKey) {
         try {
-            SecretKey key = jwtCrypto.getKey(publicKeyStr);
+            SecretKey key = jwtCrypto.toSecretKey(signingKey);
 
             Jwts.parser()
                     .json(jwtDeserializer())
@@ -114,9 +116,9 @@ public class JwtTokenProvider {
         }
     }
 
-    public Date getExpiryDateFromToken(String token, String publicKeyStr) {
+    public Date getExpiryDateFromToken(String token, String signingKey) {
         try {
-            SecretKey key = jwtCrypto.getKey(publicKeyStr);
+            SecretKey key = jwtCrypto.toSecretKey(signingKey);
 
             return Jwts.parser()
                     .json(jwtDeserializer())
@@ -131,8 +133,8 @@ public class JwtTokenProvider {
         }
     }
 
-    public Claims getAllClaimsFromToken(String token, String publicKeyStr) throws Exception {
-        SecretKey key = jwtCrypto.getKey(publicKeyStr);
+    public Claims getAllClaimsFromToken(String token, String signingKey) throws Exception {
+        SecretKey key = jwtCrypto.toSecretKey(signingKey);
 
         return Jwts.parser()
                 .json(jwtDeserializer())

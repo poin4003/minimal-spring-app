@@ -1,21 +1,21 @@
 # AI Skill Memory
 
-Thu muc nay dung de luu context lam viec cho AI trong project nay.
+This directory is used to store working context for AI in this project.
 
-Muc tieu:
-- Giu lai cac rule on dinh cua project de AI co the bam theo khi code.
-- Tach rieng bug note ra khoi rule de tranh tron lan.
-- Bo sung dan theo qua trinh lam viec, khong can viet het ngay tu dau.
+Goals:
+- Preserve stable project rules so the AI can follow them while coding.
+- Keep bug notes separate from project rules to avoid mixing concerns.
+- Add more context gradually during development instead of writing everything at once.
 
-Quy uoc hien tai:
-- Khong dung `sample.sql` lam nguon tham chieu chinh cho schema hoac structure. File do dang duoc de tam.
-- `sample.sql` la du an cu / legacy reference, khong phai dich den cua ban nay.
-- Rule co tinh on dinh thi ghi vao `project-rules.md`.
-- Bug, mismatch, technical debt thi ghi vao `bug-notes.md`.
+Current conventions:
+- Do not use `sample.sql` as the main reference for schema or structure. That file is only temporary.
+- `sample.sql` is a legacy reference from the old project, not the target state of this one.
+- Stable rules should be written in `project-rules.md`.
+- Bugs, mismatches, and technical debt should be written in `bug-notes.md`.
 
-Danh sach file:
-- `project-rules.md`: rule co ban va cau truc source hien tai.
-- `bug-notes.md`: bug note rieng, co the bo sung dan trong luc code.
+File list:
+- `project-rules.md`: core rules and the current source structure.
+- `bug-notes.md`: a separate bug note file that can be expanded gradually during development.
 
-
-jdbc:h2:file:C:/workspace/Java/minimal-spring-app/data/minimal_db;AUTO_SERVER=TRUE
+Useful local H2 URL:
+`jdbc:h2:file:C:/workspace/Java/minimal-spring-app/data/minimal_db;AUTO_SERVER=TRUE`

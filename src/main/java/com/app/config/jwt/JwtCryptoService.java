@@ -13,16 +13,14 @@ import io.jsonwebtoken.security.MacAlgorithm;
 @Component
 public class JwtCryptoService {
 
-    public KeyPairDto generateKey() {
+    public String generateSigningKey() {
         byte[] keyBytes = new byte[64];
         new SecureRandom().nextBytes(keyBytes);
-        String secret = Base64.getEncoder().encodeToString(keyBytes);
-
-        return new KeyPairDto(secret, secret);
+        return Base64.getEncoder().encodeToString(keyBytes);
     }
 
-    public SecretKey getKey(String keyStr) {
-        byte[] keyBytes = Base64.getDecoder().decode(keyStr);
+    public SecretKey toSecretKey(String signingKey) {
+        byte[] keyBytes = Base64.getDecoder().decode(signingKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

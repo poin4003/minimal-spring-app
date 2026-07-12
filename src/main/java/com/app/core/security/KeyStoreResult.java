@@ -11,9 +11,7 @@ public class KeyStoreResult {
 
     private UUID userId;
 
-    private String publicKey;
-
-    private String privateKey;
+    private String signingKey;
 
     private String refreshToken;
 }

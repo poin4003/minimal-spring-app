@@ -1,48 +1,49 @@
 # Project Rules
 
 ## Scope
-- Khong dua `sample.sql` vao bo rule cua project.
-- `sample.sql` chi la file tam, khong phai source-of-truth cho schema, migration, hay naming convention.
-- Project nay huong toi stack toi gian: Spring Boot API + H2 + JobRunr.
-- Khong dua Redis, Kafka, hay external service vao baseline cua du an nay.
-- Migration khoi tao nen toi gian, uu tien phuc vu entity hien tai va khong seed data neu chua duoc yeu cau.
+- Do not include `sample.sql` in the project's rule set.
+- `sample.sql` is only a temporary file, not the source of truth for schema, migration, or naming conventions.
+- This project targets a minimal stack: Spring Boot API + H2 + JobRunr.
+- Do not include Redis, Kafka, or external services in this project's baseline.
+- Initial migrations should stay minimal, focus on the current entities, and avoid seed data unless explicitly requested.
 
 ## Source Structure
-- `src/main/java/com/app/config`: cac cau hinh dung chung cua Spring nhu security, jwt, cors, swagger, mapper, exception, settings, webmvc.
-- `src/main/java/com/app/core`: cac thanh phan dung chung nhu base entity, constant, response wrapper, security object, sync infra, util.
-- `src/main/java/com/app/features/<domain>`: code duoc chia theo domain nghiep vu.
-- Ben trong moi feature, uu tien giu cac nhom thu muc quen thuoc:
+- `src/main/java/com/app/config`: shared Spring configuration such as security, jwt, cors, swagger, mapper, exception, settings, and webmvc.
+- `src/main/java/com/app/core`: shared components such as base entities, constants, response wrappers, security objects, sync infrastructure, and utilities.
+- `src/main/java/com/app/features/<domain>`: code is organized by business domain.
+- Inside each feature, prefer keeping these familiar directory groups:
   - `api/v1/controller`
-  - `service` va `service/impl`
-  - `repository` va `repository/spec` neu can filter dong
+  - `service` and `service/impl`
+  - `repository` and `repository/spec` when dynamic filtering is needed
   - `entity`
   - `schema/payload`
   - `schema/result`
   - `schema/filter`
-  - `enums`, `sync`, `worker`, `excel`, `cronjob` neu domain can
-- `src/main/resources`: file config, logback, va Flyway migration trong `db/migration`.
+  - `enums`, `sync`, `worker`, `excel`, `cronjob` when the domain needs them
+- `src/main/resources`: configuration files, logback, and Flyway migrations under `db/migration`.
 - `src/test/java`: test code.
 
 ## Coding Direction
-- Controller nen mong, chu yeu nhan request, validate, map response va dat permission annotation.
-- Business logic nen nam o service layer.
-- Truy van DB va filter theo tieu chi nen nam o repository/specification layer.
-- DTO request/response/filter nen dat duoi `schema`.
-- Constant dung chung nen dat duoi `core/constant`.
-- Feature moi nen di theo cau truc `features/<domain>` thay vi rai code theo technical layer tren toan project.
-- API nen giu version trong path, uu tien `api/v1`.
-- Khi doi schema DB, uu tien tao migration trong `src/main/resources/db/migration`.
-- Khong mang theo bang, seed, hay integration cua du an cu neu code hien tai khong con dung toi.
+- Controllers should stay thin and mainly handle request input, validation, response mapping, and permission annotations.
+- Business logic should live in the service layer.
+- Database queries and criteria-based filtering should live in the repository/specification layer.
+- Request/response/filter DTOs should live under `schema`.
+- Shared constants should live under `core/constant`.
+- New features should follow the `features/<domain>` structure instead of scattering code by technical layer across the whole project.
+- APIs should keep versioning in the path, preferably `api/v1`.
+- When the database schema changes, prefer creating a migration under `src/main/resources/db/migration`.
+- Do not carry over tables, seed data, or integrations from the old project if the current codebase no longer uses them.
 
 ## Collaboration Rule With User
-- Truoc khi thay doi code hoac file, AI phai show code de user xem truoc.
-- Chi duoc apply thay doi sau khi user xac nhan bang cach noi `apply`.
-- Neu user noi ro y nhu `apply lien`, `apply luon`, hoac the hien rang can sua ngay, AI moi duoc apply ngay trong turn do.
-- Ngoai le nay khong ap dung cho viec doc source, phan tich, review, hoac de xuat huong sua.
+- Before changing code or files, the AI must show the code to the user first.
+- Changes may only be applied after the user explicitly confirms by saying `apply`.
+- If the user clearly says something like `apply now`, `apply directly`, or otherwise shows that the change should be made immediately, the AI may apply it in that same turn.
+- The AI does not need to fully confirm every runtime case or edge case in advance; it only needs to show the code or proposed changes clearly so the user can decide the direction.
+- This exception does not apply to reading source code, analysis, review, or proposing a fix.
 
 ## Open Sections For Future Rules
-- Naming convention cho entity, DTO, endpoint, repository.
-- Rule ve transaction va validation.
-- Rule ve logging.
-- Rule ve test.
-- Rule ve import/export va background job.
+- Naming conventions for entities, DTOs, endpoints, and repositories.
+- Rules for transactions and validation.
+- Rules for logging.
+- Rules for tests.
+- Rules for import/export and background jobs.

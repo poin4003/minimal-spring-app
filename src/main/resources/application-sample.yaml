@@ -11,7 +11,7 @@ app:
             - "http://localhost:3090"
             - "http://127.0.0.1:5500"
     jwt:
-        secret-key: "1234567890123456789012345678901234567890" # (Ít nhất 32 ký tự / 256-bit cho thuật toán HS256)
+        secret-key: "1234567890123456789012345678901234567890" # At least 256 bits (32 characters) for HS256
         access-token-expiration-ms: 3600000 # 1 hour
         refresh-token-expiration-ms: 604800000 # 7 days
 
@@ -33,6 +33,11 @@ spring:
 
     flyway:
         enabled: true
+        table: FLYWAY_SCHEMA_HISTORY
+        placeholders:
+            bootstrapAdminEmail: '${BOOTSTRAP_ADMIN_EMAIL:system@admin.com}'
+            bootstrapAdminPasswordHash: '${BOOTSTRAP_ADMIN_PASSWORD_HASH:$2b$10$aFCsDS3JNrk3lR/mopRPROvACMVX4rj8v0QTpalcFbuUc9YuYqwFu}'
+            bootstrapAdminName: '${BOOTSTRAP_ADMIN_NAME:Tài khoản Super Admin}'
 
     thymeleaf:
         cache: false
@@ -80,5 +85,5 @@ org:
         background-job-server:
             enabled: true
         dashboard:
-            enabled: true
+            enabled: false
             port: 8000

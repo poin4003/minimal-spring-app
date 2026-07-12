@@ -30,11 +30,8 @@ public class KeyStoreEntity extends BaseAuditEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "public_key")
-    private String publicKey;
-
-    @Column(name = "private_key")
-    private String privateKey;
+    @Column(name = "signing_key", nullable = false)
+    private String signingKey;
 
     @Column(name = "refresh_token")
     private String refreshToken;
