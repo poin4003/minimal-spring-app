@@ -10,9 +10,11 @@ import com.app.features.user.enums.UserStatusEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.MappedSuperclass;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@MappedSuperclass
 @Data
 @EqualsAndHashCode(callSuper = true)
 public abstract class BaseUserDetailEntity extends BaseAuditEntity implements UserDetails {

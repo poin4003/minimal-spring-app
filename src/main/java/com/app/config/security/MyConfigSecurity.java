@@ -35,6 +35,8 @@ public class MyConfigSecurity {
             .cors(Customizer.withDefaults())
             .formLogin(form -> form.disable())
             .httpBasic(basic -> basic.disable())
+            .headers(headers -> headers
+                .frameOptions(frameOptions -> frameOptions.sameOrigin()))
             .exceptionHandling(exception -> exception
                 .authenticationEntryPoint(jwtEntryPoint)
             )
@@ -42,7 +44,8 @@ public class MyConfigSecurity {
             .requestMatchers(
                 "/swagger-ui/**", 
                 "/v3/api-docs/**",
-                "/api/v1/auth/**"
+                "/api/v1/auth/**",
+                "/h2-console/**"
             ).permitAll()
             .anyRequest().authenticated())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

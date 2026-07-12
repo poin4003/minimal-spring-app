@@ -33,7 +33,6 @@ spring:
 
     flyway:
         enabled: true
-        baseline-on-migrate: true
 
     thymeleaf:
         cache: false

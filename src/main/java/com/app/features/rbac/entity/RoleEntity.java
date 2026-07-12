@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.app.core.db.BaseAuditEntity;
 import com.app.features.user.entity.UserBaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,6 +30,8 @@ public class RoleEntity extends BaseAuditEntity {
     private UUID id;
 
     private String name;
+
+    @Column(name = "role_key")
     private String key;
 
     @ManyToMany

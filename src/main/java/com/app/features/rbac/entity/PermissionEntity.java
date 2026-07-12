@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.app.core.db.BaseAuditEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,6 +26,8 @@ public class PermissionEntity extends BaseAuditEntity {
     private UUID id;
 
     private String name;
+
+    @Column(name = "permission_key")
     private String key;
 
     @ManyToMany(mappedBy = "permissions")

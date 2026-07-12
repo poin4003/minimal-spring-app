@@ -11,7 +11,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import com.app.features.rbac.entity.RoleEntity;
-import com.app.features.user.enums.UserStatusEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -42,8 +41,6 @@ public class UserBaseEntity extends BaseUserDetailEntity {
 
     @Column(nullable = false)
     private String password;
-
-    private UserStatusEnum status;
 
     @Column(name = "login_time")
     private LocalDateTime loginTime;
@@ -90,11 +87,6 @@ public class UserBaseEntity extends BaseUserDetailEntity {
     @Override
     public String getUsername() {
         return this.email;
-    }
-
-    @Override
-    public UserStatusEnum getStatus() {
-        return this.status;
     }
 
     @Override
