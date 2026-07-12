@@ -38,6 +38,7 @@ app:
         csrf-ignore-paths:
             - /api/**
             - /h2-console/**
+            - /admin/users/**
     ui:
         login-path: /login
         home-path: /admin
