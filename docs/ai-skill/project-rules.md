@@ -34,6 +34,20 @@
 - When the database schema changes, prefer creating a migration under `src/main/resources/db/migration`.
 - Do not carry over tables, seed data, or integrations from the old project if the current codebase no longer uses them.
 
+## UI View Model Rule
+- For server-rendered UI pages such as Thymeleaf, prefer using dedicated view-model classes instead of scattering many `model.addAttribute("key", value)` entries.
+- A controller should preferably expose one root page object, for example `page`, rather than multiple loose template variables.
+- Shared UI data such as title, current user, logout path, and menu tree should be grouped into structured classes when appropriate.
+- Thymeleaf templates should prefer reading structured fields such as `page.title`, `page.shell.currentUser.email`, or `page.shell.menuTree`.
+- Framework-provided attributes such as `_csrf` are exceptions and may continue to be used directly.
+- When building UI pages, prefer Java-style OOP view models over loose key-value model assembly.
+
+## UI Component Reuse Rule
+- When building server-rendered UI pages, prefer composing from shared reusable components instead of rewriting table, modal, and pagination markup per page.
+- Shared UI components should stay centered around the common Java component models and factories such as `UiTable*`, `UiModal*`, and `UiPagination*`.
+- If a new UI page needs a listing view, modal form, or paging bar, the default direction is to reuse these components first and only fall back to page-specific HTML when the shared component truly does not fit.
+- Component inputs should also stay Java/OOP oriented, meaning annotated classes, structured view models, and factories are preferred over ad-hoc maps or loose template variables.
+
 ## Collaboration Rule With User
 - Before changing code or files, the AI must show the code to the user first.
 - Changes may only be applied after the user explicitly confirms by saying `apply`.

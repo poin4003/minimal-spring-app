@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="table(table)" class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div th:if="${table.title != null or table.description != null}"
+             class="d-flex flex-column gap-2 p-4 border-bottom">
+            <h2 th:if="${table.title != null}" class="h5 mb-0" th:text="${table.title}">Records</h2>
+            <p th:if="${table.description != null}" class="text-secondary mb-0" th:text="${table.description}">
+                Table description
+            </p>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th th:each="column : ${table.columns}" scope="col" th:text="${column.label}">Column</th>
+                        <th th:if="${table.showActions}" scope="col" class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody th:if="${!#lists.isEmpty(table.rows)}">
+                    <tr th:each="row : ${table.rows}">
+                        <td th:each="cell : ${row.cells}">
+                            <th:block th:switch="${cell.type.name()}">
+                                <span th:case="'BADGE'"
+                                      class="badge"
+                                      th:classappend="${cell.badgeClass != null ? ' ' + cell.badgeClass : ''}"
+                                      th:text="${cell.text}">
+                                    ACTIVE
+                                </span>
+                                <code th:case="'MONOSPACE'" th:text="${cell.text}">value</code>
+                                <span th:case="*" th:text="${cell.text}">value</span>
+                            </th:block>
+                        </td>
+
+                        <td th:if="${table.showActions}" class="text-end">
+                            <div th:if="${!#lists.isEmpty(row.actions)}"
+                                 class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                <a th:each="action : ${row.actions}"
+                                   th:href="${action.disabled or action.path == null ? '#' : action.path}"
+                                   class="btn btn-sm"
+                                   th:classappend="${(action.buttonClass != null ? ' ' + action.buttonClass : ' btn-outline-secondary') + (action.disabled ? ' disabled' : '')}"
+                                   th:attr="aria-disabled=${action.disabled}">
+                                    <span th:text="${action.label}">View</span>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+
+                <tbody th:unless="${!#lists.isEmpty(table.rows)}">
+                    <tr>
+                        <td class="text-center text-secondary py-5"
+                            th:attr="colspan=${table.columns.size() + (table.showActions ? 1 : 0)}"
+                            th:text="${table.emptyMessage}">
+                            No records found.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${table.pagination != null and table.pagination.totalPages > 1}"
+             class="d-flex justify-content-end p-3 border-top">
+            <div th:replace="~{fragments/components/pagination :: pagination(${table.pagination})}"></div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

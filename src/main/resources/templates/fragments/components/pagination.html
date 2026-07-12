@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="pagination(pagination)"
+     th:if="${pagination != null and pagination.totalPages > 1}"
+     aria-label="Pagination">
+    <ul class="pagination mb-0">
+        <li class="page-item" th:classappend="${!pagination.hasPrevious} ? ' disabled' : ''">
+            <a class="page-link"
+               th:href="${pagination.hasPrevious ? pagination.previousPath : '#'}">
+                Previous
+            </a>
+        </li>
+
+        <li class="page-item"
+            th:each="item : ${pagination.items}"
+            th:classappend="${item.active} ? ' active' : (${item.disabled} ? ' disabled' : '')">
+            <span th:if="${item.disabled}" class="page-link" th:text="${item.label}">...</span>
+            <a th:unless="${item.disabled}"
+               class="page-link"
+               th:href="${item.path}"
+               th:text="${item.label}">
+                1
+            </a>
+        </li>
+
+        <li class="page-item" th:classappend="${!pagination.hasNext} ? ' disabled' : ''">
+            <a class="page-link"
+               th:href="${pagination.hasNext ? pagination.nextPath : '#'}">
+                Next
+            </a>
+        </li>
+    </ul>
+</nav>
+</body>
+</html>

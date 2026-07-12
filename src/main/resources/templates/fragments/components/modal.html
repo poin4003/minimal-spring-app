@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="modal(modal)">
+    <button th:if="${modal.triggerLabel != null}"
+            type="button"
+            class="btn"
+            th:classappend="${modal.triggerButtonClass != null ? ' ' + modal.triggerButtonClass : ' btn-primary'}"
+            data-bs-toggle="modal"
+            th:data-bs-target="${'#' + modal.id}">
+        <span th:text="${modal.triggerLabel}">Open modal</span>
+    </button>
+
+    <div class="modal fade" th:id="${modal.id}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"
+             th:classappend="${modal.dialogClass != null ? ' ' + modal.dialogClass : ''}">
+            <div class="modal-content">
+                <form th:attr="action=${modal.actionPath},method=${modal.method}">
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <div class="modal-header">
+                        <div>
+                            <h2 class="modal-title fs-5 mb-1" th:text="${modal.title}">Modal title</h2>
+                            <p th:if="${modal.description != null}"
+                               class="text-secondary small mb-0"
+                               th:text="${modal.description}">
+                                Modal description
+                            </p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div th:each="field : ${modal.fields}">
+                            <input th:if="${field.type.name() == 'HIDDEN'}"
+                                   type="hidden"
+                                   th:name="${field.name}"
+                                   th:value="${field.value}">
+
+                            <div th:unless="${field.type.name() == 'HIDDEN'}" class="mb-3">
+                                <div th:if="${field.type.name() == 'CHECKBOX'}" class="form-check">
+                                    <input class="form-check-input"
+                                           th:classappend="${field.errorMessage != null ? ' is-invalid' : ''}"
+                                           type="checkbox"
+                                           th:id="${modal.id + '-' + field.name}"
+                                           th:name="${field.name}"
+                                           th:checked="${field.checked}"
+                                           th:disabled="${field.readOnly}">
+                                    <label class="form-check-label"
+                                           th:attr="for=${modal.id + '-' + field.name}"
+                                           th:text="${field.label}">
+                                        Checkbox
+                                    </label>
+                                    <div th:if="${field.errorMessage != null}"
+                                         class="invalid-feedback d-block"
+                                         th:text="${field.errorMessage}">
+                                        Invalid value
+                                    </div>
+                                </div>
+
+                                <th:block th:unless="${field.type.name() == 'CHECKBOX'}">
+                                    <label class="form-label"
+                                           th:attr="for=${modal.id + '-' + field.name}"
+                                           th:text="${field.label}">
+                                        Field
+                                    </label>
+
+                                    <th:block th:switch="${field.type.name()}">
+                                        <textarea th:case="'TEXTAREA'"
+                                                  class="form-control"
+                                                  th:classappend="${field.errorMessage != null ? ' is-invalid' : ''}"
+                                                  th:id="${modal.id + '-' + field.name}"
+                                                  th:name="${field.name}"
+                                                  th:attr="placeholder=${field.placeholder},rows=${field.rows},readonly=${field.readOnly},required=${field.required}"
+                                                  th:text="${field.value}"></textarea>
+
+                                        <select th:case="'SELECT'"
+                                                class="form-select"
+                                                th:classappend="${field.errorMessage != null ? ' is-invalid' : ''}"
+                                                th:id="${modal.id + '-' + field.name}"
+                                                th:name="${field.name}"
+                                                th:attr="required=${field.required},disabled=${field.readOnly}">
+                                            <option th:if="${field.placeholder != null}"
+                                                    value=""
+                                                    th:selected="${field.value == null}"
+                                                    th:text="${field.placeholder}">
+                                                Select an option
+                                            </option>
+                                            <option th:each="option : ${field.options}"
+                                                    th:value="${option.value}"
+                                                    th:selected="${option.selected}"
+                                                    th:text="${option.label}">
+                                                Option
+                                            </option>
+                                        </select>
+
+                                        <input th:case="*"
+                                               class="form-control"
+                                               th:classappend="${field.errorMessage != null ? ' is-invalid' : ''}"
+                                               th:type="${field.type.htmlInputType}"
+                                               th:id="${modal.id + '-' + field.name}"
+                                               th:name="${field.name}"
+                                               th:value="${field.value}"
+                                               th:attr="placeholder=${field.placeholder},readonly=${field.readOnly},required=${field.required}">
+                                    </th:block>
+
+                                    <div th:if="${field.errorMessage != null}"
+                                         class="invalid-feedback"
+                                         th:text="${field.errorMessage}">
+                                        Invalid value
+                                    </div>
+                                </th:block>
+
+                                <div th:if="${field.helpText != null}" class="form-text" th:text="${field.helpText}">
+                                    Field help text
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                        <button type="submit" class="btn btn-primary" th:text="${modal.submitLabel}">
+                            Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
