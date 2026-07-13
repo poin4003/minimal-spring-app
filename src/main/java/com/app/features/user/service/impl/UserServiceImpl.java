@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public void checkEmailUnique(String email) {
         if (userBaseRepo.existsByEmail(email)) {
-            throw ExceptionFactory.alreadyExists("Email " + email);
+            throw ExceptionFactory.alreadyExists("email", email, "Email already exists.");
         }
     }
 }

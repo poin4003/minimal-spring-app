@@ -48,6 +48,12 @@
 - If a new UI page needs a listing view, modal form, or paging bar, the default direction is to reuse these components first and only fall back to page-specific HTML when the shared component truly does not fit.
 - Component inputs should also stay Java/OOP oriented, meaning annotated classes, structured view models, and factories are preferred over ad-hoc maps or loose template variables.
 
+## Exception Handling Rule
+- Keep `details` and `fieldErrors` as separate properties in custom exceptions; do not overload `details` to carry field-level validation state.
+- For server-rendered UI error handling, prefer dedicated page/view classes such as `ErrorPageView` and helper/factory classes such as `WebErrorPageFactory`.
+- Avoid loose `ModelAndView.addObject(...)` chains for web error pages; prefer structured page objects passed as one root model attribute.
+- When Thymeleaf pages need to surface backend business validation errors, prefer structured `fieldErrors` from `MyException` and a dedicated resolver/helper instead of mutating `BindingResult` from custom exceptions.
+
 ## Collaboration Rule With User
 - Before changing code or files, the AI must show the code to the user first.
 - Changes may only be applied after the user explicitly confirms by saying `apply`.

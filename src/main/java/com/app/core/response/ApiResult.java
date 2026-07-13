@@ -1,5 +1,8 @@
 package com.app.core.response;
 
+import java.util.List;
+
+import com.app.core.exception.FieldErrorItem;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;
@@ -11,6 +14,7 @@ public class ApiResult<T> {
     private String error;
     private String message;
     private T result;
+    private List<FieldErrorItem> fieldErrors;
     private long timestamp = System.currentTimeMillis();
 
     public static <T> ApiResult<T> ok(T result, String message) {
@@ -22,10 +26,15 @@ public class ApiResult<T> {
     }
 
     public static <T> ApiResult<Void> error(String error, String message) {
+        return error(error, message, null);
+    }
+
+    public static ApiResult<Void> error(String error, String message, List<FieldErrorItem> fieldErrors) {
         ApiResult<Void> res = new ApiResult<>();
         res.setSuccess(false);
         res.setError(error);
         res.setMessage(message);
+        res.setFieldErrors(fieldErrors == null || fieldErrors.isEmpty() ? null : List.copyOf(fieldErrors));
         return res;
     }
 }

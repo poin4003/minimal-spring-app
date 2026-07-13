@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 Not Found</title>
+    <title th:text="${page.title}">404 Not Found</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
 </head>
@@ -14,9 +14,9 @@
                 <div class="col-lg-6">
                     <div class="card shadow-sm border-0 text-center">
                         <div class="card-body p-5">
-                            <div class="display-4 fw-bold text-warning mb-3">404</div>
-                            <h1 class="h3 mb-3">Page not found</h1>
-                            <p class="text-secondary mb-4">
+                            <div class="display-4 fw-bold text-warning mb-3" th:text="${page.status}">404</div>
+                            <h1 class="h3 mb-3" th:text="${page.title}">Page not found</h1>
+                            <p class="text-secondary mb-4" th:text="${page.message}">
                                 The page or resource you requested does not exist.
                             </p>
 
@@ -27,8 +27,8 @@
                             </div>
 
                             <div class="mt-4 small text-secondary">
-                                <span th:if="${path != null}">
-                                    Path: <code th:text="${path}">/missing-page</code>
+                                <span th:if="${page.path != null}">
+                                    Path: <code th:text="${page.path}">/missing-page</code>
                                 </span>
                             </div>
                         </div>

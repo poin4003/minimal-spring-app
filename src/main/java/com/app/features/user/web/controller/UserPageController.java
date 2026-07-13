@@ -1,6 +1,5 @@
 package com.app.features.user.web.controller;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,7 +8,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
-import com.app.core.exception.MyException;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
 import com.app.features.ui.web.component.support.UiModalFactory;
@@ -30,6 +27,8 @@ import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
+import com.app.features.ui.web.support.UiFormSubmitResult;
+import com.app.features.ui.web.support.UiFormSubmitSupport;
 import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 import com.app.features.user.schema.filter.UserFilter;
@@ -49,8 +48,6 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${app.ui.home-path:/admin}/users")
 public class UserPageController {
 
-    private static final String RESOURCE_ALREADY_EXISTS = "RESOURCE_ALREADY_EXISTS";
-
     private final AppProperties appProperties;
     private final MenuService menuService;
     private final UserService userService;
@@ -58,6 +55,7 @@ public class UserPageController {
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
     private final UiModalFactory uiModalFactory;
+    private final UiFormSubmitSupport uiFormSubmitSupport;
 
     @GetMapping
     @Secured(PermissionConstants.USER_VIEW)
@@ -90,22 +88,12 @@ public class UserPageController {
             @Valid @ModelAttribute("form") CreateUserModalForm form,
             BindingResult bindingResult,
             Model model) {
-        if (!bindingResult.hasErrors()) {
-            try {
-                CreateUserPayload payload = new CreateUserPayload();
-                payload.setEmail(form.getEmail());
-                payload.setPassword(form.getPassword());
+        UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
+                bindingResult,
+                () -> userService.createUser(toCreateUserPayload(form)));
 
-                userService.createUser(payload);
-
-                return "redirect:" + appProperties.getUi().getHomePath() + "/users?created=true";
-            } catch (MyException ex) {
-                if (!RESOURCE_ALREADY_EXISTS.equals(ex.getError())) {
-                    throw ex;
-                }
-
-                bindingResult.rejectValue("email", RESOURCE_ALREADY_EXISTS, ex.getMessage());
-            }
+        if (submitResult.success()) {
+            return "redirect:" + appProperties.getUi().getHomePath() + "/users?created=true";
         }
 
         model.addAttribute(
@@ -115,7 +103,7 @@ public class UserPageController {
                         request,
                         filter,
                         form,
-                        toFieldErrors(bindingResult),
+                        submitResult.fieldErrors(),
                         null,
                         "Please correct the form and try again.",
                         true));
@@ -180,6 +168,13 @@ public class UserPageController {
                 .build();
     }
 
+    private CreateUserPayload toCreateUserPayload(CreateUserModalForm form) {
+        CreateUserPayload payload = new CreateUserPayload();
+        payload.setEmail(form.getEmail());
+        payload.setPassword(form.getPassword());
+        return payload;
+    }
+
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
         return UiShellView.builder()
                 .title(appProperties.getUi().getApplicationTitle())
@@ -202,16 +197,6 @@ public class UserPageController {
                 .createdAt(result.getCreatedAt())
                 .updatedAt(result.getUpdatedAt())
                 .build();
-    }
-
-    private Map<String, String> toFieldErrors(BindingResult bindingResult) {
-        Map<String, String> errors = new LinkedHashMap<>();
-
-        for (FieldError fieldError : bindingResult.getFieldErrors()) {
-            errors.putIfAbsent(fieldError.getField(), fieldError.getDefaultMessage());
-        }
-
-        return errors;
     }
 
     private boolean hasAuthority(UserPrincipal currentUser, String authority) {

@@ -1,5 +1,7 @@
 package com.app.core.exception;
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 
 public final class ExceptionFactory {
@@ -26,8 +28,26 @@ public final class ExceptionFactory {
         return new MyException("RESOURCE_ALREADY_EXISTS", HttpStatus.BAD_REQUEST.value(), message);
     }
 
+    public static MyException alreadyExists(String field, Object rejectedValue, String message) {
+        return new MyException(
+                "RESOURCE_ALREADY_EXISTS",
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                null,
+                List.of(new FieldErrorItem(field, "ALREADY_EXISTS", message, rejectedValue)));
+    }
+
     public static MyException invalidParam(String message) {
         return new MyException("INVALID_PARAM", HttpStatus.BAD_REQUEST.value(), message);
+    }
+
+    public static MyException validationError(String message, List<FieldErrorItem> fieldErrors) {
+        return new MyException(
+                "COMMON_VALIDATION_ERROR",
+                HttpStatus.BAD_REQUEST.value(),
+                message,
+                null,
+                fieldErrors);
     }
 
     // --- Security Error (401, 403)
