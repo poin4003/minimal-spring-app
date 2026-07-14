@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
@@ -72,8 +71,6 @@ public class RolePermissionPageController {
             HttpServletRequest request,
             @PathVariable UUID roleId,
             @Valid @ModelAttribute("filter") RolePermissionFilter filter,
-            @RequestParam(defaultValue = "false") boolean assigned,
-            @RequestParam(defaultValue = "false") boolean removed,
             Model model) {
         model.addAttribute(
                 RolePermissionPageView.ATTRIBUTE,
@@ -86,7 +83,6 @@ public class RolePermissionPageController {
                         Map.of(),
                         new RolePermissionActionForm(),
                         Map.of(),
-                        assigned ? "Permission assigned successfully." : removed ? "Permission removed successfully." : null,
                         null,
                         false,
                         false));
@@ -108,7 +104,7 @@ public class RolePermissionPageController {
                 () -> rbacService.assignPermToRole(roleId, List.of(assignForm.getPermissionId())));
 
         if (submitResult.success()) {
-            return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions?assigned=true";
+            return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions";
         }
 
         model.addAttribute(
@@ -122,7 +118,6 @@ public class RolePermissionPageController {
                         submitResult.fieldErrors(),
                         new RolePermissionActionForm(),
                         Map.of(),
-                        null,
                         "Please correct the form and try again.",
                         true,
                         false));
@@ -144,7 +139,7 @@ public class RolePermissionPageController {
                 () -> rbacService.removePermFromRole(roleId, List.of(removeForm.getPermissionId())));
 
         if (submitResult.success()) {
-            return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions?removed=true";
+            return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions";
         }
 
         model.addAttribute(
@@ -158,7 +153,6 @@ public class RolePermissionPageController {
                         Map.of(),
                         removeForm,
                         submitResult.fieldErrors(),
-                        null,
                         "Please correct the form and try again.",
                         false,
                         true));
@@ -174,7 +168,6 @@ public class RolePermissionPageController {
             Map<String, String> assignErrors,
             RolePermissionActionForm removeForm,
             Map<String, String> removeErrors,
-            String successMessage,
             String errorMessage,
             boolean openAssignPermissionModal,
             boolean openRemovePermissionModal) {
@@ -264,7 +257,6 @@ public class RolePermissionPageController {
                 .assignedPermissionTable(assignedPermissionTable)
                 .assignPermissionModal(assignPermissionModal)
                 .removePermissionModal(removePermissionModal)
-                .successMessage(successMessage)
                 .errorMessage(errorMessage)
                 .openAssignPermissionModal(openAssignPermissionModal)
                 .openRemovePermissionModal(openRemovePermissionModal)

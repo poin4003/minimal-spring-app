@@ -57,12 +57,6 @@
                                      th:replace="~{fragments/components/modal :: modal(${page.createRoleModal})}"></div>
                             </section>
 
-                            <div th:if="${page.successMessage != null}"
-                                 class="alert alert-success mb-0"
-                                 th:text="${page.successMessage}">
-                                Role created successfully.
-                            </div>
-
                             <div th:if="${page.errorMessage != null}"
                                  class="alert alert-danger mb-0"
                                  th:text="${page.errorMessage}">
@@ -71,8 +65,8 @@
 
                             <div th:replace="~{fragments/components/table :: table(${page.roleTable})}"></div>
 
-                            <th:block th:if="${page.roleDetailModal != null}">
-                                <div th:replace="~{rbac/role/fragments/detail-modal :: modal(${page.roleDetailModal})}"></div>
+                            <th:block th:if="${page.detailModal != null}">
+                                <div th:replace="~{fragments/components/assignment-detail-modal :: modal(${page.detailModal})}"></div>
                             </th:block>
                         </div>
                     </div>
@@ -87,7 +81,7 @@
         });
     </script>
 
-    <script th:if="${page.openRoleDetailModal}">
+    <script th:if="${page.openDetailModal}">
         document.addEventListener("DOMContentLoaded", function () {
             bootstrap.Modal.getOrCreateInstance(document.getElementById("role-detail-modal")).show();
         });

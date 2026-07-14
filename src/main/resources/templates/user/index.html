@@ -57,12 +57,6 @@
                                      th:replace="~{fragments/components/modal :: modal(${page.createUserModal})}"></div>
                             </section>
 
-                            <div th:if="${page.successMessage != null}"
-                                 class="alert alert-success mb-0"
-                                 th:text="${page.successMessage}">
-                                User created successfully.
-                            </div>
-
                             <div th:if="${page.errorMessage != null}"
                                  class="alert alert-danger mb-0"
                                  th:text="${page.errorMessage}">
@@ -70,6 +64,10 @@
                             </div>
 
                             <div th:replace="~{fragments/components/table :: table(${page.userTable})}"></div>
+
+                            <th:block th:if="${page.detailModal != null}">
+                                <div th:replace="~{fragments/components/assignment-detail-modal :: modal(${page.detailModal})}"></div>
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -80,6 +78,12 @@
     <script th:if="${page.openCreateUserModal}">
         document.addEventListener("DOMContentLoaded", function () {
             bootstrap.Modal.getOrCreateInstance(document.getElementById("create-user-modal")).show();
+        });
+    </script>
+
+    <script th:if="${page.openDetailModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("user-role-detail-modal")).show();
         });
     </script>
 </body>

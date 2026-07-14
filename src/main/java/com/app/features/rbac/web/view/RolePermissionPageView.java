@@ -22,7 +22,6 @@ public class RolePermissionPageView {
     private final UiTableView assignedPermissionTable;
     private final UiModalView assignPermissionModal;
     private final UiModalView removePermissionModal;
-    private final String successMessage;
     private final String errorMessage;
     private final boolean openAssignPermissionModal;
     private final boolean openRemovePermissionModal;

@@ -1,8 +1,13 @@
 package com.app.features.user.web.controller;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -10,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,13 +24,20 @@ import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.features.rbac.schema.filter.RoleFilterCriteria;
+import com.app.features.rbac.schema.result.RoleResult;
+import com.app.features.rbac.service.RbacService;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
+import com.app.features.ui.web.component.view.UiAssignmentDetailItemView;
+import com.app.features.ui.web.component.view.UiAssignmentDetailMetaView;
+import com.app.features.ui.web.component.view.UiAssignmentDetailModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
+import com.app.features.ui.web.component.view.UiTableActionView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.support.UiFormSubmitResult;
@@ -33,6 +46,7 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
+import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.schema.result.UserResult;
 import com.app.features.user.service.UserService;
 import com.app.features.user.web.view.CreateUserModalForm;
@@ -51,6 +65,7 @@ public class UserPageController {
     private final AppProperties appProperties;
     private final MenuService menuService;
     private final UserService userService;
+    private final RbacService rbacService;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
@@ -63,7 +78,7 @@ public class UserPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") UserFilter filter,
-            @RequestParam(defaultValue = "false") boolean created,
+            @RequestParam(required = false) UUID detailUserId,
             Model model) {
         model.addAttribute(
                 UserListPageView.ATTRIBUTE,
@@ -73,9 +88,10 @@ public class UserPageController {
                         filter,
                         new CreateUserModalForm(),
                         null,
-                        created ? "User created successfully." : null,
                         null,
-                        false));
+                        false,
+                        detailUserId,
+                        detailUserId != null));
         return "user/index";
     }
 
@@ -93,7 +109,7 @@ public class UserPageController {
                 () -> userService.createUser(toCreateUserPayload(form)));
 
         if (submitResult.success()) {
-            return "redirect:" + appProperties.getUi().getHomePath() + "/users?created=true";
+            return "redirect:" + appProperties.getUi().getHomePath() + "/users";
         }
 
         model.addAttribute(
@@ -104,10 +120,33 @@ public class UserPageController {
                         filter,
                         form,
                         submitResult.fieldErrors(),
-                        null,
                         "Please correct the form and try again.",
-                        true));
+                        true,
+                        null,
+                        false));
         return "user/index";
+    }
+
+    @PostMapping("/{userId}/detail/assign-role")
+    @Secured(PermissionConstants.RBAC_MANAGE)
+    public String assignRoleFromDetail(
+            @PathVariable UUID userId,
+            @RequestParam UUID roleId) {
+        rbacService.assignRoleToUser(userId, List.of(roleId));
+
+        return "redirect:" + appProperties.getUi().getHomePath()
+                + "/users?detailUserId=" + userId;
+    }
+
+    @PostMapping("/{userId}/detail/remove-role")
+    @Secured(PermissionConstants.RBAC_MANAGE)
+    public String removeRoleFromDetail(
+            @PathVariable UUID userId,
+            @RequestParam UUID roleId) {
+        rbacService.removeRoleFromUser(userId, List.of(roleId));
+
+        return "redirect:" + appProperties.getUi().getHomePath()
+                + "/users?detailUserId=" + userId;
     }
 
     private UserListPageView buildPage(
@@ -116,12 +155,16 @@ public class UserPageController {
             UserFilter filter,
             CreateUserModalForm form,
             Map<String, String> modalErrors,
-            String successMessage,
             String errorMessage,
-            boolean openCreateUserModal) {
+            boolean openCreateUserModal,
+            UUID detailUserId,
+            boolean openDetailModal) {
+        boolean canCreateUser = hasAuthority(currentUser, PermissionConstants.USER_CREATE);
+        boolean canManageRbac = hasAuthority(currentUser, PermissionConstants.RBAC_MANAGE);
+
         var userPage = userService.getManyUser(filter.toPageable());
         List<UserTableRowView> rows = userPage.getContent().stream()
-                .map(this::toRowView)
+                .map(result -> this.toRowView(result))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -136,9 +179,16 @@ public class UserPageController {
                         .pagination(pagination)
                         .build(),
                 rows,
-                UserTableRowView.class);
+                UserTableRowView.class,
+                row -> canManageRbac
+                        ? List.of(UiTableActionView.builder()
+                                .label("Roles")
+                                .path(appProperties.getUi().getHomePath() + "/users?detailUserId=" + row.getId())
+                                .buttonClass("btn-outline-primary")
+                                .build())
+                        : List.of());
 
-        UiModalView createUserModal = hasAuthority(currentUser, PermissionConstants.USER_CREATE)
+        UiModalView createUserModal = canCreateUser
                 ? uiModalFactory.build(
                         UiModalDefinition.builder()
                                 .id("create-user-modal")
@@ -155,6 +205,10 @@ public class UserPageController {
                         modalErrors == null ? Map.of() : modalErrors)
                 : null;
 
+        UiAssignmentDetailModalView detailModal = canManageRbac && detailUserId != null
+                ? buildUserRoleDetailModal(detailUserId)
+                : null;
+
         return UserListPageView.builder()
                 .title("User Management")
                 .heading("Users")
@@ -162,9 +216,83 @@ public class UserPageController {
                 .shell(buildShell(currentUser, request))
                 .userTable(userTable)
                 .createUserModal(createUserModal)
-                .successMessage(successMessage)
+                .detailModal(detailModal)
                 .errorMessage(errorMessage)
                 .openCreateUserModal(openCreateUserModal)
+                .openDetailModal(openDetailModal && detailModal != null)
+                .build();
+    }
+
+    private UiAssignmentDetailModalView buildUserRoleDetailModal(UUID userId) {
+        UserDetailResult user = userService.getUserDetailById(userId);
+
+        List<RoleResult> assignedRoles = user.getRoles() == null
+                ? List.of()
+                : user.getRoles().stream()
+                        .sorted(Comparator.comparing(
+                                (RoleResult role) -> role.getKey(),
+                                String.CASE_INSENSITIVE_ORDER))
+                        .toList();
+
+        Set<String> assignedRoleIds = assignedRoles.stream()
+                .map(role -> role.getId())
+                .collect(Collectors.toSet());
+
+        List<RoleResult> allRoles = rbacService.getManyRoles(
+                new RoleFilterCriteria(),
+                Pageable.unpaged())
+                .getContent()
+                .stream()
+                .sorted(Comparator.comparing(
+                        (RoleResult role) -> role.getKey(),
+                        String.CASE_INSENSITIVE_ORDER))
+                .toList();
+
+        List<UiAssignmentDetailItemView> assignedItems = assignedRoles.stream()
+                .map(role -> UiAssignmentDetailItemView.builder()
+                        .title(role.getKey())
+                        .description(role.getName())
+                        .actionPath(appProperties.getUi().getHomePath() + "/users/" + userId + "/detail/remove-role")
+                        .actionLabel("Remove")
+                        .actionButtonClass("btn-outline-danger")
+                        .hiddenFieldName("roleId")
+                        .hiddenFieldValue(role.getId())
+                        .build())
+                .toList();
+
+        List<UiAssignmentDetailItemView> availableItems = allRoles.stream()
+                .filter(role -> !assignedRoleIds.contains(role.getId()))
+                .map(role -> UiAssignmentDetailItemView.builder()
+                        .title(role.getKey())
+                        .description(role.getName())
+                        .actionPath(appProperties.getUi().getHomePath() + "/users/" + userId + "/detail/assign-role")
+                        .actionLabel("Assign")
+                        .actionButtonClass("btn-outline-primary")
+                        .hiddenFieldName("roleId")
+                        .hiddenFieldValue(role.getId())
+                        .build())
+                .toList();
+
+        return UiAssignmentDetailModalView.builder()
+                .id("user-role-detail-modal")
+                .title("User Roles")
+                .metadata(List.of(
+                        UiAssignmentDetailMetaView.builder()
+                                .label("Email")
+                                .value(user.getEmail())
+                                .monospace(false)
+                                .build(),
+                        UiAssignmentDetailMetaView.builder()
+                                .label("Status")
+                                .value(String.valueOf(user.getStatus()))
+                                .monospace(false)
+                                .build()))
+                .assignedTitle("Assigned Roles")
+                .assignedEmptyMessage("No roles assigned.")
+                .assignedItems(assignedItems)
+                .availableTitle("Available Roles")
+                .availableEmptyMessage("All roles are already assigned.")
+                .availableItems(availableItems)
                 .build();
     }
 

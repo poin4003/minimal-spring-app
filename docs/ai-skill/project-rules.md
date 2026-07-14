@@ -49,6 +49,7 @@
 - When building server-rendered UI pages, prefer composing from shared reusable components instead of rewriting table, modal, and pagination markup per page.
 - Shared UI components should stay centered around the common Java component models and factories such as `UiTable*`, `UiModal*`, and `UiPagination*`.
 - If a new UI page needs a listing view, modal form, or paging bar, the default direction is to reuse these components first and only fall back to page-specific HTML when the shared component truly does not fit.
+- For assignment-style UI flows such as assigning permissions to roles or roles to users, prefer a shared structured modal/component instead of duplicating near-identical assign/remove markup.
 - Component inputs should also stay Java/OOP oriented, meaning annotated classes, structured view models, and factories are preferred over ad-hoc maps or loose template variables.
 - UI descriptions, helper text, and table subtitles should describe the business function of the page or table, not mention internal implementation details such as shared or reusable components.
 
