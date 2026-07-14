@@ -36,6 +36,8 @@
 - Prefer explicit lambda expressions over Java method references such as `::`, especially in stream operations, sorting, and mapping.
 - This project prefers lambdas because VS Code Java null-safety analysis tends to produce noisier warnings on method references than on equivalent lambdas.
 - When both forms are valid, prefer styles such as `item -> item.getId()` or `item -> this.toView(item)` over `Type::method` or `this::method`.
+- For flat DTOs or flat UI row views with matching field names, prefer mutable classes with `ModelMapper` over repetitive manual `builder()` mapping.
+- Reserve manual builders for composed page objects, modal/detail structures, or cases where field names or mapping logic differ.
 
 ## UI View Model Rule
 - For server-rendered UI pages such as Thymeleaf, prefer using dedicated view-model classes instead of scattering many `model.addAttribute("key", value)` entries.

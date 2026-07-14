@@ -2,6 +2,7 @@ package com.app.features.rbac.web.controller;
 
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -54,6 +55,7 @@ public class PermissionPageController {
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
+    private final ModelMapper mapper;
 
     @GetMapping
     @Secured(PermissionConstants.RBAC_MANAGE)
@@ -79,7 +81,7 @@ public class PermissionPageController {
 
         var permissionPage = rbacService.getManyPermissions(criteria, query.toPageable(PERMISSION_PAGE_DEFAULTS));
         List<PermissionTableRowView> rows = permissionPage.getContent().stream()
-                .map((PermissionResult permission) -> this.toRowView(permission))
+                .map((PermissionResult permission) -> mapper.map(permission, PermissionTableRowView.class))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -102,14 +104,6 @@ public class PermissionPageController {
                 .description("Review permission keys used by authorization rules.")
                 .shell(buildShell(currentUser, request))
                 .permissionTable(permissionTable)
-                .build();
-    }
-
-    private PermissionTableRowView toRowView(PermissionResult result) {
-        return PermissionTableRowView.builder()
-                .id(result.getId())
-                .key(result.getKey())
-                .name(result.getName())
                 .build();
     }
 

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
@@ -87,6 +88,7 @@ public class RolePageController {
     private final UiTableFactory uiTableFactory;
     private final UiModalFactory uiModalFactory;
     private final UiFormSubmitSupport uiFormSubmitSupport;
+    private final ModelMapper mapper;
 
     @GetMapping
     @Secured(PermissionConstants.RBAC_MANAGE)
@@ -128,7 +130,7 @@ public class RolePageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> rbacService.createRole(toCreateRolePayload(form)));
+                () -> rbacService.createRole(mapper.map(form, CreateRolePayload.class)));
 
         if (submitResult.success()) {
             return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles";
@@ -170,7 +172,7 @@ public class RolePageController {
 
         var rolePage = rbacService.getManyRoles(criteria, query.toPageable(ROLE_PAGE_DEFAULTS));
         List<RoleTableRowView> rows = rolePage.getContent().stream()
-                .map(role -> this.toRowView(role))
+                .map(role -> mapper.map(role, RoleTableRowView.class))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -284,21 +286,6 @@ public class RolePageController {
                 .listTitle("Assigned Permissions")
                 .items(items)
                 .emptyMessage("No permissions assigned.")
-                .build();
-    }
-
-    private CreateRolePayload toCreateRolePayload(CreateRoleModalForm form) {
-        CreateRolePayload payload = new CreateRolePayload();
-        payload.setName(form.getName());
-        payload.setKey(form.getKey());
-        return payload;
-    }
-
-    private RoleTableRowView toRowView(RoleResult result) {
-        return RoleTableRowView.builder()
-                .id(result.getId())
-                .key(result.getKey())
-                .name(result.getName())
                 .build();
     }
 

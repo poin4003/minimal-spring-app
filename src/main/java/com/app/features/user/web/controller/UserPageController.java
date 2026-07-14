@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,9 +22,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
-import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
+import com.app.core.security.UserPrincipal;
 import com.app.features.rbac.schema.result.RoleResult;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
@@ -48,7 +49,6 @@ import com.app.features.ui.web.view.UiShellView;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
-import com.app.features.user.schema.result.UserResult;
 import com.app.features.user.service.UserService;
 import com.app.features.user.web.view.CreateUserModalForm;
 import com.app.features.user.web.view.UserListPageView;
@@ -85,6 +85,7 @@ public class UserPageController {
     private final UiTableFactory uiTableFactory;
     private final UiModalFactory uiModalFactory;
     private final UiFormSubmitSupport uiFormSubmitSupport;
+    private final ModelMapper mapper;
 
     @GetMapping
     @Secured(PermissionConstants.USER_VIEW)
@@ -126,7 +127,7 @@ public class UserPageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> userService.createUser(toCreateUserPayload(form)));
+                () -> userService.createUser(mapper.map(form, CreateUserPayload.class)));
 
         if (submitResult.success()) {
             return "redirect:" + appProperties.getUi().getHomePath() + "/users";
@@ -165,7 +166,7 @@ public class UserPageController {
             boolean openDetailModal) {
         var userPage = userService.getManyUser(query.toPageable(USER_PAGE_DEFAULTS));
         List<UserTableRowView> rows = userPage.getContent().stream()
-                .map(result -> this.toRowView(result))
+                .map(result -> mapper.map(result, UserTableRowView.class))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -291,13 +292,6 @@ public class UserPageController {
                 .build();
     }
 
-    private CreateUserPayload toCreateUserPayload(CreateUserModalForm form) {
-        CreateUserPayload payload = new CreateUserPayload();
-        payload.setEmail(form.getEmail());
-        payload.setPassword(form.getPassword());
-        return payload;
-    }
-
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
         return UiShellView.builder()
                 .title(appProperties.getUi().getApplicationTitle())
@@ -309,16 +303,6 @@ public class UserPageController {
                                 .toList())
                         .build())
                 .menuTree(menuService.getMenuTree(request.getRequestURI()))
-                .build();
-    }
-
-    private UserTableRowView toRowView(UserResult result) {
-        return UserTableRowView.builder()
-                .id(result.getId())
-                .email(result.getEmail())
-                .status(result.getStatus())
-                .createdAt(result.getCreatedAt())
-                .updatedAt(result.getUpdatedAt())
                 .build();
     }
 

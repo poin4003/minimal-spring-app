@@ -6,24 +6,26 @@ import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.enums.UiCellType;
 import com.app.features.user.enums.UserStatusEnum;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@Builder
+@Setter
+@NoArgsConstructor
 public class UserTableRowView {
 
-    private final UUID id;
+    private UUID id;
 
     @UiColumn(label = "Email", order = 10)
-    private final String email;
+    private String email;
 
     @UiColumn(label = "Status", order = 20, type = UiCellType.BADGE)
-    private final UserStatusEnum status;
+    private UserStatusEnum status;
 
     @UiColumn(label = "Created At", order = 30)
-    private final String createdAt;
+    private String createdAt;
 
     @UiColumn(label = "Updated At", order = 40)
-    private final String updatedAt;
+    private String updatedAt;
 }

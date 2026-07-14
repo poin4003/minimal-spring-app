@@ -5,18 +5,20 @@ import java.util.UUID;
 import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.enums.UiCellType;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
-@Builder
+@Setter
+@NoArgsConstructor
 public class PermissionTableRowView {
 
-    private final UUID id;
+    private UUID id;
 
     @UiColumn(label = "Key", order = 10, type = UiCellType.MONOSPACE)
-    private final String key;
+    private String key;
 
     @UiColumn(label = "Name", order = 20)
-    private final String name;
+    private String name;
 }
