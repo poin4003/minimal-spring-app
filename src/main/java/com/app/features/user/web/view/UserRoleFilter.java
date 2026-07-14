@@ -1,20 +1,20 @@
-package com.app.features.rbac.web.view;
+package com.app.features.user.web.view;
+
+import org.springframework.data.domain.Sort;
 
 import com.app.core.schema.filter.BasePageFilter;
 import com.app.features.ui.web.enums.UiAssignmentMode;
-
-import org.springframework.data.domain.Sort;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RolePermissionFilter extends BasePageFilter {
+public class UserRoleFilter extends BasePageFilter {
 
     private UiAssignmentMode mode = UiAssignmentMode.ASSIGNED;
 
-    public RolePermissionFilter() {
+    public UserRoleFilter() {
         setSortBy("key");
         setSortDirection(Sort.Direction.ASC);
     }

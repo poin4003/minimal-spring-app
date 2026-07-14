@@ -1,4 +1,4 @@
-package com.app.features.rbac.web.view;
+package com.app.features.user.web.view;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class RolePermissionPageView {
+public class UserRolePageView {
 
     public static final String ATTRIBUTE = "page";
 

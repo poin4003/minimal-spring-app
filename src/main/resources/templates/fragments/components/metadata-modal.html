@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modal(modal)"
+     class="modal fade"
+     th:id="${modal.id}"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" th:text="${modal.title}">Metadata</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <dl class="row mb-0" th:if="${!#lists.isEmpty(modal.items)}">
+                    <th:block th:each="item : ${modal.items}">
+                        <dt class="col-sm-4" th:text="${item.label}">Label</dt>
+                        <dd class="col-sm-8 mb-3">
+                            <code th:if="${item.monospace}" th:text="${item.value}">value</code>
+                            <span th:unless="${item.monospace}" th:text="${item.value}">value</span>
+                        </dd>
+                    </th:block>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

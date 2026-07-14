@@ -1,8 +1,9 @@
 package com.app.features.rbac.web.view;
 
+import com.app.features.ui.web.component.view.UiDetailModalView;
+import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiTableView;
-import com.app.features.ui.web.component.view.UiAssignmentDetailModalView;
 import com.app.features.ui.web.view.UiShellView;
 
 import lombok.Builder;
@@ -20,8 +21,10 @@ public class RoleListPageView {
     private final UiShellView shell;
     private final UiTableView roleTable;
     private final UiModalView createRoleModal;
-    private final UiAssignmentDetailModalView detailModal;
+    private final UiMetadataModalView metadataModal;
+    private final UiDetailModalView detailModal;
     private final String errorMessage;
     private final boolean openCreateRoleModal;
+    private final boolean openMetadataModal;
     private final boolean openDetailModal;
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${page.title}">Roles</title>
+    <title th:text="${page.title}">User Roles</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
@@ -44,57 +44,49 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
-                            <section class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+                            <section class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3">
                                 <div>
-                                    <p class="text-secondary mb-2">RBAC</p>
-                                    <h2 class="h3 mb-2" th:text="${page.heading}">Roles</h2>
-                                    <p class="text-secondary mb-0" th:text="${page.description}">
-                                        Create roles and review access groups available in the system.
+                                    <p class="text-secondary mb-2">User Management</p>
+                                    <h2 class="h3 mb-2" th:text="${page.heading}">User Roles</h2>
+                                    <p class="text-secondary mb-2" th:text="${page.description}">
+                                        Manage roles for the selected user.
                                     </p>
+                                    <div class="small text-secondary d-flex flex-wrap gap-3">
+                                        <span th:each="item : ${page.metadataItems}">
+                                            <span th:text="${item.label + ': '}">Label: </span>
+                                            <code th:if="${item.monospace}" th:text="${item.value}">value</code>
+                                            <span th:unless="${item.monospace}" th:text="${item.value}">value</span>
+                                        </span>
+                                    </div>
                                 </div>
 
-                                <div th:if="${page.createRoleModal != null}"
-                                     th:replace="~{fragments/components/modal :: modal(${page.createRoleModal})}"></div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <a th:href="${page.backPath}" class="btn btn-outline-secondary">Back</a>
+                                    <a th:href="${page.assignedPath}"
+                                       class="btn"
+                                       th:classappend="${page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
+                                        Assigned
+                                    </a>
+                                    <a th:href="${page.availablePath}"
+                                       class="btn"
+                                       th:classappend="${!page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
+                                        Available
+                                    </a>
+                                </div>
                             </section>
 
                             <div th:if="${page.errorMessage != null}"
                                  class="alert alert-danger mb-0"
                                  th:text="${page.errorMessage}">
-                                Please correct the form and try again.
+                                Unexpected error.
                             </div>
 
-                            <div th:replace="~{fragments/components/table :: table(${page.roleTable})}"></div>
-
-                            <th:block th:if="${page.metadataModal != null}">
-                                <div th:replace="~{fragments/components/metadata-modal :: modal(${page.metadataModal})}"></div>
-                            </th:block>
-
-                            <th:block th:if="${page.detailModal != null}">
-                                <div th:replace="~{fragments/components/detail-modal :: modal(${page.detailModal})}"></div>
-                            </th:block>
+                            <div th:replace="~{fragments/components/assignment-panel :: panel(${page.assignmentPanel})}"></div>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
     </div>
-
-    <script th:if="${page.openCreateRoleModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("create-role-modal")).show();
-        });
-    </script>
-
-    <script th:if="${page.openMetadataModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("role-metadata-modal")).show();
-        });
-    </script>
-
-    <script th:if="${page.openDetailModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("role-detail-modal")).show();
-        });
-    </script>
 </body>
 </html>

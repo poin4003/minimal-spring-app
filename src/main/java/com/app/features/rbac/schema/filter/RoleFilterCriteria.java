@@ -6,5 +6,6 @@ import lombok.Data;
 
 @Data
 public class RoleFilterCriteria {
-    UUID userId;
+    private UUID userId;
+    private UUID excludeUserId;
 }

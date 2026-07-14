@@ -3,9 +3,7 @@ package com.app.features.rbac.web.controller;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.annotation.Secured;
@@ -15,7 +13,6 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,14 +30,15 @@ import com.app.features.rbac.service.RbacService;
 import com.app.features.rbac.web.view.CreateRoleModalForm;
 import com.app.features.rbac.web.view.RoleFilter;
 import com.app.features.rbac.web.view.RoleListPageView;
-import com.app.features.ui.web.component.view.UiAssignmentDetailItemView;
-import com.app.features.ui.web.component.view.UiAssignmentDetailMetaView;
-import com.app.features.ui.web.component.view.UiAssignmentDetailModalView;
 import com.app.features.rbac.web.view.RoleTableRowView;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
+import com.app.features.ui.web.component.view.UiDetailItemView;
+import com.app.features.ui.web.component.view.UiDetailModalView;
+import com.app.features.ui.web.component.view.UiMetadataItemView;
+import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
@@ -76,6 +74,7 @@ public class RolePageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") RoleFilter filter,
+            @RequestParam(required = false) UUID metadataRoleId,
             @RequestParam(required = false) UUID detailRoleId,
             Model model) {
         model.addAttribute(
@@ -88,6 +87,8 @@ public class RolePageController {
                         null,
                         null,
                         false,
+                        metadataRoleId,
+                        metadataRoleId != null,
                         detailRoleId,
                         detailRoleId != null));
         return "rbac/role/index";
@@ -121,30 +122,10 @@ public class RolePageController {
                         "Please correct the form and try again.",
                         true,
                         null,
+                        false,
+                        null,
                         false));
         return "rbac/role/index";
-    }
-
-    @PostMapping("/{roleId}/detail/assign")
-    @Secured(PermissionConstants.RBAC_MANAGE)
-    public String assignPermissionFromDetail(
-            @PathVariable UUID roleId,
-            @RequestParam UUID permissionId) {
-        rbacService.assignPermToRole(roleId, List.of(permissionId));
-
-        return "redirect:" + appProperties.getUi().getHomePath()
-                + "/rbac/roles?detailRoleId=" + roleId;
-    }
-
-    @PostMapping("/{roleId}/detail/remove")
-    @Secured(PermissionConstants.RBAC_MANAGE)
-    public String removePermissionFromDetail(
-            @PathVariable UUID roleId,
-            @RequestParam UUID permissionId) {
-        rbacService.removePermFromRole(roleId, List.of(permissionId));
-
-        return "redirect:" + appProperties.getUi().getHomePath()
-                + "/rbac/roles?detailRoleId=" + roleId;
     }
 
     private RoleListPageView buildPage(
@@ -155,6 +136,8 @@ public class RolePageController {
             Map<String, String> modalErrors,
             String errorMessage,
             boolean openCreateRoleModal,
+            UUID metadataRoleId,
+            boolean openMetadataModal,
             UUID detailRoleId,
             boolean openDetailModal) {
         RoleFilterCriteria criteria = new RoleFilterCriteria();
@@ -162,7 +145,7 @@ public class RolePageController {
 
         var rolePage = rbacService.getManyRoles(criteria, filter.toPageable());
         List<RoleTableRowView> rows = rolePage.getContent().stream()
-                .map((RoleResult role) -> this.toRowView(role))
+                .map(role -> this.toRowView(role))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -180,9 +163,19 @@ public class RolePageController {
                 RoleTableRowView.class,
                 row -> List.of(
                         UiTableActionView.builder()
+                                .label("Metadata")
+                                .path(appProperties.getUi().getHomePath() + "/rbac/roles?metadataRoleId=" + row.getId())
+                                .buttonClass("btn-outline-secondary")
+                                .build(),
+                        UiTableActionView.builder()
                                 .label("Detail")
                                 .path(appProperties.getUi().getHomePath() + "/rbac/roles?detailRoleId=" + row.getId())
                                 .buttonClass("btn-outline-primary")
+                                .build(),
+                        UiTableActionView.builder()
+                                .label("Manage Permissions")
+                                .path(appProperties.getUi().getHomePath() + "/rbac/roles/" + row.getId() + "/permissions?mode=ASSIGNED")
+                                .buttonClass("btn-primary")
                                 .build()));
 
         UiModalView createRoleModal = uiModalFactory.build(
@@ -195,12 +188,16 @@ public class RolePageController {
                         .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles")
                         .submitLabel("Create Role")
                         .build(),
-                        CreateRoleModalForm.class,
-                        form,
-                        Map.of(),
-                        modalErrors == null ? Map.of() : modalErrors);
+                CreateRoleModalForm.class,
+                form,
+                Map.of(),
+                modalErrors == null ? Map.of() : modalErrors);
 
-        UiAssignmentDetailModalView detailModal = detailRoleId == null
+        UiMetadataModalView metadataModal = metadataRoleId == null
+                ? null
+                : buildRoleMetadataModal(metadataRoleId);
+
+        UiDetailModalView detailModal = detailRoleId == null
                 ? null
                 : buildRoleDetailModal(detailRoleId);
 
@@ -211,86 +208,57 @@ public class RolePageController {
                 .shell(buildShell(currentUser, request))
                 .roleTable(roleTable)
                 .createRoleModal(createRoleModal)
+                .metadataModal(metadataModal)
                 .detailModal(detailModal)
                 .errorMessage(errorMessage)
                 .openCreateRoleModal(openCreateRoleModal)
-                .openDetailModal(openDetailModal)
+                .openMetadataModal(openMetadataModal && metadataModal != null)
+                .openDetailModal(openDetailModal && detailModal != null)
                 .build();
     }
 
-    private UiAssignmentDetailModalView buildRoleDetailModal(UUID roleId) {
+    private UiMetadataModalView buildRoleMetadataModal(UUID roleId) {
         RoleResult role = rbacService.getRole(roleId);
 
-        PermissionFilterCriteria assignedCriteria = new PermissionFilterCriteria();
-        assignedCriteria.setRoleId(roleId);
+        return UiMetadataModalView.builder()
+                .id("role-metadata-modal")
+                .title("Role Metadata")
+                .items(List.of(
+                        UiMetadataItemView.builder()
+                                .label("Role Key")
+                                .value(role.getKey())
+                                .monospace(true)
+                                .build(),
+                        UiMetadataItemView.builder()
+                                .label("Role Name")
+                                .value(role.getName())
+                                .monospace(false)
+                                .build()))
+                .build();
+    }
 
-        List<PermissionResult> assignedPermissions = rbacService.getManyPermissions(
-                assignedCriteria,
-                Pageable.unpaged())
-                .getContent();
+    private UiDetailModalView buildRoleDetailModal(UUID roleId) {
+        PermissionFilterCriteria criteria = new PermissionFilterCriteria();
+        criteria.setRoleId(roleId);
 
-        Set<UUID> assignedPermissionIds = assignedPermissions.stream()
-                .map((PermissionResult permission) -> permission.getId())
-                .collect(Collectors.toSet());
-
-        List<PermissionResult> allPermissions = rbacService.getManyPermissions(
-                new PermissionFilterCriteria(),
-                Pageable.unpaged())
+        List<UiDetailItemView> items = rbacService.getManyPermissions(criteria, Pageable.unpaged())
                 .getContent()
                 .stream()
                 .sorted(Comparator.comparing(
                         (PermissionResult permission) -> permission.getKey(),
                         String.CASE_INSENSITIVE_ORDER))
-                .toList();
-
-        List<UiAssignmentDetailItemView> assignedItems = assignedPermissions.stream()
-                .sorted(Comparator.comparing(
-                        (PermissionResult permission) -> permission.getKey(),
-                        String.CASE_INSENSITIVE_ORDER))
-                .map(permission -> UiAssignmentDetailItemView.builder()
+                .map(permission -> UiDetailItemView.builder()
                         .title(permission.getKey())
                         .description(permission.getName())
-                        .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/detail/remove")
-                        .actionLabel("Remove")
-                        .actionButtonClass("btn-outline-danger")
-                        .hiddenFieldName("permissionId")
-                        .hiddenFieldValue(permission.getId().toString())
                         .build())
                 .toList();
 
-        List<UiAssignmentDetailItemView> availableItems = allPermissions.stream()
-                .filter(permission -> !assignedPermissionIds.contains(permission.getId()))
-                .map(permission -> UiAssignmentDetailItemView.builder()
-                        .title(permission.getKey())
-                        .description(permission.getName())
-                        .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/detail/assign")
-                        .actionLabel("Assign")
-                        .actionButtonClass("btn-outline-primary")
-                        .hiddenFieldName("permissionId")
-                        .hiddenFieldValue(permission.getId().toString())
-                        .build())
-                .toList();
-
-        return UiAssignmentDetailModalView.builder()
+        return UiDetailModalView.builder()
                 .id("role-detail-modal")
                 .title("Role Detail")
-                .metadata(List.of(
-                        UiAssignmentDetailMetaView.builder()
-                                .label("Role Key")
-                                .value(role.getKey())
-                                .monospace(true)
-                                .build(),
-                        UiAssignmentDetailMetaView.builder()
-                                .label("Role Name")
-                                .value(role.getName())
-                                .monospace(false)
-                                .build()))
-                .assignedTitle("Assigned Permissions")
-                .assignedEmptyMessage("No permissions assigned.")
-                .assignedItems(assignedItems)
-                .availableTitle("Available Permissions")
-                .availableEmptyMessage("All permissions are already assigned.")
-                .availableItems(availableItems)
+                .listTitle("Assigned Permissions")
+                .items(items)
+                .emptyMessage("No permissions assigned.")
                 .build();
     }
 

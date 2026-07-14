@@ -13,6 +13,8 @@ import com.app.features.user.entity.UserBaseEntity_;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 
 public class RoleSpecification {
 
@@ -23,6 +25,17 @@ public class RoleSpecification {
             if (criteria.getUserId() != null) {
                 Join<RoleEntity, UserBaseEntity> userJoin = root.join(RoleEntity_.users);
                 predicates.add(cb.equal(userJoin.get(UserBaseEntity_.id), criteria.getUserId()));
+            }
+
+            if (criteria.getExcludeUserId() != null && query != null) {
+                Subquery<java.util.UUID> subquery = query.subquery(java.util.UUID.class);
+                Root<UserBaseEntity> userRoot = subquery.from(UserBaseEntity.class);
+                Join<UserBaseEntity, RoleEntity> roleJoin = userRoot.join(UserBaseEntity_.roles);
+
+                subquery.select(roleJoin.get(RoleEntity_.id))
+                        .where(cb.equal(userRoot.get(UserBaseEntity_.id), criteria.getExcludeUserId()));
+
+                predicates.add(cb.not(root.get(RoleEntity_.id).in(subquery)));
             }
 
             if (query != null) {

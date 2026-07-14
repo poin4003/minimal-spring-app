@@ -49,9 +49,17 @@
 - When building server-rendered UI pages, prefer composing from shared reusable components instead of rewriting table, modal, and pagination markup per page.
 - Shared UI components should stay centered around the common Java component models and factories such as `UiTable*`, `UiModal*`, and `UiPagination*`.
 - If a new UI page needs a listing view, modal form, or paging bar, the default direction is to reuse these components first and only fall back to page-specific HTML when the shared component truly does not fit.
-- For assignment-style UI flows such as assigning permissions to roles or roles to users, prefer a shared structured modal/component instead of duplicating near-identical assign/remove markup.
+- For assignment-style UI flows such as assigning permissions to roles or roles to users, prefer shared page fragments and structured page models instead of pushing those workflows into heavy modals.
 - Component inputs should also stay Java/OOP oriented, meaning annotated classes, structured view models, and factories are preferred over ad-hoc maps or loose template variables.
 - UI descriptions, helper text, and table subtitles should describe the business function of the page or table, not mention internal implementation details such as shared or reusable components.
+
+## UI/UX Rule
+- For server-rendered UI pages, use modals only for simple flows such as create, update, metadata display, and lightweight detail display.
+- If an action contains repeated state changes, larger datasets, or workflow-style navigation, prefer a dedicated page instead of a modal.
+- Keep metadata display and detail display as separate UI concerns when they serve different purposes.
+- If a page needs both metadata and related-item detail, prefer separate actions and separate modals instead of merging them into one heavy modal.
+- For complex assignment screens, reuse the existing paging stack based on `BasePageFilter`, `UiPaginationPathBuilder`, and `UiPaginationFactory` instead of creating a separate UI-only paging system.
+- Do not hide UI actions based on permissions at the Thymeleaf layer for now; let secured routes return `403` when the current user is not allowed.
 
 ## Exception Handling Rule
 - Keep `details` and `fieldErrors` as separate properties in custom exceptions; do not overload `details` to carry field-level validation state.

@@ -65,8 +65,12 @@
 
                             <div th:replace="~{fragments/components/table :: table(${page.userTable})}"></div>
 
+                            <th:block th:if="${page.metadataModal != null}">
+                                <div th:replace="~{fragments/components/metadata-modal :: modal(${page.metadataModal})}"></div>
+                            </th:block>
+
                             <th:block th:if="${page.detailModal != null}">
-                                <div th:replace="~{fragments/components/assignment-detail-modal :: modal(${page.detailModal})}"></div>
+                                <div th:replace="~{fragments/components/detail-modal :: modal(${page.detailModal})}"></div>
                             </th:block>
                         </div>
                     </div>
@@ -81,9 +85,15 @@
         });
     </script>
 
+    <script th:if="${page.openMetadataModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("user-metadata-modal")).show();
+        });
+    </script>
+
     <script th:if="${page.openDetailModal}">
         document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("user-role-detail-modal")).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("user-detail-modal")).show();
         });
     </script>
 </body>

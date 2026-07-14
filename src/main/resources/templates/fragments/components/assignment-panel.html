@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="panel(panel)" class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <div class="p-4 border-bottom">
+            <h2 class="h5 mb-2" th:text="${panel.title}">Assignment</h2>
+            <p class="text-secondary mb-0" th:text="${panel.description}">Description</p>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(panel.rows)}" class="list-group list-group-flush">
+            <div th:each="row : ${panel.rows}"
+                 class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <div class="fw-semibold" th:text="${row.title}">TITLE</div>
+                    <div class="small text-secondary" th:text="${row.description}">Description</div>
+                </div>
+
+                <form method="post" th:action="${row.actionPath}" class="mb-0">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input th:each="hiddenField : ${row.hiddenFields.entrySet()}"
+                           type="hidden"
+                           th:name="${hiddenField.key}"
+                           th:value="${hiddenField.value}">
+                    <button type="submit"
+                            class="btn btn-sm"
+                            th:classappend="${' ' + row.actionButtonClass}"
+                            th:text="${row.actionLabel}">
+                        Action
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(panel.rows)}"
+             class="p-4 text-secondary"
+             th:text="${panel.emptyMessage}">
+            No items.
+        </div>
+
+        <div th:if="${panel.pagination != null and panel.pagination.totalPages > 1}"
+             class="d-flex justify-content-end p-3 border-top">
+            <div th:replace="~{fragments/components/pagination :: pagination(${panel.pagination})}"></div>
+        </div>
+    </div>
+</section>
+</body>
+</html>

@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UiAssignmentDetailMetaView {
+public class UiMetadataItemView {
 
     private final String label;
     private final String value;

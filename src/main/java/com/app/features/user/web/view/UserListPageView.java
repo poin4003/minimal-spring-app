@@ -1,8 +1,9 @@
 package com.app.features.user.web.view;
 
+import com.app.features.ui.web.component.view.UiDetailModalView;
+import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiTableView;
-import com.app.features.ui.web.component.view.UiAssignmentDetailModalView;
 import com.app.features.ui.web.view.UiShellView;
 
 import lombok.Builder;
@@ -20,8 +21,10 @@ public class UserListPageView {
     private final UiShellView shell;
     private final UiTableView userTable;
     private final UiModalView createUserModal;
-    private final UiAssignmentDetailModalView detailModal;
+    private final UiMetadataModalView metadataModal;
+    private final UiDetailModalView detailModal;
     private final String errorMessage;
     private final boolean openCreateUserModal;
+    private final boolean openMetadataModal;
     private final boolean openDetailModal;
 }
