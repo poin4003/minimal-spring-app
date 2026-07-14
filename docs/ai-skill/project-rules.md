@@ -44,6 +44,8 @@
 - Thymeleaf templates should prefer reading structured fields such as `page.title`, `page.shell.currentUser.email`, or `page.shell.menuTree`.
 - Framework-provided attributes such as `_csrf` are exceptions and may continue to be used directly.
 - When building UI pages, prefer Java-style OOP view models over loose key-value model assembly.
+- Separate business filter objects from paging and query-state objects; do not merge them into one DTO by default.
+- Paging, sorting, and mode-switch state should prefer dedicated Java query classes over extending business filters for convenience.
 
 ## UI Component Reuse Rule
 - When building server-rendered UI pages, prefer composing from shared reusable components instead of rewriting table, modal, and pagination markup per page.
@@ -60,6 +62,8 @@
 - If a page needs both metadata and related-item detail, prefer separate actions and separate modals instead of merging them into one heavy modal.
 - For complex assignment screens, reuse the existing paging stack based on `BasePageFilter`, `UiPaginationPathBuilder`, and `UiPaginationFactory` instead of creating a separate UI-only paging system.
 - Do not hide UI actions based on permissions at the Thymeleaf layer for now; let secured routes return `403` when the current user is not allowed.
+- Do not use ad-hoc `Map<String, String>` structures for UI hidden fields, UI action payloads, or query-state transport.
+- For Thymeleaf interaction state such as paging, sorting, mode switching, and post-back context, prefer dedicated Java classes such as `Ui...Query`, `Ui...Action`, or `Ui...State`.
 
 ## Exception Handling Rule
 - Keep `details` and `fieldErrors` as separate properties in custom exceptions; do not overload `details` to carry field-level validation state.

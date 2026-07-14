@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -15,11 +16,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.core.schema.query.UiPageDefaults;
+import com.app.core.schema.query.UiPageQuery;
 import com.app.features.rbac.schema.result.RoleResult;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
@@ -35,6 +39,8 @@ import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableActionView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
+import com.app.features.ui.web.enums.UiAssignmentMode;
+import com.app.features.ui.web.query.UiAssignmentPageQuery;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
 import com.app.features.ui.web.view.UiCurrentUserView;
@@ -57,6 +63,20 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${app.ui.home-path:/admin}/users")
 public class UserPageController {
 
+    private static final UiPageDefaults USER_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("createdAt")
+            .sortDirection(Sort.Direction.DESC)
+            .build();
+
+    private static final UiPageDefaults USER_ROLE_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("key")
+            .sortDirection(Sort.Direction.ASC)
+            .build();
+
     private final AppProperties appProperties;
     private final MenuService menuService;
     private final UserService userService;
@@ -72,6 +92,7 @@ public class UserPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") UserFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
             @RequestParam(required = false) UUID metadataUserId,
             @RequestParam(required = false) UUID detailUserId,
             Model model) {
@@ -81,6 +102,7 @@ public class UserPageController {
                         currentUser,
                         request,
                         filter,
+                        query,
                         new CreateUserModalForm(),
                         null,
                         null,
@@ -98,6 +120,7 @@ public class UserPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") UserFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
             @Valid @ModelAttribute("form") CreateUserModalForm form,
             BindingResult bindingResult,
             Model model) {
@@ -115,6 +138,7 @@ public class UserPageController {
                         currentUser,
                         request,
                         filter,
+                        query,
                         form,
                         submitResult.fieldErrors(),
                         "Please correct the form and try again.",
@@ -130,6 +154,7 @@ public class UserPageController {
             UserPrincipal currentUser,
             HttpServletRequest request,
             UserFilter filter,
+            UiPageQuery query,
             CreateUserModalForm form,
             Map<String, String> modalErrors,
             String errorMessage,
@@ -138,14 +163,14 @@ public class UserPageController {
             boolean openMetadataModal,
             UUID detailUserId,
             boolean openDetailModal) {
-        var userPage = userService.getManyUser(filter.toPageable());
+        var userPage = userService.getManyUser(query.toPageable(USER_PAGE_DEFAULTS));
         List<UserTableRowView> rows = userPage.getContent().stream()
                 .map(result -> this.toRowView(result))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 userPage,
-                uiPaginationPathBuilder.build(request, filter));
+                uiPaginationPathBuilder.build(request, query, USER_PAGE_DEFAULTS));
 
         UiTableView userTable = uiTableFactory.build(
                 UiTableDefinition.builder()
@@ -159,17 +184,17 @@ public class UserPageController {
                 row -> List.of(
                         UiTableActionView.builder()
                                 .label("Metadata")
-                                .path(appProperties.getUi().getHomePath() + "/users?metadataUserId=" + row.getId())
+                                .path(buildMetadataPath(row.getId(), query))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Detail")
-                                .path(appProperties.getUi().getHomePath() + "/users?detailUserId=" + row.getId())
+                                .path(buildDetailPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Manage Roles")
-                                .path(appProperties.getUi().getHomePath() + "/users/" + row.getId() + "/roles?mode=ASSIGNED")
+                                .path(buildManageRolesPath(row.getId()))
                                 .buttonClass("btn-primary")
                                 .build()));
 
@@ -295,5 +320,35 @@ public class UserPageController {
                 .createdAt(result.getCreatedAt())
                 .updatedAt(result.getUpdatedAt())
                 .build();
+    }
+
+    private String buildMetadataPath(UUID userId, UiPageQuery query) {
+        return UriComponentsBuilder.fromUriString(query.toUri(
+                appProperties.getUi().getHomePath() + "/users",
+                USER_PAGE_DEFAULTS))
+                .replaceQueryParam("detailUserId")
+                .replaceQueryParam("metadataUserId", userId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildDetailPath(UUID userId, UiPageQuery query) {
+        return UriComponentsBuilder.fromUriString(query.toUri(
+                appProperties.getUi().getHomePath() + "/users",
+                USER_PAGE_DEFAULTS))
+                .replaceQueryParam("metadataUserId")
+                .replaceQueryParam("detailUserId", userId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildManageRolesPath(UUID userId) {
+        UiAssignmentPageQuery query = new UiAssignmentPageQuery();
+        query.setMode(UiAssignmentMode.ASSIGNED);
+        return query.toUri(
+                appProperties.getUi().getHomePath() + "/users/" + userId + "/roles",
+                USER_ROLE_PAGE_DEFAULTS);
     }
 }

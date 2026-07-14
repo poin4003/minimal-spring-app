@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -14,6 +15,8 @@ import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.core.schema.query.UiPageDefaults;
+import com.app.core.schema.query.UiPageQuery;
 import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 import com.app.features.rbac.schema.result.PermissionResult;
 import com.app.features.rbac.service.RbacService;
@@ -38,6 +41,13 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${app.ui.home-path:/admin}/rbac/permissions")
 public class PermissionPageController {
 
+    private static final UiPageDefaults PERMISSION_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("key")
+            .sortDirection(Sort.Direction.ASC)
+            .build();
+
     private final AppProperties appProperties;
     private final MenuService menuService;
     private final RbacService rbacService;
@@ -51,28 +61,30 @@ public class PermissionPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") PermissionFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
             Model model) {
         model.addAttribute(
                 PermissionListPageView.ATTRIBUTE,
-                buildPage(currentUser, request, filter));
+                buildPage(currentUser, request, filter, query));
         return "rbac/permission/index";
     }
 
     private PermissionListPageView buildPage(
             UserPrincipal currentUser,
             HttpServletRequest request,
-            PermissionFilter filter) {
+            PermissionFilter filter,
+            UiPageQuery query) {
         PermissionFilterCriteria criteria = new PermissionFilterCriteria();
         criteria.setRoleId(filter.getRoleId());
 
-        var permissionPage = rbacService.getManyPermissions(criteria, filter.toPageable());
+        var permissionPage = rbacService.getManyPermissions(criteria, query.toPageable(PERMISSION_PAGE_DEFAULTS));
         List<PermissionTableRowView> rows = permissionPage.getContent().stream()
                 .map((PermissionResult permission) -> this.toRowView(permission))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 permissionPage,
-                uiPaginationPathBuilder.build(request, filter));
+                uiPaginationPathBuilder.build(request, query, PERMISSION_PAGE_DEFAULTS));
 
         UiTableView permissionTable = uiTableFactory.build(
                 UiTableDefinition.builder()

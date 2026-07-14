@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -16,11 +17,14 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.core.schema.query.UiPageDefaults;
+import com.app.core.schema.query.UiPageQuery;
 import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 import com.app.features.rbac.schema.filter.RoleFilterCriteria;
 import com.app.features.rbac.schema.payload.CreateRolePayload;
@@ -45,6 +49,8 @@ import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableActionView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
+import com.app.features.ui.web.enums.UiAssignmentMode;
+import com.app.features.ui.web.query.UiAssignmentPageQuery;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
 import com.app.features.ui.web.view.UiCurrentUserView;
@@ -58,6 +64,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/rbac/roles")
 public class RolePageController {
+
+    private static final UiPageDefaults ROLE_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("key")
+            .sortDirection(Sort.Direction.ASC)
+            .build();
+
+    private static final UiPageDefaults ROLE_ASSIGNMENT_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("key")
+            .sortDirection(Sort.Direction.ASC)
+            .build();
 
     private final AppProperties appProperties;
     private final MenuService menuService;
@@ -74,6 +94,7 @@ public class RolePageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") RoleFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
             @RequestParam(required = false) UUID metadataRoleId,
             @RequestParam(required = false) UUID detailRoleId,
             Model model) {
@@ -83,6 +104,7 @@ public class RolePageController {
                         currentUser,
                         request,
                         filter,
+                        query,
                         new CreateRoleModalForm(),
                         null,
                         null,
@@ -100,6 +122,7 @@ public class RolePageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") RoleFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
             @Valid @ModelAttribute("form") CreateRoleModalForm form,
             BindingResult bindingResult,
             Model model) {
@@ -117,6 +140,7 @@ public class RolePageController {
                         currentUser,
                         request,
                         filter,
+                        query,
                         form,
                         submitResult.fieldErrors(),
                         "Please correct the form and try again.",
@@ -132,6 +156,7 @@ public class RolePageController {
             UserPrincipal currentUser,
             HttpServletRequest request,
             RoleFilter filter,
+            UiPageQuery query,
             CreateRoleModalForm form,
             Map<String, String> modalErrors,
             String errorMessage,
@@ -143,14 +168,14 @@ public class RolePageController {
         RoleFilterCriteria criteria = new RoleFilterCriteria();
         criteria.setUserId(filter.getUserId());
 
-        var rolePage = rbacService.getManyRoles(criteria, filter.toPageable());
+        var rolePage = rbacService.getManyRoles(criteria, query.toPageable(ROLE_PAGE_DEFAULTS));
         List<RoleTableRowView> rows = rolePage.getContent().stream()
                 .map(role -> this.toRowView(role))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 rolePage,
-                uiPaginationPathBuilder.build(request, filter));
+                uiPaginationPathBuilder.build(request, query, ROLE_PAGE_DEFAULTS));
 
         UiTableView roleTable = uiTableFactory.build(
                 UiTableDefinition.builder()
@@ -164,17 +189,17 @@ public class RolePageController {
                 row -> List.of(
                         UiTableActionView.builder()
                                 .label("Metadata")
-                                .path(appProperties.getUi().getHomePath() + "/rbac/roles?metadataRoleId=" + row.getId())
+                                .path(buildMetadataPath(row.getId(), query))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Detail")
-                                .path(appProperties.getUi().getHomePath() + "/rbac/roles?detailRoleId=" + row.getId())
+                                .path(buildDetailPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Manage Permissions")
-                                .path(appProperties.getUi().getHomePath() + "/rbac/roles/" + row.getId() + "/permissions?mode=ASSIGNED")
+                                .path(buildManagePermissionsPath(row.getId()))
                                 .buttonClass("btn-primary")
                                 .build()));
 
@@ -275,6 +300,36 @@ public class RolePageController {
                 .key(result.getKey())
                 .name(result.getName())
                 .build();
+    }
+
+    private String buildMetadataPath(String roleId, UiPageQuery query) {
+        return UriComponentsBuilder.fromUriString(query.toUri(
+                appProperties.getUi().getHomePath() + "/rbac/roles",
+                ROLE_PAGE_DEFAULTS))
+                .replaceQueryParam("detailRoleId")
+                .replaceQueryParam("metadataRoleId", roleId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildDetailPath(String roleId, UiPageQuery query) {
+        return UriComponentsBuilder.fromUriString(query.toUri(
+                appProperties.getUi().getHomePath() + "/rbac/roles",
+                ROLE_PAGE_DEFAULTS))
+                .replaceQueryParam("metadataRoleId")
+                .replaceQueryParam("detailRoleId", roleId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildManagePermissionsPath(String roleId) {
+        UiAssignmentPageQuery query = new UiAssignmentPageQuery();
+        query.setMode(UiAssignmentMode.ASSIGNED);
+        return query.toUri(
+                appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions",
+                ROLE_ASSIGNMENT_PAGE_DEFAULTS);
     }
 
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {

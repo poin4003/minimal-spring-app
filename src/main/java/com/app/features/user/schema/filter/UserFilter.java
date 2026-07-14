@@ -1,9 +1,7 @@
 package com.app.features.user.schema.filter;
 
-import org.springframework.data.domain.Sort;
 import org.springframework.util.StringUtils;
 
-import com.app.core.schema.filter.BasePageFilter;
 import com.app.features.user.enums.UserStatusEnum;
 
 import jakarta.validation.constraints.Size;
@@ -12,17 +10,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserFilter extends BasePageFilter {
+public class UserFilter {
 
     @Size(max = 100, message = "Keyword must be less than or equal to 100 characters")
     private String keyword;
 
     private UserStatusEnum status;
-
-    public UserFilter() {
-        setSortBy("createdAt");
-        setSortDirection(Sort.Direction.DESC);
-    }
 
     public boolean hasKeyword() {
         return StringUtils.hasText(keyword);

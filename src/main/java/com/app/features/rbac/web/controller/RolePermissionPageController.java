@@ -1,10 +1,9 @@
 package com.app.features.rbac.web.controller;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -15,25 +14,26 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.core.schema.query.UiPageDefaults;
 import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 import com.app.features.rbac.schema.result.PermissionResult;
 import com.app.features.rbac.schema.result.RoleResult;
 import com.app.features.rbac.service.RbacService;
-import com.app.features.rbac.web.view.RolePermissionFilter;
 import com.app.features.rbac.web.view.RolePermissionPageView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
+import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.enums.UiAssignmentMode;
+import com.app.features.ui.web.query.UiAssignmentPageQuery;
 import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
@@ -45,6 +45,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/rbac/roles/{roleId}/permissions")
 public class RolePermissionPageController {
+
+    private static final UiPageDefaults ROLE_PERMISSION_PAGE_DEFAULTS = UiPageDefaults.builder()
+            .page(0)
+            .size(10)
+            .sortBy("key")
+            .sortDirection(Sort.Direction.ASC)
+            .build();
 
     private final AppProperties appProperties;
     private final MenuService menuService;
@@ -58,11 +65,11 @@ public class RolePermissionPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @PathVariable UUID roleId,
-            @Valid @ModelAttribute("filter") RolePermissionFilter filter,
+            @Valid @ModelAttribute("query") UiAssignmentPageQuery query,
             Model model) {
         model.addAttribute(
                 RolePermissionPageView.ATTRIBUTE,
-                buildPage(currentUser, request, roleId, filter, null));
+                buildPage(currentUser, request, roleId, query, null));
         return "rbac/role-permission/index";
     }
 
@@ -70,40 +77,43 @@ public class RolePermissionPageController {
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String assign(
             @PathVariable UUID roleId,
-            @RequestParam UUID permissionId,
-            @Valid @ModelAttribute("filter") RolePermissionFilter filter) {
-        rbacService.assignPermToRole(roleId, List.of(permissionId));
-        return "redirect:" + buildRedirectPath(roleId, filter);
+            @RequestParam UUID targetId,
+            @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
+        rbacService.assignPermToRole(roleId, List.of(targetId));
+        return "redirect:" + buildRedirectPath(roleId, query);
     }
 
     @PostMapping("/remove")
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String remove(
             @PathVariable UUID roleId,
-            @RequestParam UUID permissionId,
-            @Valid @ModelAttribute("filter") RolePermissionFilter filter) {
-        rbacService.removePermFromRole(roleId, List.of(permissionId));
-        return "redirect:" + buildRedirectPath(roleId, filter);
+            @RequestParam UUID targetId,
+            @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
+        rbacService.removePermFromRole(roleId, List.of(targetId));
+        return "redirect:" + buildRedirectPath(roleId, query);
     }
 
     private RolePermissionPageView buildPage(
             UserPrincipal currentUser,
             HttpServletRequest request,
             UUID roleId,
-            RolePermissionFilter filter,
+            UiAssignmentPageQuery query,
             String errorMessage) {
+        UiAssignmentPageQuery resolvedQuery = query.applyDefaults(ROLE_PERMISSION_PAGE_DEFAULTS);
         RoleResult role = rbacService.getRole(roleId);
-        boolean assignedMode = filter.getMode() == UiAssignmentMode.ASSIGNED;
+        boolean assignedMode = resolvedQuery.getMode() == UiAssignmentMode.ASSIGNED;
 
         PermissionFilterCriteria criteria = assignedMode
                 ? buildAssignedCriteria(roleId)
                 : buildAvailableCriteria(roleId);
 
-        var permissionPage = rbacService.getManyPermissions(criteria, filter.toPageable());
+        var permissionPage = rbacService.getManyPermissions(
+                criteria,
+                resolvedQuery.toPageable(ROLE_PERMISSION_PAGE_DEFAULTS));
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 permissionPage,
-                uiPaginationPathBuilder.build(request, filter));
+                uiPaginationPathBuilder.build(request, resolvedQuery, ROLE_PERMISSION_PAGE_DEFAULTS));
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .title(assignedMode ? "Assigned Permissions" : "Available Permissions")
@@ -114,7 +124,7 @@ public class RolePermissionPageController {
                         ? "No permissions assigned."
                         : "No permissions available.")
                 .rows(permissionPage.getContent().stream()
-                        .map(permission -> this.toPanelItem(roleId, filter, assignedMode, permission))
+                        .map(permission -> this.toPanelItem(roleId, resolvedQuery, assignedMode, permission))
                         .toList())
                 .pagination(pagination)
                 .build();
@@ -136,8 +146,8 @@ public class RolePermissionPageController {
                                 .build()))
                 .shell(buildShell(currentUser, request))
                 .backPath(appProperties.getUi().getHomePath() + "/rbac/roles")
-                .assignedPath(buildModePath(roleId, filter, UiAssignmentMode.ASSIGNED))
-                .availablePath(buildModePath(roleId, filter, UiAssignmentMode.AVAILABLE))
+                .assignedPath(buildModePath(roleId, resolvedQuery, UiAssignmentMode.ASSIGNED))
+                .availablePath(buildModePath(roleId, resolvedQuery, UiAssignmentMode.AVAILABLE))
                 .assignedMode(assignedMode)
                 .assignmentPanel(assignmentPanel)
                 .errorMessage(errorMessage)
@@ -158,56 +168,34 @@ public class RolePermissionPageController {
 
     private UiAssignmentPanelItemView toPanelItem(
             UUID roleId,
-            RolePermissionFilter filter,
+            UiAssignmentPageQuery query,
             boolean assignedMode,
             PermissionResult permission) {
         return UiAssignmentPanelItemView.builder()
                 .title(permission.getKey())
                 .description(permission.getName())
-                .actionPath(assignedMode
-                        ? appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/remove"
-                        : appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/assign")
-                .actionLabel(assignedMode ? "Remove" : "Assign")
-                .actionButtonClass(assignedMode ? "btn-outline-danger" : "btn-outline-primary")
-                .hiddenFields(buildHiddenFields("permissionId", permission.getId().toString(), filter))
+                .action(UiAssignmentActionView.builder()
+                        .path(assignedMode
+                                ? appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/remove"
+                                : appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/assign")
+                        .label(assignedMode ? "Remove" : "Assign")
+                        .buttonClass(assignedMode ? "btn-outline-danger" : "btn-outline-primary")
+                        .targetId(permission.getId().toString())
+                        .query(query)
+                        .build())
                 .build();
     }
 
-    private Map<String, String> buildHiddenFields(
-            String targetFieldName,
-            String targetFieldValue,
-            RolePermissionFilter filter) {
-        LinkedHashMap<String, String> hiddenFields = new LinkedHashMap<>();
-        hiddenFields.put(targetFieldName, targetFieldValue);
-        hiddenFields.put("mode", filter.getMode().name());
-        hiddenFields.put("page", String.valueOf(filter.getPage()));
-        hiddenFields.put("size", String.valueOf(filter.getSize()));
-        hiddenFields.put("sortBy", filter.getSortBy());
-        hiddenFields.put("sortDirection", filter.getSortDirection().name());
-        return hiddenFields;
+    private String buildRedirectPath(UUID roleId, UiAssignmentPageQuery query) {
+        return query.toUri(
+                appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions",
+                ROLE_PERMISSION_PAGE_DEFAULTS);
     }
 
-    private String buildRedirectPath(UUID roleId, RolePermissionFilter filter) {
-        return UriComponentsBuilder.fromPath(appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions")
-                .queryParam("mode", filter.getMode().name())
-                .queryParam("page", filter.getPage())
-                .queryParam("size", filter.getSize())
-                .queryParam("sortBy", filter.getSortBy())
-                .queryParam("sortDirection", filter.getSortDirection().name())
-                .build()
-                .encode()
-                .toUriString();
-    }
-
-    private String buildModePath(UUID roleId, RolePermissionFilter filter, UiAssignmentMode mode) {
-        return UriComponentsBuilder.fromPath(appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions")
-                .queryParam("mode", mode.name())
-                .queryParam("size", filter.getSize())
-                .queryParam("sortBy", filter.getSortBy())
-                .queryParam("sortDirection", filter.getSortDirection().name())
-                .build()
-                .encode()
-                .toUriString();
+    private String buildModePath(UUID roleId, UiAssignmentPageQuery query, UiAssignmentMode mode) {
+        return query.forMode(mode).toUri(
+                appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions",
+                ROLE_PERMISSION_PAGE_DEFAULTS);
     }
 
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
