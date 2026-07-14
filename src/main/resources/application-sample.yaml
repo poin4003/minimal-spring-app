@@ -39,6 +39,7 @@ app:
             - /api/**
             - /h2-console/**
             - /admin/users/**
+            - /admin/rbac/**
     ui:
         login-path: /login
         home-path: /admin

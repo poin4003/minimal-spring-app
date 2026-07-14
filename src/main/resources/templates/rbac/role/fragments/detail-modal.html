@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modal(modal)"
+     class="modal fade"
+     th:id="${modal.id}"
+     tabindex="-1"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title fs-5 mb-1" th:text="${modal.title}">
+                        Role Detail
+                    </h2>
+                    <p class="text-secondary small mb-0">
+                        <span class="me-3">
+                            Role Key:
+                            <code th:text="${modal.roleKey}">SUPER_ADMIN</code>
+                        </span>
+                        <span>
+                            Role Name:
+                            <span th:text="${modal.roleName}">Super Admin</span>
+                        </span>
+                    </p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h3 class="h6 mb-3">Assigned Permissions</h3>
+
+                        <div class="list-group" th:if="${!#lists.isEmpty(modal.assignedPermissions)}">
+                            <div th:each="item : ${modal.assignedPermissions}"
+                                 class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold" th:text="${item.key}">RBAC:MANAGE</div>
+                                    <div class="small text-secondary" th:text="${item.name}">
+                                        Permission RBAC:MANAGE
+                                    </div>
+                                </div>
+
+                                <form method="post" th:action="${item.actionPath}" class="mb-0">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <input type="hidden" name="permissionId" th:value="${item.permissionId}">
+                                    <button type="submit"
+                                            class="btn btn-sm"
+                                            th:classappend="${' ' + item.actionButtonClass}"
+                                            th:text="${item.actionLabel}">
+                                        Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(modal.assignedPermissions)}"
+                             class="text-secondary small">
+                            No permissions assigned.
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <h3 class="h6 mb-3">Available Permissions</h3>
+
+                        <div class="list-group" th:if="${!#lists.isEmpty(modal.availablePermissions)}">
+                            <div th:each="item : ${modal.availablePermissions}"
+                                 class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                                <div>
+                                    <div class="fw-semibold" th:text="${item.key}">USER:VIEW</div>
+                                    <div class="small text-secondary" th:text="${item.name}">
+                                        Permission USER:VIEW
+                                    </div>
+                                </div>
+
+                                <form method="post" th:action="${item.actionPath}" class="mb-0">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <input type="hidden" name="permissionId" th:value="${item.permissionId}">
+                                    <button type="submit"
+                                            class="btn btn-sm"
+                                            th:classappend="${' ' + item.actionButtonClass}"
+                                            th:text="${item.actionLabel}">
+                                        Assign
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div th:if="${#lists.isEmpty(modal.availablePermissions)}"
+                             class="text-secondary small">
+                            All permissions are already assigned.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

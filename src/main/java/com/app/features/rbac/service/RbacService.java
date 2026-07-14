@@ -19,6 +19,8 @@ public interface RbacService {
 
     void deleteRole(UUID roleId);
 
+    RoleResult getRole(UUID roleId);
+
     RoleResult updateRole(UUID roleId, UpdateRolePayload payload);
 
     void assignRoleToUser(UUID userId, List<UUID> roleIds);

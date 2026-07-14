@@ -58,7 +58,7 @@ public class RbacController {
         return ApiResult.ok(result, "Create role success!");
     }
 
-    @PatchMapping("/role/{id}")
+    @PatchMapping("/role/{roleId}")
     public ApiResult<RoleResult> updateRole(
             @PathVariable UUID roleId,
             @Valid @RequestBody UpdateRolePayload req) {
@@ -67,7 +67,7 @@ public class RbacController {
         return ApiResult.ok(result, "Update role sucess!");
     }
 
-    @DeleteMapping("/role")
+    @DeleteMapping("/role/{roleId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ApiResult<Void> deleteRole(
             @PathVariable UUID roleId) {
@@ -112,16 +112,16 @@ public class RbacController {
         return ApiResult.ok(null, "Remove roles from user success!");
     }
 
-    @PostMapping("assign-permissions")
+    @PostMapping("/assign-permissions")
     public ApiResult<Void> assignPermissionsToRole(@Valid @RequestBody RolePermissionsPayload req) {
         rbacSvc.assignPermToRole(req.getRoleId(), req.getPermIds());
 
         return ApiResult.ok(null, "Assign permission to role success!");
     }
 
-    @PostMapping("remove-permissions")
+    @PostMapping("/remove-permissions")
     public ApiResult<Void> removePermissionsFromRole(@Valid @RequestBody RolePermissionsPayload req) {
-        rbacSvc.assignPermToRole(req.getRoleId(), req.getPermIds());
+        rbacSvc.removePermFromRole(req.getRoleId(), req.getPermIds());
 
         return ApiResult.ok(null, "Remove permissions from role success!");
     }

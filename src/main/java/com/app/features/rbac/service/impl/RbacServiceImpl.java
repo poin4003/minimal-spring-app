@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.rbac.entity.PermissionEntity;
@@ -41,7 +42,7 @@ public class RbacServiceImpl implements RbacService {
     @Override
     public RoleResult createRole(CreateRolePayload payload) {
         if (roleRepo.existsByKey(payload.getKey())) {
-            throw ExceptionFactory.alreadyExists("Role key" + payload.getKey());
+            throw ExceptionFactory.alreadyExists("key", payload.getKey(), "Role key already exists.");
         }
 
         RoleEntity role = new RoleEntity();
@@ -63,6 +64,15 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
+    public RoleResult getRole(UUID roleId) {
+        RoleEntity role = roleRepo.findById(roleId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
+
+        return mapper.map(role, RoleResult.class);
+    }
+
+    @Override
+    @Transactional
     public RoleResult updateRole(UUID roleId, UpdateRolePayload payload) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
@@ -76,6 +86,7 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
+    @Transactional
     public void assignRoleToUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
@@ -86,12 +97,18 @@ public class RbacServiceImpl implements RbacService {
             throw ExceptionFactory.notFound("Missing some role");
         }
 
-        user.setRoles(new HashSet<>(roles));
+        HashSet<RoleEntity> currentRoles = user.getRoles() == null
+                ? new HashSet<>()
+                : new HashSet<>(user.getRoles());
+        currentRoles.addAll(roles);
+
+        user.setRoles(currentRoles);
 
         userBaseRepo.save(user);
     }
 
     @Override
+    @Transactional
     public void assignPermToRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
@@ -102,31 +119,48 @@ public class RbacServiceImpl implements RbacService {
             throw ExceptionFactory.notFound("Missing some permission");
         }
 
-        role.setPermissions(new HashSet<>(perms));
+        HashSet<PermissionEntity> currentPermissions = role.getPermissions() == null
+                ? new HashSet<>()
+                : new HashSet<>(role.getPermissions());
+        currentPermissions.addAll(perms);
+
+        role.setPermissions(currentPermissions);
 
         roleRepo.save(role);
     }
 
     @Override
+    @Transactional
     public void removeRoleFromUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
 
         List<RoleEntity> roles = roleRepo.findAllById(roleIds);
 
-        user.getRoles().removeAll(roles);
+        HashSet<RoleEntity> currentRoles = user.getRoles() == null
+                ? new HashSet<>()
+                : new HashSet<>(user.getRoles());
+        currentRoles.removeAll(roles);
+
+        user.setRoles(currentRoles);
 
         userBaseRepo.save(user);
     }
 
     @Override
+    @Transactional
     public void removePermFromRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
 
         List<PermissionEntity> perms = permRepo.findAllById(permIds);
 
-        role.getPermissions().removeAll(perms);
+        HashSet<PermissionEntity> currentPermissions = role.getPermissions() == null
+                ? new HashSet<>()
+                : new HashSet<>(role.getPermissions());
+        currentPermissions.removeAll(perms);
+
+        role.setPermissions(currentPermissions);
 
         roleRepo.save(role);
     }

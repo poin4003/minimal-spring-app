@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${page.title}">Users</title>
+    <title th:text="${page.title}">Roles</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
@@ -46,21 +46,21 @@
                         <div class="p-4 p-lg-5 d-grid gap-4">
                             <section class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
                                 <div>
-                                    <p class="text-secondary mb-2">User Management</p>
-                                    <h2 class="h3 mb-2" th:text="${page.heading}">Users</h2>
+                                    <p class="text-secondary mb-2">RBAC</p>
+                                    <h2 class="h3 mb-2" th:text="${page.heading}">Roles</h2>
                                     <p class="text-secondary mb-0" th:text="${page.description}">
-                                        Create and review user accounts from the administration workspace.
+                                        Create roles and review access groups available in the system.
                                     </p>
                                 </div>
 
-                                <div th:if="${page.createUserModal != null}"
-                                     th:replace="~{fragments/components/modal :: modal(${page.createUserModal})}"></div>
+                                <div th:if="${page.createRoleModal != null}"
+                                     th:replace="~{fragments/components/modal :: modal(${page.createRoleModal})}"></div>
                             </section>
 
                             <div th:if="${page.successMessage != null}"
                                  class="alert alert-success mb-0"
                                  th:text="${page.successMessage}">
-                                User created successfully.
+                                Role created successfully.
                             </div>
 
                             <div th:if="${page.errorMessage != null}"
@@ -69,7 +69,11 @@
                                 Please correct the form and try again.
                             </div>
 
-                            <div th:replace="~{fragments/components/table :: table(${page.userTable})}"></div>
+                            <div th:replace="~{fragments/components/table :: table(${page.roleTable})}"></div>
+
+                            <th:block th:if="${page.roleDetailModal != null}">
+                                <div th:replace="~{rbac/role/fragments/detail-modal :: modal(${page.roleDetailModal})}"></div>
+                            </th:block>
                         </div>
                     </div>
                 </div>
@@ -77,9 +81,15 @@
         </div>
     </div>
 
-    <script th:if="${page.openCreateUserModal}">
+    <script th:if="${page.openCreateRoleModal}">
         document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("create-user-modal")).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("create-role-modal")).show();
+        });
+    </script>
+
+    <script th:if="${page.openRoleDetailModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("role-detail-modal")).show();
         });
     </script>
 </body>

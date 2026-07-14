@@ -33,6 +33,9 @@
 - APIs should keep versioning in the path, preferably `api/v1`.
 - When the database schema changes, prefer creating a migration under `src/main/resources/db/migration`.
 - Do not carry over tables, seed data, or integrations from the old project if the current codebase no longer uses them.
+- Prefer explicit lambda expressions over Java method references such as `::`, especially in stream operations, sorting, and mapping.
+- This project prefers lambdas because VS Code Java null-safety analysis tends to produce noisier warnings on method references than on equivalent lambdas.
+- When both forms are valid, prefer styles such as `item -> item.getId()` or `item -> this.toView(item)` over `Type::method` or `this::method`.
 
 ## UI View Model Rule
 - For server-rendered UI pages such as Thymeleaf, prefer using dedicated view-model classes instead of scattering many `model.addAttribute("key", value)` entries.
@@ -47,6 +50,7 @@
 - Shared UI components should stay centered around the common Java component models and factories such as `UiTable*`, `UiModal*`, and `UiPagination*`.
 - If a new UI page needs a listing view, modal form, or paging bar, the default direction is to reuse these components first and only fall back to page-specific HTML when the shared component truly does not fit.
 - Component inputs should also stay Java/OOP oriented, meaning annotated classes, structured view models, and factories are preferred over ad-hoc maps or loose template variables.
+- UI descriptions, helper text, and table subtitles should describe the business function of the page or table, not mention internal implementation details such as shared or reusable components.
 
 ## Exception Handling Rule
 - Keep `details` and `fieldErrors` as separate properties in custom exceptions; do not overload `details` to carry field-level validation state.

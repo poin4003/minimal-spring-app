@@ -79,7 +79,8 @@ public class AppProperties {
         private List<String> csrfIgnorePaths = List.of(
                 "/api/**",
                 "/h2-console/**",
-                "/admin/users/**");
+                "/admin/users/**",
+                "/admin/rbac/**");
     }
 
     @Data

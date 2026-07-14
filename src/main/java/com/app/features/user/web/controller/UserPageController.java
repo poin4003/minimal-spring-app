@@ -131,7 +131,7 @@ public class UserPageController {
         UiTableView userTable = uiTableFactory.build(
                 UiTableDefinition.builder()
                         .title("User List")
-                        .description("Reusable CMS table powered by the shared table, modal, and pagination components.")
+                        .description("Review user accounts, statuses, and audit timestamps.")
                         .emptyMessage("No users found.")
                         .pagination(pagination)
                         .build(),
@@ -158,7 +158,7 @@ public class UserPageController {
         return UserListPageView.builder()
                 .title("User Management")
                 .heading("Users")
-                .description("Manage user accounts with reusable table, modal, and pagination components.")
+                .description("Create and review user accounts from the administration workspace.")
                 .shell(buildShell(currentUser, request))
                 .userTable(userTable)
                 .createUserModal(createUserModal)

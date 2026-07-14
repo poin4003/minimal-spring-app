@@ -22,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 @ControllerAdvice(basePackages = {
         "com.app.features.auth.web.controller",
         "com.app.features.ui.web.controller",
-        "com.app.features.user.web.controller"
+        "com.app.features.user.web.controller",
+        "com.app.features.rbac.web.controller"
 })
 public class WebExceptionHandler {
 
