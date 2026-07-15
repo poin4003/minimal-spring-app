@@ -1,4 +1,4 @@
-package com.app.features.user.web.view;
+package com.app.features.cronjob.web.view;
 
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalView;
@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserListPageView {
+public class CronJobListPageView {
 
     public static final String ATTRIBUTE = "page";
 
@@ -18,12 +18,10 @@ public class UserListPageView {
     private final String heading;
     private final String description;
     private final UiShellView shell;
-    private final UiTableView userTable;
-    private final UiModalView createUserModal;
+    private final UiTableView cronJobTable;
     private final UiMetadataModalView metadataModal;
     private final UiModalView detailModal;
     private final String errorMessage;
-    private final boolean openCreateUserModal;
     private final boolean openMetadataModal;
     private final boolean openDetailModal;
 }

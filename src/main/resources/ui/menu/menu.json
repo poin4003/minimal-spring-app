@@ -26,15 +26,8 @@
     ]
   },
   {
-    "id": "jobs",
-    "label": "Jobs",
-    "children": [
-      {
-        "id": "cronjobs",
-        "label": "Cronjobs",
-        "path": "/admin/cronjobs",
-        "disabled": true
-      }
-    ]
+    "id": "cronjobs",
+    "label": "Cronjobs",
+    "path": "/admin/cronjobs"
   }
 ]

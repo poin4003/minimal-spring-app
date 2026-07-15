@@ -7,14 +7,13 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CronJobDef {
-    
-    String jobName();
+public @interface AppRecurringJob {
 
-    String cronExpression() default "0 0 0 * * ?";
+    String id();
 
-    String lockAtMostFor() default "PT10M";
-    String lockAtLeastFor() default "PT30S";
+    String name();
 
-    String description() default "Auto-synced Job";
+    String defaultCron();
+
+    String zoneId() default "Asia/Ho_Chi_Minh";
 }

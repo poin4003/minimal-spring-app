@@ -1,134 +1,113 @@
 package com.app.features.cronjob.service.impl;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
+import org.jobrunr.storage.StorageProvider;
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.app.core.exception.ExceptionFactory;
 import com.app.features.cronjob.entity.CronJobConfigEntity;
 import com.app.features.cronjob.enums.CronjobStatusEnum;
 import com.app.features.cronjob.repository.CronJobConfigRepository;
-import com.app.features.cronjob.scheduler.JobHandler;
+import com.app.features.cronjob.scheduler.RecurringJobDefinition;
+import com.app.features.cronjob.scheduler.RecurringJobRegistry;
+import com.app.features.cronjob.schema.result.CronJobDetailResult;
+import com.app.features.cronjob.schema.result.CronJobResult;
 import com.app.features.cronjob.service.CronJobService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CronJobServiceImpl implements CronJobService {
 
-    private final TaskScheduler taskScheduler;
+    private final StorageProvider storageProvider;
     private final CronJobConfigRepository jobConfigRepo;
-    private final Map<String, JobHandler> jobHandlerMap;
+    private final RecurringJobRegistry recurringJobRegistry;
+    private final ModelMapper mapper;
 
-    private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
-    private final Map<String, Boolean> jobStatusMap = new ConcurrentHashMap<>();
-    private final Map<String, AtomicBoolean> jobLocks = new ConcurrentHashMap<>();
+    @Override
+    public Page<CronJobResult> getManyCronJobs(Pageable pageable) {
+        Page<CronJobConfigEntity> entityPage = jobConfigRepo.findAll(pageable);
 
-    public CronJobServiceImpl(
-            TaskScheduler taskScheduler,
-            CronJobConfigRepository jobConfigRepo,
-            List<JobHandler> jobHandlers) {
-
-        this.taskScheduler = taskScheduler;
-        this.jobConfigRepo = jobConfigRepo;
-
-        this.jobHandlerMap = jobHandlers.stream()
-                .collect(Collectors.toMap(jobHandler -> jobHandler.getSupportedJobType(), Function.identity()));
+        return entityPage.map(result -> mapper.map(result, CronJobResult.class));
     }
 
     @Override
-    public void refreshJobs() {
-        log.info("Refreshing dynamic jobs from Database...");
+    public CronJobDetailResult getCronJobDetail(String jobType) {
+        CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
+                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
 
-        List<CronJobConfigEntity> configs = jobConfigRepo.findByStatus(CronjobStatusEnum.ACTIVE);
-
-        scheduledTasks.forEach((k, v) -> {
-            v.cancel(false);
-            log.debug("Cancelled job: {}", k);
-        });
-        scheduledTasks.clear();
-        jobLocks.clear();
-
-        for (CronJobConfigEntity config : configs) {
-            scheduleSingleJob(config);
-        }
-
-        log.info("Refreshed {} jobs successfully.", scheduledTasks.size());
+        return toCronJobDetailResult(config);
     }
 
-    private void scheduleSingleJob(CronJobConfigEntity config) {
-        try {
-            String jobName = config.getName();
-
-            if (!isJobEnabled(jobName)) {
-                log.warn("Job [{}] is DISABLED. Skipping.", jobName);
-                return;
-            }
-
-            JobHandler handler = jobHandlerMap.get(config.getJobType());
-            if (handler == null) {
-                log.error("No Handler found for job type: [{}]. Skipping.", config.getJobType());
-                return;
-            }
-
-            Runnable lockableTask = () -> {
-                AtomicBoolean isRunning = jobLocks.computeIfAbsent(jobName, k -> new AtomicBoolean(false));
-
-                if (isRunning.compareAndSet(false, true)) {
-                    try {
-                        log.info("Starting job: {}", jobName);
-                        handler.execute();
-                        log.info("Finished job: {}", jobName);
-                    } catch (Exception e) {
-                        log.error("Error executing job: {}", jobName, e);
-                    } finally {
-                        isRunning.set(false);
-                    }
-                } else {
-                    log.warn("Job [{}] is still running. Skipping this execution tick.", jobName);
-                }
-            };
-
-            ScheduledFuture<?> future = taskScheduler.schedule(
-                    lockableTask,
-                    new CronTrigger(
-                            Objects.requireNonNull(config.getExpression(), "Cronjob Expression must not be null")));
-
-            scheduledTasks.put(jobName, future);
-            log.info("Scheduled job [{}] - cron [{}] - type [{}]", jobName, config.getExpression(),
-                    config.getJobType());
-
-        } catch (Exception e) {
-            log.error("Failed to schedule job: " + config.getName(), e);
+    @Override
+    public void refreshRecurringJobs() {
+        for (CronJobConfigEntity config : jobConfigRepo.findAll()) {
+            refreshRecurringJob(config.getJobType());
         }
     }
 
     @Override
-    public boolean isJobEnabled(String jobName) {
-        return jobStatusMap.getOrDefault(jobName, true);
+    public void refreshRecurringJob(String jobType) {
+        RecurringJobDefinition definition = recurringJobRegistry.getRequired(jobType);
+
+        CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
+                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
+
+        if (config.getStatus() == CronjobStatusEnum.INACTIVE) {
+            storageProvider.deleteRecurringJob(jobType);
+            log.info("Disabled recurring job [{}]", jobType);
+            return;
+        }
+
+        String cron = definition.resolveCron(config.getCronExpression());
+
+        storageProvider.saveRecurringJob(definition.toRecurringJob(cron));
+        log.info("Registered recurring job [{}] with cron [{}]", jobType, cron);
     }
 
+    @Transactional
     @Override
-    public void setJobStatus(String jobName, boolean enabled) {
-        jobStatusMap.put(jobName, enabled);
-        log.info("Manual OP: set cronjob '{}' status to {}", jobName, enabled);
-        refreshJobs();
+    public void updateConfig(String jobType, String cronExpression, CronjobStatusEnum status) {
+        CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
+                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
+
+        config.setCronExpression(normalizeCronExpression(cronExpression));
+        config.setStatus(status);
+        jobConfigRepo.save(config);
+
+        refreshRecurringJob(jobType);
     }
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        log.info("System is ready. Starting initial cronjob refresh...");
-        this.refreshJobs();
+        refreshRecurringJobs();
+    }
+
+    private CronJobDetailResult toCronJobDetailResult(CronJobConfigEntity config) {
+        RecurringJobDefinition definition = recurringJobRegistry.getRequired(config.getJobType());
+
+        CronJobDetailResult result = mapper.map(config, CronJobDetailResult.class);
+        result.setName(definition.getName());
+        result.setDefaultCron(definition.getDefaultCron());
+        result.setEffectiveCron(definition.resolveCron(config.getCronExpression()));
+        result.setZoneId(definition.getZoneId());
+        result.setUsingDefaultCron(config.getCronExpression() == null || config.getCronExpression().isBlank());
+
+        return result;
+    }
+
+    private String normalizeCronExpression(String cronExpression) {
+        if (cronExpression == null || cronExpression.isBlank()) {
+            return null;
+        }
+        return cronExpression.trim();
     }
 }

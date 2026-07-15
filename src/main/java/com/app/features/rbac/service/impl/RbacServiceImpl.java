@@ -77,6 +77,12 @@ public class RbacServiceImpl implements RbacService {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
 
+        if (payload.getKey() != null
+                && !payload.getKey().equals(role.getKey())
+                && roleRepo.existsByKey(payload.getKey())) {
+            throw ExceptionFactory.alreadyExists("key", payload.getKey(), "Role key already exists.");
+        }
+
         mapper.getConfiguration().setSkipNullEnabled(true);
         mapper.map(payload, role);
 

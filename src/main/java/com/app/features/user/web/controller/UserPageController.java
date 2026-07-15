@@ -1,6 +1,6 @@
 package com.app.features.user.web.controller;
 
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,16 +26,14 @@ import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
-import com.app.features.rbac.schema.result.RoleResult;
+import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
-import com.app.features.ui.web.component.view.UiDetailItemView;
-import com.app.features.ui.web.component.view.UiDetailModalView;
-import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
+import com.app.features.ui.web.component.view.UiModalFieldOptionView;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableActionView;
@@ -48,9 +47,12 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
+import com.app.features.user.schema.payload.UpdateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
+import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.service.UserService;
 import com.app.features.user.web.view.CreateUserModalForm;
+import com.app.features.user.web.view.UserDetailModalForm;
 import com.app.features.user.web.view.UserListPageView;
 import com.app.features.user.web.view.UserTableRowView;
 
@@ -105,13 +107,15 @@ public class UserPageController {
                         filter,
                         query,
                         new CreateUserModalForm(),
+                        new UserDetailModalForm(),
                         null,
                         null,
                         false,
                         metadataUserId,
                         metadataUserId != null,
                         detailUserId,
-                        detailUserId != null));
+                        detailUserId != null,
+                        false));
         return "user/index";
     }
 
@@ -122,7 +126,7 @@ public class UserPageController {
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") UserFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
-            @Valid @ModelAttribute("form") CreateUserModalForm form,
+            @Valid @ModelAttribute("createForm") CreateUserModalForm form,
             BindingResult bindingResult,
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
@@ -141,13 +145,56 @@ public class UserPageController {
                         filter,
                         query,
                         form,
+                        new UserDetailModalForm(),
                         submitResult.fieldErrors(),
                         "Please correct the form and try again.",
                         true,
                         null,
                         false,
                         null,
+                        false,
                         false));
+        return "user/index";
+    }
+
+    @PostMapping("/{userId}")
+    @Secured(PermissionConstants.USER_CREATE)
+    public String update(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            HttpServletRequest request,
+            @PathVariable UUID userId,
+            @Valid @ModelAttribute("filter") UserFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            @Valid @ModelAttribute("detailForm") UserDetailModalForm form,
+            BindingResult bindingResult,
+            Model model) {
+        UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
+                bindingResult,
+                () -> userService.updateUser(userId, mapper.map(form, UpdateUserPayload.class)));
+
+        if (submitResult.success()) {
+            return "redirect:" + query.toUri(
+                    appProperties.getUi().getHomePath() + "/users",
+                    USER_PAGE_DEFAULTS);
+        }
+
+        model.addAttribute(
+                UserListPageView.ATTRIBUTE,
+                buildPage(
+                        currentUser,
+                        request,
+                        filter,
+                        query,
+                        new CreateUserModalForm(),
+                        form,
+                        submitResult.fieldErrors(),
+                        "Please correct the form and try again.",
+                        false,
+                        null,
+                        false,
+                        userId,
+                        true,
+                        true));
         return "user/index";
     }
 
@@ -156,14 +203,16 @@ public class UserPageController {
             HttpServletRequest request,
             UserFilter filter,
             UiPageQuery query,
-            CreateUserModalForm form,
+            CreateUserModalForm createForm,
+            UserDetailModalForm detailForm,
             Map<String, String> modalErrors,
             String errorMessage,
             boolean openCreateUserModal,
             UUID metadataUserId,
             boolean openMetadataModal,
             UUID detailUserId,
-            boolean openDetailModal) {
+            boolean openDetailModal,
+            boolean preserveDetailForm) {
         var userPage = userService.getManyUser(query.toPageable(USER_PAGE_DEFAULTS));
         List<UserTableRowView> rows = userPage.getContent().stream()
                 .map(result -> mapper.map(result, UserTableRowView.class))
@@ -210,17 +259,17 @@ public class UserPageController {
                         .submitLabel("Create User")
                         .build(),
                 CreateUserModalForm.class,
-                form,
+                createForm,
                 Map.of(),
-                modalErrors == null ? Map.of() : modalErrors);
+                openCreateUserModal && modalErrors != null ? modalErrors : Map.of());
 
         UiMetadataModalView metadataModal = metadataUserId == null
                 ? null
                 : buildUserMetadataModal(metadataUserId);
 
-        UiDetailModalView detailModal = detailUserId == null
+        UiModalView detailModal = detailUserId == null
                 ? null
-                : buildUserDetailModal(detailUserId);
+                : buildUserDetailModal(detailUserId, query, detailForm, modalErrors, preserveDetailForm);
 
         return UserListPageView.builder()
                 .title("User Management")
@@ -246,6 +295,11 @@ public class UserPageController {
                 .title("User Metadata")
                 .items(List.of(
                         UiMetadataItemView.builder()
+                                .label("User Id")
+                                .value(String.valueOf(user.getId()))
+                                .monospace(true)
+                                .build(),
+                        UiMetadataItemView.builder()
                                 .label("Email")
                                 .value(user.getEmail())
                                 .monospace(false)
@@ -268,28 +322,55 @@ public class UserPageController {
                 .build();
     }
 
-    private UiDetailModalView buildUserDetailModal(UUID userId) {
+    private UiModalView buildUserDetailModal(
+            UUID userId,
+            UiPageQuery query,
+            UserDetailModalForm detailForm,
+            Map<String, String> modalErrors,
+            boolean preserveDetailForm) {
         UserDetailResult user = userService.getUserDetailById(userId);
 
-        List<UiDetailItemView> items = user.getRoles() == null
-                ? List.of()
-                : user.getRoles().stream()
-                        .sorted(Comparator.comparing(
-                                (RoleResult role) -> role.getKey(),
-                                String.CASE_INSENSITIVE_ORDER))
-                        .map(role -> UiDetailItemView.builder()
-                                .title(role.getKey())
-                                .description(role.getName())
-                                .build())
-                        .toList();
+        UserDetailModalForm modalForm = preserveDetailForm
+                ? detailForm
+                : buildUserDetailForm(user);
 
-        return UiDetailModalView.builder()
-                .id("user-detail-modal")
-                .title("User Detail")
-                .listTitle("Assigned Roles")
-                .items(items)
-                .emptyMessage("No roles assigned.")
-                .build();
+        return uiModalFactory.build(
+                UiModalDefinition.builder()
+                        .id("user-detail-modal")
+                        .title("User Detail")
+                        .description("Review account information and update the current status.")
+                        .actionPath(query.toUri(
+                                appProperties.getUi().getHomePath() + "/users/" + userId,
+                                USER_PAGE_DEFAULTS))
+                        .submitLabel("Save Changes")
+                        .build(),
+                UserDetailModalForm.class,
+                modalForm,
+                Map.of("status", buildUserStatusOptions(modalForm.getStatus())),
+                preserveDetailForm && modalErrors != null ? modalErrors : Map.of());
+    }
+
+    private UserDetailModalForm buildUserDetailForm(UserDetailResult user) {
+        UserDetailModalForm form = new UserDetailModalForm();
+        form.setId(String.valueOf(user.getId()));
+        form.setEmail(user.getEmail());
+        form.setLoginTime(user.getLoginTime());
+        form.setLogoutTime(user.getLogoutTime());
+        form.setLoginIp(user.getLoginIp());
+        form.setCreatedAt(user.getCreatedAt());
+        form.setUpdatedAt(user.getUpdatedAt());
+        form.setStatus(user.getStatus());
+        return form;
+    }
+
+    private List<UiModalFieldOptionView> buildUserStatusOptions(UserStatusEnum selectedStatus) {
+        return Arrays.stream(UserStatusEnum.values())
+                .map(status -> UiModalFieldOptionView.builder()
+                        .value(status.name())
+                        .label(status.name())
+                        .selected(status == selectedStatus)
+                        .build())
+                .toList();
     }
 
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {

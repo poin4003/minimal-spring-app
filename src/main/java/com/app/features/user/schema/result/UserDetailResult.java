@@ -12,6 +12,9 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class UserDetailResult extends UserResult {
 
+    private String loginTime;
+    private String logoutTime;
+    private String loginIp;
     private List<RoleResult> roles;
     private List<PermissionResult> permissions;
 }

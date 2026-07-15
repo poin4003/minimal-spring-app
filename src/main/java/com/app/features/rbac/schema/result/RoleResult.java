@@ -10,4 +10,8 @@ public class RoleResult {
     private String name;
 
     private String key;
+
+    private String createdAt;
+
+    private String updatedAt;
 }

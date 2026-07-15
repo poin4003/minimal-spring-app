@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${page.title}">Roles</title>
+    <title th:text="${page.title}">Cronjobs</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
@@ -44,17 +44,12 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
-                            <section class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
-                                <div>
-                                    <p class="text-secondary mb-2">RBAC</p>
-                                    <h2 class="h3 mb-2" th:text="${page.heading}">Roles</h2>
-                                    <p class="text-secondary mb-0" th:text="${page.description}">
-                                        Create roles and review access groups available in the system.
-                                    </p>
-                                </div>
-
-                                <div th:if="${page.createRoleModal != null}"
-                                     th:replace="~{fragments/components/modal :: modal(${page.createRoleModal})}"></div>
+                            <section>
+                                <p class="text-secondary mb-2">Job Scheduling</p>
+                                <h2 class="h3 mb-2" th:text="${page.heading}">Cronjobs</h2>
+                                <p class="text-secondary mb-0" th:text="${page.description}">
+                                    Review recurring jobs and update cron overrides when operations need a schedule change.
+                                </p>
                             </section>
 
                             <div th:if="${page.errorMessage != null}"
@@ -63,7 +58,7 @@
                                 Please correct the form and try again.
                             </div>
 
-                            <div th:replace="~{fragments/components/table :: table(${page.roleTable})}"></div>
+                            <div th:replace="~{fragments/components/table :: table(${page.cronJobTable})}"></div>
 
                             <th:block th:if="${page.metadataModal != null}">
                                 <div th:replace="~{fragments/components/metadata-modal :: modal(${page.metadataModal})}"></div>
@@ -79,21 +74,15 @@
         </div>
     </div>
 
-    <script th:if="${page.openCreateRoleModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("create-role-modal")).show();
-        });
-    </script>
-
     <script th:if="${page.openMetadataModal}">
         document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("role-metadata-modal")).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("cronjob-metadata-modal")).show();
         });
     </script>
 
     <script th:if="${page.openDetailModal}">
         document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("role-detail-modal")).show();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("cronjob-detail-modal")).show();
         });
     </script>
 </body>

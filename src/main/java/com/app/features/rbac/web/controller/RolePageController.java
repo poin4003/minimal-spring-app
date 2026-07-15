@@ -1,12 +1,10 @@
 package com.app.features.rbac.web.controller;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,13 +25,13 @@ import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
-import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 import com.app.features.rbac.schema.filter.RoleFilterCriteria;
 import com.app.features.rbac.schema.payload.CreateRolePayload;
-import com.app.features.rbac.schema.result.PermissionResult;
+import com.app.features.rbac.schema.payload.UpdateRolePayload;
 import com.app.features.rbac.schema.result.RoleResult;
 import com.app.features.rbac.service.RbacService;
 import com.app.features.rbac.web.view.CreateRoleModalForm;
+import com.app.features.rbac.web.view.RoleDetailModalForm;
 import com.app.features.rbac.web.view.RoleFilter;
 import com.app.features.rbac.web.view.RoleListPageView;
 import com.app.features.rbac.web.view.RoleTableRowView;
@@ -40,8 +39,6 @@ import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
-import com.app.features.ui.web.component.view.UiDetailItemView;
-import com.app.features.ui.web.component.view.UiDetailModalView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
@@ -108,13 +105,15 @@ public class RolePageController {
                         filter,
                         query,
                         new CreateRoleModalForm(),
+                        new RoleDetailModalForm(),
                         null,
                         null,
                         false,
                         metadataRoleId,
                         metadataRoleId != null,
                         detailRoleId,
-                        detailRoleId != null));
+                        detailRoleId != null,
+                        false));
         return "rbac/role/index";
     }
 
@@ -125,7 +124,7 @@ public class RolePageController {
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") RoleFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
-            @Valid @ModelAttribute("form") CreateRoleModalForm form,
+            @Valid @ModelAttribute("createForm") CreateRoleModalForm form,
             BindingResult bindingResult,
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
@@ -144,13 +143,56 @@ public class RolePageController {
                         filter,
                         query,
                         form,
+                        new RoleDetailModalForm(),
                         submitResult.fieldErrors(),
                         "Please correct the form and try again.",
                         true,
                         null,
                         false,
                         null,
+                        false,
                         false));
+        return "rbac/role/index";
+    }
+
+    @PostMapping("/{roleId}")
+    @Secured(PermissionConstants.RBAC_MANAGE)
+    public String update(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            HttpServletRequest request,
+            @PathVariable UUID roleId,
+            @Valid @ModelAttribute("filter") RoleFilter filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            @Valid @ModelAttribute("detailForm") RoleDetailModalForm form,
+            BindingResult bindingResult,
+            Model model) {
+        UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
+                bindingResult,
+                () -> rbacService.updateRole(roleId, mapper.map(form, UpdateRolePayload.class)));
+
+        if (submitResult.success()) {
+            return "redirect:" + query.toUri(
+                    appProperties.getUi().getHomePath() + "/rbac/roles",
+                    ROLE_PAGE_DEFAULTS);
+        }
+
+        model.addAttribute(
+                RoleListPageView.ATTRIBUTE,
+                buildPage(
+                        currentUser,
+                        request,
+                        filter,
+                        query,
+                        new CreateRoleModalForm(),
+                        form,
+                        submitResult.fieldErrors(),
+                        "Please correct the form and try again.",
+                        false,
+                        null,
+                        false,
+                        roleId,
+                        true,
+                        true));
         return "rbac/role/index";
     }
 
@@ -159,14 +201,16 @@ public class RolePageController {
             HttpServletRequest request,
             RoleFilter filter,
             UiPageQuery query,
-            CreateRoleModalForm form,
+            CreateRoleModalForm createForm,
+            RoleDetailModalForm detailForm,
             Map<String, String> modalErrors,
             String errorMessage,
             boolean openCreateRoleModal,
             UUID metadataRoleId,
             boolean openMetadataModal,
             UUID detailRoleId,
-            boolean openDetailModal) {
+            boolean openDetailModal,
+            boolean preserveDetailForm) {
         RoleFilterCriteria criteria = new RoleFilterCriteria();
         criteria.setUserId(filter.getUserId());
 
@@ -216,17 +260,17 @@ public class RolePageController {
                         .submitLabel("Create Role")
                         .build(),
                 CreateRoleModalForm.class,
-                form,
+                createForm,
                 Map.of(),
-                modalErrors == null ? Map.of() : modalErrors);
+                openCreateRoleModal && modalErrors != null ? modalErrors : Map.of());
 
         UiMetadataModalView metadataModal = metadataRoleId == null
                 ? null
                 : buildRoleMetadataModal(metadataRoleId);
 
-        UiDetailModalView detailModal = detailRoleId == null
+        UiModalView detailModal = detailRoleId == null
                 ? null
-                : buildRoleDetailModal(detailRoleId);
+                : buildRoleDetailModal(detailRoleId, query, detailForm, modalErrors, preserveDetailForm);
 
         return RoleListPageView.builder()
                 .title("Role Management")
@@ -252,6 +296,11 @@ public class RolePageController {
                 .title("Role Metadata")
                 .items(List.of(
                         UiMetadataItemView.builder()
+                                .label("Role Id")
+                                .value(role.getId())
+                                .monospace(true)
+                                .build(),
+                        UiMetadataItemView.builder()
                                 .label("Role Key")
                                 .value(role.getKey())
                                 .monospace(true)
@@ -264,29 +313,41 @@ public class RolePageController {
                 .build();
     }
 
-    private UiDetailModalView buildRoleDetailModal(UUID roleId) {
-        PermissionFilterCriteria criteria = new PermissionFilterCriteria();
-        criteria.setRoleId(roleId);
+    private UiModalView buildRoleDetailModal(
+            UUID roleId,
+            UiPageQuery query,
+            RoleDetailModalForm detailForm,
+            Map<String, String> modalErrors,
+            boolean preserveDetailForm) {
+        RoleResult role = rbacService.getRole(roleId);
 
-        List<UiDetailItemView> items = rbacService.getManyPermissions(criteria, Pageable.unpaged())
-                .getContent()
-                .stream()
-                .sorted(Comparator.comparing(
-                        (PermissionResult permission) -> permission.getKey(),
-                        String.CASE_INSENSITIVE_ORDER))
-                .map(permission -> UiDetailItemView.builder()
-                        .title(permission.getKey())
-                        .description(permission.getName())
-                        .build())
-                .toList();
+        RoleDetailModalForm modalForm = preserveDetailForm
+                ? detailForm
+                : buildRoleDetailForm(role);
 
-        return UiDetailModalView.builder()
-                .id("role-detail-modal")
-                .title("Role Detail")
-                .listTitle("Assigned Permissions")
-                .items(items)
-                .emptyMessage("No permissions assigned.")
-                .build();
+        return uiModalFactory.build(
+                UiModalDefinition.builder()
+                        .id("role-detail-modal")
+                        .title("Role Detail")
+                        .description("Review role information and update the role name or key.")
+                        .actionPath(query.toUri(
+                                appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId,
+                                ROLE_PAGE_DEFAULTS))
+                        .submitLabel("Save Changes")
+                        .build(),
+                RoleDetailModalForm.class,
+                modalForm,
+                Map.of(),
+                preserveDetailForm && modalErrors != null ? modalErrors : Map.of());
+    }
+
+    private RoleDetailModalForm buildRoleDetailForm(RoleResult role) {
+        RoleDetailModalForm form = new RoleDetailModalForm();
+        form.setName(role.getName());
+        form.setKey(role.getKey());
+        form.setCreatedAt(role.getCreatedAt());
+        form.setUpdatedAt(role.getUpdatedAt());
+        return form;
     }
 
     private String buildMetadataPath(String roleId, UiPageQuery query) {

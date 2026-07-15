@@ -29,20 +29,11 @@ public class CronJobConfigEntity extends BaseAuditEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "expression")
-    private String expression;
-
-    @Column(name = "job_type")
+    @Column(name = "job_type", nullable = false, updatable = false)
     private String jobType;
 
-    @Column(name = "lock_at_most_for")
-    private String lockAtMostFor;
-
-    @Column(name = "lock_at_least_for")
-    private String lockAtLeastFor;
+    @Column(name = "expression", length = 100)
+    private String cronExpression;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM) 

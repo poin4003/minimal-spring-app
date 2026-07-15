@@ -80,7 +80,8 @@ public class AppProperties {
                 "/api/**",
                 "/h2-console/**",
                 "/admin/users/**",
-                "/admin/rbac/**");
+                "/admin/rbac/**",
+                "/admin/cronjobs/**");
     }
 
     @Data

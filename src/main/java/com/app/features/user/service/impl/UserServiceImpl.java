@@ -18,6 +18,7 @@ import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.repository.UserBaseRepository;
 import com.app.features.user.schema.payload.CreateUserPayload;
+import com.app.features.user.schema.payload.UpdateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.schema.result.UserResult;
 import com.app.features.user.service.UserService;
@@ -69,6 +70,19 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList()));
 
         return response;
+    }
+
+    @Override
+    public UserResult updateUser(UUID userId, UpdateUserPayload payload) {
+        UserBaseEntity user = userBaseRepo.findById(userId)
+                .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
+
+        mapper.getConfiguration().setSkipNullEnabled(true);
+        mapper.map(payload, user);
+
+        user = userBaseRepo.save(user);
+
+        return mapper.map(user, UserResult.class);
     }
 
     @Override
