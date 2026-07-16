@@ -101,7 +101,7 @@ public class AuthServiceImpl implements AuthService {
         history.setExpiryDate(expiryDate.toInstant());
         consumedRefreshTokenRepo.save(history);
 
-        UserBaseEntity user = userBaseRepo.findByIdWithAuthorities(userId)
+        UserBaseEntity user = userBaseRepo.findWithAuthoritiesById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User " + userId));
 
         if (user.getStatus() != UserStatusEnum.ACTIVE) {

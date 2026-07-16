@@ -5,21 +5,12 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import com.app.features.rbac.entity.PermissionEntity;
 
 public interface PermissionRepository
                 extends JpaRepository<PermissionEntity, UUID>, JpaSpecificationExecutor<PermissionEntity> {
 
-        @Query("""
-                        SELECT p FROM UserBaseEntity u
-                        JOIN u.roles r
-                        JOIN r.permissions p
-                        WHERE u.id = :userId
-                        """)
-        Set<PermissionEntity> findAllByUserId(@Param("userId") UUID userId);
+        Set<PermissionEntity> findDistinctByRoles_Users_Id(UUID userId);
 
         boolean existsByKey(String key);
 }

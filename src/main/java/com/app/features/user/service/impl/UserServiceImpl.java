@@ -63,7 +63,7 @@ public class UserServiceImpl implements UserService {
         // LAZY load List role
         UserDetailResult response = mapper.map(user, UserDetailResult.class);
 
-        Set<PermissionEntity> perms = permRepo.findAllByUserId(userId);
+        Set<PermissionEntity> perms = permRepo.findDistinctByRoles_Users_Id(userId);
         response.setPermissions(perms.stream()
                 .map(perm -> mapper.map(perm, PermissionResult.class))
                 .collect(Collectors.toList()));
