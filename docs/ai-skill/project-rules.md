@@ -83,6 +83,14 @@
 - Native SQL requires an explicit database-specific requirement and must be shown to the user before being added.
 - Flyway schema and data migrations are exempt because SQL is their intended format.
 
+## Session Revocation Rule
+- Use `@RevokeSessions` on service methods whose successful changes invalidate active JWT authorization state.
+- An annotated method must declare its target `UUID` as the first parameter so the aspect can bind it directly with `args(targetId, ..)`.
+- Use `SessionRevocationScope.USER` when the first UUID is a user ID and `SessionRevocationScope.USERS_BY_ROLE` when it is a role ID.
+- For role-scoped revocation, use one database bulk operation instead of loading affected user IDs into application memory.
+- Revoke sessions before the domain method runs, then persist both changes in the same transaction so failures roll back together.
+- Do not add parameter-level marker annotations, SpEL expressions, or reflection-based argument lookup for session revocation.
+
 ## Collaboration Rule With User
 - Before changing code or files, the AI must show the code to the user first.
 - Changes may only be applied after the user explicitly confirms by saying `apply`.

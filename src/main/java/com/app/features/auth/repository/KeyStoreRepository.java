@@ -1,6 +1,5 @@
 package com.app.features.auth.repository;
 
-import java.util.Collection;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +16,14 @@ public interface KeyStoreRepository extends JpaRepository<KeyStoreEntity, UUID> 
     int deleteAllByUserId(@Param("userId") UUID userId);
 
     @Modifying
-    @Query("DELETE FROM KeyStoreEntity keyStore WHERE keyStore.userId IN :userIds")
-    int deleteAllByUserIds(@Param("userIds") Collection<UUID> userIds);
+    @Query("""
+            DELETE FROM KeyStoreEntity keyStore
+            WHERE keyStore.userId IN (
+                SELECT user.id
+                FROM UserBaseEntity user
+                JOIN user.roles role
+                WHERE role.id = :roleId
+            )
+            """)
+    int deleteAllByRoleId(@Param("roleId") UUID roleId);
 }

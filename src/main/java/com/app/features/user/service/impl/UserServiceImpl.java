@@ -11,6 +11,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.app.core.exception.ExceptionFactory;
+import com.app.core.security.session.RevokeSessions;
+import com.app.core.security.session.SessionRevocationScope;
 import com.app.features.rbac.entity.PermissionEntity;
 import com.app.features.rbac.repository.PermissionRepository;
 import com.app.features.rbac.schema.result.PermissionResult;
@@ -72,6 +74,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @RevokeSessions(scope = SessionRevocationScope.USER)
     public UserResult updateUser(UUID userId, UpdateUserPayload payload) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));

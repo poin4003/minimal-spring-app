@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.core.exception.ExceptionFactory;
+import com.app.core.security.session.RevokeSessions;
+import com.app.core.security.session.SessionRevocationScope;
 import com.app.features.rbac.entity.PermissionEntity;
 import com.app.features.rbac.entity.RoleEntity;
 import com.app.features.rbac.repository.PermissionRepository;
@@ -55,6 +57,7 @@ public class RbacServiceImpl implements RbacService {
     }
 
     @Override
+    @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void deleteRole(UUID roleId) {
         if (!roleRepo.existsById(roleId)) {
             throw ExceptionFactory.notFound("Role: " + roleId);
@@ -73,6 +76,7 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
+    @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public RoleResult updateRole(UUID roleId, UpdateRolePayload payload) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
@@ -93,6 +97,7 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
+    @RevokeSessions(scope = SessionRevocationScope.USER)
     public void assignRoleToUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
@@ -115,6 +120,7 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
+    @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void assignPermToRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
@@ -137,6 +143,7 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
+    @RevokeSessions(scope = SessionRevocationScope.USER)
     public void removeRoleFromUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
@@ -155,6 +162,7 @@ public class RbacServiceImpl implements RbacService {
 
     @Override
     @Transactional
+    @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void removePermFromRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
