@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -12,8 +11,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.app.config.settings.AppProperties;
 import com.app.core.security.KeyStoreResult;
 import com.app.core.security.UserPrincipal;
+import com.app.features.auth.security.UserPrincipalFactory;
 import com.app.features.auth.service.KeyStoreService;
-import com.app.features.auth.service.impl.UserDetailServiceImpl;
+import com.app.features.user.enums.UserStatusEnum;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -29,8 +29,8 @@ import lombok.extern.slf4j.Slf4j;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailServiceImpl userDetailsService;
     private final KeyStoreService keyStoreService;
+    private final UserPrincipalFactory userPrincipalFactory;
     private final AppProperties appProperties;
 
     @Override
@@ -42,30 +42,49 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = getJwtFromRequest(request);
 
-            if (token != null) {
-                UUID keyStoreId = jwtTokenProvider.getKeyStoreIdFromTokenUnverified(token);
-                if (keyStoreId != null) {
-                    KeyStoreResult keyStore = keyStoreService.getKeyStoreById(keyStoreId);
+            if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserPrincipal principal = authenticate(token);
 
-                    if (keyStore != null)  {
-                        UUID userId = jwtTokenProvider.getUserId(token, keyStore.getSigningKey());
-                        UserPrincipal userDetails = userDetailsService.loadUserByUserId(userId);
-                        userDetails.setKeyStore(keyStore);
+                if (principal != null) {
+                    JwtAuthenticationToken authentication = new JwtAuthenticationToken(principal);
 
-                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities()
-                        );
-
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
-        } catch (Exception e) {
-            log.error("Could not set user authentication in security context", e);
+        } catch (Exception exception) {
+            SecurityContextHolder.clearContext();
+            log.debug("Access token authentication failed", exception);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private UserPrincipal authenticate(String token) throws Exception {
+        UUID keyStoreId = jwtTokenProvider.getKeyStoreIdFromTokenUnverified(token);
+        if (keyStoreId == null) {
+            return null;
+        }
+
+        KeyStoreResult keyStore = keyStoreService.getKeyStoreById(keyStoreId);
+        if (keyStore == null) {
+            return null;
+        }
+
+        JwtVerifiedAccessToken verifiedToken = jwtTokenProvider.getVerifiedAccessToken(
+                token,
+                keyStore.getSigningKey());
+
+        if (!verifiedToken.getUserId().equals(keyStore.getUserId())) {
+            return null;
+        }
+
+        JwtAccessPayload payload = verifiedToken.getPayload();
+        if (payload.getUserEmail() == null || payload.getStatus() != UserStatusEnum.ACTIVE) {
+            return null;
+        }
+
+        return userPrincipalFactory.fromToken(verifiedToken, keyStore);
     }
     
     private String getJwtFromRequest(HttpServletRequest request) {

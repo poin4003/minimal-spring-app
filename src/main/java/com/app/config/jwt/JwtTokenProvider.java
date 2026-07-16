@@ -110,9 +110,12 @@ public class JwtTokenProvider {
         return UUID.fromString(claims.getSubject());
     }
 
-    public JwtAccessPayload getAccessPayload(String token, String signingKey) throws Exception {
+    public JwtVerifiedAccessToken getVerifiedAccessToken(String token, String signingKey) throws Exception {
         Claims claims = getAllClaimsFromToken(token, signingKey);
-        return objectMapper.convertValue(claims, JwtAccessPayload.class);
+        UUID userId = UUID.fromString(claims.getSubject());
+        JwtAccessPayload payload = objectMapper.convertValue(claims, JwtAccessPayload.class);
+
+        return new JwtVerifiedAccessToken(userId, payload);
     }
 
     public boolean validateToken(String token, String signingKey) {

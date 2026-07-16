@@ -38,7 +38,6 @@ CREATE TABLE user_base (
     login_time TIMESTAMP,
     logout_time TIMESTAMP,
     login_ip VARCHAR(255),
-    del_flag VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );

@@ -1,19 +1,20 @@
 package com.app.features.user.entity;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
+import com.app.core.db.BaseAuditEntity;
 import com.app.features.rbac.entity.RoleEntity;
+import com.app.features.user.enums.UserStatusEnum;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -30,7 +31,7 @@ import lombok.ToString;
 @Table(name = "user_base")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserBaseEntity extends BaseUserDetailEntity {
+public class UserBaseEntity extends BaseAuditEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -42,6 +43,11 @@ public class UserBaseEntity extends BaseUserDetailEntity {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "status", nullable = false)
+    private UserStatusEnum status;
+
     @Column(name = "login_time")
     private LocalDateTime loginTime;
 
@@ -51,46 +57,9 @@ public class UserBaseEntity extends BaseUserDetailEntity {
     @Column(name = "login_ip")
     private String loginIp;
 
-    @Column(name = "del_flag")
-    private String delFlag;
-
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<RoleEntity> roles;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<GrantedAuthority> authorities = new HashSet<>();
-
-        if (this.roles == null)
-            return authorities;
-
-        authorities.addAll(roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getKey()))
-                .collect(Collectors.toList()));
-
-        authorities.addAll(roles.stream()
-                .flatMap(role -> role.getPermissions().stream())
-                .map(permissionKey -> new SimpleGrantedAuthority(permissionKey.getKey()))
-                .collect(Collectors.toList()));
-
-        return authorities;
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    public String getDelFlag() {
-        return this.delFlag;
-    }
 }

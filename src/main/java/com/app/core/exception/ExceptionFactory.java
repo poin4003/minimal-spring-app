@@ -55,6 +55,13 @@ public final class ExceptionFactory {
         return new MyException("TOKEN_INVALID", HttpStatus.UNAUTHORIZED.value(), message);
     }
 
+    public static MyException invalidCredentials() {
+        return new MyException(
+                "INVALID_CREDENTIALS",
+                HttpStatus.UNAUTHORIZED.value(),
+                "Invalid email or password.");
+    }
+
     public static MyException permissionError(String message) {
         return new MyException("PERMISSION_ERROR", HttpStatus.FORBIDDEN.value(), message);
     }

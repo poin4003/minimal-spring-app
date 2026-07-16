@@ -4,20 +4,16 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.LinkedHashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.config.jwt.JwtAccessPayload;
 import com.app.config.jwt.JwtTokenProvider;
 import com.app.core.exception.ExceptionFactory;
-import com.app.core.security.UserPrincipal;
 import com.app.features.auth.entity.ConsumedRefreshTokenEntity;
 import com.app.features.auth.entity.KeyStoreEntity;
 import com.app.features.auth.repository.ConsumedRefreshTokenRepository;
@@ -28,6 +24,7 @@ import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.service.KeyStoreService;
 import com.app.features.user.entity.UserBaseEntity;
+import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.repository.UserBaseRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -38,26 +35,17 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final AuthenticationManager authenticationManager;
     private final UserBaseRepository userBaseRepo;
     private final KeyStoreRepository keyStoreRepo;
     private final ConsumedRefreshTokenRepository consumedRefreshTokenRepo;
     private final KeyStoreService keyStoreService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public LoginResult login(LoginPayload payload, String ipAddress) {
-        String email = Objects.requireNonNull(payload.getEmail(), "Email must be not null");
-
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, payload.getPassword()));
-
-        UserPrincipal userDetails = (UserPrincipal) authentication.getPrincipal();
-        UUID userId = userDetails.getUserId();
-
-        UserBaseEntity user = userBaseRepo.findByEmail(email)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
+        UserBaseEntity user = authenticateCredentials(payload);
 
         user.setLoginTime(LocalDateTime.now());
         user.setLoginIp(ipAddress);
@@ -116,6 +104,10 @@ public class AuthServiceImpl implements AuthService {
         UserBaseEntity user = userBaseRepo.findByIdWithAuthorities(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User " + userId));
 
+        if (user.getStatus() != UserStatusEnum.ACTIVE) {
+            throw ExceptionFactory.invalidCredentials();
+        }
+
         return rotateSessionTokens(keyStore, user);
     }
 
@@ -142,6 +134,25 @@ public class AuthServiceImpl implements AuthService {
         keyStore = keyStoreRepo.save(keyStore);
 
         return issueTokens(keyStore, user, signingKey);
+    }
+
+    private UserBaseEntity authenticateCredentials(LoginPayload payload) {
+        if (payload.getEmail() == null || payload.getPassword() == null) {
+            throw ExceptionFactory.invalidCredentials();
+        }
+
+        UserBaseEntity user = userBaseRepo.findByEmail(payload.getEmail())
+                .orElseThrow(() -> ExceptionFactory.invalidCredentials());
+
+        if (!passwordEncoder.matches(payload.getPassword(), user.getPassword())) {
+            throw ExceptionFactory.invalidCredentials();
+        }
+
+        if (user.getStatus() != UserStatusEnum.ACTIVE) {
+            throw ExceptionFactory.invalidCredentials();
+        }
+
+        return user;
     }
 
     private LoginResult rotateSessionTokens(KeyStoreEntity keyStore, UserBaseEntity user) {
@@ -188,6 +199,7 @@ public class AuthServiceImpl implements AuthService {
 
         return JwtAccessPayload.builder()
                 .userEmail(user.getEmail())
+                .status(user.getStatus())
                 .roles(roleKeys)
                 .permissions(permissionKeys)
                 .build();

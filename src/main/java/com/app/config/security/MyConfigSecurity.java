@@ -4,11 +4,7 @@ import java.util.stream.Stream;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -17,12 +13,11 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 
 import com.app.config.jwt.JwtAuthenticationEntryPoint;
 import com.app.config.jwt.JwtAuthenticationFilter;
 import com.app.config.settings.AppProperties;
-import com.app.features.auth.service.impl.UserDetailServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,7 +27,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MyConfigSecurity {
 
-    private final UserDetailServiceImpl userDetailService;
     private final JwtAuthenticationEntryPoint jwtEntryPoint;
     private final AppProperties appProperties;
 
@@ -68,7 +62,7 @@ public class MyConfigSecurity {
                 .requestMatchers(apiPublicPaths).permitAll()
                 .requestMatchers(webPublicPaths).permitAll()
                 .anyRequest().authenticated())
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, AnonymousAuthenticationFilter.class);
 
         return http.build();
     }
@@ -78,16 +72,4 @@ public class MyConfigSecurity {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailService);
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
-            throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
-    }
 }

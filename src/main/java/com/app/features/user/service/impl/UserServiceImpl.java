@@ -42,7 +42,6 @@ public class UserServiceImpl implements UserService {
         userBase.setEmail(payload.getEmail());
         userBase.setPassword(passwordEncoder.encode(payload.getPassword()));
         userBase.setStatus(UserStatusEnum.ACTIVE);
-        userBase.setDelFlag("0");
 
         userBase = userBaseRepo.save(userBase);
 

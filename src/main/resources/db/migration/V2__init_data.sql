@@ -17,12 +17,11 @@ INSERT INTO role (id, name, role_key) VALUES (
     'SUPER_ADMIN'
 );
 
-INSERT INTO user_base (id, email, password, status, del_flag) VALUES (
+INSERT INTO user_base (id, email, password, status) VALUES (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
     '${bootstrapAdminEmail}',
     '${bootstrapAdminPasswordHash}',
-    'ACTIVE',
-    '0'
+    'ACTIVE'
 );
 
 INSERT INTO user_info (id, username) VALUES (
