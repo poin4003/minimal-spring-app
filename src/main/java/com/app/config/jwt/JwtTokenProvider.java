@@ -39,18 +39,22 @@ public class JwtTokenProvider {
         }
     }
 
-    public String generateAccessToken(UUID userId, JwtPayload payload, String signingKey) {
+    public String generateAccessToken(UUID userId, JwtAccessPayload payload, UUID keyStoreId, String signingKey) {
         try {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getAccessTokenExpirationMs();
 
             SecretKey key = jwtCrypto.toSecretKey(signingKey);
-
-            Map<String, Object> claims = objectMapper.convertValue(payload, new TypeReference<Map<String, Object>>() {
-            });
+            Map<String, Object> claims = objectMapper.convertValue(
+                    payload,
+                    new TypeReference<Map<String, Object>>() {
+                    });
 
             return Jwts.builder()
                     .json(jwtSerializer())
+                    .header()
+                    .keyId(keyStoreId.toString())
+                    .and()
                     .claims(claims)
                     .subject(userId.toString())
                     .issuedAt(new Date(now))
@@ -62,7 +66,7 @@ public class JwtTokenProvider {
         }
     }
 
-    public String generateRefreshToken(UUID userId, String signingKey) {
+    public String generateRefreshToken(UUID userId, UUID keyStoreId, String signingKey) {
         try {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getRefreshTokenExpirationMs();
@@ -71,6 +75,9 @@ public class JwtTokenProvider {
 
             return Jwts.builder()
                     .json(jwtSerializer())
+                    .header()
+                    .keyId(keyStoreId.toString())
+                    .and()
                     .subject(userId.toString())
                     .issuedAt(new Date(now))
                     .expiration(new Date(expiryDate))
@@ -81,23 +88,31 @@ public class JwtTokenProvider {
         }
     }
 
-    public UUID getUserIdFromTokenUnverified(String token) {
+    public UUID getKeyStoreIdFromTokenUnverified(String token) {
         try {
             String[] parts = token.split("\\.");
-            if (parts.length < 2) {
+            if (parts.length < 1) {
                 return null;
             }
 
-            Map<String, Object> payload = objectMapper.readValue(
-                    Base64.getUrlDecoder().decode(parts[1]),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+            JwtHeader header = objectMapper.readValue(
+                    Base64.getUrlDecoder().decode(parts[0]),
+                    JwtHeader.class);
 
-            Object sub = payload.get("sub");
-            return sub != null ? UUID.fromString(sub.toString()) : null;
+            return header.getKeyStoreId();
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public UUID getUserId(String token, String signingKey) throws Exception {
+        Claims claims = getAllClaimsFromToken(token, signingKey);
+        return UUID.fromString(claims.getSubject());
+    }
+
+    public JwtAccessPayload getAccessPayload(String token, String signingKey) throws Exception {
+        Claims claims = getAllClaimsFromToken(token, signingKey);
+        return objectMapper.convertValue(claims, JwtAccessPayload.class);
     }
 
     public boolean validateToken(String token, String signingKey) {

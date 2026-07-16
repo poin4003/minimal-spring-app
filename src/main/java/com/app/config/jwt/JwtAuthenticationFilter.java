@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -14,8 +13,8 @@ import com.app.config.settings.AppProperties;
 import com.app.core.security.KeyStoreResult;
 import com.app.core.security.UserPrincipal;
 import com.app.features.auth.service.KeyStoreService;
+import com.app.features.auth.service.impl.UserDetailServiceImpl;
 
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -23,7 +22,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Slf4j
@@ -31,8 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final ObjectMapper objectMapper;
-    private final UserDetailsService userDetailsService;
+    private final UserDetailServiceImpl userDetailsService;
     private final KeyStoreService keyStoreService;
     private final AppProperties appProperties;
 
@@ -46,16 +43,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String token = getJwtFromRequest(request);
 
             if (token != null) {
-                UUID userId = jwtTokenProvider.getUserIdFromTokenUnverified(token);
-                if (userId != null) {
-                    KeyStoreResult keyStore = keyStoreService.getKeyStoreByUserId(userId);
+                UUID keyStoreId = jwtTokenProvider.getKeyStoreIdFromTokenUnverified(token);
+                if (keyStoreId != null) {
+                    KeyStoreResult keyStore = keyStoreService.getKeyStoreById(keyStoreId);
 
                     if (keyStore != null)  {
-                        Claims claims = jwtTokenProvider.getAllClaimsFromToken(token, keyStore.getSigningKey());
-
-                        JwtPayload payload = objectMapper.convertValue(claims, JwtPayload.class);
-
-                        UserPrincipal userDetails = (UserPrincipal) userDetailsService.loadUserByUsername(payload.getUserEmail());
+                        UUID userId = jwtTokenProvider.getUserId(token, keyStore.getSigningKey());
+                        UserPrincipal userDetails = userDetailsService.loadUserByUserId(userId);
                         userDetails.setKeyStore(keyStore);
 
                         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(

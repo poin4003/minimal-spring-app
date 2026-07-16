@@ -18,4 +18,12 @@ public interface UserBaseRepository extends JpaRepository<UserBaseEntity, UUID> 
                 WHERE u.email = :email
             """)
     Optional<UserBaseEntity> findByEmail(String email);
+
+    @Query("""
+                SELECT DISTINCT u FROM UserBaseEntity u
+                LEFT JOIN FETCH u.roles r
+                LEFT JOIN FETCH r.permissions
+                WHERE u.id = :id
+            """)
+    Optional<UserBaseEntity> findByIdWithAuthorities(UUID id);
 }

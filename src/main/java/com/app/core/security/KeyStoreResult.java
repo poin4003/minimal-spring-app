@@ -7,11 +7,8 @@ import lombok.Data;
 @Data
 public class KeyStoreResult {
 
-    private UUID keyStoreId;
-
+    private UUID id;
     private UUID userId;
-
     private String signingKey;
-
     private String refreshToken;
 }

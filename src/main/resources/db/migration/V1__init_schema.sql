@@ -92,8 +92,8 @@ CREATE TABLE key_store (
         ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX uk_key_store_user_id ON key_store(user_id);
-CREATE INDEX idx_key_store_refresh_token ON key_store(refresh_token);
+CREATE INDEX idx_key_store_user_id ON key_store(user_id);
+CREATE UNIQUE INDEX uk_key_store_refresh_token ON key_store(refresh_token);
 
 CREATE TABLE consumed_refresh_token (
     id UUID PRIMARY KEY,

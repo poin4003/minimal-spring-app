@@ -23,14 +23,15 @@ public class KeyStoreServiceImpl implements KeyStoreService {
     private final ModelMapper modelMapper;
 
     @Override
-    public KeyStoreResult getKeyStoreByUserId(UUID userId) {
-        return keyStoreRepo.findByUserId(userId)
+    public KeyStoreResult getKeyStoreById(UUID keyStoreId) {
+        return keyStoreRepo.findById(keyStoreId)
                 .map(keyStore -> modelMapper.map(keyStore, KeyStoreResult.class))
                 .orElse(null);
     }
 
+    @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void deleteKeyStoreByUserId(UUID userId) {
-        keyStoreRepo.deleteByUserId(userId);
+    public void deleteKeyStoreById(UUID keyStoreId) {
+        keyStoreRepo.deleteById(keyStoreId);
     }
 }

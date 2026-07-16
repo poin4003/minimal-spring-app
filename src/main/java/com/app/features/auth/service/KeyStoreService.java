@@ -6,7 +6,7 @@ import com.app.core.security.KeyStoreResult;
 
 public interface KeyStoreService {
 
-    KeyStoreResult getKeyStoreByUserId(UUID userId);
+    KeyStoreResult getKeyStoreById(UUID keyStoreId);
 
-    void deleteKeyStoreByUserId(UUID userId);
+    void deleteKeyStoreById(UUID keyStoreId);
 }

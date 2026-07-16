@@ -3,8 +3,9 @@ package com.app.features.auth.service.impl;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.app.config.jwt.JwtPayload;
+import com.app.config.jwt.JwtAccessPayload;
 import com.app.config.jwt.JwtTokenProvider;
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.security.UserPrincipal;
@@ -54,7 +55,6 @@ public class AuthServiceImpl implements AuthService {
 
         UserPrincipal userDetails = (UserPrincipal) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
-        String userEmail = userDetails.getEmail();
 
         UserBaseEntity user = userBaseRepo.findByEmail(email)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
@@ -63,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
         user.setLoginIp(ipAddress);
         userBaseRepo.save(user);
 
-        return generateAndSaveTokens(userId, userEmail);
+        return createSessionTokens(user);
     }
 
     @Override
@@ -75,24 +75,32 @@ public class AuthServiceImpl implements AuthService {
                 .orElse(null);
 
         if (usedToken != null) {
-            log.warn("Refresh Token reuse detected! userId: {}", usedToken.getUserId());
-            keyStoreService.deleteKeyStoreByUserId(usedToken.getUserId());
+            log.warn("Refresh Token reuse detected! keyStoreId: {}", usedToken.getKeyStoreId());
+            keyStoreService.deleteKeyStoreById(usedToken.getKeyStoreId());
             throw ExceptionFactory.permissionError("Something wrong happened! Please relogin.");
         }
 
-        UUID userId = jwtTokenProvider.getUserIdFromTokenUnverified(tokenStr);
-        if (userId == null)
-            throw ExceptionFactory.notFound("userId " + userId);
-
-        KeyStoreEntity keyStore = keyStoreRepo.findByUserId(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User keystore not found. Please login again."));
-
-        if (!tokenStr.equals(keyStore.getRefreshToken())) {
+        UUID keyStoreId = jwtTokenProvider.getKeyStoreIdFromTokenUnverified(tokenStr);
+        if (keyStoreId == null) {
             throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
         }
 
-        if (!jwtTokenProvider.validateToken(tokenStr, keyStore.getSigningKey())) {
+        KeyStoreEntity keyStore = keyStoreRepo.findById(keyStoreId)
+                .orElseThrow(() -> ExceptionFactory.notFound("User keystore not found. Please login again."));
+
+        UUID userId;
+        try {
+            userId = jwtTokenProvider.getUserId(tokenStr, keyStore.getSigningKey());
+        } catch (Exception e) {
             throw ExceptionFactory.permissionError("RefreshToken Expired or Invalid Signature");
+        }
+
+        if (!userId.equals(keyStore.getUserId())) {
+            throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
+        }
+
+        if (!tokenStr.equals(keyStore.getRefreshToken())) {
+            throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
         }
 
         ConsumedRefreshTokenEntity history = new ConsumedRefreshTokenEntity();
@@ -105,53 +113,83 @@ public class AuthServiceImpl implements AuthService {
         history.setExpiryDate(expiryDate.toInstant());
         consumedRefreshTokenRepo.save(history);
 
-        UserBaseEntity user = userBaseRepo.findById(userId)
+        UserBaseEntity user = userBaseRepo.findByIdWithAuthorities(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User " + userId));
 
-        return generateAndSaveTokens(userId, user.getEmail());
+        return rotateSessionTokens(keyStore, user);
     }
 
     @Override
     @Transactional
-    public void logout(UUID userId) {
+    public void logout(UUID userId, UUID keyStoreId) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
 
         user.setLogoutTime(LocalDateTime.now());
         userBaseRepo.save(user);
 
-        keyStoreRepo.deleteByUserId(userId);
+        if (keyStoreId != null) {
+            keyStoreRepo.deleteById(keyStoreId);
+        }
     }
 
-    private LoginResult generateAndSaveTokens(UUID userId, String userEmail) {
+    private LoginResult createSessionTokens(UserBaseEntity user) {
         String signingKey = jwtTokenProvider.generateSigningKey();
 
-        JwtPayload payload = JwtPayload.builder()
-                .userEmail(userEmail)
-                .build();
+        KeyStoreEntity keyStore = new KeyStoreEntity();
+        keyStore.setUserId(user.getId());
+        keyStore.setSigningKey(signingKey);
+        keyStore = keyStoreRepo.save(keyStore);
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(userId, payload, signingKey);
-        String newRefreshToken = jwtTokenProvider.generateRefreshToken(userId, signingKey);
+        return issueTokens(keyStore, user, signingKey);
+    }
 
-        Optional<KeyStoreEntity> existingOpt = keyStoreRepo.findByUserId(userId);
+    private LoginResult rotateSessionTokens(KeyStoreEntity keyStore, UserBaseEntity user) {
+        String signingKey = jwtTokenProvider.generateSigningKey();
+        keyStore.setSigningKey(signingKey);
+        return issueTokens(keyStore, user, signingKey);
+    }
 
-        if (existingOpt.isPresent()) {
-            KeyStoreEntity existing = existingOpt.get();
-            existing.setSigningKey(signingKey);
-            existing.setRefreshToken(newRefreshToken);
-            keyStoreRepo.save(existing);
-        } else {
-            KeyStoreEntity keyStore = new KeyStoreEntity();
-            keyStore.setUserId(userId);
-            keyStore.setSigningKey(signingKey);
-            keyStore.setRefreshToken(newRefreshToken);
-            keyStoreRepo.save(keyStore);
-        }
+    private LoginResult issueTokens(KeyStoreEntity keyStore, UserBaseEntity user, String signingKey) {
+        JwtAccessPayload payload = buildAccessPayload(user);
+
+        String newAccessToken = jwtTokenProvider.generateAccessToken(
+                keyStore.getUserId(),
+                payload,
+                keyStore.getId(),
+                signingKey);
+        String newRefreshToken = jwtTokenProvider.generateRefreshToken(
+                keyStore.getUserId(),
+                keyStore.getId(),
+                signingKey);
+
+        keyStore.setRefreshToken(newRefreshToken);
+        keyStoreRepo.save(keyStore);
 
         LoginResult response = new LoginResult();
         response.setAccessToken(newAccessToken);
         response.setRefreshToken(newRefreshToken);
-
         return response;
+    }
+
+    private JwtAccessPayload buildAccessPayload(UserBaseEntity user) {
+        Set<String> roleKeys = user.getRoles() == null
+                ? Set.of()
+                : user.getRoles().stream()
+                        .map(role -> role.getKey())
+                        .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+
+        Set<String> permissionKeys = user.getRoles() == null
+                ? Set.of()
+                : user.getRoles().stream()
+                        .flatMap(role -> role.getPermissions().stream())
+                        .map(permission -> permission.getKey())
+                        .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+
+        return JwtAccessPayload.builder()
+                .userEmail(user.getEmail())
+                .roles(roleKeys)
+                .permissions(permissionKeys)
+                .build();
     }
 }

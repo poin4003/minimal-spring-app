@@ -75,8 +75,8 @@ public class LoginPageController {
     public String logout(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletResponse response) {
-        if (currentUser != null) {
-            authService.logout(currentUser.getUserId());
+        if (currentUser != null && currentUser.getKeyStore() != null) {
+            authService.logout(currentUser.getUserId(), currentUser.getKeyStore().getId());
         }
 
         SecurityContextHolder.clearContext();
