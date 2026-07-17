@@ -83,7 +83,7 @@ CREATE TABLE key_store (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
     signing_key VARCHAR(255) NOT NULL,
-    refresh_token VARCHAR(255),
+    refresh_token VARCHAR(512),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT fk_key_store_user
@@ -98,7 +98,7 @@ CREATE TABLE consumed_refresh_token (
     id UUID PRIMARY KEY,
     key_store_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    token_value VARCHAR(255),
+    token_value VARCHAR(512),
     expiry_date TIMESTAMP WITH TIME ZONE,
     used_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,

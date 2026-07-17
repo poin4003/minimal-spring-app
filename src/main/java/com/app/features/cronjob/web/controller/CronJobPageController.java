@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
+import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
@@ -74,6 +76,7 @@ public class CronJobPageController {
     private final ModelMapper mapper;
 
     @GetMapping
+    @Secured(PermissionConstants.CRONJOB_VIEW)
     public String index(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
@@ -99,6 +102,7 @@ public class CronJobPageController {
     }
 
     @PostMapping("/{jobType}")
+    @Secured(PermissionConstants.CRONJOB_UPDATE)
     public String update(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,

@@ -33,6 +33,6 @@ public class KeyStoreEntity extends BaseAuditEntity {
     @Column(name = "signing_key", nullable = false)
     private String signingKey;
 
-    @Column(name = "refresh_token")
+    @Column(name = "refresh_token", length = 512)
     private String refreshToken;
 }

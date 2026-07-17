@@ -34,7 +34,7 @@ public class ConsumedRefreshTokenEntity extends BaseAuditEntity {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "token_value")
+    @Column(name = "token_value", length = 512)
     private String tokenValue;
 
     @Column(name = "expiry_date")
