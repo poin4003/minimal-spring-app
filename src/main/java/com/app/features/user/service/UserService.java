@@ -5,8 +5,8 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.schema.payload.CreateUserPayload;
-import com.app.features.user.schema.payload.UpdateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.schema.result.UserResult;
 
@@ -18,7 +18,7 @@ public interface UserService {
 
     UserDetailResult getUserDetailById(UUID userId);
 
-    UserResult updateUser(UUID userId, UpdateUserPayload payload);
+    UserResult updateUserStatus(UUID userId, UserStatusEnum status);
 
     void checkEmailUnique(String email);
 }

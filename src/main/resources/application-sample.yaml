@@ -7,6 +7,7 @@ app:
     auth:
         cookie:
             access-token-name: ACCESS_TOKEN
+            refresh-token-name: REFRESH_TOKEN
             path: /
             same-site: Lax
             secure: false
@@ -22,7 +23,8 @@ app:
         refresh-token-expiration-ms: 604800000 # 7 days
     security:
         api-public-paths:
-            - /api/v1/auth/**
+            - /api/v1/auth/login
+            - /api/v1/auth/refresh
         web-public-paths:
             - /login
             - /logout

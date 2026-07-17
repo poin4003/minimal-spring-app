@@ -85,6 +85,7 @@
 
 ## Session Revocation Rule
 - Use `@RevokeSessions` on service methods whose successful changes invalidate active JWT authorization state.
+- Do not place `@RevokeSessions` on a broad update method when only some fields invalidate authentication state; split security-sensitive updates into explicit service methods.
 - An annotated method must declare its target `UUID` as the first parameter so the aspect can bind it directly with `args(targetId, ..)`.
 - Use `SessionRevocationScope.USER` when the first UUID is a user ID and `SessionRevocationScope.USERS_BY_ROLE` when it is a role ID.
 - For role-scoped revocation, use one database bulk operation instead of loading affected user IDs into application memory.

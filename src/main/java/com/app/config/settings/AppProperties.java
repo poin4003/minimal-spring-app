@@ -33,6 +33,9 @@ public class AppProperties {
         private String accessTokenName = "ACCESS_TOKEN";
 
         @NotBlank
+        private String refreshTokenName = "REFRESH_TOKEN";
+
+        @NotBlank
         private String path = "/";
 
         @NotBlank
@@ -61,7 +64,8 @@ public class AppProperties {
     @Data
     public static class Security {
         private List<String> apiPublicPaths = List.of(
-                "/api/v1/auth/**");
+                "/api/v1/auth/login",
+                "/api/v1/auth/refresh");
 
         private List<String> webPublicPaths = List.of(
                 "/login",

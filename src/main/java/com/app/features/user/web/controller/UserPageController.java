@@ -47,7 +47,6 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
-import com.app.features.user.schema.payload.UpdateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.service.UserService;
@@ -157,9 +156,9 @@ public class UserPageController {
         return "user/index";
     }
 
-    @PostMapping("/{userId}")
+    @PostMapping("/{userId}/status")
     @Secured(PermissionConstants.USER_CREATE)
-    public String update(
+    public String updateStatus(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @PathVariable UUID userId,
@@ -170,7 +169,7 @@ public class UserPageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> userService.updateUser(userId, mapper.map(form, UpdateUserPayload.class)));
+                () -> userService.updateUserStatus(userId, form.getStatus()));
 
         if (submitResult.success()) {
             return "redirect:" + query.toUri(
@@ -340,7 +339,7 @@ public class UserPageController {
                         .title("User Detail")
                         .description("Review account information and update the current status.")
                         .actionPath(query.toUri(
-                                appProperties.getUi().getHomePath() + "/users/" + userId,
+                                appProperties.getUi().getHomePath() + "/users/" + userId + "/status",
                                 USER_PAGE_DEFAULTS))
                         .submitLabel("Save Changes")
                         .build(),

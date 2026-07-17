@@ -13,6 +13,7 @@ import com.app.config.settings.AppProperties;
 import com.app.core.security.UserPrincipal;
 import com.app.core.utils.HttpUtils;
 import com.app.features.auth.schema.payload.LoginPayload;
+import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.web.support.AuthCookieService;
 import com.app.features.auth.web.view.LoginPageView;
@@ -60,9 +61,8 @@ public class LoginPageController {
             HttpServletRequest request,
             HttpServletResponse response) {
         try {
-            authCookieService.writeAuthenticationCookie(
-                    response,
-                    authService.login(form, HttpUtils.getClientIp(request)).getAccessToken());
+            LoginResult tokens = authService.login(form, HttpUtils.getClientIp(request));
+            authCookieService.writeAuthenticationCookies(response, tokens);
 
             return "redirect:" + appProperties.getUi().getHomePath();
         } catch (RuntimeException ex) {

@@ -20,7 +20,6 @@ import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.repository.UserBaseRepository;
 import com.app.features.user.schema.payload.CreateUserPayload;
-import com.app.features.user.schema.payload.UpdateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.schema.result.UserResult;
 import com.app.features.user.service.UserService;
@@ -75,12 +74,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @RevokeSessions(scope = SessionRevocationScope.USER)
-    public UserResult updateUser(UUID userId, UpdateUserPayload payload) {
+    public UserResult updateUserStatus(UUID userId, UserStatusEnum status) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
 
-        mapper.getConfiguration().setSkipNullEnabled(true);
-        mapper.map(payload, user);
+        user.setStatus(status);
 
         user = userBaseRepo.save(user);
 
