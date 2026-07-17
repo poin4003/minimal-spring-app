@@ -59,7 +59,7 @@ body {
 
 .app-menu-link:hover,
 .app-menu-toggle:hover {
-    background: var(--bs-light);
+    background: var(--bs-tertiary-bg);
     color: var(--bs-body-color);
 }
 

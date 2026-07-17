@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <button th:fragment="themeToggle"
+            type="button"
+            class="btn btn-outline-secondary app-header-action"
+            data-app-theme-toggle
+            aria-label="Switch to dark theme">
+        <span data-app-theme-label>Dark theme</span>
+    </button>
+
+    <div th:fragment="loader"
+         id="app-loader"
+         class="app-loader"
+         hidden
+         aria-live="polite"
+         aria-busy="true">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</body>
+</html>
