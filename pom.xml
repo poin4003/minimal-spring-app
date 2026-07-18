@@ -31,6 +31,7 @@
         <h2.version>2.2.224</h2.version>
         <jobrunr.version>7.2.1</jobrunr.version>
         <tika.version>3.3.1</tika.version>
+        <jaffree.version>2024.08.29</jaffree.version>
         
         <!-- Plugin Versions -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
@@ -140,6 +141,12 @@
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
             <version>${tika.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.kokorin.jaffree</groupId>
+            <artifactId>jaffree</artifactId>
+            <version>${jaffree.version}</version>
         </dependency>
 
         <!-- Job/Queue with DB -->

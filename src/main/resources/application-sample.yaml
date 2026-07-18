@@ -23,32 +23,39 @@ app:
         refresh-token-expiration-ms: 604800000 # 7 days
     media:
         storage-path: ${MEDIA_STORAGE_PATH:./data/media}
-        max-file-size-bytes: ${MEDIA_MAX_FILE_SIZE_BYTES:10485760}
         max-image-pixels: ${MEDIA_MAX_IMAGE_PIXELS:40000000}
         allowed-types:
             - extension: jpg
               kind: IMAGE
+              max-file-size-bytes: 10485760
               content-types: [image/jpeg]
             - extension: jpeg
               kind: IMAGE
+              max-file-size-bytes: 10485760
               content-types: [image/jpeg]
             - extension: png
               kind: IMAGE
+              max-file-size-bytes: 10485760
               content-types: [image/png]
             - extension: mp4
               kind: VIDEO
+              max-file-size-bytes: 1073741824
               content-types: [video/mp4]
             - extension: mp3
               kind: AUDIO
+              max-file-size-bytes: 209715200
               content-types: [audio/mpeg]
             - extension: pdf
               kind: DOCUMENT
+              max-file-size-bytes: 52428800
               content-types: [application/pdf]
             - extension: md
               kind: DOCUMENT
+              max-file-size-bytes: 5242880
               content-types: [text/markdown, text/plain]
             - extension: zip
               kind: FILE
+              max-file-size-bytes: 1073741824
               content-types: [application/zip]
         ffmpeg:
             executable: ${FFMPEG_PATH:ffmpeg}
@@ -127,8 +134,8 @@ spring:
 
     servlet:
         multipart:
-            max-file-size: 500MB
-            max-request-size: 500MB
+            max-file-size: ${MULTIPART_MAX_FILE_SIZE:1GB}
+            max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:1100MB}
 
     jackson:
         serialization:

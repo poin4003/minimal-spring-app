@@ -13,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
@@ -24,7 +26,10 @@ import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.storage.MediaFileStorage;
+import com.app.features.media.storage.StagedMediaFile;
 import com.app.features.media.storage.StoredMediaFile;
+import com.app.features.media.validation.MediaFileValidator;
+import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.repository.UserBaseRepository;
 
@@ -40,15 +45,34 @@ public class MediaServiceImpl implements MediaService {
     private final MediaRepository mediaRepository;
     private final UserBaseRepository userBaseRepository;
     private final MediaFileStorage mediaFileStorage;
+    private final MediaTypePolicyResolver mediaTypePolicyResolver;
+    private final MediaFileValidator mediaFileValidator;
     private final ModelMapper mapper;
 
     @Transactional
     @Override
     public MediaResult createMedia(UUID createdById, CreateMediaPayload payload) {
+        if (payload == null || payload.getFile() == null) {
+            throw ExceptionFactory.invalidParam("Media file is required.");
+        }
+
         UserBaseEntity creator = userBaseRepository.findById(createdById)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
 
-        StoredMediaFile storedFile = mediaFileStorage.store(payload.getFile());
+        MultipartFile upload = payload.getFile();
+        AllowedMediaType policy = mediaTypePolicyResolver.resolve(upload.getOriginalFilename());
+        StagedMediaFile stagedFile = mediaFileStorage.stage(upload, policy);
+        StoredMediaFile storedFile;
+        try {
+            String detectedContentType = mediaFileValidator.validate(
+                    stagedFile.getTemporaryPath(),
+                    policy);
+            storedFile = mediaFileStorage.commit(stagedFile, detectedContentType);
+        } catch (RuntimeException ex) {
+            mediaFileStorage.discard(stagedFile);
+            throw ex;
+        }
+
         registerRollbackCleanup(storedFile.getStorageKey());
 
         MediaEntity media = new MediaEntity();
