@@ -30,6 +30,7 @@
         <easyexcel.version>3.3.4</easyexcel.version>
         <h2.version>2.2.224</h2.version>
         <jobrunr.version>7.2.1</jobrunr.version>
+        <tika.version>3.3.1</tika.version>
         
         <!-- Plugin Versions -->
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
@@ -133,6 +134,12 @@
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
             <version>${easyexcel.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika.version}</version>
         </dependency>
 
         <!-- Job/Queue with DB -->

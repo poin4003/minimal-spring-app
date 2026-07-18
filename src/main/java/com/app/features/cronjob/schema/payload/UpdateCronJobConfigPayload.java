@@ -1,6 +1,6 @@
 package com.app.features.cronjob.schema.payload;
 
-import com.app.features.cronjob.enums.CronjobStatusEnum;
+import com.app.core.enums.RecordStatus;
 import com.app.features.cronjob.validation.ValidJobRunrCron;
 
 import jakarta.validation.constraints.NotNull;
@@ -15,5 +15,5 @@ public class UpdateCronJobConfigPayload {
     private String cronExpression;
 
     @NotNull(message = "Cronjob status is required")
-    private CronjobStatusEnum status;
+    private RecordStatus status;
 }

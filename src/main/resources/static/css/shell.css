@@ -19,6 +19,9 @@ body {
 
 .app-sidebar-panel {
     min-height: 100vh;
+    border-bottom: var(--bs-border-width)
+        var(--bs-border-style)
+        var(--bs-border-color) !important;
 }
 
 .app-header {
@@ -95,5 +98,9 @@ body {
     .app-sidebar-panel {
         position: sticky;
         top: 0;
+        border-right: var(--bs-border-width)
+            var(--bs-border-style)
+            var(--bs-border-color) !important;
+        border-bottom: 0 !important;
     }
 }

@@ -1,6 +1,6 @@
 package com.app.features.cronjob.web.view;
 
-import com.app.features.cronjob.enums.CronjobStatusEnum;
+import com.app.core.enums.RecordStatus;
 import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.enums.UiCellType;
 
@@ -20,7 +20,7 @@ public class CronJobTableRowView {
     private String cronExpression;
 
     @UiColumn(label = "Status", order = 30, type = UiCellType.BADGE)
-    private CronjobStatusEnum status;
+    private RecordStatus status;
 
     @UiColumn(label = "Updated At", order = 40)
     private String updatedAt;

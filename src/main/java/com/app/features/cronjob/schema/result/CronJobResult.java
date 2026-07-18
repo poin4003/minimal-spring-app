@@ -2,7 +2,7 @@ package com.app.features.cronjob.schema.result;
 
 import java.util.UUID;
 
-import com.app.features.cronjob.enums.CronjobStatusEnum;
+import com.app.core.enums.RecordStatus;
 
 import lombok.Data;
 
@@ -15,7 +15,7 @@ public class CronJobResult {
 
     private String cronExpression;
 
-    private CronjobStatusEnum status;
+    private RecordStatus status;
 
     private String createdAt;
 

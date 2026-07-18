@@ -9,9 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.cronjob.entity.CronJobConfigEntity;
-import com.app.features.cronjob.enums.CronjobStatusEnum;
 import com.app.features.cronjob.repository.CronJobConfigRepository;
 import com.app.features.cronjob.scheduler.RecurringJobDefinition;
 import com.app.features.cronjob.scheduler.RecurringJobRegistry;
@@ -61,7 +61,7 @@ public class CronJobServiceImpl implements CronJobService {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
                 .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
 
-        if (config.getStatus() == CronjobStatusEnum.INACTIVE) {
+        if (config.getStatus() == RecordStatus.INACTIVE) {
             storageProvider.deleteRecurringJob(jobType);
             log.info("Disabled recurring job [{}]", jobType);
             return;
@@ -75,7 +75,7 @@ public class CronJobServiceImpl implements CronJobService {
 
     @Transactional
     @Override
-    public void updateConfig(String jobType, String cronExpression, CronjobStatusEnum status) {
+    public void updateConfig(String jobType, String cronExpression, RecordStatus status) {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
                 .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
 

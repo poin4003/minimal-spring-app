@@ -77,11 +77,19 @@
 - Prefer Spring Data derived query methods for simple lookups, existence checks, relation traversal, and small delete operations.
 - Prefer `@EntityGraph` for defining fetch plans instead of writing manual `JOIN FETCH` queries.
 - Prefer `JpaSpecificationExecutor`, Criteria API, and the JPA static metamodel for dynamic filtering.
+- Any general listing displayed in the UI or exposed as a browsable result must use `Page<T>` at the service boundary and accept paging through `Pageable` or the project's base paging filter.
+- Do not use repository methods returning `List` or `Set` to implement general display listings.
+- Repository methods returning `List` or `Set` are reserved for bounded domain operations, such as validating a caller-supplied collection of IDs, loading assignment relations, or performing finite business checks.
 - Do not use `@Query` when the same behavior can be expressed clearly and efficiently with a derived query, entity graph, or specification.
 - JPQL `@Query` is allowed for bulk update/delete operations or queries that cannot be expressed clearly without harming correctness or performance.
 - Native SQL through `nativeQuery = true`, `@NativeQuery`, `EntityManager.createNativeQuery`, or JDBC query APIs is prohibited by default.
 - Native SQL requires an explicit database-specific requirement and must be shown to the user before being added.
 - Flyway schema and data migrations are exempt because SQL is their intended format.
+
+## Audit Index Rule
+- Every concrete entity extending `BaseAuditEntity` must declare table-specific indexes for both `created_at` and `updated_at`.
+- Flyway migrations must create the matching audit indexes immediately after the related `CREATE TABLE` statement instead of grouping them at the end of the migration.
+- Join tables without audit columns are excluded from this rule.
 
 ## Session Revocation Rule
 - Use `@RevokeSessions` on service methods whose successful changes invalidate active JWT authorization state.

@@ -21,11 +21,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.enums.RecordStatus;
 import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
-import com.app.features.cronjob.enums.CronjobStatusEnum;
 import com.app.features.cronjob.schema.result.CronJobDetailResult;
 import com.app.features.cronjob.service.CronJobService;
 import com.app.features.cronjob.web.view.CronJobDetailModalForm;
@@ -265,8 +265,8 @@ public class CronJobPageController {
         return form;
     }
 
-    private List<UiModalFieldOptionView> buildStatusOptions(CronjobStatusEnum selectedStatus) {
-        return Arrays.stream(CronjobStatusEnum.values())
+    private List<UiModalFieldOptionView> buildStatusOptions(RecordStatus selectedStatus) {
+        return Arrays.stream(RecordStatus.values())
                 .map(status -> UiModalFieldOptionView.builder()
                         .value(status.name())
                         .label(status.name())

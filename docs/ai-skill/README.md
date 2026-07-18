@@ -16,6 +16,7 @@ Current conventions:
 File list:
 - `project-rules.md`: core rules and the current source structure.
 - `bug-notes.md`: a separate bug note file that can be expanded gradually during development.
+- `social-media-business.md`: stable product scope and business rules for the social media features.
 
 Useful local H2 URL:
 `jdbc:h2:file:C:/workspace/Java/minimal-spring-app/data/minimal_db;AUTO_SERVER=TRUE`

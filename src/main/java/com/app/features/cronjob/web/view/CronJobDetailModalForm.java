@@ -1,6 +1,6 @@
 package com.app.features.cronjob.web.view;
 
-import com.app.features.cronjob.enums.CronjobStatusEnum;
+import com.app.core.enums.RecordStatus;
 import com.app.features.cronjob.validation.ValidJobRunrCron;
 import com.app.features.ui.web.annotation.UiField;
 import com.app.features.ui.web.enums.UiInputType;
@@ -82,5 +82,5 @@ public class CronJobDetailModalForm {
             placeholder = "Select status",
             required = true)
     @NotNull(message = "Cronjob status is required")
-    private CronjobStatusEnum status;
+    private RecordStatus status;
 }

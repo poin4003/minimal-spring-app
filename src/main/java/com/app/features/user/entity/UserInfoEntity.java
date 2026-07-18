@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
@@ -18,7 +19,10 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Entity
-@Table(name = "user_info")
+@Table(name = "user_info", indexes = {
+        @Index(name = "idx_user_info_created_at", columnList = "created_at"),
+        @Index(name = "idx_user_info_updated_at", columnList = "updated_at")
+})
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class UserInfoEntity extends BaseAuditEntity {
