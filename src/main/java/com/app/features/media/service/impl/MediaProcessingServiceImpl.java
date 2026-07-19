@@ -26,6 +26,7 @@ import com.app.features.media.enums.MediaVariantType;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.schema.model.HlsEncodingProfile;
+import com.app.features.media.schema.model.HlsProcessingResult;
 import com.app.features.media.service.MediaProcessingService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.MediaProcessingWorkspace;
@@ -57,8 +58,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         }
 
         try {
-            List<HlsEncodingProfile> generatedProfiles = createHls(media);
-            markReady(mediaId, generatedProfiles);
+            HlsProcessingResult processingResult = createHls(media);
+            markReady(mediaId, processingResult);
         } catch (RuntimeException ex) {
             markFailed(mediaId);
             throw ex;
@@ -79,7 +80,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         return media;
     }
 
-    private List<HlsEncodingProfile> createHls(MediaEntity media) {
+    private HlsProcessingResult createHls(MediaEntity media) {
         Path source = mediaFileStorage.resolve(media.getStorageKey());
         MediaProcessingWorkspace workspace =
                 mediaFileStorage.prepareProcessingWorkspace(media.getStorageKey());
@@ -102,7 +103,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     profiles);
 
             mediaFileStorage.publishProcessingWorkspace(workspace);
-            return profiles;
+            return new HlsProcessingResult(
+                    workspace.getPublishedDirectoryKey(),
+                    profiles);
         } finally {
             mediaFileStorage.discardProcessingWorkspace(workspace);
         }
@@ -231,58 +234,41 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     }
 
     @Transactional
-    private void markReady(UUID mediaId, List<HlsEncodingProfile> generatedProfiles) {
+    private void markReady(UUID mediaId, HlsProcessingResult processingResult) {
         MediaEntity media = mediaRepository.findById(mediaId).orElse(null);
         if (media == null) {
             return;
         }
 
-        String hlsDirectoryKey = resolveMediaDirectoryKey(media.getStorageKey()) + "/hls";
-        List<MediaVariantEntity> variants = new ArrayList<>();
-        variants.add(buildVariant(
-                media,
-                MediaVariantType.HLS_MASTER_PLAYLIST,
-                HlsReservedVariantKey.MASTER.getKey(),
-                hlsDirectoryKey + "/index.m3u8",
-                null,
-                null));
+        mediaVariantRepository.deleteAllByMedia_Id(mediaId);
+        mediaVariantRepository.flush();
 
-        for (HlsEncodingProfile profile : generatedProfiles) {
-            variants.add(buildVariant(
-                    media,
-                    MediaVariantType.HLS_RENDITION,
-                    profile.getKey(),
-                    hlsDirectoryKey + "/" + profile.getKey() + "/index.m3u8",
-                    profile.getHeight(),
-                    profile.getTotalBitrate()));
+        String hlsDirectoryKey = processingResult.getPublishedDirectoryKey();
+        List<MediaVariantEntity> variants = new ArrayList<>();
+
+        MediaVariantEntity masterVariant = new MediaVariantEntity();
+        masterVariant.setMedia(media);
+        masterVariant.setVariantType(MediaVariantType.HLS_MASTER_PLAYLIST);
+        masterVariant.setVariantKey(HlsReservedVariantKey.MASTER.getKey());
+        masterVariant.setStorageKey(hlsDirectoryKey + "/index.m3u8");
+        masterVariant.setContentType(HLS_CONTENT_TYPE);
+        variants.add(masterVariant);
+
+        for (HlsEncodingProfile profile : processingResult.getProfiles()) {
+            MediaVariantEntity renditionVariant = new MediaVariantEntity();
+            renditionVariant.setMedia(media);
+            renditionVariant.setVariantType(MediaVariantType.HLS_RENDITION);
+            renditionVariant.setVariantKey(profile.getKey());
+            renditionVariant.setStorageKey(
+                    hlsDirectoryKey + "/" + profile.getKey() + "/index.m3u8");
+            renditionVariant.setContentType(HLS_CONTENT_TYPE);
+            renditionVariant.setHeight(profile.getHeight());
+            renditionVariant.setBitrate(profile.getTotalBitrate());
+            variants.add(renditionVariant);
         }
 
         mediaVariantRepository.saveAll(variants);
         media.setProcessingStatus(MediaProcessingStatus.READY);
-    }
-
-    private MediaVariantEntity buildVariant(
-            MediaEntity media,
-            MediaVariantType variantType,
-            String variantKey,
-            String storageKey,
-            Integer height,
-            Integer bitrate) {
-        MediaVariantEntity variant = mediaVariantRepository
-                .findByMedia_IdAndVariantTypeAndVariantKey(
-                        media.getId(),
-                        variantType,
-                        variantKey)
-                .orElseGet(() -> new MediaVariantEntity());
-        variant.setMedia(media);
-        variant.setVariantType(variantType);
-        variant.setVariantKey(variantKey);
-        variant.setStorageKey(storageKey);
-        variant.setContentType(HLS_CONTENT_TYPE);
-        variant.setWidth(null);
-        variant.setHeight(height);
-        variant.setBitrate(bitrate);
-        return variant;
     }
 
     @Transactional
@@ -293,14 +279,6 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
     private boolean requiresHls(MediaKind kind) {
         return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO;
-    }
-
-    private String resolveMediaDirectoryKey(String storageKey) {
-        int separatorIndex = storageKey.lastIndexOf('/');
-        if (separatorIndex < 0) {
-            throw ExceptionFactory.serverError("Media storage key is invalid.");
-        }
-        return storageKey.substring(0, separatorIndex);
     }
 
 }

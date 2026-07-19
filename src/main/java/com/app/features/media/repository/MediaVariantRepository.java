@@ -15,10 +15,7 @@ public interface MediaVariantRepository extends JpaRepository<MediaVariantEntity
 
     List<MediaVariantEntity> findAllByMedia_IdOrderByVariantTypeAscHeightAsc(UUID mediaId);
 
-    Optional<MediaVariantEntity> findByMedia_IdAndVariantTypeAndVariantKey(
-            UUID mediaId,
-            MediaVariantType variantType,
-            String variantKey);
+    void deleteAllByMedia_Id(UUID mediaId);
 
     Optional<MediaVariantEntity>
             findByMedia_PublicKeyAndMedia_StatusAndMedia_ProcessingStatusAndVariantTypeAndVariantKey(
