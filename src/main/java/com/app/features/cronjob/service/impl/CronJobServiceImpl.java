@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
@@ -56,21 +58,13 @@ public class CronJobServiceImpl implements CronJobService {
 
     @Override
     public void refreshRecurringJob(String jobType) {
-        RecurringJobDefinition definition = recurringJobRegistry.getRequired(jobType);
-
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
                 .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
 
-        if (config.getStatus() == RecordStatus.INACTIVE) {
-            storageProvider.deleteRecurringJob(jobType);
-            log.info("Disabled recurring job [{}]", jobType);
-            return;
-        }
-
-        String cron = definition.resolveCron(config.getCronExpression());
-
-        storageProvider.saveRecurringJob(definition.toRecurringJob(cron));
-        log.info("Registered recurring job [{}] with cron [{}]", jobType, cron);
+        applyRecurringJob(
+                config.getJobType(),
+                config.getCronExpression(),
+                config.getStatus());
     }
 
     @Transactional
@@ -79,11 +73,16 @@ public class CronJobServiceImpl implements CronJobService {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
                 .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
 
-        config.setCronExpression(normalizeCronExpression(cronExpression));
+        String normalizedExpression = normalizeCronExpression(cronExpression);
+
+        config.setCronExpression(normalizedExpression);
         config.setStatus(status);
         jobConfigRepo.save(config);
 
-        refreshRecurringJob(jobType);
+        registerRefreshAfterCommit(
+                config.getJobType(),
+                normalizedExpression,
+                status);
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -109,5 +108,41 @@ public class CronJobServiceImpl implements CronJobService {
             return null;
         }
         return cronExpression.trim();
+    }
+
+    private void registerRefreshAfterCommit(
+            String jobType,
+            String cronExpression,
+            RecordStatus status) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    applyRecurringJob(jobType, cronExpression, status);
+                } catch (RuntimeException exception) {
+                    log.error(
+                            "Cronjob config [{}] was committed but scheduler refresh failed.",
+                            jobType,
+                            exception);
+                }
+            }
+        });
+    }
+
+    private void applyRecurringJob(
+            String jobType,
+            String cronExpression,
+            RecordStatus status) {
+        RecurringJobDefinition definition = recurringJobRegistry.getRequired(jobType);
+
+        if (status == RecordStatus.INACTIVE) {
+            storageProvider.deleteRecurringJob(jobType);
+            log.info("Disabled recurring job [{}]", jobType);
+            return;
+        }
+
+        String cron = definition.resolveCron(cronExpression);
+        storageProvider.saveRecurringJob(definition.toRecurringJob(cron));
+        log.info("Registered recurring job [{}] with cron [{}]", jobType, cron);
     }
 }
