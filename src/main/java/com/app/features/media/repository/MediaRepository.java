@@ -38,6 +38,12 @@ public interface MediaRepository
             LocalDateTime updatedBefore,
             Pageable pageable);
 
+    Page<MediaEntity> findAllByStatusAndProcessingStatusNotAndUpdatedAtBefore(
+            RecordStatus status,
+            MediaProcessingStatus excludedProcessingStatus,
+            LocalDateTime updatedBefore,
+            Pageable pageable);
+
     List<MediaEntity> findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
             Collection<UUID> mediaIds,
             UUID createdById,

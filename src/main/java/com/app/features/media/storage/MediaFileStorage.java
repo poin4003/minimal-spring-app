@@ -24,5 +24,9 @@ public interface MediaFileStorage {
 
     Path resolve(String storageKey);
 
+    boolean exists(String storageKey);
+
+    boolean deleteHlsArtifacts(String sourceStorageKey);
+
     void delete(String storageKey);
 }

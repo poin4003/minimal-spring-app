@@ -187,6 +187,25 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         return resolveStorageKey(storageKey);
     }
 
+    @Override
+    public boolean exists(String storageKey) {
+        return Files.isRegularFile(resolveStorageKey(storageKey));
+    }
+
+    @Override
+    public boolean deleteHlsArtifacts(String sourceStorageKey) {
+        Path source = resolveStorageKey(sourceStorageKey);
+        Path hlsDirectory = source.getParent().resolve("hls");
+        boolean existed = Files.exists(hlsDirectory);
+
+        try {
+            deleteRecursively(hlsDirectory);
+            return existed;
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to delete HLS artifacts.");
+        }
+    }
+
     private Path createTemporaryFile() {
         try {
             return Files.createTempFile(stagingRoot, "upload-", ".tmp");
