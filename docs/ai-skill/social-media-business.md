@@ -55,7 +55,7 @@ Allowed transitions:
 - Physical filenames should be generated using UUIDs.
 - Uploads must validate extension, content type, file size, and kind-specific content.
 - Video and audio are processed asynchronously into HLS by JobRunr.
-- Video HLS uses a master playlist with `360p`, `720p`, and `1080p` renditions up to the source resolution.
+- Video HLS uses a configurable rendition ladder and does not generate profiles above the source resolution.
 - Audio HLS uses a dedicated audio rendition referenced by the master playlist.
 - Each media item owns a separate directory containing its original file and generated variants.
 - Media paths must never accept user-controlled filesystem traversal.

@@ -25,6 +25,21 @@ app:
         storage-path: ${MEDIA_STORAGE_PATH:./data/media}
         delivery-cache-duration: ${MEDIA_DELIVERY_CACHE_DURATION:365d}
         max-image-pixels: ${MEDIA_MAX_IMAGE_PIXELS:40000000}
+        hls:
+            audio-bitrate: ${MEDIA_HLS_AUDIO_BITRATE:192000}
+            renditions:
+                - key: 360p
+                  height: 360
+                  video-bitrate: 800000
+                  audio-bitrate: 96000
+                - key: 720p
+                  height: 720
+                  video-bitrate: 2800000
+                  audio-bitrate: 128000
+                - key: 1080p
+                  height: 1080
+                  video-bitrate: 5000000
+                  audio-bitrate: 192000
         allowed-types:
             - extension: jpg
               kind: IMAGE

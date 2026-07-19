@@ -1,4 +1,4 @@
-package com.app.features.media.processing;
+package com.app.features.media.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,12 +15,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.app.features.media.repository.MediaRepository;
+import com.app.features.media.service.MediaProcessingService;
 
 @SpringBootTest
-class MediaProcessorTransactionTests {
+class MediaProcessingServiceTransactionTests {
 
     @Autowired
-    private MediaProcessor mediaProcessor;
+    private MediaProcessingService mediaProcessingService;
 
     @MockitoBean
     private MediaRepository mediaRepository;
@@ -33,7 +34,7 @@ class MediaProcessorTransactionTests {
             return Optional.empty();
         });
 
-        mediaProcessor.process(UUID.randomUUID());
+        mediaProcessingService.process(UUID.randomUUID());
 
         assertThat(transactionActive).isTrue();
     }

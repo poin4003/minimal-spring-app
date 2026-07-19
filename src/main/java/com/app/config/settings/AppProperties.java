@@ -1,15 +1,19 @@
 package com.app.config.settings;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
 
+import com.app.features.media.enums.HlsReservedVariantKey;
 import com.app.features.media.enums.MediaKind;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -81,11 +85,61 @@ public class AppProperties {
         private long maxImagePixels = 40_000_000;
 
         @Valid
+        private final Hls hls = new Hls();
+
+        @Valid
         @NotEmpty
         private List<AllowedMediaType> allowedTypes = List.of();
 
         @Valid
         private final Ffmpeg ffmpeg = new Ffmpeg();
+    }
+
+    @Data
+    public static class Hls {
+        @Positive
+        private int audioBitrate = 192_000;
+
+        @Valid
+        @NotEmpty
+        private List<@NotNull HlsRendition> renditions = List.of();
+
+        @AssertTrue(message = "HLS rendition keys must be unique and must not use reserved keys.")
+        public boolean isRenditionConfigurationValid() {
+            if (renditions == null) {
+                return true;
+            }
+
+            Set<String> keys = new HashSet<>();
+            Set<String> reservedKeys = Set.of(
+                    HlsReservedVariantKey.MASTER.getKey(),
+                    HlsReservedVariantKey.AUDIO.getKey());
+            for (HlsRendition rendition : renditions) {
+                if (rendition == null || rendition.getKey() == null) {
+                    continue;
+                }
+                if (reservedKeys.contains(rendition.getKey()) || !keys.add(rendition.getKey())) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    @Data
+    public static class HlsRendition {
+        @NotBlank
+        @Pattern(regexp = "^[a-z0-9]+$")
+        private String key;
+
+        @Positive
+        private int height;
+
+        @Positive
+        private int videoBitrate;
+
+        @Positive
+        private int audioBitrate;
     }
 
     @Data

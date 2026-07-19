@@ -11,7 +11,7 @@ import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.entity.MediaVariantEntity;
-import com.app.features.media.enums.HlsVariantProfile;
+import com.app.features.media.enums.HlsReservedVariantKey;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.enums.MediaVariantType;
@@ -60,7 +60,7 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
         MediaVariantEntity playlist = getHlsVariant(
                 publicKey,
                 MediaVariantType.HLS_MASTER_PLAYLIST,
-                HlsVariantProfile.MASTER.getKey());
+                HlsReservedVariantKey.MASTER.getKey());
         Path path = resolveReadableFile(playlist.getStorageKey());
 
         return new MediaDeliveryResult(
