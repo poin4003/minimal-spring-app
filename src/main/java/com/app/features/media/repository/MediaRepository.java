@@ -15,6 +15,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import com.app.core.enums.RecordStatus;
 import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.entity.MediaEntity_;
+import com.app.features.media.enums.MediaProcessingStatus;
 
 public interface MediaRepository
         extends JpaRepository<MediaEntity, UUID>, JpaSpecificationExecutor<MediaEntity> {
@@ -29,8 +30,9 @@ public interface MediaRepository
 
     Optional<MediaEntity> findByIdAndCreatedBy_Id(UUID mediaId, UUID createdById);
 
-    List<MediaEntity> findAllByIdInAndCreatedBy_IdAndStatus(
+    List<MediaEntity> findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
             Collection<UUID> mediaIds,
             UUID createdById,
-            RecordStatus status);
+            RecordStatus status,
+            MediaProcessingStatus processingStatus);
 }

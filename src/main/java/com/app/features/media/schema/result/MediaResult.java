@@ -3,6 +3,8 @@ package com.app.features.media.schema.result;
 import java.util.UUID;
 
 import com.app.core.enums.RecordStatus;
+import com.app.features.media.enums.MediaKind;
+import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.user.schema.result.UserShortResult;
 
 import lombok.Data;
@@ -21,6 +23,10 @@ public class MediaResult {
     private String contentType;
 
     private long fileSize;
+
+    private MediaKind kind;
+
+    private MediaProcessingStatus processingStatus;
 
     private RecordStatus status;
 

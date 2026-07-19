@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -123,12 +124,18 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         }
 
         Path targetPath = resolveStorageKey(storageKey);
+        Path mediaDirectory = targetPath.getParent();
         try {
-            Files.deleteIfExists(targetPath);
-            deleteParentIfEmpty(targetPath.getParent());
+            deleteRecursively(mediaDirectory);
+            deleteParentIfEmpty(mediaDirectory.getParent());
         } catch (IOException ex) {
             throw ExceptionFactory.serverError("Unable to delete media file.");
         }
+    }
+
+    @Override
+    public Path resolve(String storageKey) {
+        return resolveStorageKey(storageKey);
     }
 
     private Path createTemporaryFile() {
@@ -167,6 +174,28 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             if (entries.findAny().isEmpty()) {
                 Files.deleteIfExists(directory);
             }
+        }
+    }
+
+    private void deleteRecursively(Path directory) throws IOException {
+        if (directory == null || !Files.exists(directory)) {
+            return;
+        }
+        if (!directory.startsWith(storageRoot)
+                || directory.equals(storageRoot)
+                || directory.equals(stagingRoot)) {
+            throw ExceptionFactory.invalidParam("Media directory is invalid.");
+        }
+
+        List<Path> paths;
+        try (var entries = Files.walk(directory)) {
+            paths = entries
+                    .sorted((left, right) -> right.compareTo(left))
+                    .toList();
+        }
+
+        for (Path path : paths) {
+            Files.deleteIfExists(path);
         }
     }
 

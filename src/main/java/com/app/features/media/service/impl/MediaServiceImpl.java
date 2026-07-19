@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,6 +20,9 @@ import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
+import com.app.features.media.enums.MediaKind;
+import com.app.features.media.enums.MediaProcessingStatus;
+import com.app.features.media.job.MediaProcessingJob;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.spec.MediaSpecification;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
@@ -47,6 +51,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileStorage mediaFileStorage;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaFileValidator mediaFileValidator;
+    private final JobScheduler jobScheduler;
     private final ModelMapper mapper;
 
     @Transactional
@@ -82,9 +87,16 @@ public class MediaServiceImpl implements MediaService {
         media.setOriginalName(storedFile.getOriginalName());
         media.setContentType(storedFile.getContentType());
         media.setFileSize(storedFile.getFileSize());
+        media.setKind(policy.getKind());
+        media.setProcessingStatus(requiresProcessing(policy.getKind())
+                ? MediaProcessingStatus.PENDING
+                : MediaProcessingStatus.READY);
         media.setStatus(RecordStatus.ACTIVE);
 
         media = mediaRepository.save(media);
+        if (media.getProcessingStatus() == MediaProcessingStatus.PENDING) {
+            registerProcessingJob(media.getId());
+        }
 
         return mapper.map(media, MediaResult.class);
     }
@@ -129,10 +141,11 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Duplicate media IDs are not allowed.");
         }
 
-        List<MediaEntity> media = mediaRepository.findAllByIdInAndCreatedBy_IdAndStatus(
+        List<MediaEntity> media = mediaRepository.findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
                 distinctIds,
                 createdById,
-                RecordStatus.ACTIVE);
+                RecordStatus.ACTIVE,
+                MediaProcessingStatus.READY);
 
         if (media.size() != distinctIds.size()) {
             throw ExceptionFactory.invalidParam(
@@ -140,6 +153,23 @@ public class MediaServiceImpl implements MediaService {
         }
 
         return media;
+    }
+
+    private boolean requiresProcessing(MediaKind kind) {
+        return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO;
+    }
+
+    private void registerProcessingJob(UUID mediaId) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    jobScheduler.<MediaProcessingJob>enqueue(job -> job.execute(mediaId));
+                } catch (RuntimeException ex) {
+                    log.error("Failed to enqueue media processing job [{}]", mediaId, ex);
+                }
+            }
+        });
     }
 
     private void deleteMediaEntity(MediaEntity media) {

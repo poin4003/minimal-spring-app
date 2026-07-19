@@ -7,6 +7,8 @@ import org.hibernate.type.SqlTypes;
 
 import com.app.core.db.BaseAuditEntity;
 import com.app.core.enums.RecordStatus;
+import com.app.features.media.enums.MediaKind;
+import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.user.entity.UserBaseEntity;
 
 import jakarta.persistence.Column;
@@ -31,6 +33,7 @@ import lombok.ToString;
         @Index(name = "uk_media_public_key", columnList = "public_key", unique = true),
         @Index(name = "idx_media_created_by_created_at", columnList = "created_by, created_at"),
         @Index(name = "idx_media_status_created_at", columnList = "status, created_at"),
+        @Index(name = "idx_media_processing_status_created_at", columnList = "processing_status, created_at"),
         @Index(name = "idx_media_created_at", columnList = "created_at"),
         @Index(name = "idx_media_updated_at", columnList = "updated_at")
 })
@@ -62,6 +65,16 @@ public class MediaEntity extends BaseAuditEntity {
 
     @Column(name = "file_size", nullable = false)
     private long fileSize;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false)
+    private MediaKind kind;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "processing_status", nullable = false)
+    private MediaProcessingStatus processingStatus;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

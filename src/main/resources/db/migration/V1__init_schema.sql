@@ -10,6 +10,15 @@ CREATE DOMAIN SimStatusEnum AS VARCHAR(8)
 CREATE DOMAIN RecordStatus AS VARCHAR(8)
     CHECK (VALUE IN ('ACTIVE', 'INACTIVE'));
 
+CREATE DOMAIN MediaKindEnum AS VARCHAR(16)
+    CHECK (VALUE IN ('IMAGE', 'VIDEO', 'AUDIO', 'DOCUMENT', 'FILE'));
+
+CREATE DOMAIN MediaProcessingStatusEnum AS VARCHAR(16)
+    CHECK (VALUE IN ('PENDING', 'READY', 'FAILED'));
+
+CREATE DOMAIN MediaVariantTypeEnum AS VARCHAR(16)
+    CHECK (VALUE IN ('HLS_PLAYLIST'));
+
 CREATE TABLE permission (
     id UUID PRIMARY KEY,
     name VARCHAR(255),
@@ -72,6 +81,8 @@ CREATE TABLE media (
     original_name VARCHAR(255) NOT NULL,
     content_type VARCHAR(100) NOT NULL,
     file_size BIGINT NOT NULL,
+    kind MediaKindEnum NOT NULL,
+    processing_status MediaProcessingStatusEnum NOT NULL,
     status RecordStatus NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -83,8 +94,30 @@ CREATE UNIQUE INDEX uk_media_storage_key ON media(storage_key);
 CREATE UNIQUE INDEX uk_media_public_key ON media(public_key);
 CREATE INDEX idx_media_created_by_created_at ON media(created_by, created_at);
 CREATE INDEX idx_media_status_created_at ON media(status, created_at);
+CREATE INDEX idx_media_processing_status_created_at ON media(processing_status, created_at);
 CREATE INDEX idx_media_created_at ON media(created_at);
 CREATE INDEX idx_media_updated_at ON media(updated_at);
+
+CREATE TABLE media_variant (
+    id UUID PRIMARY KEY,
+    media_id UUID NOT NULL,
+    variant_type MediaVariantTypeEnum NOT NULL,
+    storage_key VARCHAR(255) NOT NULL,
+    content_type VARCHAR(100) NOT NULL,
+    width INTEGER,
+    height INTEGER,
+    bitrate INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_media_variant_media
+        FOREIGN KEY (media_id) REFERENCES media(id)
+        ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX uk_media_variant_storage_key ON media_variant(storage_key);
+CREATE UNIQUE INDEX uk_media_variant_media_type ON media_variant(media_id, variant_type);
+CREATE INDEX idx_media_variant_created_at ON media_variant(created_at);
+CREATE INDEX idx_media_variant_updated_at ON media_variant(updated_at);
 
 CREATE TABLE role_permissions (
     role_id UUID NOT NULL,

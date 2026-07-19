@@ -42,33 +42,35 @@ Allowed transitions:
 `PENDING_REVIEW -> REJECTED`
 
 ## Post Content
-- A post contains text content and may contain zero or more images.
-- The initial media scope supports images only.
-- Video, audio, and general file attachments are outside the initial scope.
-- Maximum text length, image count, and image size must be configurable.
+- A post contains text content and may contain zero or more media attachments.
+- Supported media kinds are image, video, audio, document, and general file.
+- Maximum text length, media count, and per-type file size must be configurable.
 - Editing and resubmitting published posts are outside the initial scope.
 
 ## Media Storage
 - Uploaded media must not be written into `src/main/resources/static`.
 - Media files are stored in a configurable local directory outside the packaged JAR, for example `./data/media`.
-- The database stores media metadata and the generated storage name.
+- The database stores original media metadata and generated media variants.
 - Original filenames must not be used as physical storage paths.
 - Physical filenames should be generated using UUIDs.
-- Uploads must validate content type, file size, and image content.
+- Uploads must validate extension, content type, file size, and kind-specific content.
+- Video and audio are processed asynchronously into HLS by JobRunr.
+- Each media item owns a separate directory containing its original file and generated variants.
 - Media paths must never accept user-controlled filesystem traversal.
 
 ## Media Delivery
-- Image bytes are not embedded into rendered HTML.
-- HTML renders a media URL in the image `src` attribute.
+- Media bytes are not embedded into rendered HTML.
+- HTML renders public media or stream URLs.
 - Spring exposes a public media endpoint such as `GET /api/v1/public/media/{mediaId}`.
 - The endpoint resolves media metadata from the database and streams the file.
 - Media responses should provide the correct content type and support browser caching.
+- Video and audio delivery uses generated HLS playlists and segments.
 - Missing physical files return `404`.
 
 ## Media Upload
-- The initial Thymeleaf flow uploads images together with the post form using `multipart/form-data`.
-- A separate upload API is not required for the initial implementation.
-- A dedicated upload API may be added later for external clients, reusable media, rich editors, or upload progress.
+- Each media file is uploaded separately through a multipart API.
+- Post creation uses a JSON payload containing previously uploaded media IDs.
+- A media can be attached only after its processing status is `READY`.
 - If post persistence fails after files are written, newly written files must be removed.
 
 ## Comments

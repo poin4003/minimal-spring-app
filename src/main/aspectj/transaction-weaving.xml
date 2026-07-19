@@ -1,0 +1,6 @@
+<!DOCTYPE aspectj PUBLIC "-//AspectJ//DTD//EN" "https://www.eclipse.org/aspectj/dtd/aspectj.dtd">
+<aspectj>
+    <aspects>
+        <aspect name="org.springframework.transaction.aspectj.AnnotationTransactionAspect" />
+    </aspects>
+</aspectj>
