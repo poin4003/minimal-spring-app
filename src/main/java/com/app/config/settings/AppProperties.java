@@ -85,6 +85,9 @@ public class AppProperties {
         private long maxImagePixels = 40_000_000;
 
         @Valid
+        private final MediaMaintenance maintenance = new MediaMaintenance();
+
+        @Valid
         private final Hls hls = new Hls();
 
         @Valid
@@ -93,6 +96,40 @@ public class AppProperties {
 
         @Valid
         private final Ffmpeg ffmpeg = new Ffmpeg();
+    }
+
+    @Data
+    public static class MediaMaintenance {
+        @NotNull
+        private Duration pendingRecoveryTtl = Duration.ofMinutes(15);
+
+        @NotNull
+        private Duration stagingTtl = Duration.ofHours(1);
+
+        @NotNull
+        private Duration failedHlsTtl = Duration.ofHours(24);
+
+        @NotNull
+        private Duration orphanDirectoryTtl = Duration.ofHours(24);
+
+        @NotNull
+        private Duration missingOriginalAuditTtl = Duration.ofMinutes(10);
+
+        @Positive
+        private int batchSize = 100;
+
+        @AssertTrue(message = "Media maintenance TTL values must be positive.")
+        public boolean isTtlConfigurationValid() {
+            return isPositive(pendingRecoveryTtl)
+                    && isPositive(stagingTtl)
+                    && isPositive(failedHlsTtl)
+                    && isPositive(orphanDirectoryTtl)
+                    && isPositive(missingOriginalAuditTtl);
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
     }
 
     @Data

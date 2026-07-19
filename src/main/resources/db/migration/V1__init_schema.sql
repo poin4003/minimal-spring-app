@@ -95,6 +95,7 @@ CREATE UNIQUE INDEX uk_media_public_key ON media(public_key);
 CREATE INDEX idx_media_created_by_created_at ON media(created_by, created_at);
 CREATE INDEX idx_media_status_created_at ON media(status, created_at);
 CREATE INDEX idx_media_processing_status_created_at ON media(processing_status, created_at);
+CREATE INDEX idx_media_pending_recovery ON media(status, processing_status, updated_at);
 CREATE INDEX idx_media_created_at ON media(created_at);
 CREATE INDEX idx_media_updated_at ON media(updated_at);
 

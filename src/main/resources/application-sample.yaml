@@ -78,6 +78,13 @@ app:
             ffprobe-executable: ${FFPROBE_PATH:ffprobe}
             segment-duration-seconds: 6
             process-timeout-minutes: 30
+        maintenance:
+            pending-recovery-ttl: ${MEDIA_PENDING_RECOVERY_TTL:15m}
+            staging-ttl: ${MEDIA_STAGING_TTL:1h}
+            failed-hls-ttl: ${MEDIA_FAILED_HLS_TTL:24h}
+            orphan-directory-ttl: ${MEDIA_ORPHAN_DIRECTORY_TTL:24h}
+            missing-original-audit-ttl: ${MEDIA_MISSING_ORIGINAL_AUDIT_TTL:10m}
+            batch-size: ${MEDIA_MAINTENANCE_BATCH_SIZE:100}
     security:
         api-public-paths:
             - /api/v1/auth/login

@@ -1,5 +1,6 @@
 package com.app.features.media.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -9,7 +10,9 @@ import org.modelmapper.ModelMapper;
 import org.jobrunr.jobs.context.JobContext;
 import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,10 +20,12 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
+import com.app.features.media.entity.MediaEntity_;
 import com.app.features.media.entity.MediaProcessingLeaseEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
@@ -61,6 +66,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileValidator mediaFileValidator;
     private final JobScheduler jobScheduler;
     private final ModelMapper mapper;
+    private final AppProperties appProperties;
 
     @Transactional
     @Override
@@ -183,6 +189,47 @@ public class MediaServiceImpl implements MediaService {
         return retryMedia(media);
     }
 
+    @Override
+    public int recoverPendingMedia() {
+        AppProperties.MediaMaintenance config = appProperties.getMedia().getMaintenance();
+        LocalDateTime cutoff = LocalDateTime.now().minus(config.getPendingRecoveryTtl());
+        Sort recoverySort = Sort.by(
+                Sort.Direction.ASC,
+                MediaEntity_.UPDATED_AT,
+                MediaEntity_.ID);
+        Pageable firstPageable = PageRequest.of(0, config.getBatchSize(), recoverySort);
+        Page<MediaEntity> firstPage = mediaRepo
+                .findAllByStatusAndProcessingStatusAndUpdatedAtBefore(
+                        RecordStatus.ACTIVE,
+                        MediaProcessingStatus.PENDING,
+                        cutoff,
+                        firstPageable);
+
+        int enqueued = 0;
+        for (int pageNumber = firstPage.getTotalPages() - 1;
+                pageNumber >= 0;
+                pageNumber--) {
+            Page<MediaEntity> candidates = pageNumber == 0
+                    ? firstPage
+                    : mediaRepo.findAllByStatusAndProcessingStatusAndUpdatedAtBefore(
+                            RecordStatus.ACTIVE,
+                            MediaProcessingStatus.PENDING,
+                            cutoff,
+                            PageRequest.of(pageNumber, config.getBatchSize(), recoverySort));
+
+            for (MediaEntity media : candidates.getContent()) {
+                try {
+                    enqueueProcessingJob(media.getId());
+                    enqueued++;
+                } catch (RuntimeException ex) {
+                    log.error("Failed to recover pending media [{}]", media.getId(), ex);
+                }
+            }
+        }
+
+        return enqueued;
+    }
+
     private MediaResult retryMedia(MediaEntity media) {
         if (media.getStatus() != RecordStatus.ACTIVE) {
             throw ExceptionFactory.invalidParam("Inactive media cannot be processed.");
@@ -254,13 +301,17 @@ public class MediaServiceImpl implements MediaService {
             @Override
             public void afterCommit() {
                 try {
-                    jobScheduler.<MediaProcessingJob>enqueue(
-                            job -> job.execute(mediaId, JobContext.Null));
+                    enqueueProcessingJob(mediaId);
                 } catch (RuntimeException ex) {
                     log.error("Failed to enqueue media processing job [{}]", mediaId, ex);
                 }
             }
         });
+    }
+
+    private void enqueueProcessingJob(UUID mediaId) {
+        jobScheduler.<MediaProcessingJob>enqueue(
+                job -> job.execute(mediaId, JobContext.Null));
     }
 
     private void deleteMediaEntity(MediaEntity media) {

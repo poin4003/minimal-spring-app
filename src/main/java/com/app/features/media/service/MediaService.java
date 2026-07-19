@@ -36,5 +36,7 @@ public interface MediaService {
 
     MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId);
 
+    int recoverPendingMedia();
+
     List<MediaEntity> requireOwnedActiveMedia(Collection<UUID> mediaIds, UUID createdById);
 }
