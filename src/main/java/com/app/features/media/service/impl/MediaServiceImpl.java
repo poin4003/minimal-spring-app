@@ -24,10 +24,13 @@ import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.job.MediaProcessingJob;
 import com.app.features.media.repository.MediaRepository;
+import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.repository.spec.MediaSpecification;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.media.schema.payload.CreateMediaPayload;
+import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
+import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.StagedMediaFile;
@@ -49,6 +52,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaRepository mediaRepository;
     private final UserBaseRepository userBaseRepository;
     private final MediaFileStorage mediaFileStorage;
+    private final MediaVariantRepository mediaVariantRepository;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaFileValidator mediaFileValidator;
     private final JobScheduler jobScheduler;
@@ -125,6 +129,85 @@ public class MediaServiceImpl implements MediaService {
         Page<MediaEntity> entityPage = mediaRepository.findAll(specification, pageable);
 
         return entityPage.map(entity -> mapper.map(entity, MediaResult.class));
+    }
+
+    @Override
+    public Page<MediaResult> getManyOwnedMedia(
+            UUID ownerId,
+            MediaFilterCriteria criteria,
+            Pageable pageable) {
+        MediaFilterCriteria ownedCriteria = mapper.map(criteria, MediaFilterCriteria.class);
+        ownedCriteria.setCreatedById(ownerId);
+
+        return getManyMedia(ownedCriteria, pageable);
+    }
+
+    @Override
+    public MediaDetailResult getMediaDetail(UUID mediaId) {
+        MediaEntity media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+
+        return toMediaDetailResult(media);
+    }
+
+    @Override
+    public MediaDetailResult getOwnedMediaDetail(UUID mediaId, UUID ownerId) {
+        MediaEntity media = mediaRepository.findByIdAndCreatedBy_Id(mediaId, ownerId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+
+        return toMediaDetailResult(media);
+    }
+
+    @Transactional
+    @Override
+    public MediaResult retryProcessing(UUID mediaId) {
+        MediaEntity media = mediaRepository.findById(mediaId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+
+        return retryMedia(media);
+    }
+
+    @Transactional
+    @Override
+    public MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId) {
+        MediaEntity media = mediaRepository.findByIdAndCreatedBy_Id(mediaId, ownerId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+
+        return retryMedia(media);
+    }
+
+    private MediaResult retryMedia(MediaEntity media) {
+        if (media.getStatus() != RecordStatus.ACTIVE) {
+            throw ExceptionFactory.invalidParam("Inactive media cannot be processed.");
+        }
+
+        if (!requiresProcessing(media.getKind())) {
+            throw ExceptionFactory.invalidParam(
+                    "Only video and audio media can be processed.");
+        }
+
+        if (media.getProcessingStatus() != MediaProcessingStatus.FAILED) {
+            throw ExceptionFactory.invalidParam(
+                    "Only failed media can be retried.");
+        }
+
+        media.setProcessingStatus(MediaProcessingStatus.PENDING);
+        media = mediaRepository.save(media);
+        registerProcessingJob(media.getId());
+
+        return mapper.map(media, MediaResult.class);
+    }
+
+    private MediaDetailResult toMediaDetailResult(MediaEntity media) {
+        MediaDetailResult result = mapper.map(media, MediaDetailResult.class);
+        List<MediaVariantResult> variants = mediaVariantRepository
+                .findAllByMedia_IdOrderByVariantTypeAscHeightAsc(media.getId())
+                .stream()
+                .map(entity -> mapper.map(entity, MediaVariantResult.class))
+                .toList();
+
+        result.setVariants(variants);
+        return result;
     }
 
     @Override

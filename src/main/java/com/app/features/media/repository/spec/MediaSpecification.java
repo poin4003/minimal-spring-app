@@ -33,12 +33,30 @@ public class MediaSpecification {
                         criteria.getPublicKey().trim()));
             }
 
+            if (criteria.getCreatedById() != null) {
+                predicates.add(cb.equal(
+                        root.get(MediaEntity_.createdBy).get(UserBaseEntity_.id),
+                        criteria.getCreatedById()));
+            }
+
             if (criteria.hasCreatedByEmail()) {
                 Join<MediaEntity, UserBaseEntity> creator = root.join(MediaEntity_.createdBy);
 
                 predicates.add(cb.like(
                         cb.lower(creator.get(UserBaseEntity_.email)),
                         contains(criteria.getCreatedByEmail())));
+            }
+
+            if (criteria.getKind() != null) {
+                predicates.add(cb.equal(
+                        root.get(MediaEntity_.kind),
+                        criteria.getKind()));
+            }
+
+            if (criteria.getProcessingStatus() != null) {
+                predicates.add(cb.equal(
+                        root.get(MediaEntity_.processingStatus),
+                        criteria.getProcessingStatus()));
             }
 
             if (criteria.getStatus() != null) {
