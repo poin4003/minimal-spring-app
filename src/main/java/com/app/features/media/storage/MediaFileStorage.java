@@ -1,6 +1,8 @@
 package com.app.features.media.storage;
 
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +29,15 @@ public interface MediaFileStorage {
     boolean exists(String storageKey);
 
     boolean deleteHlsArtifacts(String sourceStorageKey);
+
+    int deleteStagedFilesOlderThan(Instant cutoff, int limit);
+
+    int deleteProcessingWorkspacesOlderThan(Instant cutoff, int limit);
+
+    List<MediaStorageDirectoryCandidate> findMediaDirectoriesOlderThan(
+            Instant cutoff);
+
+    boolean deleteMediaDirectory(String storageDirectoryKey);
 
     void delete(String storageKey);
 }

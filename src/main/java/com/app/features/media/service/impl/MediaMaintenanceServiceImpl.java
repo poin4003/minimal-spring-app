@@ -1,9 +1,13 @@
 package com.app.features.media.service.impl;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,10 +23,14 @@ import com.app.features.media.entity.MediaEntity_;
 import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaVariantRepository;
+import com.app.features.media.repository.spec.MediaSpecification;
 import com.app.features.media.schema.model.KnownMediaCleanupResult;
+import com.app.features.media.schema.model.MediaStorageCleanupResult;
 import com.app.features.media.service.MediaMaintenanceService;
 import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.storage.MediaFileStorage;
+import com.app.features.media.storage.MediaStorageDirectoryCandidate;
+import com.app.features.media.storage.MediaStorageKeySupport;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +73,57 @@ public class MediaMaintenanceServiceImpl implements MediaMaintenanceService {
         return new KnownMediaCleanupResult(
                 failedHlsCleaned,
                 missingOriginalsDetected);
+    }
+
+    @Override
+    public MediaStorageCleanupResult cleanupStorage() {
+        AppProperties.MediaMaintenance config = appProperties.getMedia().getMaintenance();
+        Instant now = Instant.now();
+
+        int stagingFilesDeleted = mediaFileStorage.deleteStagedFilesOlderThan(
+                now.minus(config.getStagingTtl()),
+                config.getBatchSize());
+        int processingWorkspacesDeleted =
+                mediaFileStorage.deleteProcessingWorkspacesOlderThan(
+                        now.minus(config.getProcessingWorkspaceTtl()),
+                        config.getBatchSize());
+        int orphanDirectoriesDeleted = cleanupOrphanDirectories(
+                now.minus(config.getOrphanDirectoryTtl()),
+                config.getBatchSize());
+
+        return new MediaStorageCleanupResult(
+                stagingFilesDeleted,
+                processingWorkspacesDeleted,
+                orphanDirectoriesDeleted);
+    }
+
+    private int cleanupOrphanDirectories(Instant cutoff, int batchSize) {
+        List<MediaStorageDirectoryCandidate> candidates =
+                mediaFileStorage.findMediaDirectoriesOlderThan(cutoff);
+        int deleted = 0;
+
+        for (int offset = 0; offset < candidates.size(); offset += batchSize) {
+            int end = Math.min(offset + batchSize, candidates.size());
+            List<MediaStorageDirectoryCandidate> batch = candidates.subList(offset, end);
+            Set<String> candidateKeys = batch.stream()
+                    .map(candidate -> candidate.getStorageDirectoryKey())
+                    .collect(Collectors.toSet());
+            Set<String> referencedKeys = mediaRepo
+                    .findAll(MediaSpecification.storageDirectoryIn(candidateKeys))
+                    .stream()
+                    .map(media -> MediaStorageKeySupport.directoryOf(media.getStorageKey()))
+                    .collect(Collectors.toSet());
+
+            for (MediaStorageDirectoryCandidate candidate : batch) {
+                if (!referencedKeys.contains(candidate.getStorageDirectoryKey())
+                        && mediaFileStorage.deleteMediaDirectory(
+                                candidate.getStorageDirectoryKey())) {
+                    deleted++;
+                }
+            }
+        }
+
+        return deleted;
     }
 
     @Transactional

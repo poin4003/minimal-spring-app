@@ -96,6 +96,17 @@ public class AppProperties {
 
         @Valid
         private final Ffmpeg ffmpeg = new Ffmpeg();
+
+        @AssertTrue(message = "Processing workspace TTL must exceed the FFmpeg timeout.")
+        public boolean isProcessingWorkspaceTtlValid() {
+            Duration processingWorkspaceTtl = maintenance.getProcessingWorkspaceTtl();
+            if (processingWorkspaceTtl == null) {
+                return true;
+            }
+
+            Duration processTimeout = Duration.ofMinutes(ffmpeg.getProcessTimeoutMinutes());
+            return processingWorkspaceTtl.compareTo(processTimeout) > 0;
+        }
     }
 
     @Data
@@ -105,6 +116,9 @@ public class AppProperties {
 
         @NotNull
         private Duration stagingTtl = Duration.ofHours(1);
+
+        @NotNull
+        private Duration processingWorkspaceTtl = Duration.ofHours(2);
 
         @NotNull
         private Duration failedHlsTtl = Duration.ofHours(24);
@@ -122,6 +136,7 @@ public class AppProperties {
         public boolean isTtlConfigurationValid() {
             return isPositive(pendingRecoveryTtl)
                     && isPositive(stagingTtl)
+                    && isPositive(processingWorkspaceTtl)
                     && isPositive(failedHlsTtl)
                     && isPositive(orphanDirectoryTtl)
                     && isPositive(missingOriginalAuditTtl);

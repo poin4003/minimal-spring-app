@@ -1,6 +1,7 @@
 package com.app.features.media.repository.spec;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 
@@ -66,6 +67,22 @@ public class MediaSpecification {
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public static Specification<MediaEntity> storageDirectoryIn(
+            Collection<String> storageDirectoryKeys) {
+        return (root, query, cb) -> {
+            if (storageDirectoryKeys == null || storageDirectoryKeys.isEmpty()) {
+                return cb.disjunction();
+            }
+
+            List<Predicate> predicates = storageDirectoryKeys.stream()
+                    .map(directoryKey -> cb.like(
+                            root.get(MediaEntity_.storageKey),
+                            directoryKey + "/%"))
+                    .toList();
+            return cb.or(predicates.toArray(new Predicate[0]));
         };
     }
 

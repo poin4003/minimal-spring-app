@@ -108,10 +108,11 @@ public class MediaServiceImpl implements MediaService {
         media.setStatus(RecordStatus.ACTIVE);
 
         media = mediaRepo.save(media);
+        MediaProcessingLeaseEntity processingLease = new MediaProcessingLeaseEntity();
+        processingLease.setMediaId(media.getId());
+        mediaProcessingLeaseRepo.save(processingLease);
+
         if (media.getProcessingStatus() == MediaProcessingStatus.PENDING) {
-            MediaProcessingLeaseEntity processingLease = new MediaProcessingLeaseEntity();
-            processingLease.setMediaId(media.getId());
-            mediaProcessingLeaseRepo.save(processingLease);
             registerProcessingJob(media.getId());
         }
 

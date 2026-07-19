@@ -5,6 +5,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -135,7 +136,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         return new MediaProcessingWorkspace(
                 temporaryDirectory,
                 publishedDirectory,
-                resolveParentStorageKey(sourceStorageKey) + "/hls");
+                MediaStorageKeySupport.directoryOf(sourceStorageKey) + "/hls");
     }
 
     @Override
@@ -206,6 +207,86 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         }
     }
 
+    @Override
+    public int deleteStagedFilesOlderThan(Instant cutoff, int limit) {
+        List<Path> staleFiles;
+        try (var paths = Files.list(stagingRoot)) {
+            staleFiles = paths
+                    .filter(path -> Files.isRegularFile(path))
+                    .filter(path -> isOlderThan(path, cutoff))
+                    .limit(limit)
+                    .toList();
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to scan media staging files.");
+        }
+
+        int deleted = 0;
+        for (Path path : staleFiles) {
+            if (deleteFileSafely(path)) {
+                deleted++;
+            }
+        }
+        return deleted;
+    }
+
+    @Override
+    public int deleteProcessingWorkspacesOlderThan(Instant cutoff, int limit) {
+        List<Path> staleDirectories;
+        try (var paths = Files.walk(storageRoot, 4)) {
+            staleDirectories = paths
+                    .filter(path -> Files.isDirectory(path))
+                    .filter(path -> path.getFileName().toString()
+                            .startsWith(".hls-processing-"))
+                    .filter(path -> isOlderThan(path, cutoff))
+                    .limit(limit)
+                    .toList();
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError(
+                    "Unable to scan media processing workspaces.");
+        }
+
+        int deleted = 0;
+        for (Path directory : staleDirectories) {
+            if (deleteRecursivelySafely(directory)) {
+                deleted++;
+            }
+        }
+        return deleted;
+    }
+
+    @Override
+    public List<MediaStorageDirectoryCandidate> findMediaDirectoriesOlderThan(
+            Instant cutoff) {
+        try (var paths = Files.walk(storageRoot, 3)) {
+            return paths
+                    .filter(path -> Files.isDirectory(path))
+                    .filter(path -> isMediaDirectory(path))
+                    .filter(path -> isOlderThan(path, cutoff))
+                    .map(path -> new MediaStorageDirectoryCandidate(
+                            toStorageKey(path)))
+                    .toList();
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to scan media directories.");
+        }
+    }
+
+    @Override
+    public boolean deleteMediaDirectory(String storageDirectoryKey) {
+        Path directory = resolveStorageKey(storageDirectoryKey);
+        if (!isMediaDirectory(directory)) {
+            throw ExceptionFactory.invalidParam("Media directory key is invalid.");
+        }
+
+        boolean existed = Files.exists(directory);
+        try {
+            deleteRecursively(directory);
+            deleteParentIfEmpty(directory.getParent());
+            return existed;
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to delete media directory.");
+        }
+    }
+
     private Path createTemporaryFile() {
         try {
             return Files.createTempFile(stagingRoot, "upload-", ".tmp");
@@ -230,14 +311,6 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         }
     }
 
-    private String resolveParentStorageKey(String storageKey) {
-        int separatorIndex = storageKey.lastIndexOf('/');
-        if (separatorIndex < 0) {
-            throw ExceptionFactory.invalidParam("Media storage key is invalid.");
-        }
-        return storageKey.substring(0, separatorIndex);
-    }
-
     private Path resolveStorageKey(String storageKey) {
         Path resolvedPath = storageRoot.resolve(storageKey).normalize();
         if (!resolvedPath.startsWith(storageRoot) || resolvedPath.startsWith(stagingRoot)) {
@@ -254,10 +327,53 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             return;
         }
 
+        boolean empty;
         try (var entries = Files.list(directory)) {
-            if (entries.findAny().isEmpty()) {
-                Files.deleteIfExists(directory);
-            }
+            empty = entries.findAny().isEmpty();
+        }
+        if (empty) {
+            Files.deleteIfExists(directory);
+            deleteParentIfEmpty(directory.getParent());
+        }
+    }
+
+    private boolean isMediaDirectory(Path path) {
+        if (!path.startsWith(storageRoot)) {
+            return false;
+        }
+
+        Path relativePath = storageRoot.relativize(path);
+        if (relativePath.getNameCount() != 3) {
+            return false;
+        }
+
+        String year = relativePath.getName(0).toString();
+        String month = relativePath.getName(1).toString();
+        if (!year.matches("^[0-9]{4}$")
+                || !month.matches("^(0[1-9]|1[0-2])$")) {
+            return false;
+        }
+
+        try {
+            UUID.fromString(relativePath.getName(2).toString());
+            return true;
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
+
+    private String toStorageKey(Path path) {
+        return storageRoot.relativize(path)
+                .toString()
+                .replace('\\', '/');
+    }
+
+    private boolean isOlderThan(Path path, Instant cutoff) {
+        try {
+            return Files.getLastModifiedTime(path).toInstant().isBefore(cutoff);
+        } catch (IOException ex) {
+            log.warn("Unable to read media path timestamp [{}]", path, ex);
+            return false;
         }
     }
 
@@ -288,6 +404,26 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             Files.deleteIfExists(path);
         } catch (IOException ex) {
             log.warn("Failed to discard staged media file [{}]", path, ex);
+        }
+    }
+
+    private boolean deleteFileSafely(Path path) {
+        try {
+            return Files.deleteIfExists(path);
+        } catch (IOException ex) {
+            log.warn("Failed to delete stale media file [{}]", path, ex);
+            return false;
+        }
+    }
+
+    private boolean deleteRecursivelySafely(Path directory) {
+        try {
+            boolean existed = Files.exists(directory);
+            deleteRecursively(directory);
+            return existed;
+        } catch (IOException | RuntimeException ex) {
+            log.warn("Failed to delete stale media directory [{}]", directory, ex);
+            return false;
         }
     }
 }
