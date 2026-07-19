@@ -17,6 +17,9 @@ public class JobRunrConfig {
     @Value("${org.jobrunr.background-job-server.enabled:true}")
     private boolean backgroundJobServerEnabled;
 
+    @Value("${org.jobrunr.background-job-server.worker-count:2}")
+    private int workerCount;
+
     @Value("${org.jobrunr.dashboard.enabled:false}")
     private boolean dashboardEnabled;
 
@@ -32,8 +35,8 @@ public class JobRunrConfig {
     public JobScheduler jobScheduler(StorageProvider storageProvider, ApplicationContext applicationContext) {
         return JobRunr.configure()
                 .useStorageProvider(storageProvider)
-                .useJobActivator(applicationContext::getBean)
-                .useBackgroundJobServerIf(backgroundJobServerEnabled)
+                .useJobActivator(new SpringJobActivator(applicationContext))
+                .useBackgroundJobServerIf(backgroundJobServerEnabled, workerCount)
                 .useDashboardIf(dashboardEnabled, dashboardPort)
                 .initialize()
                 .getJobScheduler();

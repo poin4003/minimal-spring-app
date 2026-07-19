@@ -27,7 +27,10 @@ import lombok.ToString;
 @Entity
 @Table(name = "media_variant", indexes = {
         @Index(name = "uk_media_variant_storage_key", columnList = "storage_key", unique = true),
-        @Index(name = "uk_media_variant_media_type", columnList = "media_id, variant_type", unique = true),
+        @Index(
+                name = "uk_media_variant_media_type_key",
+                columnList = "media_id, variant_type, variant_key",
+                unique = true),
         @Index(name = "idx_media_variant_created_at", columnList = "created_at"),
         @Index(name = "idx_media_variant_updated_at", columnList = "updated_at")
 })
@@ -49,6 +52,9 @@ public class MediaVariantEntity extends BaseAuditEntity {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "variant_type", nullable = false)
     private MediaVariantType variantType;
+
+    @Column(name = "variant_key", nullable = false, length = 32)
+    private String variantKey;
 
     @Column(name = "storage_key", nullable = false, length = 255)
     private String storageKey;

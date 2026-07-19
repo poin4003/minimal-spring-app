@@ -16,8 +16,8 @@ CREATE DOMAIN MediaKindEnum AS VARCHAR(16)
 CREATE DOMAIN MediaProcessingStatusEnum AS VARCHAR(16)
     CHECK (VALUE IN ('PENDING', 'READY', 'FAILED'));
 
-CREATE DOMAIN MediaVariantTypeEnum AS VARCHAR(16)
-    CHECK (VALUE IN ('HLS_PLAYLIST'));
+CREATE DOMAIN MediaVariantTypeEnum AS VARCHAR(32)
+    CHECK (VALUE IN ('HLS_MASTER_PLAYLIST', 'HLS_RENDITION'));
 
 CREATE TABLE permission (
     id UUID PRIMARY KEY,
@@ -102,6 +102,7 @@ CREATE TABLE media_variant (
     id UUID PRIMARY KEY,
     media_id UUID NOT NULL,
     variant_type MediaVariantTypeEnum NOT NULL,
+    variant_key VARCHAR(32) NOT NULL,
     storage_key VARCHAR(255) NOT NULL,
     content_type VARCHAR(100) NOT NULL,
     width INTEGER,
@@ -115,7 +116,8 @@ CREATE TABLE media_variant (
 );
 
 CREATE UNIQUE INDEX uk_media_variant_storage_key ON media_variant(storage_key);
-CREATE UNIQUE INDEX uk_media_variant_media_type ON media_variant(media_id, variant_type);
+CREATE UNIQUE INDEX uk_media_variant_media_type_key
+    ON media_variant(media_id, variant_type, variant_key);
 CREATE INDEX idx_media_variant_created_at ON media_variant(created_at);
 CREATE INDEX idx_media_variant_updated_at ON media_variant(updated_at);
 

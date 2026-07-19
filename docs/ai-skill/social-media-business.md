@@ -55,13 +55,16 @@ Allowed transitions:
 - Physical filenames should be generated using UUIDs.
 - Uploads must validate extension, content type, file size, and kind-specific content.
 - Video and audio are processed asynchronously into HLS by JobRunr.
+- Video HLS uses a master playlist with `360p`, `720p`, and `1080p` renditions up to the source resolution.
+- Audio HLS uses a dedicated audio rendition referenced by the master playlist.
 - Each media item owns a separate directory containing its original file and generated variants.
 - Media paths must never accept user-controlled filesystem traversal.
 
 ## Media Delivery
 - Media bytes are not embedded into rendered HTML.
 - HTML renders public media or stream URLs.
-- Spring exposes a public media endpoint such as `GET /api/v1/public/media/{mediaId}`.
+- Spring exposes media through an opaque public key, such as `GET /api/v1/public/media/{publicKey}`.
+- Database IDs and physical storage keys must never appear in public media URLs.
 - The endpoint resolves media metadata from the database and streams the file.
 - Media responses should provide the correct content type and support browser caching.
 - Video and audio delivery uses generated HLS playlists and segments.
@@ -102,4 +105,3 @@ Allowed transitions:
 - Direct messages
 - Notifications
 - Hashtags and mentions
-- Video and audio uploads

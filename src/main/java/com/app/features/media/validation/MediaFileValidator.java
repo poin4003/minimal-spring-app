@@ -2,14 +2,9 @@ package com.app.features.media.validation;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -22,7 +17,6 @@ import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.ExceptionFactory;
 import com.github.kokorin.jaffree.StreamType;
-import com.github.kokorin.jaffree.ffprobe.FFprobe;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
 import com.github.kokorin.jaffree.ffprobe.Stream;
@@ -35,6 +29,7 @@ public class MediaFileValidator {
 
     private final AppProperties appProperties;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
+    private final MediaProbe mediaProbe;
 
     private final Tika tika = new Tika();
 
@@ -99,7 +94,7 @@ public class MediaFileValidator {
     }
 
     private void validateAudioVideo(Path file, StreamType requiredStreamType) {
-        FFprobeResult result = probe(file);
+        FFprobeResult result = mediaProbe.probe(file);
         List<Stream> streams = result.getStreams() == null
                 ? List.of()
                 : result.getStreams();
@@ -112,42 +107,6 @@ public class MediaFileValidator {
                             ? "Invalid video content."
                             : "Invalid audio content.");
         }
-    }
-
-    private FFprobeResult probe(Path file) {
-        Future<FFprobeResult> resultFuture = createProbe()
-                .setShowStreams(true)
-                .setShowFormat(true)
-                .setInput(file)
-                .executeAsync();
-
-        try {
-            return resultFuture.get(
-                    appProperties.getMedia().getFfmpeg().getProcessTimeoutMinutes(),
-                    TimeUnit.MINUTES);
-        } catch (TimeoutException ex) {
-            resultFuture.cancel(true);
-            throw ExceptionFactory.invalidParam("Media probing timed out.");
-        } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-            resultFuture.cancel(true);
-            throw ExceptionFactory.serverError("Media probing was interrupted.");
-        } catch (ExecutionException ex) {
-            throw ExceptionFactory.invalidParam("Unable to probe audio or video content.");
-        }
-    }
-
-    private FFprobe createProbe() {
-        Path configuredPath = Path.of(
-                appProperties.getMedia().getFfmpeg().getFfprobeExecutable());
-        if (Files.isDirectory(configuredPath)) {
-            return FFprobe.atPath(configuredPath);
-        }
-
-        Path binaryDirectory = configuredPath.getParent();
-        return binaryDirectory == null
-                ? FFprobe.atPath()
-                : FFprobe.atPath(binaryDirectory);
     }
 
     private double resolveDuration(FFprobeResult result, List<Stream> streams) {

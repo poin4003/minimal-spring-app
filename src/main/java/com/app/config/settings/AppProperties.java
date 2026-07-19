@@ -1,5 +1,6 @@
 package com.app.config.settings;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -73,6 +74,9 @@ public class AppProperties {
         @NotBlank
         private String storagePath = "./data/media";
 
+        @NotNull
+        private Duration deliveryCacheDuration = Duration.ofDays(365);
+
         @Positive
         private long maxImagePixels = 40_000_000;
 
@@ -119,7 +123,8 @@ public class AppProperties {
     public static class Security {
         private List<String> apiPublicPaths = List.of(
                 "/api/v1/auth/login",
-                "/api/v1/auth/refresh");
+                "/api/v1/auth/refresh",
+                "/api/v1/public/media/**");
 
         private List<String> webPublicPaths = List.of(
                 "/login",
