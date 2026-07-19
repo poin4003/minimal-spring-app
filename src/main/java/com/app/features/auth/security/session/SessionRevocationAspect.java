@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SessionRevocationAspect {
 
-    private final SessionRevocationService sessionRevocationService;
+    private final SessionRevocationService sessionRevocationSvc;
     private final TransactionTemplate transactionTemplate;
 
     @Around(
@@ -41,11 +41,11 @@ public class SessionRevocationAspect {
 
     private void revokeSessions(SessionRevocationScope scope, UUID targetId) {
         if (scope == SessionRevocationScope.USER) {
-            sessionRevocationService.revokeSessionsByUserId(targetId);
+            sessionRevocationSvc.revokeSessionsByUserId(targetId);
             return;
         }
 
-        sessionRevocationService.revokeSessionsByRoleId(targetId);
+        sessionRevocationSvc.revokeSessionsByRoleId(targetId);
     }
 
     private Object proceed(ProceedingJoinPoint joinPoint) {

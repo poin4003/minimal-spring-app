@@ -38,7 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserBaseRepository userBaseRepo;
     private final KeyStoreRepository keyStoreRepo;
     private final ConsumedRefreshTokenRepository consumedRefreshTokenRepo;
-    private final KeyStoreService keyStoreService;
+    private final KeyStoreService keyStoreSvc;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
 
@@ -64,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (usedToken != null) {
             log.warn("Refresh Token reuse detected! keyStoreId: {}", usedToken.getKeyStoreId());
-            keyStoreService.deleteKeyStoreById(usedToken.getKeyStoreId());
+            keyStoreSvc.deleteKeyStoreById(usedToken.getKeyStoreId());
             throw ExceptionFactory.permissionError("Something wrong happened! Please relogin.");
         }
 

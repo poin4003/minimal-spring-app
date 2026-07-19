@@ -23,14 +23,14 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/media")
 public class MediaApiController {
 
-    private final MediaService mediaService;
+    private final MediaService mediaSvc;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResult<MediaResult> upload(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @ModelAttribute CreateMediaPayload payload) {
-        MediaResult result = mediaService.createMedia(
+        MediaResult result = mediaSvc.createMedia(
                 currentUser.getUserId(),
                 payload);
 

@@ -34,13 +34,13 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
             Pattern.compile("^[a-z0-9]+$");
     private static final String HLS_SEGMENT_CONTENT_TYPE = "video/mp2t";
 
-    private final MediaRepository mediaRepository;
-    private final MediaVariantRepository mediaVariantRepository;
+    private final MediaRepository mediaRepo;
+    private final MediaVariantRepository mediaVariantRepo;
     private final MediaFileStorage mediaFileStorage;
 
     @Override
     public MediaDeliveryResult getOriginal(String publicKey) {
-        MediaEntity media = mediaRepository
+        MediaEntity media = mediaRepo
                 .findByPublicKeyAndStatusAndProcessingStatus(
                         publicKey,
                         RecordStatus.ACTIVE,
@@ -118,7 +118,7 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
             String publicKey,
             MediaVariantType variantType,
             String variantKey) {
-        return mediaVariantRepository
+        return mediaVariantRepo
                 .findByMedia_PublicKeyAndMedia_StatusAndMedia_ProcessingStatusAndVariantTypeAndVariantKey(
                         publicKey,
                         RecordStatus.ACTIVE,

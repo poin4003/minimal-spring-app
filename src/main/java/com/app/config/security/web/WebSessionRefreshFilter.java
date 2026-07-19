@@ -27,8 +27,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSessionRefreshFilter extends OncePerRequestFilter {
 
-    private final AuthService authService;
-    private final AuthCookieService authCookieService;
+    private final AuthService authSvc;
+    private final AuthCookieService authCookieSvc;
     private final JwtAccessTokenAuthenticator jwtAccessTokenAuthenticator;
 
     @Override
@@ -56,7 +56,7 @@ public class WebSessionRefreshFilter extends OncePerRequestFilter {
             HttpServletRequest request,
             HttpServletResponse response) {
         try {
-            String refreshToken = authCookieService.readRefreshToken(request);
+            String refreshToken = authCookieSvc.readRefreshToken(request);
             if (refreshToken == null) {
                 return;
             }
@@ -64,7 +64,7 @@ public class WebSessionRefreshFilter extends OncePerRequestFilter {
             RefreshTokenPayload payload = new RefreshTokenPayload();
             payload.setRefreshToken(refreshToken);
 
-            LoginResult tokens = authService.refreshToken(payload);
+            LoginResult tokens = authSvc.refreshToken(payload);
             JwtAuthenticationToken authentication = jwtAccessTokenAuthenticator.authenticate(
                     tokens.getAccessToken(),
                     request);
@@ -73,11 +73,11 @@ public class WebSessionRefreshFilter extends OncePerRequestFilter {
                 throw new IllegalStateException("Refreshed access token could not be authenticated.");
             }
 
-            authCookieService.writeAuthenticationCookies(response, tokens);
+            authCookieSvc.writeAuthenticationCookies(response, tokens);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         } catch (Exception exception) {
             SecurityContextHolder.clearContext();
-            authCookieService.clearAuthenticationCookies(response);
+            authCookieSvc.clearAuthenticationCookies(response);
             log.debug("Web session refresh failed", exception);
         }
     }

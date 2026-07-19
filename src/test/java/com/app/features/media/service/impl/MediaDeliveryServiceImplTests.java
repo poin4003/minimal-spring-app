@@ -32,10 +32,10 @@ import com.app.features.media.storage.MediaFileStorage;
 class MediaDeliveryServiceImplTests {
 
     @Mock
-    private MediaRepository mediaRepository;
+    private MediaRepository mediaRepo;
 
     @Mock
-    private MediaVariantRepository mediaVariantRepository;
+    private MediaVariantRepository mediaVariantRepo;
 
     @Mock
     private MediaFileStorage mediaFileStorage;
@@ -43,13 +43,13 @@ class MediaDeliveryServiceImplTests {
     @TempDir
     private Path temporaryDirectory;
 
-    private MediaDeliveryServiceImpl mediaDeliveryService;
+    private MediaDeliveryServiceImpl mediaDeliverySvc;
 
     @BeforeEach
     void setUp() {
-        mediaDeliveryService = new MediaDeliveryServiceImpl(
-                mediaRepository,
-                mediaVariantRepository,
+        mediaDeliverySvc = new MediaDeliveryServiceImpl(
+                mediaRepo,
+                mediaVariantRepo,
                 mediaFileStorage);
     }
 
@@ -62,14 +62,14 @@ class MediaDeliveryServiceImplTests {
         media.setContentType("application/pdf");
         media.setKind(MediaKind.DOCUMENT);
 
-        given(mediaRepository.findByPublicKeyAndStatusAndProcessingStatus(
+        given(mediaRepo.findByPublicKeyAndStatusAndProcessingStatus(
                 "public-key",
                 RecordStatus.ACTIVE,
                 MediaProcessingStatus.READY))
                 .willReturn(Optional.of(media));
         given(mediaFileStorage.resolve(media.getStorageKey())).willReturn(originalPath);
 
-        MediaDeliveryResult result = mediaDeliveryService.getOriginal("public-key");
+        MediaDeliveryResult result = mediaDeliverySvc.getOriginal("public-key");
 
         assertThat(result.getPath()).isEqualTo(originalPath);
         assertThat(result.getContentType()).isEqualTo("application/pdf");
@@ -79,14 +79,14 @@ class MediaDeliveryServiceImplTests {
 
     @Test
     void rejectsInvalidHlsSegmentBeforeStorageLookup() {
-        assertThatThrownBy(() -> mediaDeliveryService.getHlsSegment(
+        assertThatThrownBy(() -> mediaDeliverySvc.getHlsSegment(
                 "public-key",
                 "720p",
                 "../original.mp4"))
                 .isInstanceOf(MyException.class)
                 .hasMessage("Media stream segment not found.");
 
-        verifyNoInteractions(mediaVariantRepository, mediaFileStorage);
+        verifyNoInteractions(mediaVariantRepo, mediaFileStorage);
     }
 
     @Test
@@ -95,7 +95,7 @@ class MediaDeliveryServiceImplTests {
         MediaVariantEntity playlist = new MediaVariantEntity();
         playlist.setStorageKey("2026/07/media/hls/720p/index.m3u8");
 
-        given(mediaVariantRepository
+        given(mediaVariantRepo
                 .findByMedia_PublicKeyAndMedia_StatusAndMedia_ProcessingStatusAndVariantTypeAndVariantKey(
                         "public-key",
                         RecordStatus.ACTIVE,
@@ -106,7 +106,7 @@ class MediaDeliveryServiceImplTests {
         given(mediaFileStorage.resolve("2026/07/media/hls/720p/segment-00001.ts"))
                 .willReturn(segmentPath);
 
-        MediaDeliveryResult result = mediaDeliveryService.getHlsSegment(
+        MediaDeliveryResult result = mediaDeliverySvc.getHlsSegment(
                 "public-key",
                 "720p",
                 "segment-00001.ts");
@@ -123,7 +123,7 @@ class MediaDeliveryServiceImplTests {
         media.setContentType("image/jpeg");
         media.setKind(MediaKind.IMAGE);
 
-        given(mediaRepository.findByPublicKeyAndStatusAndProcessingStatus(
+        given(mediaRepo.findByPublicKeyAndStatusAndProcessingStatus(
                 "public-key",
                 RecordStatus.ACTIVE,
                 MediaProcessingStatus.READY))
@@ -131,7 +131,7 @@ class MediaDeliveryServiceImplTests {
         given(mediaFileStorage.resolve(media.getStorageKey()))
                 .willReturn(temporaryDirectory.resolve("missing.jpg"));
 
-        assertThatThrownBy(() -> mediaDeliveryService.getOriginal("public-key"))
+        assertThatThrownBy(() -> mediaDeliverySvc.getOriginal("public-key"))
                 .isInstanceOf(MyException.class)
                 .hasMessage("Media file not found.");
     }

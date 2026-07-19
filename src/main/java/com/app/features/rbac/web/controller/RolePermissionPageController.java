@@ -54,8 +54,8 @@ public class RolePermissionPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final RbacService rbacService;
+    private final MenuService menuSvc;
+    private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -79,7 +79,7 @@ public class RolePermissionPageController {
             @PathVariable UUID roleId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
-        rbacService.assignPermToRole(roleId, List.of(targetId));
+        rbacSvc.assignPermToRole(roleId, List.of(targetId));
         return "redirect:" + buildRedirectPath(roleId, query);
     }
 
@@ -89,7 +89,7 @@ public class RolePermissionPageController {
             @PathVariable UUID roleId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
-        rbacService.removePermFromRole(roleId, List.of(targetId));
+        rbacSvc.removePermFromRole(roleId, List.of(targetId));
         return "redirect:" + buildRedirectPath(roleId, query);
     }
 
@@ -100,14 +100,14 @@ public class RolePermissionPageController {
             UiAssignmentPageQuery query,
             String errorMessage) {
         UiAssignmentPageQuery resolvedQuery = query.applyDefaults(ROLE_PERMISSION_PAGE_DEFAULTS);
-        RoleResult role = rbacService.getRole(roleId);
+        RoleResult role = rbacSvc.getRole(roleId);
         boolean assignedMode = resolvedQuery.getMode() == UiAssignmentMode.ASSIGNED;
 
         PermissionFilterCriteria criteria = assignedMode
                 ? buildAssignedCriteria(roleId)
                 : buildAvailableCriteria(roleId);
 
-        var permissionPage = rbacService.getManyPermissions(
+        var permissionPage = rbacSvc.getManyPermissions(
                 criteria,
                 resolvedQuery.toPageable(ROLE_PERMISSION_PAGE_DEFAULTS));
 
@@ -208,7 +208,7 @@ public class RolePermissionPageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

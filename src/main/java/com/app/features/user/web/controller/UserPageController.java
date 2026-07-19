@@ -79,8 +79,8 @@ public class UserPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final UserService userService;
+    private final MenuService menuSvc;
+    private final UserService userSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
@@ -130,7 +130,7 @@ public class UserPageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> userService.createUser(mapper.map(form, CreateUserPayload.class)));
+                () -> userSvc.createUser(mapper.map(form, CreateUserPayload.class)));
 
         if (submitResult.success()) {
             return "redirect:" + appProperties.getUi().getHomePath() + "/users";
@@ -169,7 +169,7 @@ public class UserPageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> userService.updateUserStatus(userId, form.getStatus()));
+                () -> userSvc.updateUserStatus(userId, form.getStatus()));
 
         if (submitResult.success()) {
             return "redirect:" + query.toUri(
@@ -212,7 +212,7 @@ public class UserPageController {
             UUID detailUserId,
             boolean openDetailModal,
             boolean preserveDetailForm) {
-        var userPage = userService.getManyUser(query.toPageable(USER_PAGE_DEFAULTS));
+        var userPage = userSvc.getManyUser(query.toPageable(USER_PAGE_DEFAULTS));
         List<UserTableRowView> rows = userPage.getContent().stream()
                 .map(result -> mapper.map(result, UserTableRowView.class))
                 .toList();
@@ -287,7 +287,7 @@ public class UserPageController {
     }
 
     private UiMetadataModalView buildUserMetadataModal(UUID userId) {
-        UserDetailResult user = userService.getUserDetailById(userId);
+        UserDetailResult user = userSvc.getUserDetailById(userId);
 
         return UiMetadataModalView.builder()
                 .id("user-metadata-modal")
@@ -327,7 +327,7 @@ public class UserPageController {
             UserDetailModalForm detailForm,
             Map<String, String> modalErrors,
             boolean preserveDetailForm) {
-        UserDetailResult user = userService.getUserDetailById(userId);
+        UserDetailResult user = userSvc.getUserDetailById(userId);
 
         UserDetailModalForm modalForm = preserveDetailForm
                 ? detailForm
@@ -382,7 +382,7 @@ public class UserPageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 

@@ -66,8 +66,8 @@ public class CronJobPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final CronJobService cronJobService;
+    private final MenuService menuSvc;
+    private final CronJobService cronJobSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
@@ -113,7 +113,7 @@ public class CronJobPageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> cronJobService.updateConfig(jobType, form.getCronExpression(), form.getStatus()));
+                () -> cronJobSvc.updateConfig(jobType, form.getCronExpression(), form.getStatus()));
 
         if (submitResult.success()) {
             return "redirect:" + query.toUri(
@@ -150,7 +150,7 @@ public class CronJobPageController {
             String detailJobType,
             boolean openDetailModal,
             boolean preserveDetailForm) {
-        var cronJobPage = cronJobService.getManyCronJobs(query.toPageable(CRONJOB_PAGE_DEFAULTS));
+        var cronJobPage = cronJobSvc.getManyCronJobs(query.toPageable(CRONJOB_PAGE_DEFAULTS));
         List<CronJobTableRowView> rows = cronJobPage.getContent().stream()
                 .map(result -> mapper.map(result, CronJobTableRowView.class))
                 .toList();
@@ -203,7 +203,7 @@ public class CronJobPageController {
     }
 
     private UiMetadataModalView buildMetadataModal(String jobType) {
-        CronJobDetailResult cronJob = cronJobService.getCronJobDetail(jobType);
+        CronJobDetailResult cronJob = cronJobSvc.getCronJobDetail(jobType);
 
         return UiMetadataModalView.builder()
                 .id("cronjob-metadata-modal")
@@ -250,7 +250,7 @@ public class CronJobPageController {
     }
 
     private CronJobDetailModalForm buildDetailForm(String jobType) {
-        CronJobDetailResult cronJob = cronJobService.getCronJobDetail(jobType);
+        CronJobDetailResult cronJob = cronJobSvc.getCronJobDetail(jobType);
 
         CronJobDetailModalForm form = new CronJobDetailModalForm();
         form.setJobType(cronJob.getJobType());
@@ -315,7 +315,7 @@ public class CronJobPageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

@@ -19,11 +19,11 @@ import lombok.extern.slf4j.Slf4j;
         defaultCron = "0 0 1 * * *")
 public class CleanupExpiredTokenJob implements JobHandler {
 
-    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenService refreshTokenSvc;
 
     @Override
     @Job(name = "Cleanup Expired Refresh Tokens")
     public void execute() {
-        refreshTokenService.cleanupExpiredConsumedTokens();
+        refreshTokenSvc.cleanupExpiredConsumedTokens();
     }
 }

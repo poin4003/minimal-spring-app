@@ -28,8 +28,8 @@ import lombok.RequiredArgsConstructor;
 public class LoginPageController {
 
     private final AppProperties appProperties;
-    private final AuthService authService;
-    private final AuthCookieService authCookieService;
+    private final AuthService authSvc;
+    private final AuthCookieService authCookieSvc;
 
     @GetMapping("${app.ui.login-path:/login}")
     public String loginPage(
@@ -61,12 +61,12 @@ public class LoginPageController {
             HttpServletRequest request,
             HttpServletResponse response) {
         try {
-            LoginResult tokens = authService.login(form, HttpUtils.getClientIp(request));
-            authCookieService.writeAuthenticationCookies(response, tokens);
+            LoginResult tokens = authSvc.login(form, HttpUtils.getClientIp(request));
+            authCookieSvc.writeAuthenticationCookies(response, tokens);
 
             return "redirect:" + appProperties.getUi().getHomePath();
         } catch (RuntimeException ex) {
-            authCookieService.clearAuthenticationCookies(response);
+            authCookieSvc.clearAuthenticationCookies(response);
             return "redirect:" + appProperties.getUi().getLoginPath() + "?error";
         }
     }
@@ -76,11 +76,11 @@ public class LoginPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletResponse response) {
         if (currentUser != null && currentUser.getKeyStore() != null) {
-            authService.logout(currentUser.getUserId(), currentUser.getKeyStore().getId());
+            authSvc.logout(currentUser.getUserId(), currentUser.getKeyStore().getId());
         }
 
         SecurityContextHolder.clearContext();
-        authCookieService.clearAuthenticationCookies(response);
+        authCookieSvc.clearAuthenticationCookies(response);
         return "redirect:" + appProperties.getUi().getLoginPath() + "?logout";
     }
 }

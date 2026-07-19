@@ -55,9 +55,9 @@ public class UserRolePageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final UserService userService;
-    private final RbacService rbacService;
+    private final MenuService menuSvc;
+    private final UserService userSvc;
+    private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -81,7 +81,7 @@ public class UserRolePageController {
             @PathVariable UUID userId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
-        rbacService.assignRoleToUser(userId, List.of(targetId));
+        rbacSvc.assignRoleToUser(userId, List.of(targetId));
         return "redirect:" + buildRedirectPath(userId, query);
     }
 
@@ -91,7 +91,7 @@ public class UserRolePageController {
             @PathVariable UUID userId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
-        rbacService.removeRoleFromUser(userId, List.of(targetId));
+        rbacSvc.removeRoleFromUser(userId, List.of(targetId));
         return "redirect:" + buildRedirectPath(userId, query);
     }
 
@@ -102,14 +102,14 @@ public class UserRolePageController {
             UiAssignmentPageQuery query,
             String errorMessage) {
         UiAssignmentPageQuery resolvedQuery = query.applyDefaults(USER_ROLE_PAGE_DEFAULTS);
-        UserDetailResult user = userService.getUserDetailById(userId);
+        UserDetailResult user = userSvc.getUserDetailById(userId);
         boolean assignedMode = resolvedQuery.getMode() == UiAssignmentMode.ASSIGNED;
 
         RoleFilterCriteria criteria = assignedMode
                 ? buildAssignedCriteria(userId)
                 : buildAvailableCriteria(userId);
 
-        var rolePage = rbacService.getManyRoles(criteria, resolvedQuery.toPageable(USER_ROLE_PAGE_DEFAULTS));
+        var rolePage = rbacSvc.getManyRoles(criteria, resolvedQuery.toPageable(USER_ROLE_PAGE_DEFAULTS));
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 rolePage,
@@ -208,7 +208,7 @@ public class UserRolePageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

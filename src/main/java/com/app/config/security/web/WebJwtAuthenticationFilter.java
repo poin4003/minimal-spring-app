@@ -27,7 +27,7 @@ public class WebJwtAuthenticationFilter extends OncePerRequestFilter {
             WebJwtAuthenticationFilter.class.getName() + ".expiredAccessToken";
 
     private final JwtAccessTokenAuthenticator jwtAccessTokenAuthenticator;
-    private final AuthCookieService authCookieService;
+    private final AuthCookieService authCookieSvc;
 
     @Override
     protected void doFilterInternal(
@@ -42,7 +42,7 @@ public class WebJwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void authenticateCookie(HttpServletRequest request) {
-        String accessToken = authCookieService.readAccessToken(request);
+        String accessToken = authCookieSvc.readAccessToken(request);
         if (accessToken == null) {
             return;
         }

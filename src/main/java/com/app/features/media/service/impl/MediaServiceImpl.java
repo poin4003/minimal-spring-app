@@ -52,11 +52,11 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class MediaServiceImpl implements MediaService {
 
-    private final MediaRepository mediaRepository;
-    private final UserBaseRepository userBaseRepository;
+    private final MediaRepository mediaRepo;
+    private final UserBaseRepository userBaseRepo;
     private final MediaFileStorage mediaFileStorage;
-    private final MediaVariantRepository mediaVariantRepository;
-    private final MediaProcessingLeaseRepository mediaProcessingLeaseRepository;
+    private final MediaVariantRepository mediaVariantRepo;
+    private final MediaProcessingLeaseRepository mediaProcessingLeaseRepo;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaFileValidator mediaFileValidator;
     private final JobScheduler jobScheduler;
@@ -69,7 +69,7 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Media file is required.");
         }
 
-        UserBaseEntity creator = userBaseRepository.findById(createdById)
+        UserBaseEntity creator = userBaseRepo.findById(createdById)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
 
         MultipartFile upload = payload.getFile();
@@ -101,11 +101,11 @@ public class MediaServiceImpl implements MediaService {
                 : MediaProcessingStatus.READY);
         media.setStatus(RecordStatus.ACTIVE);
 
-        media = mediaRepository.save(media);
+        media = mediaRepo.save(media);
         if (media.getProcessingStatus() == MediaProcessingStatus.PENDING) {
             MediaProcessingLeaseEntity processingLease = new MediaProcessingLeaseEntity();
             processingLease.setMediaId(media.getId());
-            mediaProcessingLeaseRepository.save(processingLease);
+            mediaProcessingLeaseRepo.save(processingLease);
             registerProcessingJob(media.getId());
         }
 
@@ -115,7 +115,7 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public void deleteOwnedMedia(UUID mediaId, UUID createdById) {
-        MediaEntity media = mediaRepository.findByIdAndCreatedBy_Id(mediaId, createdById)
+        MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, createdById)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         deleteMediaEntity(media);
@@ -124,7 +124,7 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public void deleteMedia(UUID mediaId) {
-        MediaEntity media = mediaRepository.findById(mediaId)
+        MediaEntity media = mediaRepo.findById(mediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         deleteMediaEntity(media);
@@ -133,7 +133,7 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public Page<MediaResult> getManyMedia(MediaFilterCriteria criteria, Pageable pageable) {
         Specification<MediaEntity> specification = MediaSpecification.withFilter(criteria);
-        Page<MediaEntity> entityPage = mediaRepository.findAll(specification, pageable);
+        Page<MediaEntity> entityPage = mediaRepo.findAll(specification, pageable);
 
         return entityPage.map(entity -> mapper.map(entity, MediaResult.class));
     }
@@ -151,7 +151,7 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public MediaDetailResult getMediaDetail(UUID mediaId) {
-        MediaEntity media = mediaRepository.findById(mediaId)
+        MediaEntity media = mediaRepo.findById(mediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return toMediaDetailResult(media);
@@ -159,7 +159,7 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public MediaDetailResult getOwnedMediaDetail(UUID mediaId, UUID ownerId) {
-        MediaEntity media = mediaRepository.findByIdAndCreatedBy_Id(mediaId, ownerId)
+        MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return toMediaDetailResult(media);
@@ -168,7 +168,7 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public MediaResult retryProcessing(UUID mediaId) {
-        MediaEntity media = mediaRepository.findById(mediaId)
+        MediaEntity media = mediaRepo.findById(mediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return retryMedia(media);
@@ -177,7 +177,7 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId) {
-        MediaEntity media = mediaRepository.findByIdAndCreatedBy_Id(mediaId, ownerId)
+        MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return retryMedia(media);
@@ -199,7 +199,7 @@ public class MediaServiceImpl implements MediaService {
         }
 
         media.setProcessingStatus(MediaProcessingStatus.PENDING);
-        media = mediaRepository.save(media);
+        media = mediaRepo.save(media);
         registerProcessingJob(media.getId());
 
         return mapper.map(media, MediaResult.class);
@@ -207,7 +207,7 @@ public class MediaServiceImpl implements MediaService {
 
     private MediaDetailResult toMediaDetailResult(MediaEntity media) {
         MediaDetailResult result = mapper.map(media, MediaDetailResult.class);
-        List<MediaVariantResult> variants = mediaVariantRepository
+        List<MediaVariantResult> variants = mediaVariantRepo
                 .findAllByMedia_IdOrderByVariantTypeAscHeightAsc(media.getId())
                 .stream()
                 .map(entity -> mapper.map(entity, MediaVariantResult.class))
@@ -231,7 +231,7 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Duplicate media IDs are not allowed.");
         }
 
-        List<MediaEntity> media = mediaRepository.findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
+        List<MediaEntity> media = mediaRepo.findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
                 distinctIds,
                 createdById,
                 RecordStatus.ACTIVE,
@@ -264,7 +264,7 @@ public class MediaServiceImpl implements MediaService {
     }
 
     private void deleteMediaEntity(MediaEntity media) {
-        mediaRepository.delete(media);
+        mediaRepo.delete(media);
         registerAfterCommitCleanup(media.getStorageKey());
     }
 

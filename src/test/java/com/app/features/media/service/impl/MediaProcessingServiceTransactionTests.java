@@ -22,25 +22,25 @@ import com.app.features.media.service.MediaProcessingService;
 class MediaProcessingServiceTransactionTests {
 
     @Autowired
-    private MediaProcessingService mediaProcessingService;
+    private MediaProcessingService mediaProcessingSvc;
 
     @MockitoBean
-    private MediaRepository mediaRepository;
+    private MediaRepository mediaRepo;
 
     @MockitoBean
-    private MediaProcessingLeaseService mediaProcessingLeaseService;
+    private MediaProcessingLeaseService mediaProcessingLeaseSvc;
 
     @Test
     void privatePreparationRunsInsideTransaction() {
         AtomicBoolean transactionActive = new AtomicBoolean(false);
-        given(mediaProcessingLeaseService.acquire(any(UUID.class), any(UUID.class)))
+        given(mediaProcessingLeaseSvc.acquire(any(UUID.class), any(UUID.class)))
                 .willReturn(true);
-        given(mediaRepository.findById(any(UUID.class))).willAnswer(invocation -> {
+        given(mediaRepo.findById(any(UUID.class))).willAnswer(invocation -> {
             transactionActive.set(TransactionSynchronizationManager.isActualTransactionActive());
             return Optional.empty();
         });
 
-        mediaProcessingService.process(UUID.randomUUID(), UUID.randomUUID());
+        mediaProcessingSvc.process(UUID.randomUUID(), UUID.randomUUID());
 
         assertThat(transactionActive).isTrue();
     }

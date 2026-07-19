@@ -14,10 +14,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MediaProcessingJob {
 
-    private final MediaProcessingService mediaProcessingService;
+    private final MediaProcessingService mediaProcessingSvc;
 
     @Job(name = "Process uploaded media", retries = 3)
     public void execute(UUID mediaId, JobContext jobContext) {
-        mediaProcessingService.process(mediaId, jobContext.getJobId());
+        mediaProcessingSvc.process(mediaId, jobContext.getJobId());
     }
 }

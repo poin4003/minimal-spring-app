@@ -21,20 +21,20 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/auth")
 public class AuthApiController {
 
-    private final AuthService authService;
+    private final AuthService authSvc;
 
     @PostMapping("/login")
     public ApiResult<LoginResult> login(
             @Valid @RequestBody LoginPayload payload,
             HttpServletRequest request) {
-        LoginResult result = authService.login(payload, HttpUtils.getClientIp(request));
+        LoginResult result = authSvc.login(payload, HttpUtils.getClientIp(request));
         return ApiResult.ok(result, "Login successful.");
     }
 
     @PostMapping("/refresh")
     public ApiResult<LoginResult> refreshToken(
             @Valid @RequestBody RefreshTokenPayload payload) {
-        LoginResult result = authService.refreshToken(payload);
+        LoginResult result = authSvc.refreshToken(payload);
         return ApiResult.ok(result, "Token refreshed successfully.");
     }
 }

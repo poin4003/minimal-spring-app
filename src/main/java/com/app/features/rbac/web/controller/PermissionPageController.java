@@ -50,8 +50,8 @@ public class PermissionPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final RbacService rbacService;
+    private final MenuService menuSvc;
+    private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
@@ -79,7 +79,7 @@ public class PermissionPageController {
         PermissionFilterCriteria criteria = new PermissionFilterCriteria();
         criteria.setRoleId(filter.getRoleId());
 
-        var permissionPage = rbacService.getManyPermissions(criteria, query.toPageable(PERMISSION_PAGE_DEFAULTS));
+        var permissionPage = rbacSvc.getManyPermissions(criteria, query.toPageable(PERMISSION_PAGE_DEFAULTS));
         List<PermissionTableRowView> rows = permissionPage.getContent().stream()
                 .map((PermissionResult permission) -> mapper.map(permission, PermissionTableRowView.class))
                 .toList();
@@ -117,7 +117,7 @@ public class PermissionPageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

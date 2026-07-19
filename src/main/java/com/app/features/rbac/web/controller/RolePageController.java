@@ -78,8 +78,8 @@ public class RolePageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
-    private final RbacService rbacService;
+    private final MenuService menuSvc;
+    private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final UiTableFactory uiTableFactory;
@@ -129,7 +129,7 @@ public class RolePageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> rbacService.createRole(mapper.map(form, CreateRolePayload.class)));
+                () -> rbacSvc.createRole(mapper.map(form, CreateRolePayload.class)));
 
         if (submitResult.success()) {
             return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles";
@@ -168,7 +168,7 @@ public class RolePageController {
             Model model) {
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(
                 bindingResult,
-                () -> rbacService.updateRole(roleId, mapper.map(form, UpdateRolePayload.class)));
+                () -> rbacSvc.updateRole(roleId, mapper.map(form, UpdateRolePayload.class)));
 
         if (submitResult.success()) {
             return "redirect:" + query.toUri(
@@ -214,7 +214,7 @@ public class RolePageController {
         RoleFilterCriteria criteria = new RoleFilterCriteria();
         criteria.setUserId(filter.getUserId());
 
-        var rolePage = rbacService.getManyRoles(criteria, query.toPageable(ROLE_PAGE_DEFAULTS));
+        var rolePage = rbacSvc.getManyRoles(criteria, query.toPageable(ROLE_PAGE_DEFAULTS));
         List<RoleTableRowView> rows = rolePage.getContent().stream()
                 .map(role -> mapper.map(role, RoleTableRowView.class))
                 .toList();
@@ -289,7 +289,7 @@ public class RolePageController {
     }
 
     private UiMetadataModalView buildRoleMetadataModal(UUID roleId) {
-        RoleResult role = rbacService.getRole(roleId);
+        RoleResult role = rbacSvc.getRole(roleId);
 
         return UiMetadataModalView.builder()
                 .id("role-metadata-modal")
@@ -319,7 +319,7 @@ public class RolePageController {
             RoleDetailModalForm detailForm,
             Map<String, String> modalErrors,
             boolean preserveDetailForm) {
-        RoleResult role = rbacService.getRole(roleId);
+        RoleResult role = rbacSvc.getRole(roleId);
 
         RoleDetailModalForm modalForm = preserveDetailForm
                 ? detailForm
@@ -390,7 +390,7 @@ public class RolePageController {
                                 .map(authority -> authority.getAuthority())
                                 .toList())
                         .build())
-                .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class HomePageController {
 
     private final AppProperties appProperties;
-    private final MenuService menuService;
+    private final MenuService menuSvc;
 
     @GetMapping("${app.ui.home-path:/admin}")
     public String home(
@@ -37,7 +37,7 @@ public class HomePageController {
                                         .map(authority -> authority.getAuthority())
                                         .toList())
                                 .build())
-                        .menuTree(menuService.getMenuTree(request.getRequestURI()))
+                        .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                         .build())
                 .build();
 

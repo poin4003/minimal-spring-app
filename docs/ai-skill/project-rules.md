@@ -39,6 +39,12 @@
 - For flat DTOs or flat UI row views with matching field names, prefer mutable classes with `ModelMapper` over repetitive manual `builder()` mapping.
 - Reserve manual builders for composed page objects, modal/detail structures, or cases where field names or mapping logic differ.
 
+## Dependency Field Naming Rule
+- Name injected repository fields with the domain name followed by `Repo`, such as `userBaseRepo`, `mediaRepo`, or `mediaVariantRepo`.
+- Name injected service fields with the domain name followed by `Svc`, such as `userBaseSvc`, `mediaSvc`, or `authCookieSvc`.
+- Apply this convention consistently in production code and tests.
+- Keep repository and service class/interface names explicit; this abbreviation applies only to dependency field names and their references.
+
 ## UI View Model Rule
 - For server-rendered UI pages such as Thymeleaf, prefer using dedicated view-model classes instead of scattering many `model.addAttribute("key", value)` entries.
 - A controller should preferably expose one root page object, for example `page`, rather than multiple loose template variables.

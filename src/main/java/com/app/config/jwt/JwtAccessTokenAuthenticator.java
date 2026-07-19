@@ -19,7 +19,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtAccessTokenAuthenticator {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final KeyStoreService keyStoreService;
+    private final KeyStoreService keyStoreSvc;
     private final UserPrincipalFactory userPrincipalFactory;
 
     public JwtAuthenticationToken authenticate(
@@ -30,7 +30,7 @@ public class JwtAccessTokenAuthenticator {
             return null;
         }
 
-        KeyStoreResult keyStore = keyStoreService.getKeyStoreById(keyStoreId);
+        KeyStoreResult keyStore = keyStoreSvc.getKeyStoreById(keyStoreId);
         if (keyStore == null) {
             return null;
         }

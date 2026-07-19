@@ -29,11 +29,11 @@ public class JwtTokenProvider {
     private final AppProperties appProperties;
     private final ObjectMapper objectMapper;
 
-    private final JwtCryptoService jwtCrypto;
+    private final JwtCryptoService jwtCryptoSvc;
 
     public String generateSigningKey() {
         try {
-            return jwtCrypto.generateSigningKey();
+            return jwtCryptoSvc.generateSigningKey();
         } catch (Exception e) {
             throw new RuntimeException("Error generating HMAC signing key", e);
         }
@@ -44,7 +44,7 @@ public class JwtTokenProvider {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getAccessTokenExpirationMs();
 
-            SecretKey key = jwtCrypto.toSecretKey(signingKey);
+            SecretKey key = jwtCryptoSvc.toSecretKey(signingKey);
             Map<String, Object> claims = objectMapper.convertValue(
                     payload,
                     new TypeReference<Map<String, Object>>() {
@@ -59,7 +59,7 @@ public class JwtTokenProvider {
                     .subject(userId.toString())
                     .issuedAt(new Date(now))
                     .expiration(new Date(expiryDate))
-                    .signWith(key, jwtCrypto.getAlgorithm())
+                    .signWith(key, jwtCryptoSvc.getAlgorithm())
                     .compact();
         } catch (Exception e) {
             throw new RuntimeException("Could not generate token", e);
@@ -71,7 +71,7 @@ public class JwtTokenProvider {
             long now = System.currentTimeMillis();
             long expiryDate = now + appProperties.getJwt().getRefreshTokenExpirationMs();
 
-            SecretKey key = jwtCrypto.toSecretKey(signingKey);
+            SecretKey key = jwtCryptoSvc.toSecretKey(signingKey);
 
             return Jwts.builder()
                     .json(jwtSerializer())
@@ -81,7 +81,7 @@ public class JwtTokenProvider {
                     .subject(userId.toString())
                     .issuedAt(new Date(now))
                     .expiration(new Date(expiryDate))
-                    .signWith(key, jwtCrypto.getAlgorithm())
+                    .signWith(key, jwtCryptoSvc.getAlgorithm())
                     .compact();
         } catch (Exception e) {
             throw new RuntimeException("Could not generate refresh token", e);
@@ -120,7 +120,7 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token, String signingKey) {
         try {
-            SecretKey key = jwtCrypto.toSecretKey(signingKey);
+            SecretKey key = jwtCryptoSvc.toSecretKey(signingKey);
 
             Jwts.parser()
                     .json(jwtDeserializer())
@@ -136,7 +136,7 @@ public class JwtTokenProvider {
 
     public Date getExpiryDateFromToken(String token, String signingKey) {
         try {
-            SecretKey key = jwtCrypto.toSecretKey(signingKey);
+            SecretKey key = jwtCryptoSvc.toSecretKey(signingKey);
 
             return Jwts.parser()
                     .json(jwtDeserializer())
@@ -152,7 +152,7 @@ public class JwtTokenProvider {
     }
 
     public Claims getAllClaimsFromToken(String token, String signingKey) throws Exception {
-        SecretKey key = jwtCrypto.toSecretKey(signingKey);
+        SecretKey key = jwtCryptoSvc.toSecretKey(signingKey);
 
         return Jwts.parser()
                 .json(jwtDeserializer())

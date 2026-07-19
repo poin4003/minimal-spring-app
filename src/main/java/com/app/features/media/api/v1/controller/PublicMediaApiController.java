@@ -18,18 +18,18 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/public/media")
 public class PublicMediaApiController {
 
-    private final MediaDeliveryService mediaDeliveryService;
+    private final MediaDeliveryService mediaDeliverySvc;
     private final MediaResponseFactory mediaResponseFactory;
 
     @GetMapping("/{publicKey}")
     public ResponseEntity<Resource> getOriginal(@PathVariable String publicKey) {
-        MediaDeliveryResult result = mediaDeliveryService.getOriginal(publicKey);
+        MediaDeliveryResult result = mediaDeliverySvc.getOriginal(publicKey);
         return mediaResponseFactory.build(result);
     }
 
     @GetMapping("/{publicKey}/hls/index.m3u8")
     public ResponseEntity<Resource> getHlsManifest(@PathVariable String publicKey) {
-        MediaDeliveryResult result = mediaDeliveryService.getHlsManifest(publicKey);
+        MediaDeliveryResult result = mediaDeliverySvc.getHlsManifest(publicKey);
         return mediaResponseFactory.build(result);
     }
 
@@ -37,7 +37,7 @@ public class PublicMediaApiController {
     public ResponseEntity<Resource> getHlsRendition(
             @PathVariable String publicKey,
             @PathVariable String variantKey) {
-        MediaDeliveryResult result = mediaDeliveryService.getHlsRendition(
+        MediaDeliveryResult result = mediaDeliverySvc.getHlsRendition(
                 publicKey,
                 variantKey);
         return mediaResponseFactory.build(result);
@@ -48,7 +48,7 @@ public class PublicMediaApiController {
             @PathVariable String publicKey,
             @PathVariable String variantKey,
             @PathVariable String segmentName) {
-        MediaDeliveryResult result = mediaDeliveryService.getHlsSegment(
+        MediaDeliveryResult result = mediaDeliverySvc.getHlsSegment(
                 publicKey,
                 variantKey,
                 segmentName);

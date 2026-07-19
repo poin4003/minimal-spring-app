@@ -45,16 +45,16 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
     private static final String HLS_CONTENT_TYPE = "application/vnd.apple.mpegurl";
 
-    private final MediaRepository mediaRepository;
-    private final MediaVariantRepository mediaVariantRepository;
+    private final MediaRepository mediaRepo;
+    private final MediaVariantRepository mediaVariantRepo;
     private final MediaFileStorage mediaFileStorage;
     private final MediaProbe mediaProbe;
-    private final MediaProcessingLeaseService mediaProcessingLeaseService;
+    private final MediaProcessingLeaseService mediaProcessingLeaseSvc;
     private final AppProperties appProperties;
 
     @Override
     public void process(UUID mediaId, UUID executionId) {
-        if (!mediaProcessingLeaseService.acquire(mediaId, executionId)) {
+        if (!mediaProcessingLeaseSvc.acquire(mediaId, executionId)) {
             return;
         }
 
@@ -72,13 +72,13 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 throw ex;
             }
         } finally {
-            mediaProcessingLeaseService.release(mediaId, executionId);
+            mediaProcessingLeaseSvc.release(mediaId, executionId);
         }
     }
 
     @Transactional
     private MediaEntity prepareMedia(UUID mediaId) {
-        MediaEntity media = mediaRepository.findById(mediaId).orElse(null);
+        MediaEntity media = mediaRepo.findById(mediaId).orElse(null);
         if (media == null
                 || media.getStatus() != RecordStatus.ACTIVE
                 || media.getProcessingStatus() == MediaProcessingStatus.READY
@@ -245,13 +245,13 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
     @Transactional
     private void markReady(UUID mediaId, HlsProcessingResult processingResult) {
-        MediaEntity media = mediaRepository.findById(mediaId).orElse(null);
+        MediaEntity media = mediaRepo.findById(mediaId).orElse(null);
         if (media == null) {
             return;
         }
 
-        mediaVariantRepository.deleteAllByMedia_Id(mediaId);
-        mediaVariantRepository.flush();
+        mediaVariantRepo.deleteAllByMedia_Id(mediaId);
+        mediaVariantRepo.flush();
 
         String hlsDirectoryKey = processingResult.getPublishedDirectoryKey();
         List<MediaVariantEntity> variants = new ArrayList<>();
@@ -277,13 +277,13 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             variants.add(renditionVariant);
         }
 
-        mediaVariantRepository.saveAll(variants);
+        mediaVariantRepo.saveAll(variants);
         media.setProcessingStatus(MediaProcessingStatus.READY);
     }
 
     @Transactional
     private void markFailed(UUID mediaId) {
-        mediaRepository.findById(mediaId)
+        mediaRepo.findById(mediaId)
                 .ifPresent(media -> media.setProcessingStatus(MediaProcessingStatus.FAILED));
     }
 
