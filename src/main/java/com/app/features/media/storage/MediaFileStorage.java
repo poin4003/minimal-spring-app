@@ -16,6 +16,12 @@ public interface MediaFileStorage {
 
     void discard(StagedMediaFile stagedFile);
 
+    MediaProcessingWorkspace prepareProcessingWorkspace(String sourceStorageKey);
+
+    void publishProcessingWorkspace(MediaProcessingWorkspace workspace);
+
+    void discardProcessingWorkspace(MediaProcessingWorkspace workspace);
+
     Path resolve(String storageKey);
 
     void delete(String storageKey);

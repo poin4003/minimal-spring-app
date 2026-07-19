@@ -118,6 +118,55 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     }
 
     @Override
+    public MediaProcessingWorkspace prepareProcessingWorkspace(String sourceStorageKey) {
+        Path source = resolveStorageKey(sourceStorageKey);
+        Path mediaDirectory = source.getParent();
+        Path temporaryDirectory = mediaDirectory.resolve(
+                ".hls-processing-" + UUID.randomUUID());
+        Path publishedDirectory = mediaDirectory.resolve("hls");
+
+        try {
+            Files.createDirectories(temporaryDirectory);
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError(
+                    "Unable to prepare media processing workspace.");
+        }
+
+        return new MediaProcessingWorkspace(
+                temporaryDirectory,
+                publishedDirectory,
+                resolveParentStorageKey(sourceStorageKey) + "/hls");
+    }
+
+    @Override
+    public void publishProcessingWorkspace(MediaProcessingWorkspace workspace) {
+        try {
+            deleteRecursively(workspace.getPublishedDirectory());
+            moveDirectory(
+                    workspace.getTemporaryDirectory(),
+                    workspace.getPublishedDirectory());
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to publish processed media.");
+        }
+    }
+
+    @Override
+    public void discardProcessingWorkspace(MediaProcessingWorkspace workspace) {
+        if (workspace == null) {
+            return;
+        }
+
+        try {
+            deleteRecursively(workspace.getTemporaryDirectory());
+        } catch (IOException ex) {
+            log.warn(
+                    "Failed to discard media processing workspace [{}]",
+                    workspace.getTemporaryDirectory(),
+                    ex);
+        }
+    }
+
+    @Override
     public void delete(String storageKey) {
         if (storageKey == null || storageKey.isBlank()) {
             return;
@@ -152,6 +201,22 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         } catch (AtomicMoveNotSupportedException ex) {
             Files.move(source, target);
         }
+    }
+
+    private void moveDirectory(Path source, Path target) throws IOException {
+        try {
+            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException ex) {
+            Files.move(source, target);
+        }
+    }
+
+    private String resolveParentStorageKey(String storageKey) {
+        int separatorIndex = storageKey.lastIndexOf('/');
+        if (separatorIndex < 0) {
+            throw ExceptionFactory.invalidParam("Media storage key is invalid.");
+        }
+        return storageKey.substring(0, separatorIndex);
     }
 
     private Path resolveStorageKey(String storageKey) {

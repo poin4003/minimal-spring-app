@@ -28,6 +28,7 @@ import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.schema.model.HlsEncodingProfile;
 import com.app.features.media.service.MediaProcessingService;
 import com.app.features.media.storage.MediaFileStorage;
+import com.app.features.media.storage.MediaProcessingWorkspace;
 import com.app.features.media.validation.MediaProbe;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
@@ -79,34 +80,41 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     }
 
     private List<HlsEncodingProfile> createHls(MediaEntity media) {
-        String mediaDirectoryKey = resolveMediaDirectoryKey(media.getStorageKey());
-        String hlsDirectoryKey = mediaDirectoryKey + "/hls";
-
         Path source = mediaFileStorage.resolve(media.getStorageKey());
-        Path hlsDirectory = mediaFileStorage.resolve(hlsDirectoryKey);
-        recreateDirectory(hlsDirectory);
+        MediaProcessingWorkspace workspace =
+                mediaFileStorage.prepareProcessingWorkspace(media.getStorageKey());
 
-        List<HlsEncodingProfile> profiles = media.getKind() == MediaKind.VIDEO
-                ? resolveVideoProfiles(source)
-                : List.of(HlsEncodingProfile.audio(
-                        appProperties.getMedia().getHls().getAudioBitrate()));
+        try {
+            List<HlsEncodingProfile> profiles = media.getKind() == MediaKind.VIDEO
+                    ? resolveVideoProfiles(source)
+                    : List.of(HlsEncodingProfile.audio(
+                            appProperties.getMedia().getHls().getAudioBitrate()));
 
-        for (HlsEncodingProfile profile : profiles) {
-            createHlsRendition(source, hlsDirectoryKey, profile, media.getKind());
+            for (HlsEncodingProfile profile : profiles) {
+                createHlsRendition(
+                        source,
+                        workspace.getTemporaryDirectory(),
+                        profile,
+                        media.getKind());
+            }
+            writeMasterPlaylist(
+                    workspace.getTemporaryDirectory().resolve("index.m3u8"),
+                    profiles);
+
+            mediaFileStorage.publishProcessingWorkspace(workspace);
+            return profiles;
+        } finally {
+            mediaFileStorage.discardProcessingWorkspace(workspace);
         }
-        writeMasterPlaylist(hlsDirectory.resolve("index.m3u8"), profiles);
-
-        return profiles;
     }
 
     private void createHlsRendition(
             Path source,
-            String hlsDirectoryKey,
+            Path hlsDirectory,
             HlsEncodingProfile profile,
             MediaKind mediaKind) {
-        String renditionDirectoryKey = hlsDirectoryKey + "/" + profile.getKey();
-        Path renditionDirectory = mediaFileStorage.resolve(renditionDirectoryKey);
-        Path playlist = mediaFileStorage.resolve(renditionDirectoryKey + "/index.m3u8");
+        Path renditionDirectory = hlsDirectory.resolve(profile.getKey());
+        Path playlist = renditionDirectory.resolve("index.m3u8");
 
         try {
             Files.createDirectories(renditionDirectory);
@@ -295,22 +303,4 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         return storageKey.substring(0, separatorIndex);
     }
 
-    private void recreateDirectory(Path directory) {
-        try {
-            if (Files.exists(directory)) {
-                List<Path> paths;
-                try (var entries = Files.walk(directory)) {
-                    paths = entries
-                            .sorted((left, right) -> right.compareTo(left))
-                            .toList();
-                }
-                for (Path path : paths) {
-                    Files.deleteIfExists(path);
-                }
-            }
-            Files.createDirectories(directory);
-        } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to prepare HLS directory.");
-        }
-    }
 }
