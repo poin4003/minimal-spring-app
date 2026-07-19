@@ -27,6 +27,7 @@ import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.schema.model.HlsEncodingProfile;
 import com.app.features.media.schema.model.HlsProcessingResult;
+import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.service.MediaProcessingService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.MediaProcessingWorkspace;
@@ -48,21 +49,30 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaVariantRepository mediaVariantRepository;
     private final MediaFileStorage mediaFileStorage;
     private final MediaProbe mediaProbe;
+    private final MediaProcessingLeaseService mediaProcessingLeaseService;
     private final AppProperties appProperties;
 
     @Override
-    public void process(UUID mediaId) {
-        MediaEntity media = prepareMedia(mediaId);
-        if (media == null) {
+    public void process(UUID mediaId, UUID executionId) {
+        if (!mediaProcessingLeaseService.acquire(mediaId, executionId)) {
             return;
         }
 
         try {
-            HlsProcessingResult processingResult = createHls(media);
-            markReady(mediaId, processingResult);
-        } catch (RuntimeException ex) {
-            markFailed(mediaId);
-            throw ex;
+            MediaEntity media = prepareMedia(mediaId);
+            if (media == null) {
+                return;
+            }
+
+            try {
+                HlsProcessingResult processingResult = createHls(media);
+                markReady(mediaId, processingResult);
+            } catch (RuntimeException ex) {
+                markFailed(mediaId);
+                throw ex;
+            }
+        } finally {
+            mediaProcessingLeaseService.release(mediaId, executionId);
         }
     }
 

@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface MediaProcessingService {
 
-    void process(UUID mediaId);
+    void process(UUID mediaId, UUID executionId);
 }

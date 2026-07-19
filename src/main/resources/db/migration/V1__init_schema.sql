@@ -98,6 +98,24 @@ CREATE INDEX idx_media_processing_status_created_at ON media(processing_status, 
 CREATE INDEX idx_media_created_at ON media(created_at);
 CREATE INDEX idx_media_updated_at ON media(updated_at);
 
+CREATE TABLE media_processing_lease (
+    media_id UUID PRIMARY KEY,
+    execution_id UUID,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_media_processing_lease_media
+        FOREIGN KEY (media_id) REFERENCES media(id)
+        ON DELETE CASCADE
+);
+
+CREATE INDEX idx_media_processing_lease_expires_at
+    ON media_processing_lease(expires_at);
+CREATE INDEX idx_media_processing_lease_created_at
+    ON media_processing_lease(created_at);
+CREATE INDEX idx_media_processing_lease_updated_at
+    ON media_processing_lease(updated_at);
+
 CREATE TABLE media_variant (
     id UUID PRIMARY KEY,
     media_id UUID NOT NULL,

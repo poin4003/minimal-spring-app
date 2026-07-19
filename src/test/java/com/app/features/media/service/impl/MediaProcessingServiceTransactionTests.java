@@ -15,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.app.features.media.repository.MediaRepository;
+import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.service.MediaProcessingService;
 
 @SpringBootTest
@@ -26,15 +27,20 @@ class MediaProcessingServiceTransactionTests {
     @MockitoBean
     private MediaRepository mediaRepository;
 
+    @MockitoBean
+    private MediaProcessingLeaseService mediaProcessingLeaseService;
+
     @Test
     void privatePreparationRunsInsideTransaction() {
         AtomicBoolean transactionActive = new AtomicBoolean(false);
+        given(mediaProcessingLeaseService.acquire(any(UUID.class), any(UUID.class)))
+                .willReturn(true);
         given(mediaRepository.findById(any(UUID.class))).willAnswer(invocation -> {
             transactionActive.set(TransactionSynchronizationManager.isActualTransactionActive());
             return Optional.empty();
         });
 
-        mediaProcessingService.process(UUID.randomUUID());
+        mediaProcessingService.process(UUID.randomUUID(), UUID.randomUUID());
 
         assertThat(transactionActive).isTrue();
     }

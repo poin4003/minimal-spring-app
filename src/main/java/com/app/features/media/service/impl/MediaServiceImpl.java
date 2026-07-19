@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.jobrunr.jobs.context.JobContext;
 import org.jobrunr.scheduling.JobScheduler;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +21,12 @@ import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
+import com.app.features.media.entity.MediaProcessingLeaseEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.job.MediaProcessingJob;
 import com.app.features.media.repository.MediaRepository;
+import com.app.features.media.repository.MediaProcessingLeaseRepository;
 import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.repository.spec.MediaSpecification;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
@@ -53,6 +56,7 @@ public class MediaServiceImpl implements MediaService {
     private final UserBaseRepository userBaseRepository;
     private final MediaFileStorage mediaFileStorage;
     private final MediaVariantRepository mediaVariantRepository;
+    private final MediaProcessingLeaseRepository mediaProcessingLeaseRepository;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaFileValidator mediaFileValidator;
     private final JobScheduler jobScheduler;
@@ -99,6 +103,9 @@ public class MediaServiceImpl implements MediaService {
 
         media = mediaRepository.save(media);
         if (media.getProcessingStatus() == MediaProcessingStatus.PENDING) {
+            MediaProcessingLeaseEntity processingLease = new MediaProcessingLeaseEntity();
+            processingLease.setMediaId(media.getId());
+            mediaProcessingLeaseRepository.save(processingLease);
             registerProcessingJob(media.getId());
         }
 
@@ -247,7 +254,8 @@ public class MediaServiceImpl implements MediaService {
             @Override
             public void afterCommit() {
                 try {
-                    jobScheduler.<MediaProcessingJob>enqueue(job -> job.execute(mediaId));
+                    jobScheduler.<MediaProcessingJob>enqueue(
+                            job -> job.execute(mediaId, JobContext.Null));
                 } catch (RuntimeException ex) {
                     log.error("Failed to enqueue media processing job [{}]", mediaId, ex);
                 }
