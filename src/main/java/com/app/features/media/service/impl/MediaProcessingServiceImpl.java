@@ -30,7 +30,7 @@ import com.app.features.media.schema.model.HlsProcessingResult;
 import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.service.MediaProcessingService;
 import com.app.features.media.storage.MediaFileStorage;
-import com.app.features.media.storage.MediaProcessingWorkspace;
+import com.app.features.media.storage.schema.MediaProcessingWorkspace;
 import com.app.features.media.validation.MediaProbe;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffmpeg.FFmpeg;

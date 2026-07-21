@@ -25,6 +25,10 @@ app:
         storage-path: ${MEDIA_STORAGE_PATH:./data/media}
         delivery-cache-duration: ${MEDIA_DELIVERY_CACHE_DURATION:365d}
         max-image-pixels: ${MEDIA_MAX_IMAGE_PIXELS:40000000}
+        chunk-upload:
+            chunk-size-bytes: ${MEDIA_CHUNK_SIZE_BYTES:8388608}
+            session-ttl: ${MEDIA_UPLOAD_SESSION_TTL:24h}
+            completed-session-retention: ${MEDIA_COMPLETED_SESSION_RETENTION:24h}
         hls:
             audio-bitrate: ${MEDIA_HLS_AUDIO_BITRATE:192000}
             renditions:

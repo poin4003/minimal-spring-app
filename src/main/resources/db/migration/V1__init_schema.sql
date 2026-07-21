@@ -19,6 +19,9 @@ CREATE DOMAIN MediaProcessingStatusEnum AS VARCHAR(16)
 CREATE DOMAIN MediaVariantTypeEnum AS VARCHAR(32)
     CHECK (VALUE IN ('HLS_MASTER_PLAYLIST', 'HLS_RENDITION'));
 
+CREATE DOMAIN MediaUploadStatusEnum AS VARCHAR(16)
+    CHECK (VALUE IN ('UPLOADING', 'ASSEMBLING', 'COMPLETED'));
+
 CREATE TABLE permission (
     id UUID PRIMARY KEY,
     name VARCHAR(255),
@@ -139,6 +142,37 @@ CREATE UNIQUE INDEX uk_media_variant_media_type_key
     ON media_variant(media_id, variant_type, variant_key);
 CREATE INDEX idx_media_variant_created_at ON media_variant(created_at);
 CREATE INDEX idx_media_variant_updated_at ON media_variant(updated_at);
+
+CREATE TABLE media_upload_session (
+    id UUID PRIMARY KEY,
+    created_by UUID NOT NULL,
+    original_name VARCHAR(255) NOT NULL,
+    file_size BIGINT NOT NULL,
+    chunk_size INTEGER NOT NULL,
+    total_chunks INTEGER NOT NULL,
+    status MediaUploadStatusEnum NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    completed_media_id UUID,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_media_upload_created_by
+        FOREIGN KEY (created_by) REFERENCES user_base(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_media_upload_completed_media
+        FOREIGN KEY (completed_media_id) REFERENCES media(id)
+        ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX uk_media_upload_completed_media
+    ON media_upload_session(completed_media_id);
+CREATE INDEX idx_media_upload_created_by_status
+    ON media_upload_session(created_by, status);
+CREATE INDEX idx_media_upload_expires_at
+    ON media_upload_session(expires_at);
+CREATE INDEX idx_media_upload_created_at
+    ON media_upload_session(created_at);
+CREATE INDEX idx_media_upload_updated_at
+    ON media_upload_session(updated_at);
 
 CREATE TABLE role_permissions (
     role_id UUID NOT NULL,

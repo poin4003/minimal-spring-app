@@ -85,6 +85,9 @@ public class AppProperties {
         private long maxImagePixels = 40_000_000;
 
         @Valid
+        private final ChunkUpload chunkUpload = new ChunkUpload();
+
+        @Valid
         private final MediaMaintenance maintenance = new MediaMaintenance();
 
         @Valid
@@ -106,6 +109,27 @@ public class AppProperties {
 
             Duration processTimeout = Duration.ofMinutes(ffmpeg.getProcessTimeoutMinutes());
             return processingWorkspaceTtl.compareTo(processTimeout) > 0;
+        }
+    }
+
+    @Data
+    public static class ChunkUpload {
+        @Positive
+        private int chunkSizeBytes = 8 * 1024 * 1024;
+
+        @NotNull
+        private Duration sessionTtl = Duration.ofHours(24);
+
+        @NotNull
+        private Duration completedSessionRetention = Duration.ofHours(24);
+
+        @AssertTrue(message = "Chunk upload retention values must be positive.")
+        public boolean isRetentionConfigurationValid() {
+            return isPositive(sessionTtl) && isPositive(completedSessionRetention);
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
         }
     }
 

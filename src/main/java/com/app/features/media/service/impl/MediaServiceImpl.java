@@ -41,8 +41,8 @@ import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.storage.MediaFileStorage;
-import com.app.features.media.storage.StagedMediaFile;
-import com.app.features.media.storage.StoredMediaFile;
+import com.app.features.media.storage.schema.StagedMediaFile;
+import com.app.features.media.storage.schema.StoredMediaFile;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
@@ -75,14 +75,32 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Media file is required.");
         }
 
-        UserBaseEntity creator = userBaseRepo.findById(createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
-
         MultipartFile upload = payload.getFile();
         AllowedMediaType policy = mediaTypePolicyResolver.resolve(upload.getOriginalFilename());
         StagedMediaFile stagedFile = mediaFileStorage.stage(upload, policy);
+        return createStagedMedia(createdById, stagedFile, policy);
+    }
+
+    @Transactional
+    @Override
+    public MediaResult createMedia(UUID createdById, StagedMediaFile stagedFile) {
+        if (stagedFile == null) {
+            throw ExceptionFactory.invalidParam("Staged media file is required.");
+        }
+
+        AllowedMediaType policy = mediaTypePolicyResolver.resolve(stagedFile.getOriginalName());
+        return createStagedMedia(createdById, stagedFile, policy);
+    }
+
+    private MediaResult createStagedMedia(
+            UUID createdById,
+            StagedMediaFile stagedFile,
+            AllowedMediaType policy) {
         StoredMediaFile storedFile;
+        UserBaseEntity creator;
         try {
+            creator = userBaseRepo.findById(createdById)
+                    .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
             String detectedContentType = mediaFileValidator.validate(
                     stagedFile.getTemporaryPath(),
                     policy);

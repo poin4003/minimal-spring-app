@@ -12,10 +12,13 @@ import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
+import com.app.features.media.storage.schema.StagedMediaFile;
 
 public interface MediaService {
 
     MediaResult createMedia(UUID createdById, CreateMediaPayload payload);
+
+    MediaResult createMedia(UUID createdById, StagedMediaFile stagedFile);
 
     void deleteOwnedMedia(UUID mediaId, UUID createdById);
 

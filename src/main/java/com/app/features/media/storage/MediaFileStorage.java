@@ -7,6 +7,10 @@ import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.app.config.settings.AppProperties.AllowedMediaType;
+import com.app.features.media.storage.schema.MediaProcessingWorkspace;
+import com.app.features.media.storage.schema.MediaStorageDirectoryCandidate;
+import com.app.features.media.storage.schema.StagedMediaFile;
+import com.app.features.media.storage.schema.StoredMediaFile;
 
 public interface MediaFileStorage {
 

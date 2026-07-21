@@ -112,6 +112,14 @@
 - If the user clearly says something like `apply now`, `apply directly`, or otherwise shows that the change should be made immediately, the AI may apply it in that same turn.
 - The AI does not need to fully confirm every runtime case or edge case in advance; it only needs to show the code or proposed changes clearly so the user can decide the direction.
 - This exception does not apply to reading source code, analysis, review, or proposing a fix.
+- If implementation reveals a substantial source, schema, architecture, or infrastructure change outside the explicit prompt scope, the AI must pause and ask the user before proposing or applying that additional direction.
+- Do not silently bundle large out-of-scope refactors or redesigns into an approved change. Small compile-safe adjustments that do not alter the agreed behavior remain allowed.
+
+## Web API Integration Rule
+- When browser JavaScript or a web frontend calls a backend API, treat the API integration as part of the complete web flow instead of implementing only the visual or client-side action.
+- Explicitly handle the endpoint contract, authentication mechanism, authorization behavior, CORS or CSRF requirements, structured `ApiResult` responses, and API error handling relevant to that call.
+- Prefer reusable JavaScript API helpers for shared authentication and error handling instead of scattering raw `fetch` behavior across individual pages or features.
+- Thymeleaf controllers that call services directly are not required to introduce an API unless browser-side JavaScript actually needs one.
 
 ## Open Sections For Future Rules
 - Naming conventions for entities, DTOs, endpoints, and repositories.

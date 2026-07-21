@@ -29,8 +29,8 @@ import com.app.features.media.schema.model.MediaStorageCleanupResult;
 import com.app.features.media.service.MediaMaintenanceService;
 import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.storage.MediaFileStorage;
-import com.app.features.media.storage.MediaStorageDirectoryCandidate;
 import com.app.features.media.storage.MediaStorageKeySupport;
+import com.app.features.media.storage.schema.MediaStorageDirectoryCandidate;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

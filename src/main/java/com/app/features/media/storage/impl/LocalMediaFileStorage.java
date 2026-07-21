@@ -1,4 +1,4 @@
-package com.app.features.media.storage;
+package com.app.features.media.storage.impl;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -17,6 +17,13 @@ import org.springframework.web.multipart.MultipartFile;
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.ExceptionFactory;
+import com.app.features.media.storage.MediaFileStorage;
+import com.app.features.media.storage.MediaFilenameSupport;
+import com.app.features.media.storage.MediaStorageKeySupport;
+import com.app.features.media.storage.schema.MediaProcessingWorkspace;
+import com.app.features.media.storage.schema.MediaStorageDirectoryCandidate;
+import com.app.features.media.storage.schema.StagedMediaFile;
+import com.app.features.media.storage.schema.StoredMediaFile;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
