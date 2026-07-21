@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +17,7 @@ import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.entity.MediaUploadSessionEntity;
+import com.app.features.media.entity.MediaUploadSessionEntity_;
 import com.app.features.media.enums.MediaUploadStatus;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaUploadSessionRepository;
@@ -154,6 +158,45 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         deleteUploadChunksSafely(uploadId);
     }
 
+    @Override
+    public int cleanupExpiredUploads() {
+        LocalDateTime cutoff = LocalDateTime.now();
+        int batchSize = appProperties.getMedia().getMaintenance().getBatchSize();
+        Sort sort = Sort.by(
+                Sort.Order.asc(MediaUploadSessionEntity_.EXPIRES_AT),
+                Sort.Order.asc(MediaUploadSessionEntity_.ID));
+
+        Page<MediaUploadSessionEntity> firstPage = mediaUploadSessionRepo
+                .findAllByExpiresAtBefore(
+                        cutoff,
+                        PageRequest.of(0, batchSize, sort));
+
+        int deletedCount = 0;
+        for (int pageNumber = firstPage.getTotalPages() - 1;
+                pageNumber >= 0;
+                pageNumber--) {
+            Page<MediaUploadSessionEntity> page = pageNumber == 0
+                    ? firstPage
+                    : mediaUploadSessionRepo.findAllByExpiresAtBefore(
+                            cutoff,
+                            PageRequest.of(pageNumber, batchSize, sort));
+
+            for (MediaUploadSessionEntity uploadSession : page.getContent()) {
+                try {
+                    if (cleanupExpiredUpload(uploadSession.getId(), cutoff)) {
+                        deletedCount++;
+                    }
+                } catch (RuntimeException ex) {
+                    log.error(
+                            "Failed to clean expired media upload session [{}].",
+                            uploadSession.getId(),
+                            ex);
+                }
+            }
+        }
+        return deletedCount;
+    }
+
     @Transactional
     private void touchUpload(UUID uploadId, UUID createdById) {
         MediaUploadSessionEntity session = requireLockedSession(uploadId, createdById);
@@ -222,6 +265,20 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             throw ExceptionFactory.invalidParam("Completed media upload cannot be cancelled.");
         }
         mediaUploadSessionRepo.delete(session);
+    }
+
+    @Transactional
+    private boolean cleanupExpiredUpload(UUID uploadId, LocalDateTime cutoff) {
+        MediaUploadSessionEntity session = mediaUploadSessionRepo
+                .findOneById(uploadId)
+                .orElse(null);
+        if (session == null || !session.getExpiresAt().isBefore(cutoff)) {
+            return false;
+        }
+
+        mediaChunkStorage.deleteUpload(uploadId);
+        mediaUploadSessionRepo.delete(session);
+        return true;
     }
 
     private MediaUploadSessionEntity requireOwnedSession(UUID uploadId, UUID createdById) {

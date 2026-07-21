@@ -26,4 +26,6 @@ public interface MediaUploadService {
     MediaResult completeUpload(UUID uploadId, UUID createdById);
 
     void cancelUpload(UUID uploadId, UUID createdById);
+
+    int cleanupExpiredUploads();
 }
