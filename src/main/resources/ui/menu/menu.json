@@ -26,6 +26,11 @@
     ]
   },
   {
+    "id": "media-library",
+    "label": "Media Library",
+    "path": "/admin/media"
+  },
+  {
     "id": "cronjobs",
     "label": "Cronjobs",
     "path": "/admin/cronjobs"

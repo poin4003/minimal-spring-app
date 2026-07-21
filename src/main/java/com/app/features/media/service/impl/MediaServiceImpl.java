@@ -176,7 +176,7 @@ public class MediaServiceImpl implements MediaService {
 
     @Override
     public MediaDetailResult getMediaDetail(UUID mediaId) {
-        MediaEntity media = mediaRepo.findById(mediaId)
+        MediaEntity media = mediaRepo.findOneById(mediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return toMediaDetailResult(media);

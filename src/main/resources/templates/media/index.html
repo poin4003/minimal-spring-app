@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Media Library</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/shell.css}">
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body class="app-shell bg-body-tertiary">
+    <div class="container-fluid px-0 py-0">
+        <div class="row g-0 align-items-stretch app-shell-row">
+            <aside class="col-12 col-lg-3 col-xxl-2">
+                <div class="card app-sidebar-panel shadow-sm border-0">
+                    <div class="card-body p-3 p-lg-4">
+                        <p class="app-menu-caption mb-2">Menu</p>
+                        <h1 class="h3 mb-2" th:text="${page.shell.title}">Minimal Spring App</h1>
+                        <p class="text-secondary mb-4">Internal control panel</p>
+
+                        <div th:replace="~{fragments/menu :: tree(${page.shell.menuTree})}"></div>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="col-12 col-lg-9 col-xxl-10">
+                <div class="card app-content-panel shadow-sm border-0">
+                    <div class="card-body p-0">
+                        <header class="app-header d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3 px-4 py-3 border-bottom">
+                            <div>
+                                <p class="text-secondary small mb-1">Signed in as</p>
+                                <div class="fw-semibold text-break" th:text="${page.shell.currentUser.email}">
+                                    system@admin.com
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2 ms-md-auto">
+                                <div th:replace="~{fragments/app-tools :: themeToggle}"></div>
+
+                                <form method="post" th:attr="action=${page.shell.logoutPath}" class="mb-0">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                    <button type="submit" class="btn btn-outline-secondary app-header-action">
+                                        Sign out
+                                    </button>
+                                </form>
+                            </div>
+                        </header>
+
+                        <div class="p-4 p-lg-5 d-grid gap-4">
+                            <section>
+                                <p class="text-secondary mb-2">Content Management</p>
+                                <h2 class="h3 mb-2" th:text="${page.heading}">Media Library</h2>
+                                <p class="text-secondary mb-0" th:text="${page.description}">
+                                    Review and maintain media stored by the application.
+                                </p>
+                            </section>
+
+                            <section class="card shadow-sm border-0">
+                                <div class="card-body p-4">
+                                    <h2 class="h5 mb-3">Filter Media</h2>
+
+                                    <form method="get"
+                                          th:attr="action=${page.listPath}"
+                                          class="row g-3 align-items-end">
+                                        <input type="hidden" name="page" value="0">
+                                        <input type="hidden" name="size" th:value="${page.query.size}">
+                                        <input type="hidden" name="sortBy" th:value="${page.query.sortBy}">
+                                        <input type="hidden" name="sortDirection" th:value="${page.query.sortDirection}">
+
+                                        <div class="col-12 col-lg-4">
+                                            <label for="media-original-name" class="form-label">Original Name</label>
+                                            <input id="media-original-name"
+                                                   name="originalName"
+                                                   type="text"
+                                                   class="form-control"
+                                                   maxlength="255"
+                                                   placeholder="Search file name"
+                                                   th:value="${page.filter.originalName}">
+                                        </div>
+
+                                        <div class="col-12 col-lg-4">
+                                            <label for="media-public-key" class="form-label">Public Key</label>
+                                            <input id="media-public-key"
+                                                   name="publicKey"
+                                                   type="text"
+                                                   class="form-control"
+                                                   maxlength="64"
+                                                   placeholder="Exact public key"
+                                                   th:value="${page.filter.publicKey}">
+                                        </div>
+
+                                        <div class="col-12 col-lg-4">
+                                            <label for="media-created-by" class="form-label">Created By Email</label>
+                                            <input id="media-created-by"
+                                                   name="createdByEmail"
+                                                   type="text"
+                                                   class="form-control"
+                                                   maxlength="255"
+                                                   placeholder="creator@example.com"
+                                                   th:value="${page.filter.createdByEmail}">
+                                        </div>
+
+                                        <div class="col-12 col-md-4">
+                                            <label for="media-kind" class="form-label">Kind</label>
+                                            <select id="media-kind" name="kind" class="form-select">
+                                                <option value="">All kinds</option>
+                                                <option th:each="kind : ${page.kinds}"
+                                                        th:value="${kind.name()}"
+                                                        th:selected="${kind == page.filter.kind}"
+                                                        th:text="${kind.name()}">
+                                                    IMAGE
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12 col-md-4">
+                                            <label for="media-processing-status" class="form-label">Processing</label>
+                                            <select id="media-processing-status" name="processingStatus" class="form-select">
+                                                <option value="">All processing states</option>
+                                                <option th:each="processingStatus : ${page.processingStatuses}"
+                                                        th:value="${processingStatus.name()}"
+                                                        th:selected="${processingStatus == page.filter.processingStatus}"
+                                                        th:text="${processingStatus.name()}">
+                                                    READY
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12 col-md-4">
+                                            <label for="media-status" class="form-label">Status</label>
+                                            <select id="media-status" name="status" class="form-select">
+                                                <option value="">All statuses</option>
+                                                <option th:each="status : ${page.statuses}"
+                                                        th:value="${status.name()}"
+                                                        th:selected="${status == page.filter.status}"
+                                                        th:text="${status.name()}">
+                                                    ACTIVE
+                                                </option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-12 d-flex flex-wrap justify-content-end gap-2">
+                                            <a class="btn btn-outline-secondary" th:href="${page.listPath}">Clear</a>
+                                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </section>
+
+                            <div th:replace="~{fragments/components/media-gallery :: gallery(${page.mediaGallery})}"></div>
+
+                            <th:block th:if="${page.metadataModal != null}">
+                                <div th:replace="~{fragments/components/metadata-modal :: modal(${page.metadataModal})}"></div>
+                            </th:block>
+
+                            <th:block th:if="${page.detailModal != null}">
+                                <div th:replace="~{fragments/components/detail-modal :: modal(${page.detailModal})}"></div>
+                            </th:block>
+
+                            <th:block th:if="${page.deleteModal != null}">
+                                <div th:replace="~{fragments/components/confirm-modal :: modal(${page.deleteModal})}"></div>
+                            </th:block>
+
+                            <th:block th:if="${page.retryModal != null}">
+                                <div th:replace="~{fragments/components/confirm-modal :: modal(${page.retryModal})}"></div>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script th:if="${page.openMetadataModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("media-metadata-modal")).show();
+        });
+    </script>
+
+    <script th:if="${page.openDetailModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("media-detail-modal")).show();
+        });
+    </script>
+
+    <script th:if="${page.openDeleteModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("media-delete-modal")).show();
+        });
+    </script>
+
+    <script th:if="${page.openRetryModal}">
+        document.addEventListener("DOMContentLoaded", function () {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById("media-retry-modal")).show();
+        });
+    </script>
+    <div th:replace="~{fragments/app-tools :: loader}"></div>
+</body>
+</html>

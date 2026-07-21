@@ -8,6 +8,10 @@ public final class PermissionConstants {
     public static final String CRONJOB_VIEW = "CRONJOB:VIEW";
     public static final String CRONJOB_UPDATE = "CRONJOB:UPDATE";
 
+    // Media Management
+    public static final String MEDIA_VIEW = "MEDIA:VIEW";
+    public static final String MEDIA_MANAGE = "MEDIA:MANAGE";
+
     // SIM Management
     public static final String SIM_VIEW = "SIM:VIEW";
     public static final String SIM_CREATE = "SIM:CREATE";

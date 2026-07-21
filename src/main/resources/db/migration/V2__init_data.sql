@@ -11,7 +11,9 @@ INSERT INTO permission (id, name, permission_key) VALUES
     ('f4d6e429-2359-4b47-9245-194948d3fa79', 'Permission USER:CREATE', 'USER:CREATE'),
     ('8871ca39-7ee7-4539-a081-e9eeedb66f31', 'Permission USER:VIEW', 'USER:VIEW'),
     ('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01', 'Permission CRONJOB:VIEW', 'CRONJOB:VIEW'),
-    ('c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02', 'Permission CRONJOB:UPDATE', 'CRONJOB:UPDATE');
+    ('c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02', 'Permission CRONJOB:UPDATE', 'CRONJOB:UPDATE'),
+    ('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01', 'Permission MEDIA:VIEW', 'MEDIA:VIEW'),
+    ('d2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02', 'Permission MEDIA:MANAGE', 'MEDIA:MANAGE');
 
 INSERT INTO role (id, name, role_key) VALUES (
     'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01',
@@ -46,7 +48,9 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'f4d6e429-2359-4b47-9245-194948d3fa79'),
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', '8871ca39-7ee7-4539-a081-e9eeedb66f31'),
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02');
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02');
 
 INSERT INTO cronjob_config (id, job_type, expression, status) VALUES (
     'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c01',

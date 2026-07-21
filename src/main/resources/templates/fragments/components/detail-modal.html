@@ -9,7 +9,14 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title fs-5" th:text="${modal.title}">Detail</h2>
+                <div>
+                    <h2 class="modal-title fs-5 mb-1" th:text="${modal.title}">Detail</h2>
+                    <p th:if="${modal.description != null}"
+                       class="text-secondary small mb-0"
+                       th:text="${modal.description}">
+                        Detail summary
+                    </p>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 

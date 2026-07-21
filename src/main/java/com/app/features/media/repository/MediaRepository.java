@@ -25,11 +25,15 @@ public interface MediaRepository
     @EntityGraph(attributePaths = MediaEntity_.CREATED_BY)
     Page<MediaEntity> findAll(Specification<MediaEntity> specification, Pageable pageable);
 
+    @EntityGraph(attributePaths = MediaEntity_.CREATED_BY)
+    Optional<MediaEntity> findOneById(UUID mediaId);
+
     Optional<MediaEntity> findByPublicKeyAndStatusAndProcessingStatus(
             String publicKey,
             RecordStatus status,
             MediaProcessingStatus processingStatus);
 
+    @EntityGraph(attributePaths = MediaEntity_.CREATED_BY)
     Optional<MediaEntity> findByIdAndCreatedBy_Id(UUID mediaId, UUID createdById);
 
     Page<MediaEntity> findAllByStatusAndProcessingStatusAndUpdatedAtBefore(

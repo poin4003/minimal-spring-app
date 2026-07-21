@@ -118,6 +118,9 @@ public class UiTableFactory {
                 case "ACTIVE" -> "text-bg-success";
                 case "INACTIVE" -> "text-bg-secondary";
                 case "LOCKED" -> "text-bg-danger";
+                case "READY" -> "text-bg-success";
+                case "PENDING" -> "text-bg-warning";
+                case "FAILED" -> "text-bg-danger";
                 default -> "text-bg-primary";
             };
         }

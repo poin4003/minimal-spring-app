@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="gallery(gallery)" class="card shadow-sm border-0">
+    <div class="card-body p-4 border-bottom">
+        <h2 class="h5 mb-2" th:text="${gallery.title}">Media Gallery</h2>
+        <p class="text-secondary mb-0" th:text="${gallery.description}">
+            Browse uploaded media.
+        </p>
+    </div>
+
+    <div class="card-body p-4">
+        <div th:if="${!#lists.isEmpty(gallery.items)}" class="row g-4">
+            <div th:each="item : ${gallery.items}"
+                 class="col-12 col-sm-6 col-xl-4 col-xxl-3">
+                <article class="card app-media-card h-100 overflow-hidden">
+                    <div class="app-media-preview">
+                        <img th:if="${item.hasImagePreview()}"
+                             th:src="${item.previewUrl}"
+                             th:alt="${item.originalName}"
+                             loading="lazy"
+                             decoding="async">
+
+                        <div th:unless="${item.hasImagePreview()}"
+                             class="app-media-fallback">
+                            <strong class="h5 mb-1" th:text="${item.kind}">VIDEO</strong>
+                            <span class="small text-secondary"
+                                  th:text="${item.processingStatus}">
+                                PENDING
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-body">
+                        <h3 class="h6 text-truncate mb-2"
+                            th:title="${item.originalName}"
+                            th:text="${item.originalName}">
+                            image.jpg
+                        </h3>
+
+                        <p class="small text-secondary text-truncate mb-3"
+                           th:title="${item.createdByEmail}"
+                           th:text="${item.createdByEmail != null ? item.createdByEmail : '-'}">
+                            user@example.com
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <span class="badge text-bg-primary" th:text="${item.kind}">IMAGE</span>
+                            <span class="badge"
+                                  th:classappend="${item.processingStatus.name() == 'READY'
+                                      ? ' text-bg-success'
+                                      : item.processingStatus.name() == 'FAILED'
+                                          ? ' text-bg-danger'
+                                          : ' text-bg-warning'}"
+                                  th:text="${item.processingStatus}">
+                                READY
+                            </span>
+                            <span class="badge"
+                                  th:classappend="${item.status.name() == 'ACTIVE'
+                                      ? ' text-bg-success'
+                                      : ' text-bg-secondary'}"
+                                  th:text="${item.status}">
+                                ACTIVE
+                            </span>
+                        </div>
+
+                        <dl class="row small mb-0">
+                            <dt class="col-5">Size</dt>
+                            <dd class="col-7 text-end" th:text="${item.fileSizeLabel}">1.2 MB</dd>
+                            <dt class="col-5">Created</dt>
+                            <dd class="col-7 text-end text-truncate"
+                                th:title="${item.createdAt}"
+                                th:text="${item.createdAt}">
+                                2026-07-22
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+                        <a class="btn btn-sm btn-outline-secondary"
+                           th:href="${item.metadataPath}">Metadata</a>
+                        <a class="btn btn-sm btn-outline-primary"
+                           th:href="${item.detailPath}">Detail</a>
+                        <a th:if="${item.canRetry()}"
+                           class="btn btn-sm btn-outline-warning"
+                           th:href="${item.retryPath}">Retry</a>
+                        <a class="btn btn-sm btn-outline-danger"
+                           th:href="${item.deletePath}">Delete</a>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(gallery.items)}"
+             class="text-center text-secondary py-5"
+             th:text="${gallery.emptyMessage}">
+            No media found.
+        </div>
+    </div>
+
+    <div th:if="${gallery.pagination != null and gallery.pagination.totalPages > 1}"
+         class="card-footer d-flex justify-content-end p-3">
+        <div th:replace="~{fragments/components/pagination :: pagination(${gallery.pagination})}"></div>
+    </div>
+</section>
+</body>
+</html>
