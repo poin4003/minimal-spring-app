@@ -9,6 +9,8 @@ import lombok.Getter;
 @Builder
 public class UiMetadataModalView {
 
+    public static final String ATTRIBUTE = "modal";
+
     private final String id;
     private final String title;
     private final List<UiMetadataItemView> items;

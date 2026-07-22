@@ -9,7 +9,9 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
+    <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
 <body class="app-shell bg-body-tertiary">
     <div class="container-fluid px-0 py-0">
@@ -94,6 +96,7 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById("user-detail-modal")).show();
         });
     </script>
+    <div th:replace="~{fragments/app-tools :: modalHost}"></div>
     <div th:replace="~{fragments/app-tools :: loader}"></div>
 </body>
 </html>

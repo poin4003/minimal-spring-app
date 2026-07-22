@@ -117,6 +117,34 @@ public class RolePageController {
         return "rbac/role/index";
     }
 
+    @GetMapping("/{roleId}/metadata")
+    @Secured(PermissionConstants.RBAC_MANAGE)
+    public String metadata(
+            @PathVariable UUID roleId,
+            Model model) {
+        model.addAttribute(
+                UiMetadataModalView.ATTRIBUTE,
+                buildRoleMetadataModal(roleId));
+        return "fragments/components/metadata-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{roleId}/detail")
+    @Secured(PermissionConstants.RBAC_MANAGE)
+    public String detail(
+            @PathVariable UUID roleId,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        model.addAttribute(
+                UiModalView.ATTRIBUTE,
+                buildRoleDetailModal(
+                        roleId,
+                        query,
+                        new RoleDetailModalForm(),
+                        Map.of(),
+                        false));
+        return "fragments/components/modal :: modal (modal=${modal})";
+    }
+
     @PostMapping
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String create(
@@ -236,11 +264,13 @@ public class RolePageController {
                         UiTableActionView.builder()
                                 .label("Metadata")
                                 .path(buildMetadataPath(row.getId(), query))
+                                .partialPath(buildMetadataPartialPath(row.getId()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Detail")
                                 .path(buildDetailPath(row.getId(), query))
+                                .partialPath(buildDetailPartialPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
@@ -359,6 +389,13 @@ public class RolePageController {
                 .toUriString();
     }
 
+    private String buildMetadataPartialPath(String roleId) {
+        return appProperties.getUi().getHomePath()
+                + "/rbac/roles/"
+                + roleId
+                + "/metadata";
+    }
+
     private String buildDetailPath(String roleId, UiPageQuery query) {
         return UriComponentsBuilder.fromUriString(query.toUri(
                 appProperties.getUi().getHomePath() + "/rbac/roles",
@@ -368,6 +405,15 @@ public class RolePageController {
                 .build()
                 .encode()
                 .toUriString();
+    }
+
+    private String buildDetailPartialPath(String roleId, UiPageQuery query) {
+        return query.toUri(
+                appProperties.getUi().getHomePath()
+                        + "/rbac/roles/"
+                        + roleId
+                        + "/detail",
+                ROLE_PAGE_DEFAULTS);
     }
 
     private String buildManagePermissionsPath(String roleId) {

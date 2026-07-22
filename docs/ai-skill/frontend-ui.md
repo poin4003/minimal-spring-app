@@ -26,13 +26,18 @@
 - Bootstrap CSS: `/vendor/bootstrap/css/bootstrap.min.css`.
 - Bootstrap JavaScript bundle: `/vendor/bootstrap/js/bootstrap.bundle.min.js`.
 - Bootstrap Icons SVG assets: `/vendor/bootstrap-icons/icons`.
+- HTMX: `/vendor/htmx/htmx.min.js`.
 - HLS.js: `/vendor/hls.js/hls.min.js`.
+- Use HTMX with Thymeleaf fragments for partial server-rendered interactions that should not reload the full page.
 - Use HLS.js for HLS playback where native browser playback is unavailable; retain native HLS playback when the browser supports it.
 - Prefer bundled and minified production assets at runtime. Do not replace them with CDN references.
 
 ## HTML And Thymeleaf
 - Reuse existing fragments under `templates/fragments`, feature fragments, and shared component models before creating page-specific markup.
 - Keep templates focused on rendering structured Java view models instead of assembling business state or loose key-value data.
+- For HTMX fragment endpoints, add one typed view model to `Model` and return a named Thymeleaf fragment parameter such as `template :: fragment (modal=${modal})`.
+- Keep a normal `href` or form action as progressive fallback when adding HTMX behavior.
+- Treat Thymeleaf fragment endpoints as UI endpoints: controllers call application services directly rather than routing through the Web API layer.
 - Use semantic HTML and preserve keyboard navigation, labels, alt text, and relevant ARIA attributes when composing Bootstrap components.
 - Use modals only for the simple actions defined by the project's UI/UX rules; use dedicated pages for complex workflows.
 
@@ -53,4 +58,3 @@
 ## Dependency Check
 - Before proposing a frontend dependency, inspect `src/main/resources/static/vendor` and the current templates to confirm that the capability is not already available.
 - If a new library is still necessary, explain the missing capability, expected scope, local bundling approach, and maintenance cost before changing the source.
-

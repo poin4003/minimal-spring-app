@@ -107,6 +107,39 @@ public class MediaPageController {
         return "media/index";
     }
 
+    @GetMapping("/{mediaId}/preview")
+    @Secured(PermissionConstants.MEDIA_VIEW)
+    public String preview(
+            @PathVariable UUID mediaId,
+            Model model) {
+        model.addAttribute(
+                MediaPreviewModalView.ATTRIBUTE,
+                buildPreviewModal(mediaId));
+        return "media/fragments/preview-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{mediaId}/metadata")
+    @Secured(PermissionConstants.MEDIA_VIEW)
+    public String metadata(
+            @PathVariable UUID mediaId,
+            Model model) {
+        model.addAttribute(
+                UiMetadataModalView.ATTRIBUTE,
+                buildMetadataModal(mediaId));
+        return "fragments/components/metadata-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{mediaId}/detail")
+    @Secured(PermissionConstants.MEDIA_VIEW)
+    public String detail(
+            @PathVariable UUID mediaId,
+            Model model) {
+        model.addAttribute(
+                UiDetailModalView.ATTRIBUTE,
+                buildDetailModal(mediaId));
+        return "fragments/components/detail-modal :: modal (modal=${modal})";
+    }
+
     @PostMapping("/{mediaId}/delete")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String delete(
@@ -208,8 +241,11 @@ public class MediaPageController {
                 .fileSizeLabel(formatFileSize(media.getFileSize()))
                 .createdAt(media.getCreatedAt())
                 .previewPath(buildSelectionPath(request, PREVIEW_MEDIA_ID, media.getId()))
+                .previewPartialPath(buildPartialPath(media.getId(), "preview"))
                 .metadataPath(buildSelectionPath(request, METADATA_MEDIA_ID, media.getId()))
+                .metadataPartialPath(buildPartialPath(media.getId(), "metadata"))
                 .detailPath(buildSelectionPath(request, DETAIL_MEDIA_ID, media.getId()))
+                .detailPartialPath(buildPartialPath(media.getId(), "detail"))
                 .retryPath(canRetry(media)
                         ? buildSelectionPath(request, RETRY_MEDIA_ID, media.getId())
                         : null)
@@ -439,6 +475,15 @@ public class MediaPageController {
         clearModalParameters(builder);
         return builder
                 .replaceQueryParam(selectedParameter, mediaId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildPartialPath(UUID mediaId, String fragmentName) {
+        return UriComponentsBuilder
+                .fromPath(appProperties.getUi().getHomePath() + "/media")
+                .pathSegment(mediaId.toString(), fragmentName)
                 .build()
                 .encode()
                 .toUriString();

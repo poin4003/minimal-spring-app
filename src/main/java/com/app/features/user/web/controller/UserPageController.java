@@ -118,6 +118,34 @@ public class UserPageController {
         return "user/index";
     }
 
+    @GetMapping("/{userId}/metadata")
+    @Secured(PermissionConstants.USER_VIEW)
+    public String metadata(
+            @PathVariable UUID userId,
+            Model model) {
+        model.addAttribute(
+                UiMetadataModalView.ATTRIBUTE,
+                buildUserMetadataModal(userId));
+        return "fragments/components/metadata-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{userId}/detail")
+    @Secured(PermissionConstants.USER_VIEW)
+    public String detail(
+            @PathVariable UUID userId,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        model.addAttribute(
+                UiModalView.ATTRIBUTE,
+                buildUserDetailModal(
+                        userId,
+                        query,
+                        new UserDetailModalForm(),
+                        Map.of(),
+                        false));
+        return "fragments/components/modal :: modal (modal=${modal})";
+    }
+
     @PostMapping
     @Secured(PermissionConstants.USER_CREATE)
     public String create(
@@ -234,11 +262,13 @@ public class UserPageController {
                         UiTableActionView.builder()
                                 .label("Metadata")
                                 .path(buildMetadataPath(row.getId(), query))
+                                .partialPath(buildMetadataPartialPath(row.getId()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Detail")
                                 .path(buildDetailPath(row.getId(), query))
+                                .partialPath(buildDetailPartialPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
@@ -395,6 +425,13 @@ public class UserPageController {
                 .toUriString();
     }
 
+    private String buildMetadataPartialPath(UUID userId) {
+        return appProperties.getUi().getHomePath()
+                + "/users/"
+                + userId
+                + "/metadata";
+    }
+
     private String buildDetailPath(UUID userId, UiPageQuery query) {
         return UriComponentsBuilder.fromUriString(query.toUri(
                 appProperties.getUi().getHomePath() + "/users",
@@ -404,6 +441,15 @@ public class UserPageController {
                 .build()
                 .encode()
                 .toUriString();
+    }
+
+    private String buildDetailPartialPath(UUID userId, UiPageQuery query) {
+        return query.toUri(
+                appProperties.getUi().getHomePath()
+                        + "/users/"
+                        + userId
+                        + "/detail",
+                USER_PAGE_DEFAULTS);
     }
 
     private String buildManageRolesPath(UUID userId) {

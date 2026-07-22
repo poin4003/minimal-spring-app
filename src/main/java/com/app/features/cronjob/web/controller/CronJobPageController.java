@@ -101,6 +101,34 @@ public class CronJobPageController {
         return "cronjob/index";
     }
 
+    @GetMapping("/{jobType}/metadata")
+    @Secured(PermissionConstants.CRONJOB_VIEW)
+    public String metadata(
+            @PathVariable String jobType,
+            Model model) {
+        model.addAttribute(
+                UiMetadataModalView.ATTRIBUTE,
+                buildMetadataModal(jobType));
+        return "fragments/components/metadata-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{jobType}/detail")
+    @Secured(PermissionConstants.CRONJOB_VIEW)
+    public String detail(
+            @PathVariable String jobType,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        model.addAttribute(
+                UiModalView.ATTRIBUTE,
+                buildDetailModal(
+                        jobType,
+                        query,
+                        new CronJobDetailModalForm(),
+                        Map.of(),
+                        false));
+        return "fragments/components/modal :: modal (modal=${modal})";
+    }
+
     @PostMapping("/{jobType}")
     @Secured(PermissionConstants.CRONJOB_UPDATE)
     public String update(
@@ -172,11 +200,13 @@ public class CronJobPageController {
                         UiTableActionView.builder()
                                 .label("Metadata")
                                 .path(buildMetadataPath(row.getJobType(), query))
+                                .partialPath(buildMetadataPartialPath(row.getJobType()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
                                 .label("Detail")
                                 .path(buildDetailPath(row.getJobType(), query))
+                                .partialPath(buildDetailPartialPath(row.getJobType(), query))
                                 .buttonClass("btn-primary")
                                 .build()));
 
@@ -292,6 +322,13 @@ public class CronJobPageController {
                 .toUriString();
     }
 
+    private String buildMetadataPartialPath(String jobType) {
+        return appProperties.getUi().getHomePath()
+                + "/cronjobs/"
+                + jobType
+                + "/metadata";
+    }
+
     private String buildDetailPath(String jobType, UiPageQuery query) {
         return UriComponentsBuilder.fromUriString(query.toUri(
                 appProperties.getUi().getHomePath() + "/cronjobs",
@@ -301,6 +338,15 @@ public class CronJobPageController {
                 .build()
                 .encode()
                 .toUriString();
+    }
+
+    private String buildDetailPartialPath(String jobType, UiPageQuery query) {
+        return query.toUri(
+                appProperties.getUi().getHomePath()
+                        + "/cronjobs/"
+                        + jobType
+                        + "/detail",
+                CRONJOB_PAGE_DEFAULTS);
     }
 
     private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {

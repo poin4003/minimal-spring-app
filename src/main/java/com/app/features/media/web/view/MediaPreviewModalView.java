@@ -11,6 +11,8 @@ import lombok.Getter;
 @Builder
 public class MediaPreviewModalView {
 
+    public static final String ATTRIBUTE = "modal";
+
     private final UUID mediaId;
     private final String id;
     private final String title;

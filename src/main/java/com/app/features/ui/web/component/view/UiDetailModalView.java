@@ -9,6 +9,8 @@ import lombok.Getter;
 @Builder
 public class UiDetailModalView {
 
+    public static final String ATTRIBUTE = "modal";
+
     private final String id;
     private final String title;
     private final String description;

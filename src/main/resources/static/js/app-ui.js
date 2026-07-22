@@ -64,6 +64,7 @@
                     || event.altKey
                     || link.target === "_blank"
                     || link.hasAttribute("download")
+                    || link.hasAttribute("hx-get")
                     || href.startsWith("#")
                     || href.startsWith("javascript:")) {
                 return;

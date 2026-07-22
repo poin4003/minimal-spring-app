@@ -23,7 +23,12 @@ public class WebAuthenticationEntryPoint implements AuthenticationEntryPoint {
             HttpServletRequest request,
             HttpServletResponse response,
             AuthenticationException authException) throws IOException {
-        response.sendRedirect(
-                request.getContextPath() + appProperties.getUi().getLoginPath());
+        String loginPath = request.getContextPath() + appProperties.getUi().getLoginPath();
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            HtmxRequestSupport.redirect(response, loginPath);
+            return;
+        }
+
+        response.sendRedirect(loginPath);
     }
 }

@@ -72,9 +72,27 @@
     </div>
 
     <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
-        <a class="btn btn-sm btn-primary" th:href="${item.previewPath}">Preview</a>
-        <a class="btn btn-sm btn-outline-secondary" th:href="${item.metadataPath}">Metadata</a>
-        <a class="btn btn-sm btn-outline-primary" th:href="${item.detailPath}">Detail</a>
+        <a class="btn btn-sm btn-primary"
+           th:href="${item.previewPath}"
+           th:attr="hx-get=${item.previewPartialPath},
+                    hx-target='#app-modal-host',
+                    hx-swap='innerHTML',
+                    hx-disabled-elt='this',
+                    data-app-modal-request='true'">Preview</a>
+        <a class="btn btn-sm btn-outline-secondary"
+           th:href="${item.metadataPath}"
+           th:attr="hx-get=${item.metadataPartialPath},
+                    hx-target='#app-modal-host',
+                    hx-swap='innerHTML',
+                    hx-disabled-elt='this',
+                    data-app-modal-request='true'">Metadata</a>
+        <a class="btn btn-sm btn-outline-primary"
+           th:href="${item.detailPath}"
+           th:attr="hx-get=${item.detailPartialPath},
+                    hx-target='#app-modal-host',
+                    hx-swap='innerHTML',
+                    hx-disabled-elt='this',
+                    data-app-modal-request='true'">Detail</a>
         <a th:if="${item.canRetry()}"
            class="btn btn-sm btn-outline-warning"
            th:href="${item.retryPath}">Retry</a>

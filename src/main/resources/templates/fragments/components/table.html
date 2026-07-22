@@ -42,7 +42,12 @@
                                    th:href="${action.disabled or action.path == null ? '#' : action.path}"
                                    class="btn btn-sm"
                                    th:classappend="${(action.buttonClass != null ? ' ' + action.buttonClass : ' btn-outline-secondary') + (action.disabled ? ' disabled' : '')}"
-                                   th:attr="aria-disabled=${action.disabled}">
+                                   th:attr="aria-disabled=${action.disabled},
+                                            hx-get=${!action.disabled and action.loadsModal() ? action.partialPath : null},
+                                            hx-target=${action.loadsModal() ? '#app-modal-host' : null},
+                                            hx-swap=${action.loadsModal() ? 'innerHTML' : null},
+                                            hx-disabled-elt=${action.loadsModal() ? 'this' : null},
+                                            data-app-modal-request=${action.loadsModal() ? 'true' : null}">
                                     <span th:text="${action.label}">View</span>
                                 </a>
                             </div>

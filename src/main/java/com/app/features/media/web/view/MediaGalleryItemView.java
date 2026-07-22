@@ -34,8 +34,11 @@ public class MediaGalleryItemView {
     private final String fileSizeLabel;
     private final String createdAt;
     private final String previewPath;
+    private final String previewPartialPath;
     private final String metadataPath;
+    private final String metadataPartialPath;
     private final String detailPath;
+    private final String detailPartialPath;
     private final String retryPath;
     private final String deletePath;
 

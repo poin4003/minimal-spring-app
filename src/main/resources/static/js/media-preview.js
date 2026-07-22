@@ -201,17 +201,27 @@
         });
     });
 
-    document.querySelectorAll("[data-media-preview-modal]").forEach(function (modalElement) {
-        modalElement.addEventListener("shown.bs.modal", function () {
-            modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
-                initializePlayer(mediaElement);
-            });
-        });
+    document.addEventListener("shown.bs.modal", function (event) {
+        const modalElement = event.target;
+        if (!(modalElement instanceof Element)
+                || !modalElement.matches("[data-media-preview-modal]")) {
+            return;
+        }
 
-        modalElement.addEventListener("hidden.bs.modal", function () {
-            modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
-                destroyPlayer(mediaElement);
-            });
+        modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
+            initializePlayer(mediaElement);
+        });
+    });
+
+    document.addEventListener("hidden.bs.modal", function (event) {
+        const modalElement = event.target;
+        if (!(modalElement instanceof Element)
+                || !modalElement.matches("[data-media-preview-modal]")) {
+            return;
+        }
+
+        modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
+            destroyPlayer(mediaElement);
         });
     });
 })();
