@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<section th:fragment="gallery(gallery)" class="card shadow-sm border-0">
+    <div class="card-body p-4 border-bottom">
+        <h2 class="h5 mb-2" th:text="${gallery.title}">Media Gallery</h2>
+        <p class="text-secondary mb-0" th:text="${gallery.description}">
+            Browse uploaded media.
+        </p>
+    </div>
+
+    <div class="card-body p-4">
+        <div th:if="${!#lists.isEmpty(gallery.items)}" class="row g-4">
+            <div th:each="item : ${gallery.items}"
+                 class="col-12 col-sm-6 col-xl-4 col-xxl-3">
+                <article th:replace="~{media/fragments/card :: card(${item})}"></article>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(gallery.items)}"
+             class="text-center text-secondary py-5"
+             th:text="${gallery.emptyMessage}">
+            No media found.
+        </div>
+    </div>
+
+    <div th:if="${gallery.pagination != null and gallery.pagination.totalPages > 1}"
+         class="card-footer d-flex justify-content-end p-3">
+        <div th:replace="~{fragments/components/pagination :: pagination(${gallery.pagination})}"></div>
+    </div>
+</section>
+</body>
+</html>

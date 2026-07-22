@@ -152,10 +152,10 @@
                                 </div>
                             </section>
 
-                            <div th:replace="~{fragments/components/media-gallery :: gallery(${page.mediaGallery})}"></div>
+                            <div th:replace="~{media/fragments/gallery :: gallery(${page.mediaGallery})}"></div>
 
                             <th:block th:if="${page.previewModal != null}">
-                                <div th:replace="~{fragments/components/media-preview-modal :: modal(${page.previewModal})}"></div>
+                                <div th:replace="~{media/fragments/preview-modal :: modal(${page.previewModal})}"></div>
                             </th:block>
 
                             <th:block th:if="${page.metadataModal != null}">

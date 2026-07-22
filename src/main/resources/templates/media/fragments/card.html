@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<article th:fragment="card(item)" class="card h-100 overflow-hidden">
+    <div class="ratio ratio-4x3 bg-body-tertiary border-bottom">
+        <img th:if="${item.hasImagePreview()}"
+             class="w-100 h-100 object-fit-cover"
+             th:src="${item.previewUrl}"
+             th:alt="${item.originalName}"
+             loading="lazy"
+             decoding="async">
+
+        <div th:unless="${item.hasImagePreview()}"
+             class="d-flex flex-column align-items-center justify-content-center">
+            <strong class="h5 mb-1" th:text="${item.kind}">VIDEO</strong>
+            <span class="small text-secondary" th:text="${item.processingStatus}">
+                PENDING
+            </span>
+        </div>
+    </div>
+
+    <div class="card-body">
+        <h3 class="h6 text-truncate mb-2"
+            th:title="${item.originalName}"
+            th:text="${item.originalName}">
+            image.jpg
+        </h3>
+
+        <p class="small text-secondary text-truncate mb-3"
+           th:title="${item.createdByEmail}"
+           th:text="${item.createdByEmail != null ? item.createdByEmail : '-'}">
+            user@example.com
+        </p>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+            <span class="badge text-bg-primary" th:text="${item.kind}">IMAGE</span>
+            <span class="badge"
+                  th:classappend="${item.processingStatus.name() == 'READY'
+                      ? ' text-bg-success'
+                      : item.processingStatus.name() == 'FAILED'
+                          ? ' text-bg-danger'
+                          : ' text-bg-warning'}"
+                  th:text="${item.processingStatus}">
+                READY
+            </span>
+            <span class="badge"
+                  th:classappend="${item.status.name() == 'ACTIVE'
+                      ? ' text-bg-success'
+                      : ' text-bg-secondary'}"
+                  th:text="${item.status}">
+                ACTIVE
+            </span>
+        </div>
+
+        <dl class="row small mb-0">
+            <dt class="col-5">Size</dt>
+            <dd class="col-7 text-end" th:text="${item.fileSizeLabel}">1.2 MB</dd>
+            <dt class="col-5">Created</dt>
+            <dd class="col-7 text-end text-truncate"
+                th:title="${item.createdAt}"
+                th:text="${item.createdAt}">
+                2026-07-22
+            </dd>
+        </dl>
+    </div>
+
+    <div class="card-footer bg-transparent d-flex flex-wrap gap-2">
+        <a class="btn btn-sm btn-primary" th:href="${item.previewPath}">Preview</a>
+        <a class="btn btn-sm btn-outline-secondary" th:href="${item.metadataPath}">Metadata</a>
+        <a class="btn btn-sm btn-outline-primary" th:href="${item.detailPath}">Detail</a>
+        <a th:if="${item.canRetry()}"
+           class="btn btn-sm btn-outline-warning"
+           th:href="${item.retryPath}">Retry</a>
+        <a class="btn btn-sm btn-outline-danger" th:href="${item.deletePath}">Delete</a>
+    </div>
+</article>
+</body>
+</html>

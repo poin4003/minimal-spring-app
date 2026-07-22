@@ -12,8 +12,7 @@
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title fs-5" th:text="${modal.title}">Media Preview</h2>
-                    <p class="text-secondary small mb-0 mt-1"
-                       th:text="${modal.description}">
+                    <p class="text-secondary small mb-0 mt-1" th:text="${modal.description}">
                         image.jpg | IMAGE | 1.2 MB
                     </p>
                 </div>
@@ -23,45 +22,50 @@
                         aria-label="Close"></button>
             </div>
 
-            <div class="modal-body app-media-preview-modal-body"
+            <div class="modal-body bg-body-tertiary"
                  th:switch="${modal.previewType.name()}">
-                <div th:case="'IMAGE'" class="app-media-preview-stage">
-                    <img class="app-media-preview-image"
+                <div th:case="'IMAGE'"
+                     class="d-flex align-items-center justify-content-center p-3">
+                    <img class="img-fluid rounded bg-black app-media-preview-content"
                          th:src="${modal.sourceUrl}"
                          th:alt="${modal.description}">
                 </div>
 
-                <div th:case="'VIDEO'" class="app-media-preview-stage">
-                    <video class="app-media-preview-player"
+                <div th:case="'VIDEO'"
+                     class="d-flex flex-column align-items-center justify-content-center p-3">
+                    <video class="w-100 rounded bg-black app-media-preview-content"
                            controls
                            playsinline
                            preload="metadata"
                            data-hls-player
                            th:attr="data-hls-source=${modal.sourceUrl}"></video>
-                    <div class="alert alert-danger mt-3 mb-0" data-hls-error hidden></div>
+                    <div class="alert alert-danger w-100 mt-3 mb-0" data-hls-error hidden></div>
                 </div>
 
-                <div th:case="'AUDIO'" class="app-media-preview-stage app-media-preview-audio-stage">
-                    <audio class="app-media-preview-audio"
+                <div th:case="'AUDIO'"
+                     class="d-flex flex-column align-items-center justify-content-center py-5 px-3">
+                    <audio class="w-100"
                            controls
                            preload="metadata"
                            data-hls-player
                            th:attr="data-hls-source=${modal.sourceUrl}"></audio>
-                    <div class="alert alert-danger mt-3 mb-0" data-hls-error hidden></div>
+                    <div class="alert alert-danger w-100 mt-3 mb-0" data-hls-error hidden></div>
                 </div>
 
                 <iframe th:case="'PDF'"
-                        class="app-media-preview-document"
+                        class="app-media-preview-document d-block w-100 border rounded bg-body"
                         th:src="${modal.sourceUrl}"
                         title="PDF preview"></iframe>
 
-                <div th:case="'DOWNLOAD'" class="app-media-preview-message">
+                <div th:case="'DOWNLOAD'"
+                     class="app-media-preview-message d-flex align-items-center justify-content-center text-center p-4">
                     <p class="text-secondary mb-0" th:text="${modal.unavailableMessage}">
                         This file type cannot be previewed in the browser.
                     </p>
                 </div>
 
-                <div th:case="'UNAVAILABLE'" class="app-media-preview-message">
+                <div th:case="'UNAVAILABLE'"
+                     class="app-media-preview-message d-flex align-items-center justify-content-center text-center p-4">
                     <p class="text-secondary mb-0" th:text="${modal.unavailableMessage}">
                         Preview is not available yet.
                     </p>
