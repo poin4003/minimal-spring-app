@@ -1,5 +1,7 @@
 package com.app.config.exception;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
@@ -19,11 +21,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RequiredArgsConstructor
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice(basePackages = {
         "com.app.features.auth.web.controller",
         "com.app.features.ui.web.controller",
         "com.app.features.user.web.controller",
-        "com.app.features.rbac.web.controller"
+        "com.app.features.rbac.web.controller",
+        "com.app.features.cronjob.web.controller",
+        "com.app.features.media.web.controller"
 })
 public class WebExceptionHandler {
 
