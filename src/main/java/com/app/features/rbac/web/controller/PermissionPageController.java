@@ -100,8 +100,6 @@ public class PermissionPageController {
 
         return PermissionListPageView.builder()
                 .title("Permission Management")
-                .heading("Permissions")
-                .description("Review permission keys used by authorization rules.")
                 .shell(buildShell(currentUser, request))
                 .permissionTable(permissionTable)
                 .build();

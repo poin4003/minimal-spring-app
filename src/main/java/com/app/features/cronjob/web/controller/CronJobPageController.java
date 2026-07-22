@@ -190,8 +190,6 @@ public class CronJobPageController {
 
         return CronJobListPageView.builder()
                 .title("Cronjob Management")
-                .heading("Cronjobs")
-                .description("Review recurring jobs and update cron overrides when operations need a schedule change.")
                 .shell(buildShell(currentUser, request))
                 .cronJobTable(cronJobTable)
                 .metadataModal(metadataModal)

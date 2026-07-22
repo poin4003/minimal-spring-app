@@ -1,5 +1,7 @@
 package com.app.features.media.web.view;
 
+import java.util.UUID;
+
 import com.app.features.media.web.enums.MediaPreviewType;
 
 import lombok.Builder;
@@ -9,6 +11,7 @@ import lombok.Getter;
 @Builder
 public class MediaPreviewModalView {
 
+    private final UUID mediaId;
     private final String id;
     private final String title;
     private final String description;

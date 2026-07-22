@@ -49,14 +49,6 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
-                            <section>
-                                <p class="text-secondary mb-2">RBAC</p>
-                                <h2 class="h3 mb-2" th:text="${page.heading}">Permissions</h2>
-                                <p class="text-secondary mb-0" th:text="${page.description}">
-                                    Review permission keys used by authorization rules.
-                                </p>
-                            </section>
-
                             <div th:replace="~{fragments/components/table :: table(${page.permissionTable})}"></div>
                         </div>
                     </div>

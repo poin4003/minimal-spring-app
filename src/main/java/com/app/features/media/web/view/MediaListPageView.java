@@ -22,8 +22,6 @@ public class MediaListPageView {
     public static final String ATTRIBUTE = "page";
 
     private final String title;
-    private final String heading;
-    private final String description;
     private final String listPath;
     private final UiShellView shell;
     private final MediaFilterCriteria filter;

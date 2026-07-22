@@ -274,8 +274,6 @@ public class RolePageController {
 
         return RoleListPageView.builder()
                 .title("Role Management")
-                .heading("Roles")
-                .description("Create roles and review access groups available in the system.")
                 .shell(buildShell(currentUser, request))
                 .roleTable(roleTable)
                 .createRoleModal(createRoleModal)

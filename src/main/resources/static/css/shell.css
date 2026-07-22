@@ -17,6 +17,10 @@ body {
     border-radius: 0;
 }
 
+.app-content-panel {
+    background-color: var(--bs-tertiary-bg);
+}
+
 .app-sidebar-panel {
     min-height: 100vh;
     border-bottom: var(--bs-border-width)
@@ -26,6 +30,7 @@ body {
 
 .app-header {
     border-radius: 0;
+    background-color: var(--bs-body-bg);
 }
 
 .app-menu-caption {
@@ -92,6 +97,10 @@ body {
 
 .app-menu-toggle[aria-expanded="true"] .app-menu-caret {
     transform: rotate(90deg);
+}
+
+[data-bs-theme="dark"] .app-content-panel .shadow-sm {
+    box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.35) !important;
 }
 
 @media (min-width: 992px) {

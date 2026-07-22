@@ -171,8 +171,6 @@ public class MediaPageController {
 
         return MediaListPageView.builder()
                 .title("Media Library")
-                .heading("Media Library")
-                .description("Review and maintain media stored by the application.")
                 .listPath(appProperties.getUi().getHomePath() + "/media")
                 .shell(buildShell(currentUser, request))
                 .filter(filter)
@@ -237,6 +235,7 @@ public class MediaPageController {
         };
 
         return MediaPreviewModalView.builder()
+                .mediaId(media.getId())
                 .id("media-preview-modal")
                 .title("Media Preview")
                 .description(String.format(

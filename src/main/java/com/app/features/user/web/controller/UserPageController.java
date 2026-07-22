@@ -272,8 +272,6 @@ public class UserPageController {
 
         return UserListPageView.builder()
                 .title("User Management")
-                .heading("Users")
-                .description("Create and review user accounts from the administration workspace.")
                 .shell(buildShell(currentUser, request))
                 .userTable(userTable)
                 .createUserModal(createUserModal)

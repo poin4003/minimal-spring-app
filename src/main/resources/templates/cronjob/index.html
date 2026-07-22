@@ -50,14 +50,6 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
-                            <section>
-                                <p class="text-secondary mb-2">Job Scheduling</p>
-                                <h2 class="h3 mb-2" th:text="${page.heading}">Cronjobs</h2>
-                                <p class="text-secondary mb-0" th:text="${page.description}">
-                                    Review recurring jobs and update cron overrides when operations need a schedule change.
-                                </p>
-                            </section>
-
                             <div th:if="${page.errorMessage != null}"
                                  class="alert alert-danger mb-0"
                                  th:text="${page.errorMessage}">

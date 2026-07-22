@@ -50,18 +50,10 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
-                            <section class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
-                                <div>
-                                    <p class="text-secondary mb-2">User Management</p>
-                                    <h2 class="h3 mb-2" th:text="${page.heading}">Users</h2>
-                                    <p class="text-secondary mb-0" th:text="${page.description}">
-                                        Create and review user accounts from the administration workspace.
-                                    </p>
-                                </div>
-
-                                <div th:if="${page.createUserModal != null}"
-                                     th:replace="~{fragments/components/modal :: modal(${page.createUserModal})}"></div>
-                            </section>
+                            <div th:if="${page.createUserModal != null}"
+                                 class="d-flex justify-content-end">
+                                <div th:replace="~{fragments/components/modal :: modal(${page.createUserModal})}"></div>
+                            </div>
 
                             <div th:if="${page.errorMessage != null}"
                                  class="alert alert-danger mb-0"
