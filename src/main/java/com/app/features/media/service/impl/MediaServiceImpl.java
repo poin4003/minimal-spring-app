@@ -35,14 +35,17 @@ import com.app.features.media.repository.MediaProcessingLeaseRepository;
 import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.repository.spec.MediaSpecification;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
+import com.app.features.media.schema.model.MediaThumbnailResult;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
+import com.app.features.media.service.MediaThumbnailService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.storage.schema.StoredMediaFile;
+import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
@@ -64,6 +67,8 @@ public class MediaServiceImpl implements MediaService {
     private final MediaProcessingLeaseRepository mediaProcessingLeaseRepo;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaFileValidator mediaFileValidator;
+    private final MediaThumbnailService mediaThumbnailSvc;
+    private final MediaProcessingPolicy mediaProcessingPolicy;
     private final JobScheduler jobScheduler;
     private final ModelMapper mapper;
     private final AppProperties appProperties;
@@ -120,7 +125,9 @@ public class MediaServiceImpl implements MediaService {
         media.setContentType(storedFile.getContentType());
         media.setFileSize(storedFile.getFileSize());
         media.setKind(policy.getKind());
-        media.setProcessingStatus(requiresProcessing(policy.getKind())
+        media.setProcessingStatus(mediaProcessingPolicy.requiresProcessing(
+                policy.getKind(),
+                storedFile.getContentType())
                 ? MediaProcessingStatus.PENDING
                 : MediaProcessingStatus.READY);
         media.setStatus(RecordStatus.ACTIVE);
@@ -134,7 +141,7 @@ public class MediaServiceImpl implements MediaService {
             registerProcessingJob(media.getId());
         }
 
-        return mapper.map(media, MediaResult.class);
+        return toMediaResult(media);
     }
 
     @Transactional
@@ -160,7 +167,7 @@ public class MediaServiceImpl implements MediaService {
         Specification<MediaEntity> specification = MediaSpecification.withFilter(criteria);
         Page<MediaEntity> entityPage = mediaRepo.findAll(specification, pageable);
 
-        return entityPage.map(entity -> mapper.map(entity, MediaResult.class));
+        return entityPage.map(entity -> toMediaResult(entity));
     }
 
     @Override
@@ -206,6 +213,37 @@ public class MediaServiceImpl implements MediaService {
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
 
         return retryMedia(media);
+    }
+
+    @Transactional
+    @Override
+    public MediaResult updateOwnedThumbnail(
+            UUID mediaId,
+            UUID ownerId,
+            UUID sourceMediaId) {
+        MediaEntity targetMedia = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+        MediaEntity sourceMedia = mediaRepo.findByIdAndCreatedBy_Id(sourceMediaId, ownerId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + sourceMediaId));
+
+        requireReadyActiveMedia(targetMedia, "Target media");
+        requireReadyActiveMedia(sourceMedia, "Source media");
+        if (!mediaProcessingPolicy.supportsManualThumbnail(targetMedia.getKind())) {
+            throw ExceptionFactory.invalidParam(
+                    "Only video and audio media support a custom thumbnail.");
+        }
+        if (sourceMedia.getKind() != MediaKind.IMAGE
+                || sourceMedia.getThumbnailStorageKey() == null
+                || sourceMedia.getThumbnailStorageKey().isBlank()) {
+            throw ExceptionFactory.invalidParam(
+                    "Source media must be a ready image with a generated thumbnail.");
+        }
+
+        MediaThumbnailResult thumbnail = mediaThumbnailSvc.copyThumbnail(
+                targetMedia,
+                sourceMedia);
+        targetMedia.setThumbnailStorageKey(thumbnail.getStorageKey());
+        return toMediaResult(targetMedia);
     }
 
     @Override
@@ -254,9 +292,11 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Inactive media cannot be processed.");
         }
 
-        if (!requiresProcessing(media.getKind())) {
+        if (!mediaProcessingPolicy.requiresProcessing(
+                media.getKind(),
+                media.getContentType())) {
             throw ExceptionFactory.invalidParam(
-                    "Only video and audio media can be processed.");
+                    "This media type does not require processing.");
         }
 
         if (media.getProcessingStatus() != MediaProcessingStatus.FAILED) {
@@ -268,7 +308,7 @@ public class MediaServiceImpl implements MediaService {
         media = mediaRepo.save(media);
         registerProcessingJob(media.getId());
 
-        return mapper.map(media, MediaResult.class);
+        return toMediaResult(media);
     }
 
     private MediaDetailResult toMediaDetailResult(MediaEntity media) {
@@ -280,6 +320,7 @@ public class MediaServiceImpl implements MediaService {
                 .toList();
 
         result.setVariants(variants);
+        result.setThumbnailAvailable(hasThumbnail(media));
         return result;
     }
 
@@ -311,8 +352,22 @@ public class MediaServiceImpl implements MediaService {
         return media;
     }
 
-    private boolean requiresProcessing(MediaKind kind) {
-        return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO;
+    private MediaResult toMediaResult(MediaEntity media) {
+        MediaResult result = mapper.map(media, MediaResult.class);
+        result.setThumbnailAvailable(hasThumbnail(media));
+        return result;
+    }
+
+    private boolean hasThumbnail(MediaEntity media) {
+        return media.getThumbnailStorageKey() != null
+                && !media.getThumbnailStorageKey().isBlank();
+    }
+
+    private void requireReadyActiveMedia(MediaEntity media, String label) {
+        if (media.getStatus() != RecordStatus.ACTIVE
+                || media.getProcessingStatus() != MediaProcessingStatus.READY) {
+            throw ExceptionFactory.invalidParam(label + " must be active and ready.");
+        }
     }
 
     private void registerProcessingJob(UUID mediaId) {

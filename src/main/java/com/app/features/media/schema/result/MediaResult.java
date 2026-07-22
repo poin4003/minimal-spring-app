@@ -24,6 +24,8 @@ public class MediaResult {
 
     private long fileSize;
 
+    private boolean thumbnailAvailable;
+
     private MediaKind kind;
 
     private MediaProcessingStatus processingStatus;

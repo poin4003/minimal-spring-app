@@ -24,12 +24,15 @@ public class MediaResponseFactory {
 
     public ResponseEntity<Resource> build(MediaDeliveryResult result) {
         FileSystemResource resource = new FileSystemResource(result.getPath());
-        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(result.getContentType()))
-                .cacheControl(CacheControl
+        CacheControl cacheControl = result.isCacheImmutable()
+                ? CacheControl
                         .maxAge(appProperties.getMedia().getDeliveryCacheDuration())
                         .cachePublic()
-                        .immutable())
+                        .immutable()
+                : CacheControl.noCache();
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(result.getContentType()))
+                .cacheControl(cacheControl)
                 .header(HttpHeaders.ACCEPT_RANGES, "bytes")
                 .header("X-Content-Type-Options", "nosniff");
 

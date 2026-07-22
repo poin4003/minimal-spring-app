@@ -5,9 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class KnownMediaCleanupResult {
+public class MediaThumbnailResult {
 
-    private final int failedArtifactsCleaned;
-
-    private final int missingOriginalsDetected;
+    private final String storageKey;
 }

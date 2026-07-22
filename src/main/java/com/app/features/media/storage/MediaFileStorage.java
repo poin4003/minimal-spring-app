@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.features.media.storage.schema.MediaProcessingWorkspace;
 import com.app.features.media.storage.schema.MediaStorageDirectoryCandidate;
+import com.app.features.media.storage.schema.MediaThumbnailWorkspace;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.storage.schema.StoredMediaFile;
 
@@ -28,11 +29,19 @@ public interface MediaFileStorage {
 
     void discardProcessingWorkspace(MediaProcessingWorkspace workspace);
 
+    MediaThumbnailWorkspace prepareThumbnailWorkspace(String sourceStorageKey);
+
+    void publishThumbnailWorkspace(MediaThumbnailWorkspace workspace);
+
+    void discardThumbnailWorkspace(MediaThumbnailWorkspace workspace);
+
     Path resolve(String storageKey);
 
     boolean exists(String storageKey);
 
     boolean deleteHlsArtifacts(String sourceStorageKey);
+
+    boolean deleteThumbnailArtifact(String sourceStorageKey);
 
     int deleteStagedFilesOlderThan(Instant cutoff, int limit);
 

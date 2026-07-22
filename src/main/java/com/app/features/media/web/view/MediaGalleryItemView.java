@@ -15,7 +15,7 @@ public class MediaGalleryItemView {
 
     private final UUID id;
     private final String originalName;
-    private final String previewUrl;
+    private final String thumbnailUrl;
     private final MediaKind kind;
     private final MediaProcessingStatus processingStatus;
     private final RecordStatus status;
@@ -28,8 +28,8 @@ public class MediaGalleryItemView {
     private final String retryPath;
     private final String deletePath;
 
-    public boolean hasImagePreview() {
-        return previewUrl != null;
+    public boolean hasThumbnail() {
+        return thumbnailUrl != null;
     }
 
     public boolean canRetry() {

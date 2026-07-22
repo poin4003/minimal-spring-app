@@ -78,6 +78,46 @@ class MediaDeliveryServiceImplTests {
     }
 
     @Test
+    void returnsReadyActiveThumbnail() throws Exception {
+        Path thumbnailPath = Files.writeString(
+                temporaryDirectory.resolve("thumbnail.jpg"),
+                "thumbnail");
+        MediaEntity media = new MediaEntity();
+        media.setThumbnailStorageKey("2026/07/media/thumbnail.jpg");
+
+        given(mediaRepo.findByPublicKeyAndStatusAndProcessingStatus(
+                "public-key",
+                RecordStatus.ACTIVE,
+                MediaProcessingStatus.READY))
+                .willReturn(Optional.of(media));
+        given(mediaFileStorage.resolve(media.getThumbnailStorageKey()))
+                .willReturn(thumbnailPath);
+
+        MediaDeliveryResult result = mediaDeliverySvc.getThumbnail("public-key");
+
+        assertThat(result.getPath()).isEqualTo(thumbnailPath);
+        assertThat(result.getContentType()).isEqualTo("image/jpeg");
+        assertThat(result.getFileName()).isNull();
+        assertThat(result.isAttachment()).isFalse();
+        assertThat(result.isCacheImmutable()).isFalse();
+    }
+
+    @Test
+    void returnsNotFoundWhenMediaHasNoThumbnail() {
+        given(mediaRepo.findByPublicKeyAndStatusAndProcessingStatus(
+                "public-key",
+                RecordStatus.ACTIVE,
+                MediaProcessingStatus.READY))
+                .willReturn(Optional.of(new MediaEntity()));
+
+        assertThatThrownBy(() -> mediaDeliverySvc.getThumbnail("public-key"))
+                .isInstanceOf(MyException.class)
+                .hasMessage("Media thumbnail not found.");
+
+        verifyNoInteractions(mediaFileStorage);
+    }
+
+    @Test
     void rejectsInvalidHlsSegmentBeforeStorageLookup() {
         assertThatThrownBy(() -> mediaDeliverySvc.getHlsSegment(
                 "public-key",

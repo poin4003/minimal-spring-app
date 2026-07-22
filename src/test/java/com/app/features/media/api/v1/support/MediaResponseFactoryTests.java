@@ -44,4 +44,20 @@ class MediaResponseFactoryTests {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getFile()).isEqualTo(path.toFile());
     }
+
+    @Test
+    void buildsRevalidatedResponseForMutableArtifact() throws Exception {
+        Path path = Files.writeString(temporaryDirectory.resolve("thumbnail.jpg"), "content");
+        MediaResponseFactory responseFactory = new MediaResponseFactory(new AppProperties());
+        MediaDeliveryResult result = new MediaDeliveryResult(
+                path,
+                "image/jpeg",
+                null,
+                false,
+                false);
+
+        ResponseEntity<Resource> response = responseFactory.build(result);
+
+        assertThat(response.getHeaders().getCacheControl()).isEqualTo("no-cache");
+    }
 }

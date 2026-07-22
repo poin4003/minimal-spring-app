@@ -70,6 +70,18 @@ Allowed transitions:
 - Video and audio delivery uses generated HLS playlists and segments.
 - Missing physical files return `404`.
 
+## Media Thumbnails
+- Each media item has at most one thumbnail, referenced directly by `thumbnailStorageKey` on the media record.
+- Thumbnails are derived artifacts and must not be stored as `MediaVariant` rows or as child media records.
+- Public thumbnail URLs are resolved from the media public key; physical storage keys are never exposed.
+- Images and videos require an automatically generated JPEG thumbnail bounded by the configured dimensions.
+- Audio may use embedded cover art, and PDF documents may use a rendered first page; failure to create these optional thumbnails must not block the media from becoming ready.
+- General downloads and unsupported documents use frontend file-type icons instead of generated thumbnails.
+- A custom video or audio cover must reuse a ready image owned by the same user and copy its normalized thumbnail artifact into the target media directory.
+- Retrying HLS processing must preserve an existing custom thumbnail.
+- Thumbnail delivery must be revalidated rather than cached as immutable because a custom cover can replace it at the same public URL.
+- Original files are retained after thumbnail and HLS processing for future moderation, inspection, and reprocessing flows.
+
 ## Media Upload
 - Each media file is uploaded separately through a multipart API.
 - Post creation uses a JSON payload containing previously uploaded media IDs.

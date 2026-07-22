@@ -14,6 +14,9 @@ import com.app.features.media.enums.MediaKind;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -85,6 +88,9 @@ public class AppProperties {
         private long maxImagePixels = 40_000_000;
 
         @Valid
+        private final Thumbnail thumbnail = new Thumbnail();
+
+        @Valid
         private final ChunkUpload chunkUpload = new ChunkUpload();
 
         @Valid
@@ -110,6 +116,28 @@ public class AppProperties {
             Duration processTimeout = Duration.ofMinutes(ffmpeg.getProcessTimeoutMinutes());
             return processingWorkspaceTtl.compareTo(processTimeout) > 0;
         }
+    }
+
+    @Data
+    public static class Thumbnail {
+        private boolean enabled = true;
+
+        @Positive
+        private int maxWidth = 480;
+
+        @Positive
+        private int maxHeight = 480;
+
+        @DecimalMin("0.1")
+        @DecimalMax("1.0")
+        private double jpegQuality = 0.82;
+
+        @Min(0)
+        private int videoFrameSecond = 1;
+
+        private boolean pdfEnabled = true;
+
+        private boolean audioCoverEnabled = true;
     }
 
     @Data
@@ -145,7 +173,7 @@ public class AppProperties {
         private Duration processingWorkspaceTtl = Duration.ofHours(2);
 
         @NotNull
-        private Duration failedHlsTtl = Duration.ofHours(24);
+        private Duration failedArtifactTtl = Duration.ofHours(24);
 
         @NotNull
         private Duration orphanDirectoryTtl = Duration.ofHours(24);
@@ -161,7 +189,7 @@ public class AppProperties {
             return isPositive(pendingRecoveryTtl)
                     && isPositive(stagingTtl)
                     && isPositive(processingWorkspaceTtl)
-                    && isPositive(failedHlsTtl)
+                    && isPositive(failedArtifactTtl)
                     && isPositive(orphanDirectoryTtl)
                     && isPositive(missingOriginalAuditTtl);
         }

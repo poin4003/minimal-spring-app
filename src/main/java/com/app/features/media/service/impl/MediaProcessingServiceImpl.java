@@ -7,8 +7,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,18 +27,23 @@ import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.schema.model.HlsEncodingProfile;
 import com.app.features.media.schema.model.HlsProcessingResult;
+import com.app.features.media.schema.model.MediaThumbnailResult;
 import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.service.MediaProcessingService;
+import com.app.features.media.service.MediaThumbnailService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.schema.MediaProcessingWorkspace;
+import com.app.features.media.support.MediaFfmpegFactory;
+import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.validation.MediaProbe;
 import com.github.kokorin.jaffree.StreamType;
-import com.github.kokorin.jaffree.ffmpeg.FFmpeg;
 import com.github.kokorin.jaffree.ffmpeg.UrlInput;
 import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MediaProcessingServiceImpl implements MediaProcessingService {
@@ -49,7 +54,10 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaVariantRepository mediaVariantRepo;
     private final MediaFileStorage mediaFileStorage;
     private final MediaProbe mediaProbe;
+    private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingLeaseService mediaProcessingLeaseSvc;
+    private final MediaFfmpegFactory mediaFfmpegFactory;
+    private final MediaProcessingPolicy mediaProcessingPolicy;
     private final AppProperties appProperties;
 
     @Override
@@ -65,8 +73,19 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             }
 
             try {
-                HlsProcessingResult processingResult = createHls(media);
-                markReady(mediaId, processingResult);
+                boolean thumbnailAttempted = shouldCreateThumbnail(media);
+                MediaThumbnailResult thumbnailResult = thumbnailAttempted
+                        ? createThumbnail(media).orElse(null)
+                        : null;
+                HlsProcessingResult hlsResult = mediaProcessingPolicy
+                        .requiresHls(media.getKind())
+                                ? createHls(media)
+                                : null;
+                markReady(
+                        mediaId,
+                        hlsResult,
+                        thumbnailResult,
+                        thumbnailAttempted);
             } catch (RuntimeException ex) {
                 markFailed(mediaId);
                 throw ex;
@@ -81,13 +100,40 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         MediaEntity media = mediaRepo.findById(mediaId).orElse(null);
         if (media == null
                 || media.getStatus() != RecordStatus.ACTIVE
-                || media.getProcessingStatus() == MediaProcessingStatus.READY
-                || !requiresHls(media.getKind())) {
+                || media.getProcessingStatus() == MediaProcessingStatus.READY) {
             return null;
         }
 
         media.setProcessingStatus(MediaProcessingStatus.PENDING);
         return media;
+    }
+
+    private Optional<MediaThumbnailResult> createThumbnail(MediaEntity media) {
+        if (!mediaProcessingPolicy.shouldGenerateThumbnail(media)) {
+            return Optional.empty();
+        }
+
+        try {
+            Optional<MediaThumbnailResult> result = mediaThumbnailSvc
+                    .generateThumbnail(media);
+            if (result.isEmpty()
+                    && mediaProcessingPolicy.isThumbnailRequired(media.getKind())) {
+                throw ExceptionFactory.serverError("Required media thumbnail was not generated.");
+            }
+            return result;
+        } catch (RuntimeException ex) {
+            if (mediaProcessingPolicy.isThumbnailRequired(media.getKind())) {
+                throw ex;
+            }
+            log.warn("Optional thumbnail generation failed for media [{}]", media.getId(), ex);
+            return Optional.empty();
+        }
+    }
+
+    private boolean shouldCreateThumbnail(MediaEntity media) {
+        return (media.getThumbnailStorageKey() == null
+                || media.getThumbnailStorageKey().isBlank())
+                && mediaProcessingPolicy.shouldGenerateThumbnail(media);
     }
 
     private HlsProcessingResult createHls(MediaEntity media) {
@@ -165,7 +211,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             output.disableStream(StreamType.VIDEO);
         }
 
-        createFfmpeg()
+        mediaFfmpegFactory.create()
                 .addInput(UrlInput.fromPath(source))
                 .addOutput(output)
                 .setOverwriteOutput(true)
@@ -226,58 +272,53 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         }
     }
 
-    private FFmpeg createFfmpeg() {
-        Path configuredPath = Path.of(appProperties.getMedia().getFfmpeg().getExecutable());
-        FFmpeg ffmpeg;
-        if (Files.isDirectory(configuredPath)) {
-            ffmpeg = FFmpeg.atPath(configuredPath);
-        } else {
-            Path binaryDirectory = configuredPath.getParent();
-            ffmpeg = binaryDirectory == null
-                    ? FFmpeg.atPath()
-                    : FFmpeg.atPath(binaryDirectory);
-        }
-
-        long timeoutMillis = TimeUnit.MINUTES.toMillis(
-                appProperties.getMedia().getFfmpeg().getProcessTimeoutMinutes());
-        return ffmpeg.setExecutorTimeoutMillis(Math.toIntExact(timeoutMillis));
-    }
-
     @Transactional
-    private void markReady(UUID mediaId, HlsProcessingResult processingResult) {
+    private void markReady(
+            UUID mediaId,
+            HlsProcessingResult hlsResult,
+            MediaThumbnailResult thumbnailResult,
+            boolean thumbnailAttempted) {
         MediaEntity media = mediaRepo.findById(mediaId).orElse(null);
         if (media == null) {
             return;
         }
 
-        mediaVariantRepo.deleteAllByMedia_Id(mediaId);
-        mediaVariantRepo.flush();
+        if (hlsResult != null) {
+            mediaVariantRepo.deleteAllByMedia_Id(mediaId);
+            mediaVariantRepo.flush();
 
-        String hlsDirectoryKey = processingResult.getPublishedDirectoryKey();
-        List<MediaVariantEntity> variants = new ArrayList<>();
+            String hlsDirectoryKey = hlsResult.getPublishedDirectoryKey();
+            List<MediaVariantEntity> variants = new ArrayList<>();
 
-        MediaVariantEntity masterVariant = new MediaVariantEntity();
-        masterVariant.setMedia(media);
-        masterVariant.setVariantType(MediaVariantType.HLS_MASTER_PLAYLIST);
-        masterVariant.setVariantKey(HlsReservedVariantKey.MASTER.getKey());
-        masterVariant.setStorageKey(hlsDirectoryKey + "/index.m3u8");
-        masterVariant.setContentType(HLS_CONTENT_TYPE);
-        variants.add(masterVariant);
+            MediaVariantEntity masterVariant = new MediaVariantEntity();
+            masterVariant.setMedia(media);
+            masterVariant.setVariantType(MediaVariantType.HLS_MASTER_PLAYLIST);
+            masterVariant.setVariantKey(HlsReservedVariantKey.MASTER.getKey());
+            masterVariant.setStorageKey(hlsDirectoryKey + "/index.m3u8");
+            masterVariant.setContentType(HLS_CONTENT_TYPE);
+            variants.add(masterVariant);
 
-        for (HlsEncodingProfile profile : processingResult.getProfiles()) {
-            MediaVariantEntity renditionVariant = new MediaVariantEntity();
-            renditionVariant.setMedia(media);
-            renditionVariant.setVariantType(MediaVariantType.HLS_RENDITION);
-            renditionVariant.setVariantKey(profile.getKey());
-            renditionVariant.setStorageKey(
-                    hlsDirectoryKey + "/" + profile.getKey() + "/index.m3u8");
-            renditionVariant.setContentType(HLS_CONTENT_TYPE);
-            renditionVariant.setHeight(profile.getHeight());
-            renditionVariant.setBitrate(profile.getTotalBitrate());
-            variants.add(renditionVariant);
+            for (HlsEncodingProfile profile : hlsResult.getProfiles()) {
+                MediaVariantEntity renditionVariant = new MediaVariantEntity();
+                renditionVariant.setMedia(media);
+                renditionVariant.setVariantType(MediaVariantType.HLS_RENDITION);
+                renditionVariant.setVariantKey(profile.getKey());
+                renditionVariant.setStorageKey(
+                        hlsDirectoryKey + "/" + profile.getKey() + "/index.m3u8");
+                renditionVariant.setContentType(HLS_CONTENT_TYPE);
+                renditionVariant.setHeight(profile.getHeight());
+                renditionVariant.setBitrate(profile.getTotalBitrate());
+                variants.add(renditionVariant);
+            }
+
+            mediaVariantRepo.saveAll(variants);
         }
 
-        mediaVariantRepo.saveAll(variants);
+        if (thumbnailAttempted) {
+            media.setThumbnailStorageKey(thumbnailResult == null
+                    ? null
+                    : thumbnailResult.getStorageKey());
+        }
         media.setProcessingStatus(MediaProcessingStatus.READY);
     }
 
@@ -285,10 +326,6 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private void markFailed(UUID mediaId) {
         mediaRepo.findById(mediaId)
                 .ifPresent(media -> media.setProcessingStatus(MediaProcessingStatus.FAILED));
-    }
-
-    private boolean requiresHls(MediaKind kind) {
-        return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO;
     }
 
 }

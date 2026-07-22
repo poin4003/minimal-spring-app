@@ -22,6 +22,7 @@ import com.app.features.media.storage.MediaFilenameSupport;
 import com.app.features.media.storage.MediaStorageKeySupport;
 import com.app.features.media.storage.schema.MediaProcessingWorkspace;
 import com.app.features.media.storage.schema.MediaStorageDirectoryCandidate;
+import com.app.features.media.storage.schema.MediaThumbnailWorkspace;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.storage.schema.StoredMediaFile;
 
@@ -175,6 +176,60 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     }
 
     @Override
+    public MediaThumbnailWorkspace prepareThumbnailWorkspace(String sourceStorageKey) {
+        Path source = resolveStorageKey(sourceStorageKey);
+        Path mediaDirectory = source.getParent();
+        Path temporaryDirectory = mediaDirectory.resolve(
+                ".thumbnail-processing-" + UUID.randomUUID());
+        Path temporaryFile = temporaryDirectory.resolve("thumbnail.jpg");
+        Path publishedFile = mediaDirectory.resolve("thumbnail.jpg");
+
+        try {
+            Files.createDirectories(temporaryDirectory);
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError(
+                    "Unable to prepare thumbnail processing workspace.");
+        }
+
+        return new MediaThumbnailWorkspace(
+                temporaryDirectory,
+                temporaryFile,
+                publishedFile,
+                MediaStorageKeySupport.directoryOf(sourceStorageKey) + "/thumbnail.jpg");
+    }
+
+    @Override
+    public void publishThumbnailWorkspace(MediaThumbnailWorkspace workspace) {
+        if (!Files.isRegularFile(workspace.getTemporaryFile())) {
+            throw ExceptionFactory.serverError("Generated thumbnail file is missing.");
+        }
+
+        try {
+            moveFileReplacing(
+                    workspace.getTemporaryFile(),
+                    workspace.getPublishedFile());
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to publish media thumbnail.");
+        }
+    }
+
+    @Override
+    public void discardThumbnailWorkspace(MediaThumbnailWorkspace workspace) {
+        if (workspace == null) {
+            return;
+        }
+
+        try {
+            deleteRecursively(workspace.getTemporaryDirectory());
+        } catch (IOException ex) {
+            log.warn(
+                    "Failed to discard thumbnail workspace [{}]",
+                    workspace.getTemporaryDirectory(),
+                    ex);
+        }
+    }
+
+    @Override
     public void delete(String storageKey) {
         if (storageKey == null || storageKey.isBlank()) {
             return;
@@ -215,6 +270,17 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     }
 
     @Override
+    public boolean deleteThumbnailArtifact(String sourceStorageKey) {
+        Path source = resolveStorageKey(sourceStorageKey);
+        Path thumbnail = source.getParent().resolve("thumbnail.jpg");
+        try {
+            return Files.deleteIfExists(thumbnail);
+        } catch (IOException ex) {
+            throw ExceptionFactory.serverError("Unable to delete media thumbnail.");
+        }
+    }
+
+    @Override
     public int deleteStagedFilesOlderThan(Instant cutoff, int limit) {
         List<Path> staleFiles;
         try (var paths = Files.list(stagingRoot)) {
@@ -242,8 +308,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         try (var paths = Files.walk(storageRoot, 4)) {
             staleDirectories = paths
                     .filter(path -> Files.isDirectory(path))
-                    .filter(path -> path.getFileName().toString()
-                            .startsWith(".hls-processing-"))
+                    .filter(path -> isProcessingWorkspace(path.getFileName().toString()))
                     .filter(path -> isOlderThan(path, cutoff))
                     .limit(limit)
                     .toList();
@@ -316,6 +381,23 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         } catch (AtomicMoveNotSupportedException ex) {
             Files.move(source, target);
         }
+    }
+
+    private void moveFileReplacing(Path source, Path target) throws IOException {
+        try {
+            Files.move(
+                    source,
+                    target,
+                    StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException ex) {
+            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private boolean isProcessingWorkspace(String fileName) {
+        return fileName.startsWith(".hls-processing-")
+                || fileName.startsWith(".thumbnail-processing-");
     }
 
     private Path resolveStorageKey(String storageKey) {

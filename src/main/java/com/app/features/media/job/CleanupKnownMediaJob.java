@@ -27,8 +27,8 @@ public class CleanupKnownMediaJob implements JobHandler {
     public void execute() {
         KnownMediaCleanupResult result = mediaMaintenanceSvc.cleanupKnownMedia();
         log.info(
-                "Known media cleanup completed: HLS cleaned [{}], missing originals [{}].",
-                result.getFailedHlsCleaned(),
+                "Known media cleanup completed: derived artifacts cleaned [{}], missing originals [{}].",
+                result.getFailedArtifactsCleaned(),
                 result.getMissingOriginalsDetected());
     }
 }

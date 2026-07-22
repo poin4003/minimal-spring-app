@@ -32,6 +32,7 @@
         <jobrunr.version>7.2.1</jobrunr.version>
         <tika.version>3.3.1</tika.version>
         <jaffree.version>2024.08.29</jaffree.version>
+        <pdfbox.version>3.0.8</pdfbox.version>
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
@@ -158,6 +159,12 @@
             <groupId>com.github.kokorin.jaffree</groupId>
             <artifactId>jaffree</artifactId>
             <version>${jaffree.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>${pdfbox.version}</version>
         </dependency>
 
         <!-- Job/Queue with DB -->

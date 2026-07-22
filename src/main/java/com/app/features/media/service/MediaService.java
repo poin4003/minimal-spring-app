@@ -39,6 +39,11 @@ public interface MediaService {
 
     MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId);
 
+    MediaResult updateOwnedThumbnail(
+            UUID mediaId,
+            UUID ownerId,
+            UUID sourceMediaId);
+
     int recoverPendingMedia();
 
     List<MediaEntity> requireOwnedActiveMedia(Collection<UUID> mediaIds, UUID createdById);

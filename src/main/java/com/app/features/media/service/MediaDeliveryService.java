@@ -6,6 +6,8 @@ public interface MediaDeliveryService {
 
     MediaDeliveryResult getOriginal(String publicKey);
 
+    MediaDeliveryResult getThumbnail(String publicKey);
+
     MediaDeliveryResult getHlsManifest(String publicKey);
 
     MediaDeliveryResult getHlsRendition(String publicKey, String variantKey);

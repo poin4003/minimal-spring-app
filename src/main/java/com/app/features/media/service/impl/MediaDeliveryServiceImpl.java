@@ -56,6 +56,26 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
     }
 
     @Override
+    public MediaDeliveryResult getThumbnail(String publicKey) {
+        MediaEntity media = mediaRepo
+                .findByPublicKeyAndStatusAndProcessingStatus(
+                        publicKey,
+                        RecordStatus.ACTIVE,
+                        MediaProcessingStatus.READY)
+                .filter(candidate -> candidate.getThumbnailStorageKey() != null)
+                .filter(candidate -> !candidate.getThumbnailStorageKey().isBlank())
+                .orElseThrow(() -> ExceptionFactory.notFound("Media thumbnail not found."));
+
+        Path path = resolveReadableFile(media.getThumbnailStorageKey());
+        return new MediaDeliveryResult(
+                path,
+                "image/jpeg",
+                null,
+                false,
+                false);
+    }
+
+    @Override
     public MediaDeliveryResult getHlsManifest(String publicKey) {
         MediaVariantEntity playlist = getHlsVariant(
                 publicKey,

@@ -50,16 +50,16 @@ public class MediaMaintenanceServiceImpl implements MediaMaintenanceService {
     public KnownMediaCleanupResult cleanupKnownMedia() {
         AppProperties.MediaMaintenance config = appProperties.getMedia().getMaintenance();
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime failedHlsCutoff = now.minus(config.getFailedHlsTtl());
+        LocalDateTime failedArtifactCutoff = now.minus(config.getFailedArtifactTtl());
         LocalDateTime missingOriginalCutoff = now.minus(config.getMissingOriginalAuditTtl());
 
-        int failedHlsCleaned = processCandidates(
+        int failedArtifactsCleaned = processCandidates(
                 pageable -> mediaRepo.findAllByStatusAndProcessingStatusAndUpdatedAtBefore(
                         RecordStatus.ACTIVE,
                         MediaProcessingStatus.FAILED,
-                        failedHlsCutoff,
+                        failedArtifactCutoff,
                         pageable),
-                media -> cleanupFailedHls(media.getId(), failedHlsCutoff),
+                media -> cleanupFailedArtifacts(media.getId(), failedArtifactCutoff),
                 config.getBatchSize());
         int missingOriginalsDetected = processCandidates(
                 pageable -> mediaRepo.findAllByStatusAndProcessingStatusNotAndUpdatedAtBefore(
@@ -71,7 +71,7 @@ public class MediaMaintenanceServiceImpl implements MediaMaintenanceService {
                 config.getBatchSize());
 
         return new KnownMediaCleanupResult(
-                failedHlsCleaned,
+                failedArtifactsCleaned,
                 missingOriginalsDetected);
     }
 
@@ -127,7 +127,7 @@ public class MediaMaintenanceServiceImpl implements MediaMaintenanceService {
     }
 
     @Transactional
-    private boolean cleanupFailedHls(UUID mediaId, LocalDateTime cutoff) {
+    private boolean cleanupFailedArtifacts(UUID mediaId, LocalDateTime cutoff) {
         UUID executionId = UUID.randomUUID();
         if (!mediaProcessingLeaseSvc.acquire(mediaId, executionId)) {
             return false;
@@ -140,8 +140,12 @@ public class MediaMaintenanceServiceImpl implements MediaMaintenanceService {
             }
 
             boolean deletedHls = mediaFileStorage.deleteHlsArtifacts(media.getStorageKey());
+            boolean hasPersistedThumbnail = media.getThumbnailStorageKey() != null
+                    && !media.getThumbnailStorageKey().isBlank();
+            boolean deletedThumbnail = !hasPersistedThumbnail
+                    && mediaFileStorage.deleteThumbnailArtifact(media.getStorageKey());
             long deletedVariants = mediaVariantRepo.deleteAllByMedia_Id(mediaId);
-            return deletedHls || deletedVariants > 0;
+            return deletedHls || deletedThumbnail || deletedVariants > 0;
         } finally {
             mediaProcessingLeaseSvc.release(mediaId, executionId);
         }

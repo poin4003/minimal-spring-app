@@ -3,14 +3,14 @@
 <body>
 <article th:fragment="card(item)" class="card h-100 overflow-hidden">
     <div class="ratio ratio-4x3 bg-body-tertiary border-bottom">
-        <img th:if="${item.hasImagePreview()}"
+        <img th:if="${item.hasThumbnail()}"
              class="w-100 h-100 object-fit-cover"
-             th:src="${item.previewUrl}"
+             th:src="${item.thumbnailUrl}"
              th:alt="${item.originalName}"
              loading="lazy"
              decoding="async">
 
-        <div th:unless="${item.hasImagePreview()}"
+        <div th:unless="${item.hasThumbnail()}"
              class="d-flex flex-column align-items-center justify-content-center">
             <strong class="h5 mb-1" th:text="${item.kind}">VIDEO</strong>
             <span class="small text-secondary" th:text="${item.processingStatus}">

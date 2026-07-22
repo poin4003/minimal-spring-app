@@ -33,6 +33,7 @@ import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
+import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.web.enums.MediaPreviewType;
 import com.app.features.media.web.view.MediaGalleryItemView;
 import com.app.features.media.web.view.MediaGalleryView;
@@ -74,6 +75,7 @@ public class MediaPageController {
     private final AppProperties appProperties;
     private final MenuService menuSvc;
     private final MediaService mediaSvc;
+    private final MediaProcessingPolicy mediaProcessingPolicy;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -195,17 +197,17 @@ public class MediaPageController {
     private MediaGalleryItemView toGalleryItem(
             MediaResult media,
             HttpServletRequest request) {
-        boolean imagePreviewAvailable = media.getKind() == MediaKind.IMAGE
+        boolean thumbnailAvailable = media.isThumbnailAvailable()
                 && media.getStatus() == RecordStatus.ACTIVE
                 && media.getProcessingStatus() == MediaProcessingStatus.READY;
-        String previewUrl = imagePreviewAvailable
-                ? buildOriginalUrl(media.getPublicKey())
+        String thumbnailUrl = thumbnailAvailable
+                ? buildThumbnailUrl(media.getPublicKey())
                 : null;
 
         return MediaGalleryItemView.builder()
                 .id(media.getId())
                 .originalName(media.getOriginalName())
-                .previewUrl(previewUrl)
+                .thumbnailUrl(thumbnailUrl)
                 .kind(media.getKind())
                 .processingStatus(media.getProcessingStatus())
                 .status(media.getStatus())
@@ -297,9 +299,19 @@ public class MediaPageController {
                 .toUriString();
     }
 
+    private String buildThumbnailUrl(String publicKey) {
+        return UriComponentsBuilder.fromPath("/api/v1/public/media")
+                .pathSegment(publicKey, "thumbnail")
+                .build()
+                .encode()
+                .toUriString();
+    }
+
     private boolean canRetry(MediaResult media) {
         return media.getProcessingStatus() == MediaProcessingStatus.FAILED
-                && (media.getKind() == MediaKind.VIDEO || media.getKind() == MediaKind.AUDIO);
+                && mediaProcessingPolicy.requiresProcessing(
+                        media.getKind(),
+                        media.getContentType());
     }
 
     private UiMetadataModalView buildMetadataModal(UUID mediaId) {
@@ -313,6 +325,10 @@ public class MediaPageController {
                         metadataItem("Public Key", media.getPublicKey(), true),
                         metadataItem("Original Name", media.getOriginalName(), false),
                         metadataItem("Content Type", media.getContentType(), true),
+                        metadataItem(
+                                "Thumbnail Available",
+                                String.valueOf(media.isThumbnailAvailable()),
+                                false),
                         metadataItem(
                                 "Created By Id",
                                 media.getCreatedBy() == null

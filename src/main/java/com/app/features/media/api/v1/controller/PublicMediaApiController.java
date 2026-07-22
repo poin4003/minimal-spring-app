@@ -27,6 +27,12 @@ public class PublicMediaApiController {
         return mediaResponseFactory.build(result);
     }
 
+    @GetMapping("/{publicKey}/thumbnail")
+    public ResponseEntity<Resource> getThumbnail(@PathVariable String publicKey) {
+        MediaDeliveryResult result = mediaDeliverySvc.getThumbnail(publicKey);
+        return mediaResponseFactory.build(result);
+    }
+
     @GetMapping("/{publicKey}/hls/index.m3u8")
     public ResponseEntity<Resource> getHlsManifest(@PathVariable String publicKey) {
         MediaDeliveryResult result = mediaDeliverySvc.getHlsManifest(publicKey);

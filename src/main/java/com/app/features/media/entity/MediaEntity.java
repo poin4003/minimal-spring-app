@@ -30,6 +30,10 @@ import lombok.ToString;
 @Entity
 @Table(name = "media", indexes = {
         @Index(name = "uk_media_storage_key", columnList = "storage_key", unique = true),
+        @Index(
+                name = "uk_media_thumbnail_storage_key",
+                columnList = "thumbnail_storage_key",
+                unique = true),
         @Index(name = "uk_media_public_key", columnList = "public_key", unique = true),
         @Index(name = "idx_media_created_by_created_at", columnList = "created_by, created_at"),
         @Index(name = "idx_media_status_created_at", columnList = "status, created_at"),
@@ -56,6 +60,9 @@ public class MediaEntity extends BaseAuditEntity {
 
     @Column(name = "storage_key", nullable = false, length = 255)
     private String storageKey;
+
+    @Column(name = "thumbnail_storage_key", length = 255)
+    private String thumbnailStorageKey;
 
     @Column(name = "public_key", nullable = false, length = 64)
     private String publicKey;

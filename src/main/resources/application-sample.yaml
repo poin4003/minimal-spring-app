@@ -25,6 +25,14 @@ app:
         storage-path: ${MEDIA_STORAGE_PATH:./data/media}
         delivery-cache-duration: ${MEDIA_DELIVERY_CACHE_DURATION:365d}
         max-image-pixels: ${MEDIA_MAX_IMAGE_PIXELS:40000000}
+        thumbnail:
+            enabled: ${MEDIA_THUMBNAIL_ENABLED:true}
+            max-width: ${MEDIA_THUMBNAIL_MAX_WIDTH:480}
+            max-height: ${MEDIA_THUMBNAIL_MAX_HEIGHT:480}
+            jpeg-quality: ${MEDIA_THUMBNAIL_JPEG_QUALITY:0.82}
+            video-frame-second: ${MEDIA_THUMBNAIL_VIDEO_FRAME_SECOND:1}
+            pdf-enabled: ${MEDIA_THUMBNAIL_PDF_ENABLED:true}
+            audio-cover-enabled: ${MEDIA_THUMBNAIL_AUDIO_COVER_ENABLED:true}
         chunk-upload:
             chunk-size-bytes: ${MEDIA_CHUNK_SIZE_BYTES:8388608}
             session-ttl: ${MEDIA_UPLOAD_SESSION_TTL:24h}
@@ -86,7 +94,7 @@ app:
             pending-recovery-ttl: ${MEDIA_PENDING_RECOVERY_TTL:15m}
             staging-ttl: ${MEDIA_STAGING_TTL:1h}
             processing-workspace-ttl: ${MEDIA_PROCESSING_WORKSPACE_TTL:2h}
-            failed-hls-ttl: ${MEDIA_FAILED_HLS_TTL:24h}
+            failed-artifact-ttl: ${MEDIA_FAILED_ARTIFACT_TTL:24h}
             orphan-directory-ttl: ${MEDIA_ORPHAN_DIRECTORY_TTL:24h}
             missing-original-audit-ttl: ${MEDIA_MISSING_ORIGINAL_AUDIT_TTL:10m}
             batch-size: ${MEDIA_MAINTENANCE_BATCH_SIZE:100}
