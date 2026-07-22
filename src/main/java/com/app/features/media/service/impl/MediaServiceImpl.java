@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
@@ -220,28 +221,30 @@ public class MediaServiceImpl implements MediaService {
     public MediaResult updateOwnedThumbnail(
             UUID mediaId,
             UUID ownerId,
-            UUID sourceMediaId) {
+            UUID thumbnailMediaId) {
         MediaEntity targetMedia = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
                 .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
-        MediaEntity sourceMedia = mediaRepo.findByIdAndCreatedBy_Id(sourceMediaId, ownerId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + sourceMediaId));
+        MediaEntity thumbnailMedia = mediaRepo
+                .findByIdAndCreatedBy_Id(thumbnailMediaId, ownerId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "Media: " + thumbnailMediaId));
 
         requireReadyActiveMedia(targetMedia, "Target media");
-        requireReadyActiveMedia(sourceMedia, "Source media");
+        requireReadyActiveMedia(thumbnailMedia, "Thumbnail media");
         if (!mediaProcessingPolicy.supportsManualThumbnail(targetMedia.getKind())) {
             throw ExceptionFactory.invalidParam(
                     "Only video and audio media support a custom thumbnail.");
         }
-        if (sourceMedia.getKind() != MediaKind.IMAGE
-                || sourceMedia.getThumbnailStorageKey() == null
-                || sourceMedia.getThumbnailStorageKey().isBlank()) {
+        if (thumbnailMedia.getKind() != MediaKind.IMAGE
+                || thumbnailMedia.getThumbnailStorageKey() == null
+                || thumbnailMedia.getThumbnailStorageKey().isBlank()) {
             throw ExceptionFactory.invalidParam(
                     "Source media must be a ready image with a generated thumbnail.");
         }
 
         MediaThumbnailResult thumbnail = mediaThumbnailSvc.copyThumbnail(
                 targetMedia,
-                sourceMedia);
+                thumbnailMedia);
         targetMedia.setThumbnailStorageKey(thumbnail.getStorageKey());
         return toMediaResult(targetMedia);
     }
@@ -320,7 +323,7 @@ public class MediaServiceImpl implements MediaService {
                 .toList();
 
         result.setVariants(variants);
-        result.setThumbnailAvailable(hasThumbnail(media));
+        result.setThumbnailUrl(resolveThumbnailUrl(media));
         return result;
     }
 
@@ -354,13 +357,23 @@ public class MediaServiceImpl implements MediaService {
 
     private MediaResult toMediaResult(MediaEntity media) {
         MediaResult result = mapper.map(media, MediaResult.class);
-        result.setThumbnailAvailable(hasThumbnail(media));
+        result.setThumbnailUrl(resolveThumbnailUrl(media));
         return result;
     }
 
-    private boolean hasThumbnail(MediaEntity media) {
-        return media.getThumbnailStorageKey() != null
-                && !media.getThumbnailStorageKey().isBlank();
+    private String resolveThumbnailUrl(MediaEntity media) {
+        if (media.getThumbnailStorageKey() == null
+                || media.getThumbnailStorageKey().isBlank()
+                || media.getStatus() != RecordStatus.ACTIVE
+                || media.getProcessingStatus() != MediaProcessingStatus.READY) {
+            return null;
+        }
+
+        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
+                .pathSegment(media.getPublicKey(), "thumbnail")
+                .build()
+                .encode()
+                .toUriString();
     }
 
     private void requireReadyActiveMedia(MediaEntity media, String label) {

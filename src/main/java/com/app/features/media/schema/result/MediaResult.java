@@ -24,7 +24,7 @@ public class MediaResult {
 
     private long fileSize;
 
-    private boolean thumbnailAvailable;
+    private String thumbnailUrl;
 
     private MediaKind kind;
 

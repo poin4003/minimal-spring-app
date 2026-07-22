@@ -9,5 +9,8 @@ import lombok.Data;
 public class UpdateMediaThumbnailPayload {
 
     @NotNull
-    private UUID sourceMediaId;
+    private UUID mediaId;
+
+    @NotNull
+    private UUID thumbnailMediaId;
 }

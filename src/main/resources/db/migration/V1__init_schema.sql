@@ -80,6 +80,7 @@ CREATE TABLE media (
     id UUID PRIMARY KEY,
     created_by UUID NOT NULL,
     storage_key VARCHAR(255) NOT NULL,
+    thumbnail_storage_key VARCHAR(255),
     public_key VARCHAR(64) NOT NULL,
     original_name VARCHAR(255) NOT NULL,
     content_type VARCHAR(100) NOT NULL,
@@ -94,6 +95,7 @@ CREATE TABLE media (
 );
 
 CREATE UNIQUE INDEX uk_media_storage_key ON media(storage_key);
+CREATE UNIQUE INDEX uk_media_thumbnail_storage_key ON media(thumbnail_storage_key);
 CREATE UNIQUE INDEX uk_media_public_key ON media(public_key);
 CREATE INDEX idx_media_created_by_created_at ON media(created_by, created_at);
 CREATE INDEX idx_media_status_created_at ON media(status, created_at);

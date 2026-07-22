@@ -197,17 +197,10 @@ public class MediaPageController {
     private MediaGalleryItemView toGalleryItem(
             MediaResult media,
             HttpServletRequest request) {
-        boolean thumbnailAvailable = media.isThumbnailAvailable()
-                && media.getStatus() == RecordStatus.ACTIVE
-                && media.getProcessingStatus() == MediaProcessingStatus.READY;
-        String thumbnailUrl = thumbnailAvailable
-                ? buildThumbnailUrl(media.getPublicKey())
-                : null;
-
         return MediaGalleryItemView.builder()
                 .id(media.getId())
                 .originalName(media.getOriginalName())
-                .thumbnailUrl(thumbnailUrl)
+                .thumbnailUrl(media.getThumbnailUrl())
                 .kind(media.getKind())
                 .processingStatus(media.getProcessingStatus())
                 .status(media.getStatus())
@@ -284,7 +277,7 @@ public class MediaPageController {
     }
 
     private String buildOriginalUrl(String publicKey) {
-        return UriComponentsBuilder.fromPath("/api/v1/public/media")
+        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
                 .pathSegment(publicKey)
                 .build()
                 .encode()
@@ -292,16 +285,8 @@ public class MediaPageController {
     }
 
     private String buildHlsUrl(String publicKey) {
-        return UriComponentsBuilder.fromPath("/api/v1/public/media")
+        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
                 .pathSegment(publicKey, "hls", "index.m3u8")
-                .build()
-                .encode()
-                .toUriString();
-    }
-
-    private String buildThumbnailUrl(String publicKey) {
-        return UriComponentsBuilder.fromPath("/api/v1/public/media")
-                .pathSegment(publicKey, "thumbnail")
                 .build()
                 .encode()
                 .toUriString();
@@ -326,9 +311,9 @@ public class MediaPageController {
                         metadataItem("Original Name", media.getOriginalName(), false),
                         metadataItem("Content Type", media.getContentType(), true),
                         metadataItem(
-                                "Thumbnail Available",
-                                String.valueOf(media.isThumbnailAvailable()),
-                                false),
+                                "Thumbnail URL",
+                                media.getThumbnailUrl(),
+                                true),
                         metadataItem(
                                 "Created By Id",
                                 media.getCreatedBy() == null

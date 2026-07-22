@@ -1,12 +1,9 @@
 package com.app.features.media.api.v1.controller;
 
-import java.util.UUID;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,15 +40,14 @@ public class MediaApiController {
         return ApiResult.ok(result, "Media uploaded successfully.");
     }
 
-    @PutMapping("/{mediaId}/thumbnail")
+    @PutMapping("/thumbnail")
     public ApiResult<MediaResult> updateThumbnail(
-            @PathVariable UUID mediaId,
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody UpdateMediaThumbnailPayload payload) {
         MediaResult result = mediaSvc.updateOwnedThumbnail(
-                mediaId,
+                payload.getMediaId(),
                 currentUser.getUserId(),
-                payload.getSourceMediaId());
+                payload.getThumbnailMediaId());
 
         return ApiResult.ok(result, "Media thumbnail updated successfully.");
     }

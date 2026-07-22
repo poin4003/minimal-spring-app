@@ -81,6 +81,10 @@ public class AppProperties {
         @NotBlank
         private String storagePath = "./data/media";
 
+        @NotBlank
+        @Pattern(regexp = "^/(?:[^/?#]+/)*[^/?#]+$")
+        private String publicPath = "/api/v1/public/media";
+
         @NotNull
         private Duration deliveryCacheDuration = Duration.ofDays(365);
 

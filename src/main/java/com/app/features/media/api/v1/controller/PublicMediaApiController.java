@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/public/media")
+@RequestMapping("${app.media.public-path:/api/v1/public/media}")
 public class PublicMediaApiController {
 
     private final MediaDeliveryService mediaDeliverySvc;

@@ -2,21 +2,28 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 <article th:fragment="card(item)" class="card h-100 overflow-hidden">
-    <div class="ratio ratio-4x3 bg-body-tertiary border-bottom">
-        <img th:if="${item.hasThumbnail()}"
-             class="w-100 h-100 object-fit-cover"
-             th:src="${item.thumbnailUrl}"
-             th:alt="${item.originalName}"
-             loading="lazy"
-             decoding="async">
-
-        <div th:unless="${item.hasThumbnail()}"
-             class="d-flex flex-column align-items-center justify-content-center">
+    <div class="ratio ratio-4x3 bg-body-tertiary border-bottom position-relative">
+        <div class="position-absolute top-0 start-0 w-100 h-100
+                    d-flex flex-column align-items-center justify-content-center">
+            <img class="mb-3 opacity-75"
+                 th:src="${item.fallbackImagePath}"
+                 alt=""
+                 width="64"
+                 height="64"
+                 aria-hidden="true">
             <strong class="h5 mb-1" th:text="${item.kind}">VIDEO</strong>
             <span class="small text-secondary" th:text="${item.processingStatus}">
                 PENDING
             </span>
         </div>
+
+        <img th:if="${item.hasThumbnail()}"
+             class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
+             th:src="${item.thumbnailUrl}"
+             th:alt="${item.originalName}"
+             data-media-thumbnail
+             loading="lazy"
+             decoding="async">
     </div>
 
     <div class="card-body">

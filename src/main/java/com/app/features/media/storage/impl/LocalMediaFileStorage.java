@@ -36,6 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 public class LocalMediaFileStorage implements MediaFileStorage {
 
     private static final DateTimeFormatter STORAGE_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy/MM");
+    private static final List<String> PROCESSING_WORKSPACE_PREFIXES = List.of(
+            ".hls-processing-",
+            ".thumbnail-processing-");
 
     private final AppProperties appProperties;
 
@@ -396,8 +399,8 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     }
 
     private boolean isProcessingWorkspace(String fileName) {
-        return fileName.startsWith(".hls-processing-")
-                || fileName.startsWith(".thumbnail-processing-");
+        return PROCESSING_WORKSPACE_PREFIXES.stream()
+                .anyMatch(prefix -> fileName.startsWith(prefix));
     }
 
     private Path resolveStorageKey(String storageKey) {

@@ -42,7 +42,7 @@ public interface MediaService {
     MediaResult updateOwnedThumbnail(
             UUID mediaId,
             UUID ownerId,
-            UUID sourceMediaId);
+            UUID thumbnailMediaId);
 
     int recoverPendingMedia();
 
