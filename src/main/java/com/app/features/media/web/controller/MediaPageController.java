@@ -33,9 +33,11 @@ import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
+import com.app.features.media.web.enums.MediaPreviewType;
 import com.app.features.media.web.view.MediaGalleryItemView;
 import com.app.features.media.web.view.MediaGalleryView;
 import com.app.features.media.web.view.MediaListPageView;
+import com.app.features.media.web.view.MediaPreviewModalView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiConfirmModalView;
@@ -56,6 +58,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("${app.ui.home-path:/admin}/media")
 public class MediaPageController {
 
+    private static final String PREVIEW_MEDIA_ID = "previewMediaId";
     private static final String METADATA_MEDIA_ID = "metadataMediaId";
     private static final String DETAIL_MEDIA_ID = "detailMediaId";
     private static final String DELETE_MEDIA_ID = "deleteMediaId";
@@ -81,6 +84,7 @@ public class MediaPageController {
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") MediaFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
+            @RequestParam(required = false) UUID previewMediaId,
             @RequestParam(required = false) UUID metadataMediaId,
             @RequestParam(required = false) UUID detailMediaId,
             @RequestParam(required = false) UUID deleteMediaId,
@@ -93,6 +97,7 @@ public class MediaPageController {
                         request,
                         filter,
                         query,
+                        previewMediaId,
                         metadataMediaId,
                         detailMediaId,
                         deleteMediaId,
@@ -123,6 +128,7 @@ public class MediaPageController {
             HttpServletRequest request,
             MediaFilterCriteria filter,
             UiPageQuery query,
+            UUID previewMediaId,
             UUID metadataMediaId,
             UUID detailMediaId,
             UUID deleteMediaId,
@@ -145,6 +151,9 @@ public class MediaPageController {
                 .pagination(pagination)
                 .build();
 
+        MediaPreviewModalView previewModal = previewMediaId == null
+                ? null
+                : buildPreviewModal(previewMediaId);
         UiMetadataModalView metadataModal = metadataMediaId == null
                 ? null
                 : buildMetadataModal(metadataMediaId);
@@ -170,10 +179,12 @@ public class MediaPageController {
                 .processingStatuses(Arrays.asList(MediaProcessingStatus.values()))
                 .statuses(Arrays.asList(RecordStatus.values()))
                 .mediaGallery(mediaGallery)
+                .previewModal(previewModal)
                 .metadataModal(metadataModal)
                 .detailModal(detailModal)
                 .deleteModal(deleteModal)
                 .retryModal(retryModal)
+                .openPreviewModal(previewModal != null)
                 .openMetadataModal(metadataModal != null)
                 .openDetailModal(detailModal != null)
                 .openDeleteModal(deleteModal != null)
@@ -188,11 +199,7 @@ public class MediaPageController {
                 && media.getStatus() == RecordStatus.ACTIVE
                 && media.getProcessingStatus() == MediaProcessingStatus.READY;
         String previewUrl = imagePreviewAvailable
-                ? UriComponentsBuilder.fromPath("/api/v1/public/media")
-                        .pathSegment(media.getPublicKey())
-                        .build()
-                        .encode()
-                        .toUriString()
+                ? buildOriginalUrl(media.getPublicKey())
                 : null;
 
         return MediaGalleryItemView.builder()
@@ -207,6 +214,7 @@ public class MediaPageController {
                         : media.getCreatedBy().getEmail())
                 .fileSizeLabel(formatFileSize(media.getFileSize()))
                 .createdAt(media.getCreatedAt())
+                .previewPath(buildSelectionPath(request, PREVIEW_MEDIA_ID, media.getId()))
                 .metadataPath(buildSelectionPath(request, METADATA_MEDIA_ID, media.getId()))
                 .detailPath(buildSelectionPath(request, DETAIL_MEDIA_ID, media.getId()))
                 .retryPath(canRetry(media)
@@ -214,6 +222,79 @@ public class MediaPageController {
                         : null)
                 .deletePath(buildSelectionPath(request, DELETE_MEDIA_ID, media.getId()))
                 .build();
+    }
+
+    private MediaPreviewModalView buildPreviewModal(UUID mediaId) {
+        MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
+        boolean deliveryAvailable = media.getStatus() == RecordStatus.ACTIVE
+                && media.getProcessingStatus() == MediaProcessingStatus.READY;
+
+        MediaPreviewType previewType = deliveryAvailable
+                ? resolvePreviewType(media)
+                : MediaPreviewType.UNAVAILABLE;
+        String originalUrl = deliveryAvailable
+                ? buildOriginalUrl(media.getPublicKey())
+                : null;
+        String sourceUrl = switch (previewType) {
+            case VIDEO, AUDIO -> buildHlsUrl(media.getPublicKey());
+            case IMAGE, PDF, DOWNLOAD -> originalUrl;
+            case UNAVAILABLE -> null;
+        };
+
+        return MediaPreviewModalView.builder()
+                .id("media-preview-modal")
+                .title("Media Preview")
+                .description(String.format(
+                        Locale.ROOT,
+                        "%s | %s | %s",
+                        media.getOriginalName(),
+                        media.getKind(),
+                        formatFileSize(media.getFileSize())))
+                .previewType(previewType)
+                .sourceUrl(sourceUrl)
+                .originalUrl(originalUrl)
+                .unavailableMessage(deliveryAvailable
+                        ? "This file type cannot be previewed in the browser."
+                        : buildUnavailableMessage(media))
+                .build();
+    }
+
+    private MediaPreviewType resolvePreviewType(MediaDetailResult media) {
+        return switch (media.getKind()) {
+            case IMAGE -> MediaPreviewType.IMAGE;
+            case VIDEO -> MediaPreviewType.VIDEO;
+            case AUDIO -> MediaPreviewType.AUDIO;
+            case DOCUMENT -> "application/pdf".equalsIgnoreCase(media.getContentType())
+                    ? MediaPreviewType.PDF
+                    : MediaPreviewType.DOWNLOAD;
+            case FILE -> MediaPreviewType.DOWNLOAD;
+        };
+    }
+
+    private String buildUnavailableMessage(MediaDetailResult media) {
+        if (media.getStatus() != RecordStatus.ACTIVE) {
+            return "Preview is unavailable because this media is inactive.";
+        }
+        if (media.getProcessingStatus() == MediaProcessingStatus.FAILED) {
+            return "Preview is unavailable because media processing failed.";
+        }
+        return "Preview will be available after media processing is complete.";
+    }
+
+    private String buildOriginalUrl(String publicKey) {
+        return UriComponentsBuilder.fromPath("/api/v1/public/media")
+                .pathSegment(publicKey)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildHlsUrl(String publicKey) {
+        return UriComponentsBuilder.fromPath("/api/v1/public/media")
+                .pathSegment(publicKey, "hls", "index.m3u8")
+                .build()
+                .encode()
+                .toUriString();
     }
 
     private boolean canRetry(MediaResult media) {
@@ -395,7 +476,8 @@ public class MediaPageController {
     }
 
     private void clearModalParameters(UriComponentsBuilder builder) {
-        builder.replaceQueryParam(METADATA_MEDIA_ID)
+        builder.replaceQueryParam(PREVIEW_MEDIA_ID)
+                .replaceQueryParam(METADATA_MEDIA_ID)
                 .replaceQueryParam(DETAIL_MEDIA_ID)
                 .replaceQueryParam(DELETE_MEDIA_ID)
                 .replaceQueryParam(RETRY_MEDIA_ID);

@@ -22,6 +22,7 @@ public class MediaGalleryItemView {
     private final String createdByEmail;
     private final String fileSizeLabel;
     private final String createdAt;
+    private final String previewPath;
     private final String metadataPath;
     private final String detailPath;
     private final String retryPath;

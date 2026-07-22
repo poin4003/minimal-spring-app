@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="modal(modal)"
+     class="modal fade"
+     tabindex="-1"
+     aria-hidden="true"
+     data-media-preview-modal
+     th:id="${modal.id}">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title fs-5" th:text="${modal.title}">Media Preview</h2>
+                    <p class="text-secondary small mb-0 mt-1"
+                       th:text="${modal.description}">
+                        image.jpg | IMAGE | 1.2 MB
+                    </p>
+                </div>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body app-media-preview-modal-body"
+                 th:switch="${modal.previewType.name()}">
+                <div th:case="'IMAGE'" class="app-media-preview-stage">
+                    <img class="app-media-preview-image"
+                         th:src="${modal.sourceUrl}"
+                         th:alt="${modal.description}">
+                </div>
+
+                <div th:case="'VIDEO'" class="app-media-preview-stage">
+                    <video class="app-media-preview-player"
+                           controls
+                           playsinline
+                           preload="metadata"
+                           data-hls-player
+                           th:attr="data-hls-source=${modal.sourceUrl}"></video>
+                    <div class="alert alert-danger mt-3 mb-0" data-hls-error hidden></div>
+                </div>
+
+                <div th:case="'AUDIO'" class="app-media-preview-stage app-media-preview-audio-stage">
+                    <audio class="app-media-preview-audio"
+                           controls
+                           preload="metadata"
+                           data-hls-player
+                           th:attr="data-hls-source=${modal.sourceUrl}"></audio>
+                    <div class="alert alert-danger mt-3 mb-0" data-hls-error hidden></div>
+                </div>
+
+                <iframe th:case="'PDF'"
+                        class="app-media-preview-document"
+                        th:src="${modal.sourceUrl}"
+                        title="PDF preview"></iframe>
+
+                <div th:case="'DOWNLOAD'" class="app-media-preview-message">
+                    <p class="text-secondary mb-0" th:text="${modal.unavailableMessage}">
+                        This file type cannot be previewed in the browser.
+                    </p>
+                </div>
+
+                <div th:case="'UNAVAILABLE'" class="app-media-preview-message">
+                    <p class="text-secondary mb-0" th:text="${modal.unavailableMessage}">
+                        Preview is not available yet.
+                    </p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <a th:if="${modal.originalUrl != null}"
+                   class="btn btn-outline-primary"
+                   th:href="${modal.originalUrl}"
+                   target="_blank"
+                   rel="noopener">
+                    Open Original
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

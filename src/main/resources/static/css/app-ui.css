@@ -47,3 +47,55 @@
         linear-gradient(135deg, transparent 0 48%, var(--bs-border-color) 49% 51%, transparent 52% 100%),
         var(--bs-tertiary-bg);
 }
+
+.app-media-preview-modal-body {
+    min-height: 20rem;
+    background: var(--bs-tertiary-bg);
+}
+
+.app-media-preview-stage {
+    min-height: 20rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-media-preview-image,
+.app-media-preview-player {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: var(--bs-border-radius-lg);
+    background: #000;
+}
+
+.app-media-preview-player {
+    width: 100%;
+}
+
+.app-media-preview-audio-stage {
+    min-height: 12rem;
+}
+
+.app-media-preview-audio {
+    width: min(100%, 48rem);
+}
+
+.app-media-preview-document {
+    display: block;
+    width: 100%;
+    min-height: 70vh;
+    border: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color);
+    border-radius: var(--bs-border-radius-lg);
+    background: var(--bs-body-bg);
+}
+
+.app-media-preview-message {
+    min-height: 20rem;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    text-align: center;
+}

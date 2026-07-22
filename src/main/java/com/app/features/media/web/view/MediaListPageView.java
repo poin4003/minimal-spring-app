@@ -32,10 +32,12 @@ public class MediaListPageView {
     private final List<MediaProcessingStatus> processingStatuses;
     private final List<RecordStatus> statuses;
     private final MediaGalleryView mediaGallery;
+    private final MediaPreviewModalView previewModal;
     private final UiMetadataModalView metadataModal;
     private final UiDetailModalView detailModal;
     private final UiConfirmModalView deleteModal;
     private final UiConfirmModalView retryModal;
+    private final boolean openPreviewModal;
     private final boolean openMetadataModal;
     private final boolean openDetailModal;
     private final boolean openDeleteModal;
