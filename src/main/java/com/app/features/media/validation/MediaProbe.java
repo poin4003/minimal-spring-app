@@ -39,7 +39,7 @@ public class MediaProbe {
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             resultFuture.cancel(true);
-            throw ExceptionFactory.serverError("Media probing was interrupted.");
+            throw ExceptionFactory.serverError("Media probing was interrupted.", ex);
         } catch (ExecutionException ex) {
             throw ExceptionFactory.invalidParam("Unable to probe audio or video content.");
         }

@@ -92,7 +92,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             throw ex;
         } catch (IOException ex) {
             deleteQuietly(temporary);
-            throw ExceptionFactory.serverError("Unable to store media chunk.");
+            throw ExceptionFactory.serverError("Unable to store media chunk.", ex);
         } finally {
             chunkLock.unlock();
         }
@@ -115,7 +115,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
                     .sorted()
                     .toList();
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to inspect uploaded media chunks.");
+            throw ExceptionFactory.serverError("Unable to inspect uploaded media chunks.", ex);
         }
     }
 
@@ -130,7 +130,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         try {
             assembledFile = Files.createTempFile(stagingRoot, "assembled-", ".tmp");
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to prepare assembled media file.");
+            throw ExceptionFactory.serverError("Unable to prepare assembled media file.", ex);
         }
 
         try (OutputStream output = Files.newOutputStream(assembledFile)) {
@@ -163,7 +163,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             throw ex;
         } catch (IOException ex) {
             deleteQuietly(assembledFile);
-            throw ExceptionFactory.serverError("Unable to assemble media chunks.");
+            throw ExceptionFactory.serverError("Unable to assemble media chunks.", ex);
         }
     }
 
@@ -173,7 +173,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         try {
             deleteRecursively(uploadDirectory);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete media upload chunks.");
+            throw ExceptionFactory.serverError("Unable to delete media upload chunks.", ex);
         }
     }
 

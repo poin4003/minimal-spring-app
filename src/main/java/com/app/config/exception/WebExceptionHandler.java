@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebExceptionHandler {
 
     private final WebErrorPageFactory webErrorPageFactory;
+    private final ExceptionLogService exceptionLogSvc;
 
     @ExceptionHandler({
             AuthorizationDeniedException.class,
@@ -62,7 +63,7 @@ public class WebExceptionHandler {
 
     @ExceptionHandler(MyException.class)
     public ModelAndView handleMyException(MyException ex, HttpServletRequest request) {
-        log.error("Web MyException [{}]: {}", ex.getError(), ex.getMessage());
+        exceptionLogSvc.log(ex, request);
 
         return webErrorPageFactory.build(
                 HttpStatus.valueOf(ex.getHttpStatusCode()),
@@ -97,7 +98,7 @@ public class WebExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ModelAndView handleAllUncaughtException(Exception ex, HttpServletRequest request) {
-        log.error("Unknown Internal Error: ", ex);
+        exceptionLogSvc.logUnexpected(ex, request);
 
         return webErrorPageFactory.build(
                 HttpStatus.INTERNAL_SERVER_ERROR,

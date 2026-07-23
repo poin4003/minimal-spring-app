@@ -12,11 +12,11 @@ public class MyException extends RuntimeException {
     private final List<FieldErrorItem> fieldErrors;
 
     public MyException(String error, int httpStatusCode, String message) {
-        this(error, httpStatusCode, message, null, List.of());
+        this(error, httpStatusCode, message, null, List.of(), null);
     }
 
     public MyException(String error, int httpStatusCode, String message, Object details) {
-        this(error, httpStatusCode, message, details, List.of());
+        this(error, httpStatusCode, message, details, List.of(), null);
     }
 
     public MyException(
@@ -25,7 +25,17 @@ public class MyException extends RuntimeException {
             String message,
             Object details,
             List<FieldErrorItem> fieldErrors) {
-        super(message);
+        this(error, httpStatusCode, message, details, fieldErrors, null);
+    }
+
+    public MyException(
+            String error,
+            int httpStatusCode,
+            String message,
+            Object details,
+            List<FieldErrorItem> fieldErrors,
+            Throwable cause) {
+        super(message, cause);
         this.error = error;
         this.httpStatusCode = httpStatusCode;
         this.details = details;

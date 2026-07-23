@@ -178,7 +178,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         try {
             Files.createDirectories(renditionDirectory);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to prepare HLS rendition directory.");
+            throw ExceptionFactory.serverError("Unable to prepare HLS rendition directory.", ex);
         }
 
         UrlOutput output = UrlOutput.toPath(playlist)
@@ -268,7 +268,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to write HLS master playlist.");
+            throw ExceptionFactory.serverError("Unable to write HLS master playlist.", ex);
         }
     }
 

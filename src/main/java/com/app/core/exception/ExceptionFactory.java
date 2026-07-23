@@ -78,6 +78,16 @@ public final class ExceptionFactory {
         return new MyException("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
     }
 
+    public static MyException serverError(String message, Throwable cause) {
+        return new MyException(
+                "INTERNAL_SERVER_ERROR",
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                message,
+                null,
+                List.of(),
+                cause);
+    }
+
     public static MyException importSimError(String message) {
         return new MyException("IMPORT_SIM_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
     }

@@ -26,16 +26,23 @@ import com.app.core.exception.FieldErrorItem;
 import com.app.core.exception.MyException;
 import com.app.core.response.ApiResult;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@RequiredArgsConstructor
 @Order(Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    private final ExceptionLogService exceptionLogSvc;
+
     @ExceptionHandler(MyException.class)
-    public ResponseEntity<ApiResult<Void>> handleMyException(MyException ex) {
-        log.error("MyException [{}]: {}", ex.getError(), ex.getMessage());
+    public ResponseEntity<ApiResult<Void>> handleMyException(
+            MyException ex,
+            HttpServletRequest request) {
+        exceptionLogSvc.log(ex, request);
 
         return ResponseEntity.status(ex.getHttpStatusCode())
                 .body(ApiResult.error(ex.getError(), ex.getMessage(), ex.getFieldErrors()));
@@ -122,8 +129,10 @@ public class ApiExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResult<Void>> handleAllUncaughtException(Exception ex) {
-        log.error("Unknown Internal Error: ", ex);
+    public ResponseEntity<ApiResult<Void>> handleAllUncaughtException(
+            Exception ex,
+            HttpServletRequest request) {
+        exceptionLogSvc.logUnexpected(ex, request);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResult.error("INTERNAL_SERVER_ERROR", "Unknown system error."));

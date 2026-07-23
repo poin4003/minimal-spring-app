@@ -109,7 +109,7 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
             mediaFileStorage.publishThumbnailWorkspace(workspace);
             return new MediaThumbnailResult(workspace.getPublishedStorageKey());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to copy media thumbnail.");
+            throw ExceptionFactory.serverError("Unable to copy media thumbnail.", ex);
         } finally {
             mediaFileStorage.discardThumbnailWorkspace(workspace);
         }
@@ -272,7 +272,7 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
             writer.setOutput(outputStream);
             writer.write(null, new IIOImage(image, null, null), parameters);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to write media thumbnail.");
+            throw ExceptionFactory.serverError("Unable to write media thumbnail.", ex);
         } finally {
             writer.dispose();
         }

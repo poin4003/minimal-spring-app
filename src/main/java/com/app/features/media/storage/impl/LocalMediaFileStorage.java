@@ -93,7 +93,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             throw ex;
         } catch (IOException ex) {
             deleteQuietly(temporaryPath);
-            throw ExceptionFactory.serverError("Unable to stage media file.");
+            throw ExceptionFactory.serverError("Unable to stage media file.", ex);
         }
     }
 
@@ -112,7 +112,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             Files.createDirectories(targetPath.getParent());
             moveStagedFile(stagedFile.getTemporaryPath(), targetPath);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to commit media file.");
+            throw ExceptionFactory.serverError("Unable to commit media file.", ex);
         }
 
         return new StoredMediaFile(
@@ -141,7 +141,8 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             Files.createDirectories(temporaryDirectory);
         } catch (IOException ex) {
             throw ExceptionFactory.serverError(
-                    "Unable to prepare media processing workspace.");
+                    "Unable to prepare media processing workspace.",
+                    ex);
         }
 
         return new MediaProcessingWorkspace(
@@ -158,7 +159,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                     workspace.getTemporaryDirectory(),
                     workspace.getPublishedDirectory());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to publish processed media.");
+            throw ExceptionFactory.serverError("Unable to publish processed media.", ex);
         }
     }
 
@@ -191,7 +192,8 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             Files.createDirectories(temporaryDirectory);
         } catch (IOException ex) {
             throw ExceptionFactory.serverError(
-                    "Unable to prepare thumbnail processing workspace.");
+                    "Unable to prepare thumbnail processing workspace.",
+                    ex);
         }
 
         return new MediaThumbnailWorkspace(
@@ -212,7 +214,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                     workspace.getTemporaryFile(),
                     workspace.getPublishedFile());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to publish media thumbnail.");
+            throw ExceptionFactory.serverError("Unable to publish media thumbnail.", ex);
         }
     }
 
@@ -244,7 +246,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             deleteRecursively(mediaDirectory);
             deleteParentIfEmpty(mediaDirectory.getParent());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete media file.");
+            throw ExceptionFactory.serverError("Unable to delete media file.", ex);
         }
     }
 
@@ -268,7 +270,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             deleteRecursively(hlsDirectory);
             return existed;
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete HLS artifacts.");
+            throw ExceptionFactory.serverError("Unable to delete HLS artifacts.", ex);
         }
     }
 
@@ -279,7 +281,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         try {
             return Files.deleteIfExists(thumbnail);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete media thumbnail.");
+            throw ExceptionFactory.serverError("Unable to delete media thumbnail.", ex);
         }
     }
 
@@ -293,7 +295,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                     .limit(limit)
                     .toList();
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to scan media staging files.");
+            throw ExceptionFactory.serverError("Unable to scan media staging files.", ex);
         }
 
         int deleted = 0;
@@ -317,7 +319,8 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                     .toList();
         } catch (IOException ex) {
             throw ExceptionFactory.serverError(
-                    "Unable to scan media processing workspaces.");
+                    "Unable to scan media processing workspaces.",
+                    ex);
         }
 
         int deleted = 0;
@@ -341,7 +344,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                             toStorageKey(path)))
                     .toList();
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to scan media directories.");
+            throw ExceptionFactory.serverError("Unable to scan media directories.", ex);
         }
     }
 
@@ -358,7 +361,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
             deleteParentIfEmpty(directory.getParent());
             return existed;
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete media directory.");
+            throw ExceptionFactory.serverError("Unable to delete media directory.", ex);
         }
     }
 
@@ -366,7 +369,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         try {
             return Files.createTempFile(stagingRoot, "upload-", ".tmp");
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to create media staging file.");
+            throw ExceptionFactory.serverError("Unable to create media staging file.", ex);
         }
     }
 
