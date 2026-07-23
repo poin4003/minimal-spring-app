@@ -86,3 +86,10 @@ INSERT INTO cronjob_config (id, job_type, expression, status) VALUES (
     NULL,
     'ACTIVE'
 );
+
+INSERT INTO cronjob_config (id, job_type, expression, status) VALUES (
+    'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c06',
+    'CLEANUP_JOBRUNR_FAILED_JOBS',
+    NULL,
+    'ACTIVE'
+);

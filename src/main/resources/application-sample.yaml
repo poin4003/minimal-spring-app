@@ -208,6 +208,10 @@ org:
         background-job-server:
             enabled: true
             worker-count: ${JOBRUNR_WORKER_COUNT:2}
+            delete-succeeded-jobs-after: ${JOBRUNR_DELETE_SUCCEEDED_AFTER:3d}
+            permanently-delete-deleted-jobs-after: ${JOBRUNR_PERMANENT_DELETE_AFTER:1d}
         dashboard:
             enabled: false
             port: 8000
+        maintenance:
+            failed-job-retention: ${JOBRUNR_FAILED_JOB_RETENTION:30d}
