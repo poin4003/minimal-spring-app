@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.app.config.ratelimit.RateLimitPolicy;
+import com.app.config.ratelimit.RateLimited;
 import com.app.config.settings.AppProperties;
 import com.app.core.security.UserPrincipal;
 import com.app.core.utils.HttpUtils;
@@ -55,6 +57,7 @@ public class LoginPageController {
         return "auth/login";
     }
 
+    @RateLimited(RateLimitPolicy.AUTH_LOGIN)
     @PostMapping("${app.ui.login-path:/login}")
     public String login(
             @ModelAttribute LoginPayload form,

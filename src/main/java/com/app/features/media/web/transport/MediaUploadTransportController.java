@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.app.config.ratelimit.RateLimitPolicy;
+import com.app.config.ratelimit.RateLimited;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.response.ApiResult;
@@ -39,6 +41,7 @@ public class MediaUploadTransportController {
 
     private final MediaUploadService mediaUploadSvc;
 
+    @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Secured(PermissionConstants.MEDIA_MANAGE)
@@ -51,6 +54,7 @@ public class MediaUploadTransportController {
         return ApiResult.ok(result, "Media upload session created successfully.");
     }
 
+    @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @GetMapping("/{uploadId}")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<MediaUploadSessionResult> getUpload(
@@ -62,6 +66,7 @@ public class MediaUploadTransportController {
         return ApiResult.ok(result, "Media upload session retrieved successfully.");
     }
 
+    @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_CHUNK)
     @PutMapping(
             path = "/{uploadId}/chunks/{chunkIndex}",
             consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -87,6 +92,7 @@ public class MediaUploadTransportController {
         return ApiResult.ok(null, "Media chunk uploaded successfully.");
     }
 
+    @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @PostMapping("/{uploadId}/complete")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<MediaResult> completeUpload(
@@ -98,6 +104,7 @@ public class MediaUploadTransportController {
         return ApiResult.ok(result, "Media upload completed successfully.");
     }
 
+    @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @DeleteMapping("/{uploadId}")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<Void> cancelUpload(

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.app.config.ratelimit.RateLimitPolicy;
+import com.app.config.ratelimit.RateLimited;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.CreateMediaPayload;
@@ -39,6 +41,7 @@ public class MediaUploadPageController {
         return "media/fragments/upload-modal :: modal (upload=${upload})";
     }
 
+    @RateLimited(RateLimitPolicy.MEDIA_DIRECT_UPLOAD)
     @PostMapping(path = "/direct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String uploadDirect(

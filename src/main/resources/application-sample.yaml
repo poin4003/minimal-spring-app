@@ -1,6 +1,11 @@
 # Server config
 server:
     port: 8080
+    forward-headers-strategy: native
+    tomcat:
+        remoteip:
+            remote-ip-header: X-Forwarded-For
+            protocol-header: X-Forwarded-Proto
 
 # App config
 app:
@@ -105,6 +110,15 @@ app:
             missing-original-audit-ttl: ${MEDIA_MISSING_ORIGINAL_AUDIT_TTL:10m}
             batch-size: ${MEDIA_MAINTENANCE_BATCH_SIZE:100}
     security:
+        rate-limit:
+            enabled: ${RATE_LIMIT_ENABLED:true}
+            cache-max-size: ${RATE_LIMIT_CACHE_MAX_SIZE:100000}
+            cache-expiration: ${RATE_LIMIT_CACHE_EXPIRATION:1h}
+            auth-login: { capacity: 10, period: 1m }
+            auth-refresh: { capacity: 60, period: 1m }
+            media-direct-upload: { capacity: 30, period: 1m }
+            media-upload-session: { capacity: 120, period: 1m }
+            media-upload-chunk: { capacity: 300, period: 1m }
         api-public-paths:
             - /api/v1/auth/login
             - /api/v1/auth/refresh

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.app.config.ratelimit.RateLimitPolicy;
+import com.app.config.ratelimit.RateLimited;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.CreateMediaPayload;
@@ -28,6 +30,7 @@ public class MediaApiController {
 
     private final MediaService mediaSvc;
 
+    @RateLimited(RateLimitPolicy.MEDIA_DIRECT_UPLOAD)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResult<MediaResult> upload(

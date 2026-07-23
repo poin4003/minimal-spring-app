@@ -33,6 +33,7 @@
         <tika.version>3.3.1</tika.version>
         <jaffree.version>2024.08.29</jaffree.version>
         <pdfbox.version>3.0.8</pdfbox.version>
+        <bucket4j.version>8.19.0</bucket4j.version>
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
@@ -165,6 +166,17 @@
             <groupId>org.apache.pdfbox</groupId>
             <artifactId>pdfbox</artifactId>
             <version>${pdfbox.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.bucket4j</groupId>
+            <artifactId>bucket4j_jdk17-core</artifactId>
+            <version>${bucket4j.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
         </dependency>
 
         <!-- Job/Queue with DB -->

@@ -66,6 +66,13 @@ public final class ExceptionFactory {
         return new MyException("PERMISSION_ERROR", HttpStatus.FORBIDDEN.value(), message);
     }
 
+    public static MyException rateLimitExceeded(String message) {
+        return new MyException(
+                "RATE_LIMIT_EXCEEDED",
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                message);
+    }
+
     // --- Infrastructure/System Errors (500) ---
     public static MyException serverError(String message) {
         return new MyException("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
