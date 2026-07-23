@@ -218,6 +218,20 @@ public class MediaServiceImpl implements MediaService {
 
     @Transactional
     @Override
+    public MediaResult updateThumbnail(
+            UUID mediaId,
+            UUID thumbnailMediaId) {
+        MediaEntity targetMedia = mediaRepo.findById(mediaId)
+                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+        MediaEntity thumbnailMedia = mediaRepo.findById(thumbnailMediaId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "Media: " + thumbnailMediaId));
+
+        return applyThumbnail(targetMedia, thumbnailMedia);
+    }
+
+    @Transactional
+    @Override
     public MediaResult updateOwnedThumbnail(
             UUID mediaId,
             UUID ownerId,
@@ -229,6 +243,12 @@ public class MediaServiceImpl implements MediaService {
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "Media: " + thumbnailMediaId));
 
+        return applyThumbnail(targetMedia, thumbnailMedia);
+    }
+
+    private MediaResult applyThumbnail(
+            MediaEntity targetMedia,
+            MediaEntity thumbnailMedia) {
         requireReadyActiveMedia(targetMedia, "Target media");
         requireReadyActiveMedia(thumbnailMedia, "Thumbnail media");
         if (!mediaProcessingPolicy.supportsManualThumbnail(targetMedia.getKind())) {

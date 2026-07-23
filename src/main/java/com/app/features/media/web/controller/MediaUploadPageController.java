@@ -5,6 +5,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +15,8 @@ import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.service.MediaService;
+import com.app.features.media.web.support.MediaUploadComponentFactory;
+import com.app.features.media.web.view.MediaUploadComponentView;
 import com.app.features.media.web.view.MediaUploadResultView;
 
 import jakarta.validation.Valid;
@@ -25,6 +28,16 @@ import lombok.RequiredArgsConstructor;
 public class MediaUploadPageController {
 
     private final MediaService mediaSvc;
+    private final MediaUploadComponentFactory mediaUploadComponentFactory;
+
+    @GetMapping("/thumbnail-modal")
+    @Secured(PermissionConstants.MEDIA_MANAGE)
+    public String thumbnailModal(Model model) {
+        model.addAttribute(
+                MediaUploadComponentView.ATTRIBUTE,
+                mediaUploadComponentFactory.buildThumbnailUpload());
+        return "media/fragments/upload-modal :: modal (upload=${upload})";
+    }
 
     @PostMapping(path = "/direct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Secured(PermissionConstants.MEDIA_MANAGE)

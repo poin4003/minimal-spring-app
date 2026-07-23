@@ -19,9 +19,10 @@ public class MediaThumbnailPageView {
     private final String title;
     private final String listPath;
     private final String backPath;
+    private final String uploadFallbackPath;
+    private final String uploadPartialPath;
     private final UiShellView shell;
     private final MediaFilterCriteria filter;
-    private final MediaUploadComponentView uploadComponent;
     private final List<UiMetadataItemView> metadataItems;
     private final UiAssignmentPanelView assignmentPanel;
 }

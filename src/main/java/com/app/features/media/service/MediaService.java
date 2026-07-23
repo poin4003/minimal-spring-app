@@ -39,6 +39,10 @@ public interface MediaService {
 
     MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId);
 
+    MediaResult updateThumbnail(
+            UUID mediaId,
+            UUID thumbnailMediaId);
+
     MediaResult updateOwnedThumbnail(
             UUID mediaId,
             UUID ownerId,

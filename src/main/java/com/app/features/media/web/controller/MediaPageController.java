@@ -112,7 +112,6 @@ public class MediaPageController {
     @GetMapping("/gallery")
     @Secured(PermissionConstants.MEDIA_VIEW)
     public String gallery(
-            @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
             @Valid @ModelAttribute("filter") MediaFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -122,8 +121,7 @@ public class MediaPageController {
                 buildMediaGallery(
                         filter,
                         query,
-                        request,
-                        currentUser.getUserId()));
+                        request));
         return "media/fragments/gallery :: gallery (gallery=${gallery})";
     }
 
@@ -191,8 +189,7 @@ public class MediaPageController {
         MediaGalleryView mediaGallery = buildMediaGallery(
                 filter,
                 query,
-                request,
-                currentUser.getUserId());
+                request);
 
         MediaPreviewModalView previewModal = previewMediaId == null
                 ? null
@@ -237,13 +234,12 @@ public class MediaPageController {
     private MediaGalleryView buildMediaGallery(
             MediaFilterCriteria filter,
             UiPageQuery query,
-            HttpServletRequest request,
-            UUID currentUserId) {
+            HttpServletRequest request) {
         var mediaPage = mediaSvc.getManyMedia(
                 filter,
                 query.toPageable(MEDIA_PAGE_DEFAULTS));
         List<MediaGalleryItemView> items = mediaPage.getContent().stream()
-                .map(media -> toGalleryItem(media, request, currentUserId))
+                .map(media -> toGalleryItem(media, request))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -265,8 +261,7 @@ public class MediaPageController {
 
     private MediaGalleryItemView toGalleryItem(
             MediaResult media,
-            HttpServletRequest request,
-            UUID currentUserId) {
+            HttpServletRequest request) {
         return MediaGalleryItemView.builder()
                 .id(media.getId())
                 .originalName(media.getOriginalName())
@@ -285,7 +280,7 @@ public class MediaPageController {
                 .metadataPartialPath(buildPartialPath(media.getId(), "metadata"))
                 .detailPath(buildSelectionPath(request, DETAIL_MEDIA_ID, media.getId()))
                 .detailPartialPath(buildPartialPath(media.getId(), "detail"))
-                .thumbnailSelectionPath(canSelectThumbnail(media, currentUserId)
+                .thumbnailSelectionPath(canSelectThumbnail(media)
                         ? getMediaListPath() + "/" + media.getId() + "/thumbnail"
                         : null)
                 .retryPath(canRetry(media)
@@ -295,12 +290,8 @@ public class MediaPageController {
                 .build();
     }
 
-    private boolean canSelectThumbnail(
-            MediaResult media,
-            UUID currentUserId) {
-        return media.getCreatedBy() != null
-                && currentUserId.equals(media.getCreatedBy().getId())
-                && media.getStatus() == RecordStatus.ACTIVE
+    private boolean canSelectThumbnail(MediaResult media) {
+        return media.getStatus() == RecordStatus.ACTIVE
                 && media.getProcessingStatus() == MediaProcessingStatus.READY
                 && mediaProcessingPolicy.supportsManualThumbnail(media.getKind());
     }

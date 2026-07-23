@@ -31,7 +31,6 @@ import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.support.MediaProcessingPolicy;
-import com.app.features.media.web.support.MediaUploadComponentFactory;
 import com.app.features.media.web.view.MediaThumbnailPageView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
@@ -63,7 +62,6 @@ public class MediaThumbnailPageController {
     private final MenuService menuSvc;
     private final MediaService mediaSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
-    private final MediaUploadComponentFactory mediaUploadComponentFactory;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -85,12 +83,10 @@ public class MediaThumbnailPageController {
     @PostMapping("/assign")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String assign(
-            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID mediaId,
             @RequestParam UUID targetId) {
-        mediaSvc.updateOwnedThumbnail(
+        mediaSvc.updateThumbnail(
                 mediaId,
-                currentUser.getUserId(),
                 targetId);
         return "redirect:" + getMediaListPath();
     }
@@ -101,14 +97,11 @@ public class MediaThumbnailPageController {
             UUID mediaId,
             MediaFilterCriteria filter,
             UiPageQuery query) {
-        MediaDetailResult targetMedia = mediaSvc.getOwnedMediaDetail(
-                mediaId,
-                currentUser.getUserId());
+        MediaDetailResult targetMedia = mediaSvc.getMediaDetail(mediaId);
         requireManualThumbnailSupport(targetMedia);
 
         MediaFilterCriteria thumbnailFilter = buildThumbnailFilter(filter);
-        var imagePage = mediaSvc.getManyOwnedMedia(
-                currentUser.getUserId(),
+        var imagePage = mediaSvc.getManyMedia(
                 thumbnailFilter,
                 query.toPageable(THUMBNAIL_PAGE_DEFAULTS));
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -120,7 +113,7 @@ public class MediaThumbnailPageController {
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .title("Ready Images")
-                .description("Choose a ready image owned by the same user.")
+                .description("Choose any ready image available in the media library.")
                 .emptyMessage("No ready images are available.")
                 .rows(imagePage.getContent().stream()
                         .map(image -> toPanelItem(mediaId, image))
@@ -132,9 +125,12 @@ public class MediaThumbnailPageController {
                 .title("Select Thumbnail")
                 .listPath(getThumbnailPath(mediaId))
                 .backPath(getMediaListPath())
+                .uploadFallbackPath(getMediaListPath())
+                .uploadPartialPath(
+                        appProperties.getUi().getHomePath()
+                                + "/media/uploads/thumbnail-modal")
                 .shell(buildShell(currentUser, request))
                 .filter(filter)
-                .uploadComponent(mediaUploadComponentFactory.buildThumbnailUpload())
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()
                                 .label("Media")

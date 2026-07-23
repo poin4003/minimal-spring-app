@@ -390,8 +390,30 @@
         }
     }
 
+    function initializeUploads(scope) {
+        const roots = [];
+        if (scope instanceof Element && scope.matches("[data-media-upload]")) {
+            roots.push(scope);
+        }
+        if (scope instanceof Document || scope instanceof Element) {
+            roots.push(...scope.querySelectorAll("[data-media-upload]"));
+        }
+
+        roots.forEach(root => {
+            if (root.dataset.mediaUploadInitialized === "true") {
+                return;
+            }
+
+            root.dataset.mediaUploadInitialized = "true";
+            new DirectMediaUpload(root);
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll("[data-media-upload]")
-            .forEach(root => new DirectMediaUpload(root));
+        initializeUploads(document);
+    });
+
+    document.addEventListener("htmx:load", function (event) {
+        initializeUploads(event.detail.elt);
     });
 })();
