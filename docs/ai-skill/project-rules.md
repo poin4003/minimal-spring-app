@@ -113,6 +113,8 @@
 - The AI does not need to fully confirm every runtime case or edge case in advance; it only needs to show the code or proposed changes clearly so the user can decide the direction.
 - This exception does not apply to reading source code, analysis, review, or proposing a fix.
 - If implementation reveals a substantial source, schema, architecture, or infrastructure change outside the explicit prompt scope, the AI must pause and ask the user before proposing or applying that additional direction.
+- If a requested change has a large effect radius and still contains unclear product, domain, security, ownership, lifecycle, or architecture decisions, the AI must pause before implementation even when the user requested an immediate apply.
+- In that situation, explain the unresolved decisions, provide concrete options with their main trade-offs and a recommendation, then wait for the user to choose a direction before applying changes.
 - Do not silently bundle large out-of-scope refactors or redesigns into an approved change. Small compile-safe adjustments that do not alter the agreed behavior remain allowed.
 
 ## Verification Scope Rule

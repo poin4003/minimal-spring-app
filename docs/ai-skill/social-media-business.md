@@ -78,6 +78,7 @@ Allowed transitions:
 - Audio may use embedded cover art, and PDF documents may use a rendered first page; failure to create these optional thumbnails must not block the media from becoming ready.
 - General downloads and unsupported documents use frontend file-type icons instead of generated thumbnails.
 - A custom video or audio cover must reuse a ready image owned by the same user and copy its normalized thumbnail artifact into the target media directory.
+- Custom thumbnail UI uses a two-step flow: upload the candidate image as normal library media, then select it only after processing reaches `READY`; do not poll and auto-attach immediately after upload.
 - Retrying HLS processing must preserve an existing custom thumbnail.
 - Thumbnail delivery must be revalidated rather than cached as immutable because a custom cover can replace it at the same public URL.
 - Original files are retained after thumbnail and HLS processing for future moderation, inspection, and reprocessing flows.

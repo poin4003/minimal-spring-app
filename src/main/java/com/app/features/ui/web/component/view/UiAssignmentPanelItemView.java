@@ -9,5 +9,6 @@ public class UiAssignmentPanelItemView {
 
     private final String title;
     private final String description;
+    private final String imageUrl;
     private final UiAssignmentActionView action;
 }

@@ -11,19 +11,40 @@
         <div th:if="${!#lists.isEmpty(panel.rows)}" class="list-group list-group-flush">
             <div th:each="row : ${panel.rows}"
                  class="list-group-item d-flex justify-content-between align-items-start gap-3">
-                <div>
-                    <div class="fw-semibold" th:text="${row.title}">TITLE</div>
-                    <div class="small text-secondary" th:text="${row.description}">Description</div>
+                <div class="d-flex align-items-center gap-3 overflow-hidden">
+                    <img th:if="${row.imageUrl != null}"
+                         class="rounded border object-fit-cover flex-shrink-0"
+                         th:src="${row.imageUrl}"
+                         th:alt="${row.title}"
+                         data-media-thumbnail
+                         width="72"
+                         height="72"
+                         loading="lazy"
+                         decoding="async">
+
+                    <div class="overflow-hidden">
+                        <div class="fw-semibold text-truncate"
+                             th:title="${row.title}"
+                             th:text="${row.title}">
+                            TITLE
+                        </div>
+                        <div class="small text-secondary"
+                             th:text="${row.description}">
+                            Description
+                        </div>
+                    </div>
                 </div>
 
                 <form method="post" th:action="${row.action.path}" class="mb-0">
                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                     <input type="hidden" name="targetId" th:value="${row.action.targetId}">
-                    <input type="hidden" name="mode" th:value="${row.action.query.mode.name()}">
-                    <input type="hidden" name="page" th:value="${row.action.query.page}">
-                    <input type="hidden" name="size" th:value="${row.action.query.size}">
-                    <input type="hidden" name="sortBy" th:value="${row.action.query.sortBy}">
-                    <input type="hidden" name="sortDirection" th:value="${row.action.query.sortDirection.name()}">
+                    <th:block th:if="${row.action.query != null}">
+                        <input type="hidden" name="mode" th:value="${row.action.query.mode.name()}">
+                        <input type="hidden" name="page" th:value="${row.action.query.page}">
+                        <input type="hidden" name="size" th:value="${row.action.query.size}">
+                        <input type="hidden" name="sortBy" th:value="${row.action.query.sortBy}">
+                        <input type="hidden" name="sortDirection" th:value="${row.action.query.sortDirection.name()}">
+                    </th:block>
                     <button type="submit"
                             class="btn btn-sm"
                             th:classappend="${' ' + row.action.buttonClass}"

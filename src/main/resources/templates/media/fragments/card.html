@@ -93,6 +93,11 @@
                     hx-swap='innerHTML',
                     hx-disabled-elt='this',
                     data-app-modal-request='true'">Detail</a>
+        <a th:if="${item.canSelectThumbnail()}"
+           class="btn btn-sm btn-outline-primary"
+           th:href="${item.thumbnailSelectionPath}">
+            Thumbnail
+        </a>
         <a th:if="${item.canRetry()}"
            class="btn btn-sm btn-outline-warning"
            th:href="${item.retryPath}">Retry</a>

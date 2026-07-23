@@ -6,7 +6,8 @@
         <button type="button"
                 class="btn btn-primary"
                 data-bs-toggle="modal"
-                th:data-bs-target="${'#' + upload.id + '-modal'}">
+                th:data-bs-target="${'#' + upload.id + '-modal'}"
+                th:text="${upload.triggerLabel}">
             Upload Media
         </button>
     </div>
@@ -141,7 +142,8 @@
                     </button>
                     <button type="submit"
                             class="btn btn-primary"
-                            data-media-upload-start>
+                            data-media-upload-start
+                            th:text="${upload.submitLabel}">
                         Upload queued
                     </button>
                 </div>

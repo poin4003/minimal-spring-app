@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.settings.AppProperties.AllowedMediaType;
+import com.app.features.media.enums.MediaKind;
 import com.app.features.media.web.view.MediaUploadComponentView;
 import com.app.features.media.web.view.MediaUploadRuleView;
 
@@ -19,9 +21,42 @@ public class MediaUploadComponentFactory {
     private final AppProperties appProperties;
 
     public MediaUploadComponentView buildLibraryUpload() {
-        List<MediaUploadRuleView> rules = appProperties.getMedia()
+        return buildUpload(
+                "media-library-upload",
+                "Upload Media",
+                "Upload Media",
+                "Select files to add to the media library.",
+                "Upload queued",
+                true,
+                appProperties.getMedia().getAllowedTypes());
+    }
+
+    public MediaUploadComponentView buildThumbnailUpload() {
+        List<AllowedMediaType> imageTypes = appProperties.getMedia()
                 .getAllowedTypes()
                 .stream()
+                .filter(rule -> rule.getKind() == MediaKind.IMAGE)
+                .toList();
+
+        return buildUpload(
+                "media-thumbnail-upload",
+                "Upload Thumbnail Image",
+                "Upload Thumbnail Image",
+                "Upload one image to the media library. Select it after processing reaches READY.",
+                "Upload image",
+                false,
+                imageTypes);
+    }
+
+    private MediaUploadComponentView buildUpload(
+            String id,
+            String triggerLabel,
+            String title,
+            String description,
+            String submitLabel,
+            boolean multiple,
+            List<AllowedMediaType> allowedTypes) {
+        List<MediaUploadRuleView> rules = allowedTypes.stream()
                 .sorted(Comparator.comparing(rule -> rule.getExtension()))
                 .map(rule -> MediaUploadRuleView.builder()
                         .extension(rule.getExtension())
@@ -36,12 +71,14 @@ public class MediaUploadComponentFactory {
                 .collect(Collectors.joining(","));
 
         return MediaUploadComponentView.builder()
-                .id("media-library-upload")
-                .title("Upload Media")
-                .description("Select files to add to the media library.")
+                .id(id)
+                .triggerLabel(triggerLabel)
+                .title(title)
+                .description(description)
+                .submitLabel(submitLabel)
                 .uploadPath(appProperties.getUi().getHomePath() + "/media/uploads/direct")
                 .accept(accept)
-                .multiple(true)
+                .multiple(multiple)
                 .rules(rules)
                 .build();
     }
