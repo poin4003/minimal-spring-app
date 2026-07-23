@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
@@ -12,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.stereotype.Component;
 
@@ -28,8 +30,10 @@ import lombok.RequiredArgsConstructor;
 public class LocalMediaChunkStorage implements MediaChunkStorage {
 
     private static final int COPY_BUFFER_SIZE = 64 * 1024;
+    private static final int CHUNK_LOCK_STRIPES = 256;
 
     private final AppProperties appProperties;
+    private final ReentrantLock[] chunkLocks = createChunkLocks();
 
     private Path uploadRoot;
     private Path stagingRoot;
@@ -62,9 +66,19 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         Path target = resolveChunk(uploadId, chunkIndex);
         Path temporary = uploadDirectory.resolve(
                 chunkFilename(chunkIndex) + ".tmp-" + UUID.randomUUID());
+        ReentrantLock chunkLock = resolveChunkLock(uploadId, chunkIndex);
 
+        chunkLock.lock();
         try {
             Files.createDirectories(uploadDirectory);
+            if (Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+                validateExistingChunk(
+                        target,
+                        expectedSize,
+                        normalizedChecksum);
+                return;
+            }
+
             MessageDigest digest = sha256();
             long written = copyAndDigest(inputStream, temporary, expectedSize, digest);
             String actualChecksum = HexFormat.of().formatHex(digest.digest());
@@ -79,6 +93,8 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         } catch (IOException ex) {
             deleteQuietly(temporary);
             throw ExceptionFactory.serverError("Unable to store media chunk.");
+        } finally {
+            chunkLock.unlock();
         }
     }
 
@@ -91,7 +107,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
 
         try (var paths = Files.list(uploadDirectory)) {
             return paths
-                    .filter(path -> Files.isRegularFile(path))
+                    .filter(path -> Files.isRegularFile(
+                            path,
+                            LinkOption.NOFOLLOW_LINKS))
                     .map(path -> parseChunkIndex(path.getFileName().toString()))
                     .filter(index -> index != null)
                     .sorted()
@@ -119,7 +137,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             long assembledSize = 0;
             for (int chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                 Path chunk = resolveChunk(uploadId, chunkIndex);
-                if (!Files.isRegularFile(chunk)) {
+                if (!Files.isRegularFile(
+                        chunk,
+                        LinkOption.NOFOLLOW_LINKS)) {
                     throw ExceptionFactory.invalidParam(
                             "Media upload is missing chunk: " + chunkIndex);
                 }
@@ -182,6 +202,34 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         return written;
     }
 
+    private void validateExistingChunk(
+            Path target,
+            long expectedSize,
+            String expectedChecksum) throws IOException {
+        if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)
+                || Files.size(target) != expectedSize) {
+            throw ExceptionFactory.invalidParam(
+                    "Media chunk already exists with different content.");
+        }
+
+        MessageDigest digest = sha256();
+        try (InputStream input = Files.newInputStream(target)) {
+            byte[] buffer = new byte[COPY_BUFFER_SIZE];
+            int read;
+            while ((read = input.read(buffer)) >= 0) {
+                if (read > 0) {
+                    digest.update(buffer, 0, read);
+                }
+            }
+        }
+
+        String actualChecksum = HexFormat.of().formatHex(digest.digest());
+        if (!actualChecksum.equals(expectedChecksum)) {
+            throw ExceptionFactory.invalidParam(
+                    "Media chunk already exists with different content.");
+        }
+    }
+
     private Path resolveUploadDirectory(UUID uploadId) {
         if (uploadId == null) {
             throw ExceptionFactory.invalidParam("Media upload ID is required.");
@@ -227,11 +275,23 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             Files.move(
                     source,
                     target,
-                    StandardCopyOption.ATOMIC_MOVE,
-                    StandardCopyOption.REPLACE_EXISTING);
+                    StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException ex) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(source, target);
         }
+    }
+
+    private ReentrantLock resolveChunkLock(UUID uploadId, int chunkIndex) {
+        int hash = 31 * uploadId.hashCode() + chunkIndex;
+        return chunkLocks[Math.floorMod(hash, chunkLocks.length)];
+    }
+
+    private static ReentrantLock[] createChunkLocks() {
+        ReentrantLock[] locks = new ReentrantLock[CHUNK_LOCK_STRIPES];
+        for (int index = 0; index < locks.length; index++) {
+            locks[index] = new ReentrantLock();
+        }
+        return locks;
     }
 
     private void deleteRecursively(Path directory) throws IOException {

@@ -9,6 +9,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -68,6 +69,19 @@ public class WebExceptionHandler {
                 request,
                 ex.getError(),
                 ex.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ModelAndView handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex,
+            HttpServletRequest request) {
+        log.warn("Multipart upload size exceeded: {}", ex.getMessage());
+
+        return webErrorPageFactory.build(
+                HttpStatus.CONTENT_TOO_LARGE,
+                request,
+                "PAYLOAD_TOO_LARGE",
+                "Uploaded file exceeds the multipart limit. Use chunk upload for large media.");
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })

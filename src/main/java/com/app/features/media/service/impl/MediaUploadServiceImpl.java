@@ -4,6 +4,8 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -43,6 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MediaUploadServiceImpl implements MediaUploadService {
 
+    private static final List<MediaUploadStatus> ACTIVE_UPLOAD_STATUSES = List.of(
+            MediaUploadStatus.UPLOADING,
+            MediaUploadStatus.ASSEMBLING);
+    private static final int UPLOAD_LOCK_STRIPES = 256;
+
     private final MediaUploadSessionRepository mediaUploadSessionRepo;
     private final MediaRepository mediaRepo;
     private final UserBaseRepository userBaseRepo;
@@ -52,6 +59,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final ModelMapper mapper;
     private final AppProperties appProperties;
+    private final ReentrantReadWriteLock[] uploadLocks = createUploadLocks();
 
     @Transactional
     @Override
@@ -64,9 +72,10 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             throw ExceptionFactory.invalidParam("Media file exceeds the allowed size.");
         }
 
-        UserBaseEntity creator = userBaseRepo.findById(createdById)
+        UserBaseEntity creator = userBaseRepo.findOneById(createdById)
                 .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
         AppProperties.ChunkUpload config = appProperties.getMedia().getChunkUpload();
+        validateUploadQuota(createdById, payload.getFileSize(), config);
         long totalChunks = Math.ceilDiv(payload.getFileSize(), (long) config.getChunkSizeBytes());
         if (totalChunks > Integer.MAX_VALUE) {
             throw ExceptionFactory.invalidParam("Media upload contains too many chunks.");
@@ -89,12 +98,18 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     @Transactional(readOnly = true)
     @Override
     public MediaUploadSessionResult getUpload(UUID uploadId, UUID createdById) {
-        MediaUploadSessionEntity session = requireOwnedSession(uploadId, createdById);
-        validateNotExpired(session);
-        List<Integer> uploadedChunks = session.getStatus() == MediaUploadStatus.COMPLETED
-                ? List.of()
-                : mediaChunkStorage.findUploadedChunks(uploadId);
-        return toResult(session, uploadedChunks);
+        Lock uploadLock = resolveUploadLock(uploadId).readLock();
+        uploadLock.lock();
+        try {
+            MediaUploadSessionEntity session = requireOwnedSession(uploadId, createdById);
+            validateNotExpired(session);
+            List<Integer> uploadedChunks = session.getStatus() == MediaUploadStatus.COMPLETED
+                    ? List.of()
+                    : mediaChunkStorage.findUploadedChunks(uploadId);
+            return toResult(session, uploadedChunks);
+        } finally {
+            uploadLock.unlock();
+        }
     }
 
     @Override
@@ -105,57 +120,75 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             long contentLength,
             String checksum,
             InputStream inputStream) {
-        MediaUploadSessionEntity session = requireOwnedSession(uploadId, createdById);
-        validateUploading(session);
-        long expectedSize = expectedChunkSize(session, chunkIndex);
-        if (contentLength >= 0 && contentLength != expectedSize) {
-            throw ExceptionFactory.invalidParam("Media chunk content length is invalid.");
-        }
+        Lock uploadLock = resolveUploadLock(uploadId).readLock();
+        uploadLock.lock();
+        try {
+            MediaUploadSessionEntity session = requireOwnedSession(uploadId, createdById);
+            validateUploading(session);
+            long expectedSize = expectedChunkSize(session, chunkIndex);
+            if (contentLength >= 0 && contentLength != expectedSize) {
+                throw ExceptionFactory.invalidParam("Media chunk content length is invalid.");
+            }
 
-        mediaChunkStorage.storeChunk(
-                uploadId,
-                chunkIndex,
-                expectedSize,
-                checksum,
-                inputStream);
-        touchUpload(uploadId, createdById);
+            mediaChunkStorage.storeChunk(
+                    uploadId,
+                    chunkIndex,
+                    expectedSize,
+                    checksum,
+                    inputStream);
+            touchUpload(uploadId, createdById);
+        } finally {
+            uploadLock.unlock();
+        }
     }
 
     @Override
     public MediaResult completeUpload(UUID uploadId, UUID createdById) {
-        MediaUploadSessionEntity currentSession = requireOwnedSession(uploadId, createdById);
-        if (currentSession.getStatus() == MediaUploadStatus.COMPLETED) {
-            return completedMediaResult(currentSession);
-        }
-
-        MediaUploadAssemblyContext context = beginCompletion(uploadId, createdById);
-        if (context == null) {
-            return completedMediaResult(requireOwnedSession(uploadId, createdById));
-        }
-        StagedMediaFile stagedFile = null;
+        Lock uploadLock = resolveUploadLock(uploadId).writeLock();
+        uploadLock.lock();
         try {
-            stagedFile = mediaChunkStorage.assemble(
-                    context.getUploadId(),
-                    context.getOriginalName(),
-                    context.getExtension(),
-                    context.getFileSize(),
-                    context.getTotalChunks());
-            MediaResult result = finalizeCompletion(uploadId, createdById, stagedFile);
-            deleteUploadChunksSafely(uploadId);
-            return result;
-        } catch (RuntimeException ex) {
-            if (stagedFile != null) {
-                mediaFileStorage.discard(stagedFile);
+            MediaUploadSessionEntity currentSession = requireOwnedSession(uploadId, createdById);
+            if (currentSession.getStatus() == MediaUploadStatus.COMPLETED) {
+                return completedMediaResult(currentSession);
             }
-            resetCompletionSafely(uploadId, createdById);
-            throw ex;
+
+            MediaUploadAssemblyContext context = beginCompletion(uploadId, createdById);
+            if (context == null) {
+                return completedMediaResult(requireOwnedSession(uploadId, createdById));
+            }
+            StagedMediaFile stagedFile = null;
+            try {
+                stagedFile = mediaChunkStorage.assemble(
+                        context.getUploadId(),
+                        context.getOriginalName(),
+                        context.getExtension(),
+                        context.getFileSize(),
+                        context.getTotalChunks());
+                MediaResult result = finalizeCompletion(uploadId, createdById, stagedFile);
+                deleteUploadChunksSafely(uploadId);
+                return result;
+            } catch (RuntimeException ex) {
+                if (stagedFile != null) {
+                    mediaFileStorage.discard(stagedFile);
+                }
+                resetCompletionSafely(uploadId, createdById);
+                throw ex;
+            }
+        } finally {
+            uploadLock.unlock();
         }
     }
 
     @Override
     public void cancelUpload(UUID uploadId, UUID createdById) {
-        deleteSession(uploadId, createdById);
-        deleteUploadChunksSafely(uploadId);
+        Lock uploadLock = resolveUploadLock(uploadId).writeLock();
+        uploadLock.lock();
+        try {
+            deleteSession(uploadId, createdById);
+            deleteUploadChunksSafely(uploadId);
+        } finally {
+            uploadLock.unlock();
+        }
     }
 
     @Override
@@ -201,8 +234,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private void touchUpload(UUID uploadId, UUID createdById) {
         MediaUploadSessionEntity session = requireLockedSession(uploadId, createdById);
         validateUploading(session);
-        session.setExpiresAt(LocalDateTime.now().plus(
-                appProperties.getMedia().getChunkUpload().getSessionTtl()));
+        session.setExpiresAt(resolveActiveSessionExpiry(session));
     }
 
     @Transactional
@@ -217,8 +249,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         }
 
         session.setStatus(MediaUploadStatus.ASSEMBLING);
-        session.setExpiresAt(LocalDateTime.now().plus(
-                appProperties.getMedia().getChunkUpload().getSessionTtl()));
+        session.setExpiresAt(resolveActiveSessionExpiry(session));
         return new MediaUploadAssemblyContext(
                 session.getId(),
                 session.getOriginalName(),
@@ -253,8 +284,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         MediaUploadSessionEntity session = requireLockedSession(uploadId, createdById);
         if (session.getStatus() == MediaUploadStatus.ASSEMBLING) {
             session.setStatus(MediaUploadStatus.UPLOADING);
-            session.setExpiresAt(LocalDateTime.now().plus(
-                    appProperties.getMedia().getChunkUpload().getSessionTtl()));
+            session.setExpiresAt(resolveActiveSessionExpiry(session));
         }
     }
 
@@ -269,16 +299,22 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     @Transactional
     private boolean cleanupExpiredUpload(UUID uploadId, LocalDateTime cutoff) {
-        MediaUploadSessionEntity session = mediaUploadSessionRepo
-                .findOneById(uploadId)
-                .orElse(null);
-        if (session == null || !session.getExpiresAt().isBefore(cutoff)) {
-            return false;
-        }
+        Lock uploadLock = resolveUploadLock(uploadId).writeLock();
+        uploadLock.lock();
+        try {
+            MediaUploadSessionEntity session = mediaUploadSessionRepo
+                    .findOneById(uploadId)
+                    .orElse(null);
+            if (session == null || !session.getExpiresAt().isBefore(cutoff)) {
+                return false;
+            }
 
-        mediaChunkStorage.deleteUpload(uploadId);
-        mediaUploadSessionRepo.delete(session);
-        return true;
+            mediaChunkStorage.deleteUpload(uploadId);
+            mediaUploadSessionRepo.delete(session);
+            return true;
+        } finally {
+            uploadLock.unlock();
+        }
     }
 
     private MediaUploadSessionEntity requireOwnedSession(UUID uploadId, UUID createdById) {
@@ -303,6 +339,55 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 && session.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw ExceptionFactory.invalidParam("Media upload session has expired.");
         }
+    }
+
+    private void validateUploadQuota(
+            UUID createdById,
+            long requestedFileSize,
+            AppProperties.ChunkUpload config) {
+        long activeSessions = mediaUploadSessionRepo
+                .countByCreatedBy_IdAndStatusIn(
+                        createdById,
+                        ACTIVE_UPLOAD_STATUSES);
+        if (activeSessions >= config.getMaxActiveSessionsPerUser()) {
+            throw ExceptionFactory.invalidParam(
+                    "Active media upload session limit exceeded.");
+        }
+
+        long reservedBytes = mediaUploadSessionRepo
+                .sumFileSizeByCreatedByIdAndStatuses(
+                        createdById,
+                        ACTIVE_UPLOAD_STATUSES);
+        long availableBytes = config.getMaxReservedBytesPerUser() - reservedBytes;
+        if (requestedFileSize > availableBytes) {
+            throw ExceptionFactory.invalidParam(
+                    "Reserved media upload size limit exceeded.");
+        }
+    }
+
+    private LocalDateTime resolveActiveSessionExpiry(
+            MediaUploadSessionEntity session) {
+        AppProperties.ChunkUpload config = appProperties.getMedia().getChunkUpload();
+        LocalDateTime idleExpiry = LocalDateTime.now().plus(config.getSessionTtl());
+        LocalDateTime absoluteExpiry = session.getCreatedAt()
+                .plus(config.getMaxSessionLifetime());
+
+        return idleExpiry.isBefore(absoluteExpiry)
+                ? idleExpiry
+                : absoluteExpiry;
+    }
+
+    private ReentrantReadWriteLock resolveUploadLock(UUID uploadId) {
+        return uploadLocks[Math.floorMod(uploadId.hashCode(), uploadLocks.length)];
+    }
+
+    private static ReentrantReadWriteLock[] createUploadLocks() {
+        ReentrantReadWriteLock[] locks =
+                new ReentrantReadWriteLock[UPLOAD_LOCK_STRIPES];
+        for (int index = 0; index < locks.length; index++) {
+            locks[index] = new ReentrantReadWriteLock();
+        }
+        return locks;
     }
 
     private long expectedChunkSize(MediaUploadSessionEntity session, int chunkIndex) {

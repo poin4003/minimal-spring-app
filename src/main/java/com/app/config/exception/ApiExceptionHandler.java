@@ -17,6 +17,7 @@ import org.springframework.web.bind.MissingPathVariableException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -58,6 +59,17 @@ public class ApiExceptionHandler {
                 .body(ApiResult.error(
                         "PERMISSION_ERROR",
                         "You are not authorized to perform this action."));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResult<Void>> handleMaxUploadSizeExceededException(
+            MaxUploadSizeExceededException ex) {
+        log.warn("Multipart upload size exceeded: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body(ApiResult.error(
+                        "PAYLOAD_TOO_LARGE",
+                        "Uploaded file exceeds the multipart limit. Use chunk upload for large media."));
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })

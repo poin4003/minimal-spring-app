@@ -87,6 +87,11 @@ Allowed transitions:
 ## Media Upload
 - Each media file is uploaded separately; small files use direct multipart upload and large files use resumable chunk upload according to the configured threshold.
 - Chunk upload sessions are owned and validated by the authenticated user, and every chunk must pass the backend checksum and size checks.
+- Direct multipart uploads must be rejected above the configured direct-upload threshold at both the servlet and service boundaries.
+- Active chunk sessions are limited by both session count and reserved bytes per user; quota checks must lock the user row so concurrent starts cannot bypass the limits.
+- An uploaded chunk is immutable: retrying the same index and checksum is idempotent, while attempting to replace it with different content is rejected.
+- Concurrent chunk writes may share an upload session, but completion, cancellation, and cleanup must run exclusively for that session.
+- Upload session expiry uses both a sliding idle TTL and an absolute lifetime derived from `createdAt`.
 - The browser may store only the upload session ID keyed by file name, size, and last-modified timestamp in `localStorage`; it must never persist the file or authentication token.
 - Resuming after a page reload requires the user to select the same local file again, after which only missing chunks are uploaded.
 - Post creation uses a JSON payload containing previously uploaded media IDs.

@@ -38,7 +38,10 @@ app:
             chunk-size-bytes: ${MEDIA_CHUNK_SIZE_BYTES:8388608}
             direct-upload-threshold-bytes: ${MEDIA_DIRECT_UPLOAD_THRESHOLD_BYTES:16777216}
             parallel-chunks: ${MEDIA_PARALLEL_CHUNKS:3}
+            max-active-sessions-per-user: ${MEDIA_MAX_ACTIVE_UPLOAD_SESSIONS_PER_USER:5}
+            max-reserved-bytes-per-user: ${MEDIA_MAX_RESERVED_UPLOAD_BYTES_PER_USER:2147483648}
             session-ttl: ${MEDIA_UPLOAD_SESSION_TTL:24h}
+            max-session-lifetime: ${MEDIA_UPLOAD_MAX_SESSION_LIFETIME:72h}
             completed-session-retention: ${MEDIA_COMPLETED_SESSION_RETENTION:24h}
         hls:
             audio-bitrate: ${MEDIA_HLS_AUDIO_BITRATE:192000}
@@ -174,8 +177,8 @@ spring:
 
     servlet:
         multipart:
-            max-file-size: ${MULTIPART_MAX_FILE_SIZE:1GB}
-            max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:1100MB}
+            max-file-size: ${MULTIPART_MAX_FILE_SIZE:16MB}
+            max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:20MB}
 
     jackson:
         serialization:

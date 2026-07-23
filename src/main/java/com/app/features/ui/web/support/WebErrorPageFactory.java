@@ -58,6 +58,7 @@ public class WebErrorPageFactory {
         return switch (status) {
             case FORBIDDEN -> "Forbidden";
             case NOT_FOUND -> "Not Found";
+            case CONTENT_TOO_LARGE -> "Content Too Large";
             default -> "System Error";
         };
     }

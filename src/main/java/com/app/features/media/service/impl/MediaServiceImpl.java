@@ -82,6 +82,12 @@ public class MediaServiceImpl implements MediaService {
         }
 
         MultipartFile upload = payload.getFile();
+        if (upload.getSize() > appProperties.getMedia()
+                .getChunkUpload()
+                .getDirectUploadThresholdBytes()) {
+            throw ExceptionFactory.invalidParam(
+                    "Media file exceeds the direct upload limit. Use chunk upload.");
+        }
         AllowedMediaType policy = mediaTypePolicyResolver.resolve(upload.getOriginalFilename());
         StagedMediaFile stagedFile = mediaFileStorage.stage(upload, policy);
         return createStagedMedia(createdById, stagedFile, policy);

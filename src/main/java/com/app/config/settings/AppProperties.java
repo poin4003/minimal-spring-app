@@ -155,15 +155,27 @@ public class AppProperties {
         @Positive
         private int parallelChunks = 3;
 
+        @Positive
+        private int maxActiveSessionsPerUser = 5;
+
+        @Positive
+        private long maxReservedBytesPerUser = 2L * 1024 * 1024 * 1024;
+
         @NotNull
         private Duration sessionTtl = Duration.ofHours(24);
 
         @NotNull
+        private Duration maxSessionLifetime = Duration.ofHours(72);
+
+        @NotNull
         private Duration completedSessionRetention = Duration.ofHours(24);
 
-        @AssertTrue(message = "Chunk upload retention values must be positive.")
+        @AssertTrue(message = "Chunk upload retention values are invalid.")
         public boolean isRetentionConfigurationValid() {
-            return isPositive(sessionTtl) && isPositive(completedSessionRetention);
+            return isPositive(sessionTtl)
+                    && isPositive(maxSessionLifetime)
+                    && isPositive(completedSessionRetention)
+                    && maxSessionLifetime.compareTo(sessionTtl) >= 0;
         }
 
         private boolean isPositive(Duration value) {
