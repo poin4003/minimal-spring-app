@@ -1,10 +1,10 @@
 export class MediaDirectUploader {
     constructor({
         uploadUrl,
-        headers = {}
+        requestHeadersProvider = null
     }) {
         this.uploadUrl = uploadUrl;
-        this.headers = headers;
+        this.requestHeadersProvider = requestHeadersProvider;
     }
 
     upload(file, {
@@ -17,7 +17,8 @@ export class MediaDirectUploader {
         const result = new Promise((resolve, reject) => {
             xhr.open("POST", this.uploadUrl);
             xhr.withCredentials = true;
-            Object.entries(this.headers).forEach(([name, value]) => {
+            const requestHeaders = this.requestHeadersProvider?.() || {};
+            Object.entries(requestHeaders).forEach(([name, value]) => {
                 if (name && value) {
                     xhr.setRequestHeader(name, value);
                 }

@@ -4,6 +4,8 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
 (function () {
     "use strict";
 
+    const CSRF_COOKIE_NAME = "XSRF-TOKEN";
+
     const STATUS = Object.freeze({
         QUEUED: "QUEUED",
         UPLOADING: "UPLOADING",
@@ -124,7 +126,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         createDirectUploader() {
             return new MediaDirectUploader({
                 uploadUrl: this.form.action,
-                headers: this.requestHeaders("text/html")
+                requestHeadersProvider: () => this.requestHeaders("text/html")
             });
         }
 
@@ -142,11 +144,23 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                 "HX-Request": "true"
             };
             const csrfHeader = this.form.dataset.csrfHeader;
-            const csrfToken = this.form.dataset.csrfToken;
+            const csrfToken = this.readCookie(CSRF_COOKIE_NAME)
+                    || this.form.dataset.csrfToken;
             if (csrfHeader && csrfToken) {
                 headers[csrfHeader] = csrfToken;
             }
             return headers;
+        }
+
+        readCookie(name) {
+            const prefix = `${encodeURIComponent(name)}=`;
+            const cookie = document.cookie
+                .split("; ")
+                .find(value => value.startsWith(prefix));
+
+            return cookie == null
+                ? null
+                : decodeURIComponent(cookie.slice(prefix.length));
         }
 
         bindEvents() {
@@ -398,13 +412,14 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                     return;
                 }
 
-                this.showServerResult(item, response.html);
                 if (response.ok) {
+                    this.showServerResult(item, response.html);
                     this.setProgress(item, 100);
                     this.setStatus(item, STATUS.SUCCESS);
                     this.dispatchUploaded(item);
                 } else {
                     this.setStatus(item, STATUS.FAILED);
+                    this.showRequestFailure(item, response);
                 }
             } catch (error) {
                 if (error.name === "AbortError" || item.cancelRequested) {
@@ -520,6 +535,24 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             const result = item.element.querySelector("[data-upload-result]");
             result.innerHTML = html;
             result.hidden = false;
+        }
+
+        showRequestFailure(item, response) {
+            const template = document.createElement("template");
+            template.innerHTML = response.html.trim();
+            const serverAlert = template.content.querySelector("[data-ui-error-alert]");
+
+            if (serverAlert != null) {
+                const result = item.element.querySelector("[data-upload-result]");
+                result.replaceChildren(serverAlert);
+                result.hidden = false;
+                return;
+            }
+
+            const message = response.status === 403
+                ? "Upload authorization expired. Please reload the page and try again."
+                : "Media upload failed.";
+            this.showLocalError(item, message);
         }
 
         showLocalError(item, message) {

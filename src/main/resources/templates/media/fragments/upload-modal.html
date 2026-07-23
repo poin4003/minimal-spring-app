@@ -11,6 +11,7 @@
         <form class="modal-content"
               enctype="multipart/form-data"
               data-media-upload-form
+              data-app-loader="manual"
               th:action="${upload.transport.directUploadPath}"
               th:data-chunk-upload-path="${upload.transport.chunkUploadPath}"
               th:data-direct-upload-threshold="${upload.transport.directUploadThresholdBytes}"

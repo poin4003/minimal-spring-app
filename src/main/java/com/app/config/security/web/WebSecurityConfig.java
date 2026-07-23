@@ -39,6 +39,7 @@ public class WebSecurityConfig {
         http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new CookieCsrfTokenRequestHandler())
                         .ignoringRequestMatchers(csrfIgnorePaths))
                 .cors(Customizer.withDefaults())
                 .formLogin(form -> form.disable())

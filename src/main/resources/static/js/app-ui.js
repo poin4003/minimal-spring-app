@@ -49,7 +49,15 @@
                 });
             });
 
-        document.addEventListener("submit", showLoader);
+        document.addEventListener("submit", function (event) {
+            const form = event.target;
+            if (event.defaultPrevented
+                    || form.matches("[data-app-loader='manual']")) {
+                return;
+            }
+
+            showLoader();
+        });
 
         document.addEventListener("click", function (event) {
             const link = event.target.closest("a[href]");
