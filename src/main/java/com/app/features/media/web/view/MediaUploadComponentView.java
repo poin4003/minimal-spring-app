@@ -16,7 +16,7 @@ public class MediaUploadComponentView {
     private final String title;
     private final String description;
     private final String submitLabel;
-    private final String uploadPath;
+    private final MediaUploadTransportView transport;
     private final String accept;
     private final boolean multiple;
     private final List<MediaUploadRuleView> rules;

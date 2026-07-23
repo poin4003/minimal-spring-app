@@ -7,7 +7,9 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -43,6 +45,19 @@ public class ApiExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResult.error("INVALID_CREDENTIALS", "Incorrect email or password!"));
+    }
+
+    @ExceptionHandler({
+            AuthorizationDeniedException.class,
+            AccessDeniedException.class
+    })
+    public ResponseEntity<ApiResult<Void>> handleAccessDeniedException(Exception ex) {
+        log.warn("[Security] Access Denied: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResult.error(
+                        "PERMISSION_ERROR",
+                        "You are not authorized to perform this action."));
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })

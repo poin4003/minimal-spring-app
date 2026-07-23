@@ -11,6 +11,7 @@ import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.web.view.MediaUploadComponentView;
 import com.app.features.media.web.view.MediaUploadRuleView;
+import com.app.features.media.web.view.MediaUploadTransportView;
 
 import lombok.RequiredArgsConstructor;
 
@@ -69,6 +70,14 @@ public class MediaUploadComponentFactory {
         String accept = rules.stream()
                 .map(rule -> "." + rule.getExtension())
                 .collect(Collectors.joining(","));
+        String uploadBasePath = appProperties.getUi().getHomePath() + "/media/uploads";
+        AppProperties.ChunkUpload chunkUpload = appProperties.getMedia().getChunkUpload();
+        MediaUploadTransportView transport = MediaUploadTransportView.builder()
+                .directUploadPath(uploadBasePath + "/direct")
+                .chunkUploadPath(uploadBasePath + "/chunks")
+                .directUploadThresholdBytes(chunkUpload.getDirectUploadThresholdBytes())
+                .parallelChunks(chunkUpload.getParallelChunks())
+                .build();
 
         return MediaUploadComponentView.builder()
                 .id(id)
@@ -76,7 +85,7 @@ public class MediaUploadComponentFactory {
                 .title(title)
                 .description(description)
                 .submitLabel(submitLabel)
-                .uploadPath(appProperties.getUi().getHomePath() + "/media/uploads/direct")
+                .transport(transport)
                 .accept(accept)
                 .multiple(multiple)
                 .rules(rules)

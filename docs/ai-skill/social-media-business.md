@@ -85,7 +85,10 @@ Allowed transitions:
 - Original files are retained after thumbnail and HLS processing for future moderation, inspection, and reprocessing flows.
 
 ## Media Upload
-- Each media file is uploaded separately through a multipart API.
+- Each media file is uploaded separately; small files use direct multipart upload and large files use resumable chunk upload according to the configured threshold.
+- Chunk upload sessions are owned and validated by the authenticated user, and every chunk must pass the backend checksum and size checks.
+- The browser may store only the upload session ID keyed by file name, size, and last-modified timestamp in `localStorage`; it must never persist the file or authentication token.
+- Resuming after a page reload requires the user to select the same local file again, after which only missing chunks are uploaded.
 - Post creation uses a JSON payload containing previously uploaded media IDs.
 - A media can be attached only after its processing status is `READY`.
 - If post persistence fails after files are written, newly written files must be removed.

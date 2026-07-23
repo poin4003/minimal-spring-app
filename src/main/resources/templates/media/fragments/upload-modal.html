@@ -11,7 +11,10 @@
         <form class="modal-content"
               enctype="multipart/form-data"
               data-media-upload-form
-              th:action="${upload.uploadPath}"
+              th:action="${upload.transport.directUploadPath}"
+              th:data-chunk-upload-path="${upload.transport.chunkUploadPath}"
+              th:data-direct-upload-threshold="${upload.transport.directUploadThresholdBytes}"
+              th:data-parallel-chunks="${upload.transport.parallelChunks}"
               th:data-csrf-header="${_csrf.headerName}"
               th:data-csrf-token="${_csrf.token}">
             <div class="modal-header">
@@ -37,7 +40,7 @@
                        th:for="${upload.id + '-file'}">
                     <span class="d-block fw-semibold">Drop files here or browse</span>
                     <span class="d-block text-secondary small mt-1">
-                        Each file is uploaded in a separate request.
+                        Large files use resumable chunk upload automatically.
                     </span>
                 </label>
 

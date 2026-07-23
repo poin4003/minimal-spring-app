@@ -36,6 +36,8 @@ app:
             audio-cover-enabled: ${MEDIA_THUMBNAIL_AUDIO_COVER_ENABLED:true}
         chunk-upload:
             chunk-size-bytes: ${MEDIA_CHUNK_SIZE_BYTES:8388608}
+            direct-upload-threshold-bytes: ${MEDIA_DIRECT_UPLOAD_THRESHOLD_BYTES:16777216}
+            parallel-chunks: ${MEDIA_PARALLEL_CHUNKS:3}
             session-ttl: ${MEDIA_UPLOAD_SESSION_TTL:24h}
             completed-session-retention: ${MEDIA_COMPLETED_SESSION_RETENTION:24h}
         hls:

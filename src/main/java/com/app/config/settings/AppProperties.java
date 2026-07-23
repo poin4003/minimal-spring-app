@@ -149,6 +149,12 @@ public class AppProperties {
         @Positive
         private int chunkSizeBytes = 8 * 1024 * 1024;
 
+        @Positive
+        private long directUploadThresholdBytes = 16L * 1024 * 1024;
+
+        @Positive
+        private int parallelChunks = 3;
+
         @NotNull
         private Duration sessionTtl = Duration.ofHours(24);
 

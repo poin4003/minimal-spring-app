@@ -1,28 +1,52 @@
+export class MediaChunkUploadError extends Error {
+    constructor(message, {
+        status = 0,
+        error = null
+    } = {}) {
+        super(message);
+        this.name = "MediaChunkUploadError";
+        this.status = status;
+        this.error = error;
+    }
+}
+
 export class MediaChunkUploader {
     constructor({
         baseUrl = "/api/v1/media/uploads",
         concurrency = 3,
-        accessTokenProvider = null
+        accessTokenProvider = null,
+        requestHeadersProvider = null
     } = {}) {
         this.baseUrl = baseUrl;
         this.concurrency = Math.max(1, concurrency);
         this.accessTokenProvider = accessTokenProvider;
+        this.requestHeadersProvider = requestHeadersProvider;
     }
 
     async upload(file, {
         uploadId = null,
+        onSession = null,
         onProgress = null,
         signal = null
     } = {}) {
-        const session = uploadId
-            ? await this.getUpload(uploadId, signal)
-            : await this.startUpload(file, signal);
+        const session = await this.resolveSession(file, uploadId, signal);
+        onSession?.(session);
 
         if (session.status === "COMPLETED") {
+            this.reportProgress(onProgress, file.size, file.size);
             return session.completedMedia;
         }
+        if (session.status !== "UPLOADING") {
+            throw new MediaChunkUploadError(
+                "The upload session cannot be resumed in its current state.",
+                { error: "UPLOAD_SESSION_NOT_RESUMABLE" }
+            );
+        }
         if (session.originalName !== file.name || session.fileSize !== file.size) {
-            throw new Error("The selected file does not match the upload session.");
+            throw new MediaChunkUploadError(
+                "The selected file does not match the saved upload session.",
+                { error: "UPLOAD_FILE_MISMATCH" }
+            );
         }
 
         const uploaded = new Set(session.uploadedChunks);
@@ -35,6 +59,8 @@ export class MediaChunkUploader {
             (total, index) => total + this.chunkSize(file, session, index),
             0
         );
+
+        this.reportProgress(onProgress, uploadedBytes, file.size);
 
         const worker = async () => {
             while (cursor < pending.length) {
@@ -60,11 +86,7 @@ export class MediaChunkUploader {
                 );
 
                 uploadedBytes += chunk.size;
-                onProgress?.({
-                    uploadedBytes,
-                    totalBytes: file.size,
-                    percent: Math.round((uploadedBytes / file.size) * 100)
-                });
+                this.reportProgress(onProgress, uploadedBytes, file.size);
             }
         };
 
@@ -78,6 +100,24 @@ export class MediaChunkUploader {
             method: "POST",
             signal
         });
+    }
+
+    async resolveSession(file, uploadId, signal) {
+        if (uploadId == null) {
+            return this.startUpload(file, signal);
+        }
+
+        try {
+            return await this.getUpload(uploadId, signal);
+        } catch (error) {
+            if (!(error instanceof MediaChunkUploadError)
+                    || error.error !== "RESOURCE_NOT_FOUND"
+                    && error.error !== "INVALID_PARAM") {
+                throw error;
+            }
+
+            return this.startUpload(file, signal);
+        }
     }
 
     startUpload(file, signal = null) {
@@ -108,6 +148,16 @@ export class MediaChunkUploader {
         return Math.min(session.chunkSize, file.size - start);
     }
 
+    reportProgress(callback, uploadedBytes, totalBytes) {
+        callback?.({
+            uploadedBytes,
+            totalBytes,
+            percent: totalBytes === 0
+                ? 0
+                : Math.round((uploadedBytes / totalBytes) * 100)
+        });
+    }
+
     async sha256(blob) {
         const bytes = await blob.arrayBuffer();
         const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -120,17 +170,41 @@ export class MediaChunkUploader {
         const token = this.accessTokenProvider
             ? await this.accessTokenProvider()
             : null;
+        const requestHeaders = this.requestHeadersProvider
+            ? await this.requestHeadersProvider()
+            : {};
         const response = await fetch(url, {
             credentials: "include",
             ...options,
             headers: {
+                ...requestHeaders,
                 ...(options.headers || {}),
                 ...(token ? { Authorization: `Bearer ${token}` } : {})
             }
         });
-        const payload = await response.json();
-        if (!response.ok || !payload.success) {
-            throw new Error(payload.message || "Media upload request failed.");
+
+        const redirectPath = response.headers.get("HX-Redirect");
+        if (redirectPath) {
+            window.location.assign(redirectPath);
+            throw new MediaChunkUploadError("Authentication is required.", {
+                status: response.status,
+                error: "AUTHENTICATION_REQUIRED"
+            });
+        }
+
+        const contentType = response.headers.get("Content-Type") || "";
+        const payload = contentType.includes("application/json")
+            ? await response.json()
+            : null;
+
+        if (!response.ok || payload?.success !== true) {
+            throw new MediaChunkUploadError(
+                payload?.message || "Media upload request failed.",
+                {
+                    status: response.status,
+                    error: payload?.error || null
+                }
+            );
         }
         return payload.result;
     }
