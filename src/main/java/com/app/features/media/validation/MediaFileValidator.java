@@ -11,11 +11,13 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
 import org.apache.tika.Tika;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
-import com.app.core.exception.ExceptionFactory;
+import com.app.core.exception.MyException;
+import com.app.features.media.exception.InvalidMediaContentException;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
@@ -54,19 +56,21 @@ public class MediaFileValidator {
         try {
             return tika.detect(file);
         } catch (IOException ex) {
-            throw ExceptionFactory.invalidParam("Unable to detect media content type.");
+            throw new InvalidMediaContentException(
+                    "Unable to detect media content type.");
         }
     }
 
     private void validateImage(Path file) {
         try (ImageInputStream input = ImageIO.createImageInputStream(file.toFile())) {
             if (input == null) {
-                throw ExceptionFactory.invalidParam("Invalid image file.");
+                throw new InvalidMediaContentException("Invalid image file.");
             }
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
-                throw ExceptionFactory.invalidParam("Unsupported image content.");
+                throw new InvalidMediaContentException(
+                        "Unsupported image content.");
             }
 
             ImageReader reader = readers.next();
@@ -76,25 +80,36 @@ public class MediaFileValidator {
                         (long) reader.getWidth(0),
                         reader.getHeight(0));
                 if (pixels > appProperties.getMedia().getMaxImagePixels()) {
-                    throw ExceptionFactory.invalidParam("Image dimensions exceed the allowed pixel count.");
+                    throw new InvalidMediaContentException(
+                            "Image dimensions exceed the allowed pixel count.");
                 }
 
                 BufferedImage decodedImage = reader.read(0);
                 if (decodedImage == null) {
-                    throw ExceptionFactory.invalidParam("Invalid image content.");
+                    throw new InvalidMediaContentException(
+                            "Invalid image content.");
                 }
             } finally {
                 reader.dispose();
             }
         } catch (ArithmeticException ex) {
-            throw ExceptionFactory.invalidParam("Image dimensions are invalid.");
+            throw new InvalidMediaContentException(
+                    "Image dimensions are invalid.");
         } catch (IOException ex) {
-            throw ExceptionFactory.invalidParam("Invalid image content.");
+            throw new InvalidMediaContentException("Invalid image content.");
         }
     }
 
     private void validateAudioVideo(Path file, StreamType requiredStreamType) {
-        FFprobeResult result = mediaProbe.probe(file);
+        FFprobeResult result;
+        try {
+            result = mediaProbe.probe(file);
+        } catch (MyException ex) {
+            if (ex.getHttpStatusCode() >= HttpStatus.INTERNAL_SERVER_ERROR.value()) {
+                throw ex;
+            }
+            throw new InvalidMediaContentException(ex.getMessage());
+        }
         List<Stream> streams = result.getStreams() == null
                 ? List.of()
                 : result.getStreams();
@@ -102,7 +117,7 @@ public class MediaFileValidator {
                 .anyMatch(stream -> requiredStreamType.equals(stream.getCodecType()));
 
         if (!requiredStreamPresent || resolveDuration(result, streams) <= 0) {
-            throw ExceptionFactory.invalidParam(
+            throw new InvalidMediaContentException(
                     requiredStreamType == StreamType.VIDEO
                             ? "Invalid video content."
                             : "Invalid audio content.");

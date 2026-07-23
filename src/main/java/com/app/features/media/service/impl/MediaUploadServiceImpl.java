@@ -21,6 +21,7 @@ import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.entity.MediaUploadSessionEntity;
 import com.app.features.media.entity.MediaUploadSessionEntity_;
 import com.app.features.media.enums.MediaUploadStatus;
+import com.app.features.media.exception.InvalidMediaContentException;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaUploadSessionRepository;
 import com.app.features.media.schema.model.MediaUploadAssemblyContext;
@@ -126,7 +127,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             MediaUploadSessionEntity session = requireOwnedSession(uploadId, createdById);
             validateUploading(session);
             long expectedSize = expectedChunkSize(session, chunkIndex);
-            if (contentLength >= 0 && contentLength != expectedSize) {
+            if (contentLength != expectedSize) {
                 throw ExceptionFactory.invalidParam("Media chunk content length is invalid.");
             }
 
@@ -167,6 +168,12 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 MediaResult result = finalizeCompletion(uploadId, createdById, stagedFile);
                 deleteUploadChunksSafely(uploadId);
                 return result;
+            } catch (InvalidMediaContentException ex) {
+                if (stagedFile != null) {
+                    mediaFileStorage.discard(stagedFile);
+                }
+                closeInvalidUploadSafely(uploadId, createdById);
+                throw ex;
             } catch (RuntimeException ex) {
                 if (stagedFile != null) {
                     mediaFileStorage.discard(stagedFile);
@@ -433,5 +440,14 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         } catch (RuntimeException ex) {
             log.error("Failed to reset media upload session [{}].", uploadId, ex);
         }
+    }
+
+    private void closeInvalidUploadSafely(UUID uploadId, UUID createdById) {
+        try {
+            deleteSession(uploadId, createdById);
+        } catch (RuntimeException ex) {
+            log.error("Failed to close invalid media upload session [{}].", uploadId, ex);
+        }
+        deleteUploadChunksSafely(uploadId);
     }
 }

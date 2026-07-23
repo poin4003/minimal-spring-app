@@ -3,6 +3,7 @@ package com.app.features.media.web.transport;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
@@ -69,6 +70,7 @@ public class MediaUploadTransportController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId,
             @PathVariable int chunkIndex,
+            @RequestHeader(HttpHeaders.CONTENT_LENGTH) long contentLength,
             @RequestHeader("X-Chunk-SHA256") String checksum,
             HttpServletRequest request) {
         try {
@@ -76,7 +78,7 @@ public class MediaUploadTransportController {
                     uploadId,
                     currentUser.getUserId(),
                     chunkIndex,
-                    request.getContentLengthLong(),
+                    contentLength,
                     checksum,
                     request.getInputStream());
         } catch (IOException ex) {

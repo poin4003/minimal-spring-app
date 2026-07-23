@@ -90,8 +90,10 @@ Allowed transitions:
 - Direct multipart uploads must be rejected above the configured direct-upload threshold at both the servlet and service boundaries.
 - Active chunk sessions are limited by both session count and reserved bytes per user; quota checks must lock the user row so concurrent starts cannot bypass the limits.
 - An uploaded chunk is immutable: retrying the same index and checksum is idempotent, while attempting to replace it with different content is rejected.
+- Every chunk request must declare the exact `Content-Length`; requests with an unknown or mismatched length are rejected before writing.
 - Concurrent chunk writes may share an upload session, but completion, cancellation, and cleanup must run exclusively for that session.
 - Upload session expiry uses both a sliding idle TTL and an absolute lifetime derived from `createdAt`.
+- Deterministically invalid assembled content closes the upload session and deletes its chunks; only infrastructure failures may reset the session for retry.
 - The browser may store only the upload session ID keyed by file name, size, and last-modified timestamp in `localStorage`; it must never persist the file or authentication token.
 - Resuming after a page reload requires the user to select the same local file again, after which only missing chunks are uploaded.
 - Post creation uses a JSON payload containing previously uploaded media IDs.

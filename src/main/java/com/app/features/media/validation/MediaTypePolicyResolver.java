@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.ExceptionFactory;
+import com.app.features.media.exception.InvalidMediaContentException;
 import com.app.features.media.storage.MediaFilenameSupport;
 
 import jakarta.annotation.PostConstruct;
@@ -53,7 +54,7 @@ public class MediaTypePolicyResolver {
                 .anyMatch(contentType -> contentType.equals(normalizedContentType));
 
         if (!allowed) {
-            throw ExceptionFactory.invalidParam(
+            throw new InvalidMediaContentException(
                     "Detected media type does not match the file extension.");
         }
 
@@ -62,7 +63,8 @@ public class MediaTypePolicyResolver {
 
     private String normalizeContentType(String contentType) {
         if (contentType == null || contentType.isBlank()) {
-            throw ExceptionFactory.invalidParam("Unable to detect media content type.");
+            throw new InvalidMediaContentException(
+                    "Unable to detect media content type.");
         }
 
         int parameterIndex = contentType.indexOf(';');
