@@ -115,6 +115,12 @@
 - If implementation reveals a substantial source, schema, architecture, or infrastructure change outside the explicit prompt scope, the AI must pause and ask the user before proposing or applying that additional direction.
 - Do not silently bundle large out-of-scope refactors or redesigns into an approved change. Small compile-safe adjustments that do not alter the agreed behavior remain allowed.
 
+## Verification Scope Rule
+- For normal code changes, verify correctness with source review, focused compilation, static syntax checks, and diff inspection.
+- Do not start the full application, dependent services, dashboards, or background workers only to perform verification unless the user explicitly requests runtime testing.
+- Do not create additional automated tests only for verification unless the user explicitly requests tests.
+- Keep verification proportional to the requested change and avoid leaving temporary processes, files, ports, or test data behind.
+
 ## Web API Integration Rule
 - When browser JavaScript or a web frontend calls a backend API, treat the API integration as part of the complete web flow instead of implementing only the visual or client-side action.
 - Explicitly handle the endpoint contract, authentication mechanism, authorization behavior, CORS or CSRF requirements, structured `ApiResult` responses, and API error handling relevant to that call.

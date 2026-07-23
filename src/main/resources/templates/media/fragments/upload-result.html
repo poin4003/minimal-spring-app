@@ -3,7 +3,12 @@
 <body>
 <div th:fragment="result(result)"
      class="alert alert-success mb-0"
-     role="status">
+     role="status"
+     data-media-upload-result
+     th:data-media-id="${result.media.id}"
+     th:data-original-name="${result.media.originalName}"
+     th:data-processing-status="${result.media.processingStatus}"
+     th:data-thumbnail-url="${result.media.thumbnailUrl}">
     <div class="fw-semibold" th:text="${result.message}">
         Media uploaded successfully.
     </div>

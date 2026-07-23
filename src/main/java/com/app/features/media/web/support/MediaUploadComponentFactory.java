@@ -38,9 +38,10 @@ public class MediaUploadComponentFactory {
         return MediaUploadComponentView.builder()
                 .id("media-library-upload")
                 .title("Upload Media")
-                .description("Select a file to add to the media library.")
+                .description("Select files to add to the media library.")
                 .uploadPath(appProperties.getUi().getHomePath() + "/media/uploads/direct")
                 .accept(accept)
+                .multiple(true)
                 .rules(rules)
                 .build();
     }

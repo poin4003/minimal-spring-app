@@ -35,6 +35,7 @@ import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.web.enums.MediaPreviewType;
+import com.app.features.media.web.support.MediaUploadComponentFactory;
 import com.app.features.media.web.view.MediaGalleryItemView;
 import com.app.features.media.web.view.MediaGalleryView;
 import com.app.features.media.web.view.MediaListPageView;
@@ -76,6 +77,7 @@ public class MediaPageController {
     private final MenuService menuSvc;
     private final MediaService mediaSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
+    private final MediaUploadComponentFactory mediaUploadComponentFactory;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -211,6 +213,7 @@ public class MediaPageController {
                 .kinds(Arrays.asList(MediaKind.values()))
                 .processingStatuses(Arrays.asList(MediaProcessingStatus.values()))
                 .statuses(Arrays.asList(RecordStatus.values()))
+                .uploadComponent(mediaUploadComponentFactory.buildLibraryUpload())
                 .mediaGallery(mediaGallery)
                 .previewModal(previewModal)
                 .metadataModal(metadataModal)

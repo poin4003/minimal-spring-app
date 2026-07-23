@@ -29,6 +29,7 @@ public class MediaListPageView {
     private final List<MediaKind> kinds;
     private final List<MediaProcessingStatus> processingStatuses;
     private final List<RecordStatus> statuses;
+    private final MediaUploadComponentView uploadComponent;
     private final MediaGalleryView mediaGallery;
     private final MediaPreviewModalView previewModal;
     private final UiMetadataModalView metadataModal;

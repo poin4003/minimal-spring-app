@@ -12,6 +12,7 @@
     <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/vendor/hls.js/hls.min.js}"></script>
+    <script defer th:src="@{/js/media-direct-upload.js}"></script>
     <script defer th:src="@{/js/media-gallery.js}"></script>
     <script defer th:src="@{/js/media-preview.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
@@ -55,6 +56,8 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
+                            <div th:replace="~{media/fragments/upload :: upload(${page.uploadComponent})}"></div>
+
                             <section class="card shadow-sm border-0">
                                 <div class="card-body p-4">
                                     <h2 class="h5 mb-3">Filter Media</h2>

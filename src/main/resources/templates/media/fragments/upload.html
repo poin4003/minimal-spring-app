@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="upload(upload)">
+    <div class="d-flex justify-content-end">
+        <button type="button"
+                class="btn btn-primary"
+                data-bs-toggle="modal"
+                th:data-bs-target="${'#' + upload.id + '-modal'}">
+            Upload Media
+        </button>
+    </div>
+
+    <div class="modal fade"
+         tabindex="-1"
+         aria-hidden="true"
+         data-media-upload
+         th:id="${upload.id + '-modal'}">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <form class="modal-content"
+                  enctype="multipart/form-data"
+                  data-media-upload-form
+                  th:action="${upload.uploadPath}"
+                  th:data-csrf-header="${_csrf.headerName}"
+                  th:data-csrf-token="${_csrf.token}">
+                <div class="modal-header">
+                    <div>
+                        <h2 class="modal-title fs-5" th:text="${upload.title}">
+                            Upload Media
+                        </h2>
+                        <p class="text-secondary small mb-0"
+                           th:text="${upload.description}">
+                            Select files to add to the media library.
+                        </p>
+                    </div>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body d-grid gap-3">
+                    <label class="app-media-upload-dropzone rounded p-4 text-center"
+                           data-media-upload-dropzone
+                           tabindex="0"
+                           th:for="${upload.id + '-file'}">
+                        <span class="d-block fw-semibold">Drop files here or browse</span>
+                        <span class="d-block text-secondary small mt-1">
+                            Each file is uploaded in a separate request.
+                        </span>
+                    </label>
+
+                    <input class="visually-hidden"
+                           type="file"
+                           name="file"
+                           data-media-upload-input
+                           th:id="${upload.id + '-file'}"
+                           th:accept="${upload.accept}"
+                           th:multiple="${upload.multiple}">
+
+                    <div class="d-flex flex-wrap gap-2" aria-label="Allowed file types">
+                        <span th:each="rule : ${upload.rules}"
+                              class="badge text-bg-secondary"
+                              th:text="${'.' + rule.extension + ' | ' + rule.kind.name()}">
+                            .png | IMAGE
+                        </span>
+                    </div>
+
+                    <span th:each="rule : ${upload.rules}"
+                          data-media-upload-rule
+                          th:data-extension="${rule.extension}"
+                          th:data-max-file-size="${rule.maxFileSizeBytes}"
+                          hidden></span>
+
+                    <div class="border rounded">
+                        <div class="p-3 text-secondary text-center"
+                             data-media-upload-empty>
+                            No files selected.
+                        </div>
+                        <div class="list-group list-group-flush"
+                             data-media-upload-queue></div>
+                    </div>
+
+                    <template data-media-upload-item-template>
+                        <div class="list-group-item p-3" data-upload-item>
+                            <div class="d-flex align-items-start justify-content-between gap-3">
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-semibold text-break" data-upload-name></div>
+                                    <div class="small text-secondary" data-upload-size></div>
+                                </div>
+                                <span class="badge text-bg-secondary" data-upload-status>
+                                    Queued
+                                </span>
+                            </div>
+
+                            <div class="progress mt-3"
+                                 role="progressbar"
+                                 aria-label="Upload progress"
+                                 aria-valuemin="0"
+                                 aria-valuemax="100"
+                                 aria-valuenow="0">
+                                <div class="progress-bar"
+                                     data-upload-progress
+                                     style="width: 0%"></div>
+                            </div>
+
+                            <div class="mt-3" data-upload-result hidden></div>
+
+                            <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        data-upload-action="cancel">
+                                    Cancel
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        data-upload-action="retry"
+                                        hidden>
+                                    Retry
+                                </button>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger"
+                                        data-upload-action="remove">
+                                    Remove
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-outline-secondary me-auto"
+                            data-media-upload-clear>
+                        Clear completed
+                    </button>
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="submit"
+                            class="btn btn-primary"
+                            data-media-upload-start>
+                        Upload queued
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

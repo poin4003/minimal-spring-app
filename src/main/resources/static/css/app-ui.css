@@ -24,3 +24,17 @@
 .app-media-preview-message {
     min-height: 20rem;
 }
+
+.app-media-upload-dropzone {
+    cursor: pointer;
+    border: 2px dashed var(--bs-border-color);
+    transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.app-media-upload-dropzone:hover,
+.app-media-upload-dropzone:focus-visible,
+.app-media-upload-dropzone.is-dragging {
+    border-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.08);
+    outline: 0;
+}

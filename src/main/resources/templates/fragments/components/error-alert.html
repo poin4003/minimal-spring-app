@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="alert(alert)"
+     class="alert alert-danger mb-0"
+     role="alert"
+     data-ui-error-alert>
+    <div class="fw-semibold" th:text="${alert.error}">UPLOAD_ERROR</div>
+    <div class="small mt-1" th:text="${alert.message}">
+        The request could not be completed.
+    </div>
+</div>
+</body>
+</html>

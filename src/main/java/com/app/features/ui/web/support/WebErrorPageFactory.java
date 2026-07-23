@@ -6,6 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.app.config.security.web.HtmxRequestSupport;
+import com.app.features.ui.web.component.view.UiErrorAlertView;
 import com.app.features.ui.web.view.ErrorPageView;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +20,18 @@ public class WebErrorPageFactory {
             HttpServletRequest request,
             String error,
             String message) {
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            UiErrorAlertView alert = UiErrorAlertView.builder()
+                    .error(error)
+                    .message(message)
+                    .build();
+
+            return new ModelAndView(
+                    "fragments/components/error-alert :: alert (alert=${alert})",
+                    Map.of(UiErrorAlertView.ATTRIBUTE, alert),
+                    status);
+        }
+
         ErrorPageView page = ErrorPageView.builder()
                 .status(status.value())
                 .title(resolveTitle(status))
