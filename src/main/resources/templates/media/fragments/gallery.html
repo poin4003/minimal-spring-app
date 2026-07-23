@@ -1,9 +1,21 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="gallery(gallery)" class="card shadow-sm border-0">
+<section th:fragment="gallery(gallery)"
+         id="media-library-gallery"
+         class="card shadow-sm border-0"
+         aria-live="polite"
+         th:attr="hx-get=${gallery.refreshPath},
+                  hx-trigger='media:uploaded from:body delay:200ms',
+                  hx-swap='outerHTML',
+                  hx-sync='this:replace'">
     <div class="card-body p-4 border-bottom">
-        <h2 class="h5 mb-2" th:text="${gallery.title}">Media Gallery</h2>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <h2 class="h5 mb-0" th:text="${gallery.title}">Media Gallery</h2>
+            <span class="spinner-border spinner-border-sm text-primary htmx-indicator"
+                  role="status"
+                  aria-label="Refreshing media library"></span>
+        </div>
         <p class="text-secondary mb-0" th:text="${gallery.description}">
             Browse uploaded media.
         </p>

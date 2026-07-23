@@ -11,9 +11,12 @@ import lombok.Getter;
 @Builder
 public class MediaGalleryView {
 
+    public static final String ATTRIBUTE = "gallery";
+
     private final String title;
     private final String description;
     private final String emptyMessage;
+    private final String refreshPath;
     private final List<MediaGalleryItemView> items;
     private final UiPaginationView pagination;
 }

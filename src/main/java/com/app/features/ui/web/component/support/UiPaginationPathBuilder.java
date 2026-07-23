@@ -24,7 +24,14 @@ public class UiPaginationPathBuilder {
             HttpServletRequest request,
             UiPageQuery query,
             UiPageDefaults defaults) {
-        String requestUri = request.getRequestURI();
+        return build(request.getRequestURI(), request, query, defaults);
+    }
+
+    public IntFunction<String> build(
+            String requestUri,
+            HttpServletRequest request,
+            UiPageQuery query,
+            UiPageDefaults defaults) {
         int pageSize = query.getSize() == null ? defaults.getSize() : query.getSize();
 
         return pageNumber -> {

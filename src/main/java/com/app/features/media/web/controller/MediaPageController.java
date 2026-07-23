@@ -109,6 +109,19 @@ public class MediaPageController {
         return "media/index";
     }
 
+    @GetMapping("/gallery")
+    @Secured(PermissionConstants.MEDIA_VIEW)
+    public String gallery(
+            HttpServletRequest request,
+            @Valid @ModelAttribute("filter") MediaFilterCriteria filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        model.addAttribute(
+                MediaGalleryView.ATTRIBUTE,
+                buildMediaGallery(filter, query, request));
+        return "media/fragments/gallery :: gallery (gallery=${gallery})";
+    }
+
     @GetMapping("/{mediaId}/preview")
     @Secured(PermissionConstants.MEDIA_VIEW)
     public String preview(
@@ -170,23 +183,7 @@ public class MediaPageController {
             UUID detailMediaId,
             UUID deleteMediaId,
             UUID retryMediaId) {
-        var mediaPage = mediaSvc.getManyMedia(
-                filter,
-                query.toPageable(MEDIA_PAGE_DEFAULTS));
-        List<MediaGalleryItemView> items = mediaPage.getContent().stream()
-                .map(media -> toGalleryItem(media, request))
-                .toList();
-
-        UiPaginationView pagination = uiPaginationFactory.build(
-                mediaPage,
-                uiPaginationPathBuilder.build(request, query, MEDIA_PAGE_DEFAULTS));
-        MediaGalleryView mediaGallery = MediaGalleryView.builder()
-                .title("Media Gallery")
-                .description("Browse uploaded media and review its processing state.")
-                .emptyMessage("No media found.")
-                .items(items)
-                .pagination(pagination)
-                .build();
+        MediaGalleryView mediaGallery = buildMediaGallery(filter, query, request);
 
         MediaPreviewModalView previewModal = previewMediaId == null
                 ? null
@@ -206,7 +203,7 @@ public class MediaPageController {
 
         return MediaListPageView.builder()
                 .title("Media Library")
-                .listPath(appProperties.getUi().getHomePath() + "/media")
+                .listPath(getMediaListPath())
                 .shell(buildShell(currentUser, request))
                 .filter(filter)
                 .query(query.applyDefaults(MEDIA_PAGE_DEFAULTS))
@@ -225,6 +222,34 @@ public class MediaPageController {
                 .openDetailModal(detailModal != null)
                 .openDeleteModal(deleteModal != null)
                 .openRetryModal(retryModal != null)
+                .build();
+    }
+
+    private MediaGalleryView buildMediaGallery(
+            MediaFilterCriteria filter,
+            UiPageQuery query,
+            HttpServletRequest request) {
+        var mediaPage = mediaSvc.getManyMedia(
+                filter,
+                query.toPageable(MEDIA_PAGE_DEFAULTS));
+        List<MediaGalleryItemView> items = mediaPage.getContent().stream()
+                .map(media -> toGalleryItem(media, request))
+                .toList();
+
+        UiPaginationView pagination = uiPaginationFactory.build(
+                mediaPage,
+                uiPaginationPathBuilder.build(
+                        getMediaListPath(),
+                        request,
+                        query,
+                        MEDIA_PAGE_DEFAULTS));
+        return MediaGalleryView.builder()
+                .title("Media Gallery")
+                .description("Browse uploaded media and review its processing state.")
+                .emptyMessage("No media found.")
+                .refreshPath(buildGalleryRefreshPath(request))
+                .items(items)
+                .pagination(pagination)
                 .build();
     }
 
@@ -474,7 +499,9 @@ public class MediaPageController {
             HttpServletRequest request,
             String selectedParameter,
             UUID mediaId) {
-        UriComponentsBuilder builder = currentRequestBuilder(request);
+        UriComponentsBuilder builder = requestQueryBuilder(
+                getMediaListPath(),
+                request);
         clearModalParameters(builder);
         return builder
                 .replaceQueryParam(selectedParameter, mediaId)
@@ -496,7 +523,9 @@ public class MediaPageController {
             HttpServletRequest request,
             UUID mediaId,
             String action) {
-        UriComponentsBuilder builder = currentRequestBuilder(request)
+        UriComponentsBuilder builder = requestQueryBuilder(
+                getMediaListPath(),
+                request)
                 .replacePath(appProperties.getUi().getHomePath()
                         + "/media/"
                         + mediaId
@@ -507,20 +536,35 @@ public class MediaPageController {
     }
 
     private String buildReturnPath(HttpServletRequest request) {
-        UriComponentsBuilder builder = currentRequestBuilder(request)
-                .replacePath(appProperties.getUi().getHomePath() + "/media");
+        UriComponentsBuilder builder = requestQueryBuilder(
+                getMediaListPath(),
+                request);
         clearModalParameters(builder);
         return builder.build().encode().toUriString();
     }
 
-    private UriComponentsBuilder currentRequestBuilder(HttpServletRequest request) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(request.getRequestURI());
+    private String buildGalleryRefreshPath(HttpServletRequest request) {
+        UriComponentsBuilder builder = requestQueryBuilder(
+                getMediaListPath() + "/gallery",
+                request);
+        clearModalParameters(builder);
+        return builder.build().encode().toUriString();
+    }
+
+    private UriComponentsBuilder requestQueryBuilder(
+            String path,
+            HttpServletRequest request) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromPath(path);
         request.getParameterMap().forEach((key, values) -> {
             for (String value : values) {
                 builder.queryParam(key, value);
             }
         });
         return builder;
+    }
+
+    private String getMediaListPath() {
+        return appProperties.getUi().getHomePath() + "/media";
     }
 
     private void clearModalParameters(UriComponentsBuilder builder) {
