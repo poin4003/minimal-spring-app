@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="result(result)"
+     class="alert alert-success mb-0"
+     role="status">
+    <div class="fw-semibold" th:text="${result.message}">
+        Media uploaded successfully.
+    </div>
+    <div class="small mt-1 text-break"
+         th:text="${result.media.originalName}">
+        image.png
+    </div>
+</div>
+</body>
+</html>
