@@ -3,6 +3,7 @@ package com.app.features.user.web.view;
 import java.util.List;
 
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.view.UiShellView;
 
@@ -18,6 +19,7 @@ public class UserRolePageView {
     private final String title;
     private final String heading;
     private final String description;
+    private final UiBreadcrumbView breadcrumb;
     private final List<UiMetadataItemView> metadataItems;
     private final UiShellView shell;
     private final String backPath;

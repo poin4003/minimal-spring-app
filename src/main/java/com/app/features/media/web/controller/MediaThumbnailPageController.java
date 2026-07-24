@@ -38,6 +38,8 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
+import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
@@ -142,6 +144,17 @@ public class MediaThumbnailPageController {
                         appProperties.getUi().getHomePath()
                                 + "/media/uploads/thumbnail-modal")
                 .shell(buildShell(currentUser, request))
+                .breadcrumb(UiBreadcrumbView.builder()
+                        .items(List.of(
+                                UiBreadcrumbItemView.builder()
+                                        .label("Media Library")
+                                        .path(getMediaListPath())
+                                        .build(),
+                                UiBreadcrumbItemView.builder()
+                                        .label("Select Thumbnail")
+                                        .active(true)
+                                        .build()))
+                        .build())
                 .filter(filter)
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()

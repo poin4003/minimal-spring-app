@@ -29,6 +29,8 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
+import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
@@ -150,6 +152,17 @@ public class UserRolePageController {
                 .title("User Roles")
                 .heading("User Roles")
                 .description("Manage roles for the selected user.")
+                .breadcrumb(UiBreadcrumbView.builder()
+                        .items(List.of(
+                                UiBreadcrumbItemView.builder()
+                                        .label("Users")
+                                        .path(appProperties.getUi().getHomePath() + "/users")
+                                        .build(),
+                                UiBreadcrumbItemView.builder()
+                                        .label("Assign Roles")
+                                        .active(true)
+                                        .build()))
+                        .build())
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()
                                 .label("Email")

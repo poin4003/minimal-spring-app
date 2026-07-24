@@ -80,38 +80,42 @@
         </dl>
     </div>
 
-    <div class="card-footer bg-transparent d-flex flex-wrap gap-2 position-relative z-2">
-        <a class="btn btn-sm btn-outline-secondary"
-           th:href="${item.metadataPath}"
-           th:attr="hx-get=${item.metadataPartialPath},
-                    hx-target='#app-modal-host',
-                    hx-swap='innerHTML',
-                    hx-disabled-elt='this',
-                    data-app-modal-request='true'">Metadata</a>
-        <a th:if="${item.canSelectThumbnail()}"
-           class="btn btn-sm btn-outline-primary"
-           th:href="${item.thumbnailSelectionPath}">
-            Thumbnail
-        </a>
-        <a th:if="${item.canRetry()}"
-           class="btn btn-sm btn-outline-warning"
-           th:href="${item.retryPath}"
-           th:attr="hx-get=${item.retryPartialPath},
-                    hx-target='#app-modal-host',
-                    hx-swap='innerHTML',
-                    hx-disabled-elt='this',
-                    data-app-modal-request='true'">
-            Retry
-        </a>
-        <a class="btn btn-sm btn-outline-danger"
-           th:href="${item.deletePath}"
-           th:attr="hx-get=${item.deletePartialPath},
-                    hx-target='#app-modal-host',
-                    hx-swap='innerHTML',
-                    hx-disabled-elt='this',
-                    data-app-modal-request='true'">
-            Delete
-        </a>
+    <div class="card-footer bg-transparent position-relative z-2">
+        <div class="btn-group btn-group-sm"
+             role="group"
+             aria-label="Media actions">
+            <a class="btn btn-outline-secondary"
+               th:href="${item.metadataPath}"
+               th:attr="hx-get=${item.metadataPartialPath},
+                        hx-target='#app-modal-host',
+                        hx-swap='innerHTML',
+                        hx-disabled-elt='this',
+                        data-app-modal-request='true'">Metadata</a>
+            <a th:if="${item.canSelectThumbnail()}"
+               class="btn btn-outline-primary"
+               th:href="${item.thumbnailSelectionPath}">
+                Thumbnail
+            </a>
+            <a th:if="${item.canRetry()}"
+               class="btn btn-outline-warning"
+               th:href="${item.retryPath}"
+               th:attr="hx-get=${item.retryPartialPath},
+                        hx-target='#app-modal-host',
+                        hx-swap='innerHTML',
+                        hx-disabled-elt='this',
+                        data-app-modal-request='true'">
+                Retry
+            </a>
+            <a class="btn btn-outline-danger"
+               th:href="${item.deletePath}"
+               th:attr="hx-get=${item.deletePartialPath},
+                        hx-target='#app-modal-host',
+                        hx-swap='innerHTML',
+                        hx-disabled-elt='this',
+                        data-app-modal-request='true'">
+                Delete
+            </a>
+        </div>
     </div>
 </article>
 </body>

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<nav th:fragment="breadcrumb(breadcrumb)" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0">
+        <li th:each="item : ${breadcrumb.items}"
+            class="breadcrumb-item"
+            th:classappend="${item.active ? ' active' : ''}"
+            th:attr="aria-current=${item.active ? 'page' : null}">
+            <span th:if="${item.active}" th:text="${item.label}">Current</span>
+            <a th:unless="${item.active}"
+               th:href="${item.path}"
+               th:text="${item.label}">
+                Parent
+            </a>
+        </li>
+    </ol>
+</nav>
+</body>
+</html>

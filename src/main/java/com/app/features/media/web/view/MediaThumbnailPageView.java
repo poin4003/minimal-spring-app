@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.view.UiShellView;
 
@@ -22,6 +23,7 @@ public class MediaThumbnailPageView {
     private final String uploadFallbackPath;
     private final String uploadPartialPath;
     private final UiShellView shell;
+    private final UiBreadcrumbView breadcrumb;
     private final MediaFilterCriteria filter;
     private final List<UiMetadataItemView> metadataItems;
     private final UiAssignmentPanelView assignmentPanel;

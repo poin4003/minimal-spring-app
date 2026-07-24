@@ -54,6 +54,9 @@
                         </header>
 
                         <div class="p-4 p-lg-5 d-grid gap-4">
+                            <div th:replace="~{fragments/components/breadcrumb
+                                    :: breadcrumb(${page.breadcrumb})}"></div>
+
                             <section class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3">
                                 <div>
                                     <h2 class="h3 mb-2" th:text="${page.title}">Select Thumbnail</h2>
