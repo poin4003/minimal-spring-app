@@ -31,6 +31,7 @@ import lombok.Data;
 public class AppProperties {
 
     private final Auth auth = new Auth();
+    private final CacheSettings cache = new CacheSettings();
     private final Cors cors = new Cors();
     private final Jwt jwt = new Jwt();
     private final Media media = new Media();
@@ -57,6 +58,26 @@ public class AppProperties {
         private String sameSite = "Lax";
 
         private boolean secure = false;
+    }
+
+    @Data
+    public static class CacheSettings {
+        @Valid
+        private final KeyStoreCache keyStore = new KeyStoreCache();
+    }
+
+    @Data
+    public static class KeyStoreCache {
+        @Positive
+        private long maximumSize = 100_000;
+
+        @NotNull
+        private Duration ttl = Duration.ofMinutes(1);
+
+        @AssertTrue(message = "Key store cache TTL must be positive.")
+        public boolean isTtlValid() {
+            return ttl != null && !ttl.isZero() && !ttl.isNegative();
+        }
     }
 
     @Data

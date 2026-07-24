@@ -121,7 +121,7 @@ public class AuthServiceImpl implements AuthService {
         userBaseRepo.save(user);
 
         if (keyStoreId != null) {
-            keyStoreRepo.deleteById(keyStoreId);
+            keyStoreSvc.deleteKeyStoreById(keyStoreId);
         }
     }
 
@@ -175,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
                 signingKey);
 
         keyStore.setRefreshToken(newRefreshToken);
-        keyStoreRepo.save(keyStore);
+        keyStoreSvc.updateKeyStore(keyStore);
 
         LoginResult response = new LoginResult();
         response.setAccessToken(newAccessToken);

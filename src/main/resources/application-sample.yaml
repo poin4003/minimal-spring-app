@@ -16,6 +16,10 @@ app:
             path: /
             same-site: Lax
             secure: false
+    cache:
+        key-store:
+            maximum-size: ${KEY_STORE_CACHE_MAXIMUM_SIZE:100000}
+            ttl: ${KEY_STORE_CACHE_TTL:1m}
     cors:
         allowed-origins:
             - "http://localhost:5173"
