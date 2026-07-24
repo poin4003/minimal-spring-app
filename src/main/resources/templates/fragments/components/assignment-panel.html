@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="panel(panel)" class="card shadow-sm border-0">
+<section th:fragment="panel(panel)"
+         th:id="${panel.id}"
+         class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div class="p-4 border-bottom">
             <h2 class="h5 mb-2" th:text="${panel.title}">Assignment</h2>
@@ -35,7 +37,12 @@
                     </div>
                 </div>
 
-                <form method="post" th:action="${row.action.path}" class="mb-0">
+                <form method="post"
+                      th:action="${row.action.path}"
+                      class="mb-0"
+                      th:attr="hx-post=${row.action.path},
+                               hx-swap='none',
+                               hx-disabled-elt='button[type=submit]'">
                     <input type="hidden" name="targetId" th:value="${row.action.targetId}">
                     <th:block th:if="${row.action.query != null}">
                         <input type="hidden" name="mode" th:value="${row.action.query.mode.name()}">

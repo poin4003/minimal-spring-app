@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
@@ -40,6 +41,7 @@ import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
 import com.app.features.ui.web.component.view.UiModalView;
@@ -55,6 +57,7 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -62,6 +65,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/rbac/roles")
 public class RolePageController {
+
+    private static final String ROLE_TABLE_ID = "role-table";
 
     private static final UiPageDefaults ROLE_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -150,6 +155,7 @@ public class RolePageController {
     public String create(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
+            HttpServletResponse response,
             @Valid @ModelAttribute("filter") RoleFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             @Valid @ModelAttribute("createForm") CreateRoleModalForm form,
@@ -160,7 +166,17 @@ public class RolePageController {
                 () -> rbacSvc.createRole(mapper.map(form, CreateRolePayload.class)));
 
         if (submitResult.success()) {
-            return "redirect:" + appProperties.getUi().getHomePath() + "/rbac/roles";
+            return HtmxRequestSupport.redirectView(
+                    request,
+                    response,
+                    appProperties.getUi().getHomePath() + "/rbac/roles");
+        }
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiModalView.ATTRIBUTE,
+                    buildCreateRoleModal(form, submitResult.fieldErrors()));
+            return "fragments/components/modal :: modal (modal=${modal})";
         }
 
         model.addAttribute(
@@ -188,6 +204,7 @@ public class RolePageController {
     public String update(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID roleId,
             @Valid @ModelAttribute("filter") RoleFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -199,9 +216,24 @@ public class RolePageController {
                 () -> rbacSvc.updateRole(roleId, mapper.map(form, UpdateRolePayload.class)));
 
         if (submitResult.success()) {
-            return "redirect:" + query.toUri(
-                    appProperties.getUi().getHomePath() + "/rbac/roles",
-                    ROLE_PAGE_DEFAULTS);
+            return HtmxRequestSupport.redirectView(
+                    request,
+                    response,
+                    query.toUri(
+                            appProperties.getUi().getHomePath() + "/rbac/roles",
+                            ROLE_PAGE_DEFAULTS));
+        }
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiModalView.ATTRIBUTE,
+                    buildRoleDetailModal(
+                            roleId,
+                            query,
+                            form,
+                            submitResult.fieldErrors(),
+                            true));
+            return "fragments/components/modal :: modal (modal=${modal})";
         }
 
         model.addAttribute(
@@ -249,10 +281,12 @@ public class RolePageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 rolePage,
-                uiPaginationPathBuilder.build(request, query, ROLE_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, query, ROLE_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(ROLE_TABLE_ID));
 
         UiTableView roleTable = uiTableFactory.build(
                 UiTableDefinition.builder()
+                        .id(ROLE_TABLE_ID)
                         .title("Role List")
                         .description("Review role keys and display names.")
                         .emptyMessage("No roles found.")
@@ -279,19 +313,8 @@ public class RolePageController {
                                 .buttonClass("btn-primary")
                                 .build()));
 
-        UiModalView createRoleModal = uiModalFactory.build(
-                UiModalDefinition.builder()
-                        .id("create-role-modal")
-                        .title("Create Role")
-                        .description("Add a new role for access control.")
-                        .triggerLabel("New Role")
-                        .triggerButtonClass("btn-primary")
-                        .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles")
-                        .submitLabel("Create Role")
-                        .build(),
-                CreateRoleModalForm.class,
+        UiModalView createRoleModal = buildCreateRoleModal(
                 createForm,
-                Map.of(),
                 openCreateRoleModal && modalErrors != null ? modalErrors : Map.of());
 
         UiMetadataModalView metadataModal = metadataRoleId == null
@@ -314,6 +337,25 @@ public class RolePageController {
                 .openMetadataModal(openMetadataModal && metadataModal != null)
                 .openDetailModal(openDetailModal && detailModal != null)
                 .build();
+    }
+
+    private UiModalView buildCreateRoleModal(
+            CreateRoleModalForm form,
+            Map<String, String> fieldErrors) {
+        return uiModalFactory.build(
+                UiModalDefinition.builder()
+                        .id("create-role-modal")
+                        .title("Create Role")
+                        .description("Add a new role for access control.")
+                        .triggerLabel("New Role")
+                        .triggerButtonClass("btn-primary")
+                        .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles")
+                        .submitLabel("Create Role")
+                        .build(),
+                CreateRoleModalForm.class,
+                form,
+                Map.of(),
+                fieldErrors == null ? Map.of() : fieldErrors);
     }
 
     private UiMetadataModalView buildRoleMetadataModal(UUID roleId) {

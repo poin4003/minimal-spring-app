@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
@@ -37,12 +38,14 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -50,6 +53,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/media/{mediaId}/thumbnail")
 public class MediaThumbnailPageController {
+
+    private static final String THUMBNAIL_PANEL_ID = "media-thumbnail-assignment-panel";
 
     private static final UiPageDefaults THUMBNAIL_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -83,12 +88,17 @@ public class MediaThumbnailPageController {
     @PostMapping("/assign")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String assign(
+            HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID mediaId,
             @RequestParam UUID targetId) {
         mediaSvc.updateThumbnail(
                 mediaId,
                 targetId);
-        return "redirect:" + getMediaListPath();
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                getMediaListPath());
     }
 
     private MediaThumbnailPageView buildPage(
@@ -109,9 +119,11 @@ public class MediaThumbnailPageController {
                 uiPaginationPathBuilder.build(
                         request,
                         query,
-                        THUMBNAIL_PAGE_DEFAULTS));
+                        THUMBNAIL_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(THUMBNAIL_PANEL_ID));
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
+                .id(THUMBNAIL_PANEL_ID)
                 .title("Ready Images")
                 .description("Choose any ready image available in the media library.")
                 .emptyMessage("No ready images are available.")

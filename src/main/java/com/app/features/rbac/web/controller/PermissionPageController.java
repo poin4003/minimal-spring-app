@@ -28,6 +28,7 @@ import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
 import com.app.features.ui.web.component.view.UiPaginationView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.view.UiCurrentUserView;
@@ -41,6 +42,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/rbac/permissions")
 public class PermissionPageController {
+
+    private static final String PERMISSION_TABLE_ID = "permission-table";
 
     private static final UiPageDefaults PERMISSION_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -86,10 +89,12 @@ public class PermissionPageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 permissionPage,
-                uiPaginationPathBuilder.build(request, query, PERMISSION_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, query, PERMISSION_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(PERMISSION_TABLE_ID));
 
         UiTableView permissionTable = uiTableFactory.build(
                 UiTableDefinition.builder()
+                        .id(PERMISSION_TABLE_ID)
                         .title("Permission List")
                         .description("Review permission identifiers and display names.")
                         .emptyMessage("No permissions found.")

@@ -58,12 +58,19 @@
                         <div class="p-4 p-lg-5 d-grid gap-4">
                             <div th:replace="~{media/fragments/upload :: upload(${page.uploadComponent})}"></div>
 
+                            <div id="media-library-workspace" class="d-grid gap-4">
                             <section class="card shadow-sm border-0">
                                 <div class="card-body p-4">
                                     <h2 class="h5 mb-3">Filter Media</h2>
 
                                     <form method="get"
-                                          th:attr="action=${page.listPath}"
+                                          th:attr="action=${page.listPath},
+                                                   hx-get=${page.listPath},
+                                                   hx-target='#media-library-workspace',
+                                                   hx-select='#media-library-workspace',
+                                                   hx-swap='outerHTML',
+                                                   hx-push-url='true',
+                                                   hx-disabled-elt='button[type=submit]'"
                                           class="row g-3 align-items-end">
                                         <input type="hidden" name="page" value="0">
                                         <input type="hidden" name="size" th:value="${page.query.size}">
@@ -143,7 +150,16 @@
                                         </div>
 
                                         <div class="col-12 d-flex flex-wrap justify-content-end gap-2">
-                                            <a class="btn btn-outline-secondary" th:href="${page.listPath}">Clear</a>
+                                            <a class="btn btn-outline-secondary"
+                                               th:href="${page.listPath}"
+                                               th:attr="hx-get=${page.listPath},
+                                                        hx-target='#media-library-workspace',
+                                                        hx-select='#media-library-workspace',
+                                                        hx-swap='outerHTML',
+                                                        hx-push-url='true',
+                                                        hx-disabled-elt='this'">
+                                                Clear
+                                            </a>
                                             <button type="submit" class="btn btn-primary">Apply Filters</button>
                                         </div>
                                     </form>
@@ -151,6 +167,7 @@
                             </section>
 
                             <div th:replace="~{media/fragments/gallery :: gallery(${page.mediaGallery})}"></div>
+                            </div>
 
                             <th:block th:if="${page.previewModal != null}">
                                 <div th:replace="~{media/fragments/preview-modal :: modal(${page.previewModal})}"></div>

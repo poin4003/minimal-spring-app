@@ -18,6 +18,7 @@ public class UiPaginationView {
     private final String previousPath;
     private final String nextPath;
     private final List<Item> items;
+    private final UiHtmxNavigationView htmxNavigation;
 
     @Getter
     @Builder

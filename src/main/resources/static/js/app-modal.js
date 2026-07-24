@@ -31,6 +31,19 @@
         }
     });
 
+    document.addEventListener("htmx:beforeRequest", function (event) {
+        const form = event.detail.elt;
+        if (!(form instanceof HTMLFormElement)
+                || !form.matches("[data-app-modal-form]")) {
+            return;
+        }
+
+        const modalElement = form.closest(".modal");
+        if (modalElement) {
+            bootstrap.Modal.getInstance(modalElement)?.hide();
+        }
+    });
+
     document.addEventListener("htmx:responseError", function (event) {
         navigateToFallback(event.detail.elt);
     });

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.menu.MenuService;
@@ -36,6 +37,7 @@ import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiModalDefinition;
 import com.app.features.ui.web.component.view.UiModalFieldOptionView;
@@ -50,6 +52,7 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -57,6 +60,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/cronjobs")
 public class CronJobPageController {
+
+    private static final String CRONJOB_TABLE_ID = "cronjob-table";
 
     private static final UiPageDefaults CRONJOB_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -134,6 +139,7 @@ public class CronJobPageController {
     public String update(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable String jobType,
             @Valid @ModelAttribute("query") UiPageQuery query,
             @Valid @ModelAttribute("form") CronJobDetailModalForm form,
@@ -144,9 +150,24 @@ public class CronJobPageController {
                 () -> cronJobSvc.updateConfig(jobType, form.getCronExpression(), form.getStatus()));
 
         if (submitResult.success()) {
-            return "redirect:" + query.toUri(
-                    appProperties.getUi().getHomePath() + "/cronjobs",
-                    CRONJOB_PAGE_DEFAULTS);
+            return HtmxRequestSupport.redirectView(
+                    request,
+                    response,
+                    query.toUri(
+                            appProperties.getUi().getHomePath() + "/cronjobs",
+                            CRONJOB_PAGE_DEFAULTS));
+        }
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiModalView.ATTRIBUTE,
+                    buildDetailModal(
+                            jobType,
+                            query,
+                            form,
+                            submitResult.fieldErrors(),
+                            true));
+            return "fragments/components/modal :: modal (modal=${modal})";
         }
 
         model.addAttribute(
@@ -185,10 +206,12 @@ public class CronJobPageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 cronJobPage,
-                uiPaginationPathBuilder.build(request, query, CRONJOB_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, query, CRONJOB_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(CRONJOB_TABLE_ID));
 
         UiTableView cronJobTable = uiTableFactory.build(
                 UiTableDefinition.builder()
+                        .id(CRONJOB_TABLE_ID)
                         .title("Cronjob List")
                         .description("Review recurring job configs stored in the database.")
                         .emptyMessage("No cronjobs found.")

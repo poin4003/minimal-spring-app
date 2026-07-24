@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.menu.MenuService;
@@ -41,6 +42,7 @@ import com.app.features.media.web.view.MediaPreviewModalView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiConfirmModalView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
@@ -48,6 +50,7 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -55,6 +58,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/media")
 public class MediaPageController {
+
+    private static final String MEDIA_GALLERY_ID = "media-library-gallery";
 
     private static final String PREVIEW_MEDIA_ID = "previewMediaId";
     private static final String METADATA_MEDIA_ID = "metadataMediaId";
@@ -140,22 +145,54 @@ public class MediaPageController {
         return "fragments/components/metadata-modal :: modal (modal=${modal})";
     }
 
+    @GetMapping("/{mediaId}/delete-confirm")
+    @Secured(PermissionConstants.MEDIA_MANAGE)
+    public String deleteConfirm(
+            @PathVariable UUID mediaId,
+            HttpServletRequest request,
+            Model model) {
+        model.addAttribute(
+                UiConfirmModalView.ATTRIBUTE,
+                buildDeleteModal(mediaId, request));
+        return "fragments/components/confirm-modal :: modal (modal=${modal})";
+    }
+
+    @GetMapping("/{mediaId}/retry-confirm")
+    @Secured(PermissionConstants.MEDIA_MANAGE)
+    public String retryConfirm(
+            @PathVariable UUID mediaId,
+            HttpServletRequest request,
+            Model model) {
+        model.addAttribute(
+                UiConfirmModalView.ATTRIBUTE,
+                buildRetryModal(mediaId, request));
+        return "fragments/components/confirm-modal :: modal (modal=${modal})";
+    }
+
     @PostMapping("/{mediaId}/delete")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String delete(
             @PathVariable UUID mediaId,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
         mediaSvc.deleteMedia(mediaId);
-        return "redirect:" + buildReturnPath(request);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildReturnPath(request));
     }
 
     @PostMapping("/{mediaId}/retry")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String retry(
             @PathVariable UUID mediaId,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            HttpServletResponse response) {
         mediaSvc.retryProcessing(mediaId);
-        return "redirect:" + buildReturnPath(request);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildReturnPath(request));
     }
 
     private MediaListPageView buildPage(
@@ -224,7 +261,8 @@ public class MediaPageController {
                         getMediaListPath(),
                         request,
                         query,
-                        MEDIA_PAGE_DEFAULTS));
+                        MEDIA_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(MEDIA_GALLERY_ID));
         return MediaGalleryView.builder()
                 .title("Media Gallery")
                 .description("Browse uploaded media and review its processing state.")
@@ -260,7 +298,14 @@ public class MediaPageController {
                 .retryPath(canRetry(media)
                         ? buildSelectionPath(request, RETRY_MEDIA_ID, media.getId())
                         : null)
+                .retryPartialPath(canRetry(media)
+                        ? buildActionPartialPath(request, media.getId(), "retry-confirm")
+                        : null)
                 .deletePath(buildSelectionPath(request, DELETE_MEDIA_ID, media.getId()))
+                .deletePartialPath(buildActionPartialPath(
+                        request,
+                        media.getId(),
+                        "delete-confirm"))
                 .build();
     }
 
@@ -461,6 +506,17 @@ public class MediaPageController {
                 .build()
                 .encode()
                 .toUriString();
+    }
+
+    private String buildActionPartialPath(
+            HttpServletRequest request,
+            UUID mediaId,
+            String action) {
+        UriComponentsBuilder builder = requestQueryBuilder(
+                getMediaListPath() + "/" + mediaId + "/" + action,
+                request);
+        clearModalParameters(builder);
+        return builder.build().encode().toUriString();
     }
 
     private String buildPostPath(

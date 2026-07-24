@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import com.app.features.ui.web.component.view.UiPaginationView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 
 @Component
 public class UiPaginationFactory {
@@ -15,6 +16,13 @@ public class UiPaginationFactory {
     private static final int WINDOW_RADIUS = 2;
 
     public UiPaginationView build(Page<?> page, IntFunction<String> pathBuilder) {
+        return build(page, pathBuilder, null);
+    }
+
+    public UiPaginationView build(
+            Page<?> page,
+            IntFunction<String> pathBuilder,
+            UiHtmxNavigationView htmxNavigation) {
         int currentPage = page.getNumber();
         int totalPages = page.getTotalPages();
 
@@ -26,6 +34,7 @@ public class UiPaginationFactory {
                     .pageSize(page.getSize())
                     .hasPrevious(false)
                     .hasNext(false)
+                    .htmxNavigation(htmxNavigation)
                     .items(List.of())
                     .build();
         }
@@ -61,6 +70,7 @@ public class UiPaginationFactory {
                 .hasNext(page.hasNext())
                 .previousPath(page.hasPrevious() ? pathBuilder.apply(currentPage - 1) : null)
                 .nextPath(page.hasNext() ? pathBuilder.apply(currentPage + 1) : null)
+                .htmxNavigation(htmxNavigation)
                 .items(items)
                 .build();
     }

@@ -7,7 +7,13 @@
     <ul class="pagination mb-0">
         <li class="page-item" th:classappend="${!pagination.hasPrevious} ? ' disabled' : ''">
             <a class="page-link"
-               th:href="${pagination.hasPrevious ? pagination.previousPath : '#'}">
+               th:href="${pagination.hasPrevious ? pagination.previousPath : '#'}"
+               th:attr="hx-get=${pagination.htmxNavigation != null and pagination.hasPrevious ? pagination.previousPath : null},
+                        hx-target=${pagination.htmxNavigation != null ? pagination.htmxNavigation.target : null},
+                        hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
+                        hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
+                        hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
                 Previous
             </a>
         </li>
@@ -19,14 +25,26 @@
             <a th:unless="${item.disabled}"
                class="page-link"
                th:href="${item.path}"
-               th:text="${item.label}">
+               th:text="${item.label}"
+               th:attr="hx-get=${pagination.htmxNavigation != null ? item.path : null},
+                        hx-target=${pagination.htmxNavigation != null ? pagination.htmxNavigation.target : null},
+                        hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
+                        hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
+                        hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
                 1
             </a>
         </li>
 
         <li class="page-item" th:classappend="${!pagination.hasNext} ? ' disabled' : ''">
             <a class="page-link"
-               th:href="${pagination.hasNext ? pagination.nextPath : '#'}">
+               th:href="${pagination.hasNext ? pagination.nextPath : '#'}"
+               th:attr="hx-get=${pagination.htmxNavigation != null and pagination.hasNext ? pagination.nextPath : null},
+                        hx-target=${pagination.htmxNavigation != null ? pagination.htmxNavigation.target : null},
+                        hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
+                        hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
+                        hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
                 Next
             </a>
         </li>

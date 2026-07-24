@@ -32,6 +32,16 @@
 - Use HLS.js for HLS playback where native browser playback is unavailable; retain native HLS playback when the browser supports it.
 - Prefer bundled and minified production assets at runtime. Do not replace them with CDN references.
 
+## HTMX Direction
+- Prefer HTMX for authenticated CMS interactions that can update a fragment or perform a server-rendered action without reloading the complete page.
+- Configure authentication-adjacent browser behavior such as CSRF headers, loading state, authorization redirects, and shared error handling once for all HTMX requests instead of implementing page-specific workarounds.
+- Shared assignment, modal, confirmation, filter, table, gallery, and pagination components should provide explicit HTMX behavior with native HTML actions or links retained as progressive fallback.
+- Prefer explicit `hx-get`, `hx-post`, `hx-target`, and `hx-swap` contracts on shared components over enabling global `hx-boost`.
+- Successful HTMX mutations should either refresh their owning fragment or use an `HX-Redirect` response when the workflow moves to another page.
+- Use typed Java component/view models when HTMX needs target, swap, navigation, or refresh metadata; do not transport this behavior through ad-hoc maps.
+- Login, logout, downloads, public media delivery, and upload progress or chunk transport may remain native or use dedicated JavaScript when HTMX does not fit their browser lifecycle.
+- HTMX does not automatically echo a CSRF cookie in the required request header. The shared HTMX infrastructure must send the current `XSRF-TOKEN` cookie as `X-XSRF-TOKEN` for state-changing requests.
+
 ## HTML And Thymeleaf
 - Reuse existing fragments under `templates/fragments`, feature fragments, and shared component models before creating page-specific markup.
 - Keep templates focused on rendering structured Java view models instead of assembling business state or loose key-value data.
@@ -40,6 +50,7 @@
 - Treat Thymeleaf fragment endpoints as UI endpoints: controllers call application services directly rather than routing through the Web API layer.
 - Use semantic HTML and preserve keyboard navigation, labels, alt text, and relevant ARIA attributes when composing Bootstrap components.
 - Use modals only for the simple actions defined by the project's UI/UX rules; use dedicated pages for complex workflows.
+- Preserve a normal `href`, `action`, and HTTP method whenever HTMX is added so the same interaction still has a server-rendered fallback.
 
 ## CSS
 - Add custom CSS only for behavior or visual requirements that Bootstrap utilities and variables cannot provide cleanly.

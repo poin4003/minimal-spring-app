@@ -56,6 +56,7 @@ public class UiTableFactory {
         UiPaginationView pagination = definition.getPagination();
 
         return UiTableView.builder()
+                .id(definition.getId())
                 .title(definition.getTitle())
                 .description(definition.getDescription())
                 .emptyMessage(definition.getEmptyMessage())

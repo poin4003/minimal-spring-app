@@ -21,12 +21,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.support.UiModalFactory;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
@@ -56,6 +58,7 @@ import com.app.features.user.web.view.UserListPageView;
 import com.app.features.user.web.view.UserTableRowView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -63,6 +66,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/users")
 public class UserPageController {
+
+    private static final String USER_TABLE_ID = "user-table";
 
     private static final UiPageDefaults USER_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -151,6 +156,7 @@ public class UserPageController {
     public String create(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
+            HttpServletResponse response,
             @Valid @ModelAttribute("filter") UserFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             @Valid @ModelAttribute("createForm") CreateUserModalForm form,
@@ -161,7 +167,17 @@ public class UserPageController {
                 () -> userSvc.createUser(mapper.map(form, CreateUserPayload.class)));
 
         if (submitResult.success()) {
-            return "redirect:" + appProperties.getUi().getHomePath() + "/users";
+            return HtmxRequestSupport.redirectView(
+                    request,
+                    response,
+                    appProperties.getUi().getHomePath() + "/users");
+        }
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiModalView.ATTRIBUTE,
+                    buildCreateUserModal(form, submitResult.fieldErrors()));
+            return "fragments/components/modal :: modal (modal=${modal})";
         }
 
         model.addAttribute(
@@ -189,6 +205,7 @@ public class UserPageController {
     public String updateStatus(
             @AuthenticationPrincipal UserPrincipal currentUser,
             HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID userId,
             @Valid @ModelAttribute("filter") UserFilter filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -200,9 +217,24 @@ public class UserPageController {
                 () -> userSvc.updateUserStatus(userId, form.getStatus()));
 
         if (submitResult.success()) {
-            return "redirect:" + query.toUri(
-                    appProperties.getUi().getHomePath() + "/users",
-                    USER_PAGE_DEFAULTS);
+            return HtmxRequestSupport.redirectView(
+                    request,
+                    response,
+                    query.toUri(
+                            appProperties.getUi().getHomePath() + "/users",
+                            USER_PAGE_DEFAULTS));
+        }
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiModalView.ATTRIBUTE,
+                    buildUserDetailModal(
+                            userId,
+                            query,
+                            form,
+                            submitResult.fieldErrors(),
+                            true));
+            return "fragments/components/modal :: modal (modal=${modal})";
         }
 
         model.addAttribute(
@@ -247,10 +279,12 @@ public class UserPageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 userPage,
-                uiPaginationPathBuilder.build(request, query, USER_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, query, USER_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(USER_TABLE_ID));
 
         UiTableView userTable = uiTableFactory.build(
                 UiTableDefinition.builder()
+                        .id(USER_TABLE_ID)
                         .title("User List")
                         .description("Review user accounts, statuses, and audit timestamps.")
                         .emptyMessage("No users found.")
@@ -277,19 +311,8 @@ public class UserPageController {
                                 .buttonClass("btn-primary")
                                 .build()));
 
-        UiModalView createUserModal = uiModalFactory.build(
-                UiModalDefinition.builder()
-                        .id("create-user-modal")
-                        .title("Create User")
-                        .description("Add a new user account.")
-                        .triggerLabel("New User")
-                        .triggerButtonClass("btn-primary")
-                        .actionPath(appProperties.getUi().getHomePath() + "/users")
-                        .submitLabel("Create User")
-                        .build(),
-                CreateUserModalForm.class,
+        UiModalView createUserModal = buildCreateUserModal(
                 createForm,
-                Map.of(),
                 openCreateUserModal && modalErrors != null ? modalErrors : Map.of());
 
         UiMetadataModalView metadataModal = metadataUserId == null
@@ -312,6 +335,25 @@ public class UserPageController {
                 .openMetadataModal(openMetadataModal && metadataModal != null)
                 .openDetailModal(openDetailModal && detailModal != null)
                 .build();
+    }
+
+    private UiModalView buildCreateUserModal(
+            CreateUserModalForm form,
+            Map<String, String> fieldErrors) {
+        return uiModalFactory.build(
+                UiModalDefinition.builder()
+                        .id("create-user-modal")
+                        .title("Create User")
+                        .description("Add a new user account.")
+                        .triggerLabel("New User")
+                        .triggerButtonClass("btn-primary")
+                        .actionPath(appProperties.getUi().getHomePath() + "/users")
+                        .submitLabel("Create User")
+                        .build(),
+                CreateUserModalForm.class,
+                form,
+                Map.of(),
+                fieldErrors == null ? Map.of() : fieldErrors);
     }
 
     private UiMetadataModalView buildUserMetadataModal(UUID userId) {

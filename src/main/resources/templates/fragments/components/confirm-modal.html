@@ -8,7 +8,11 @@
      aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form method="post" th:attr="action=${modal.actionPath}">
+            <form method="post"
+                  th:action="${modal.actionPath}"
+                  th:attr="hx-post=${modal.actionPath},
+                           hx-swap='none',
+                           hx-disabled-elt='button[type=submit]'">
                 <input type="hidden"
                        th:if="${_csrf != null}"
                        th:name="${_csrf.parameterName}"

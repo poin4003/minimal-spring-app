@@ -39,7 +39,9 @@ public class MediaGalleryItemView {
     private final String metadataPartialPath;
     private final String thumbnailSelectionPath;
     private final String retryPath;
+    private final String retryPartialPath;
     private final String deletePath;
+    private final String deletePartialPath;
 
     public boolean hasThumbnail() {
         return thumbnailUrl != null;

@@ -95,8 +95,23 @@
         </a>
         <a th:if="${item.canRetry()}"
            class="btn btn-sm btn-outline-warning"
-           th:href="${item.retryPath}">Retry</a>
-        <a class="btn btn-sm btn-outline-danger" th:href="${item.deletePath}">Delete</a>
+           th:href="${item.retryPath}"
+           th:attr="hx-get=${item.retryPartialPath},
+                    hx-target='#app-modal-host',
+                    hx-swap='innerHTML',
+                    hx-disabled-elt='this',
+                    data-app-modal-request='true'">
+            Retry
+        </a>
+        <a class="btn btn-sm btn-outline-danger"
+           th:href="${item.deletePath}"
+           th:attr="hx-get=${item.deletePartialPath},
+                    hx-target='#app-modal-host',
+                    hx-swap='innerHTML',
+                    hx-disabled-elt='this',
+                    data-app-modal-request='true'">
+            Delete
+        </a>
     </div>
 </article>
 </body>

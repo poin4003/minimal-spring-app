@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-<section th:fragment="table(table)" class="card shadow-sm border-0">
+<section th:fragment="table(table)"
+         th:id="${table.id}"
+         class="card shadow-sm border-0">
     <div class="card-body p-0">
         <div th:if="${table.title != null or table.description != null}"
              class="d-flex flex-column gap-2 p-4 border-bottom">

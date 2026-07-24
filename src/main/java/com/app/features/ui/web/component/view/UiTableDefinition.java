@@ -7,6 +7,8 @@ import lombok.Getter;
 @Builder
 public class UiTableDefinition {
 
+    private final String id;
+
     @Builder.Default
     private final String emptyMessage = "No records found.";
 

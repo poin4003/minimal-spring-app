@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
@@ -28,6 +29,7 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.enums.UiAssignmentMode;
@@ -39,6 +41,7 @@ import com.app.features.user.service.UserService;
 import com.app.features.user.web.view.UserRolePageView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -46,6 +49,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/users/{userId}/roles")
 public class UserRolePageController {
+
+    private static final String USER_ROLE_PANEL_ID = "user-role-assignment-panel";
 
     private static final UiPageDefaults USER_ROLE_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -78,21 +83,31 @@ public class UserRolePageController {
     @PostMapping("/assign")
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String assign(
+            HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID userId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
         rbacSvc.assignRoleToUser(userId, List.of(targetId));
-        return "redirect:" + buildRedirectPath(userId, query);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildRedirectPath(userId, query));
     }
 
     @PostMapping("/remove")
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String remove(
+            HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID userId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
         rbacSvc.removeRoleFromUser(userId, List.of(targetId));
-        return "redirect:" + buildRedirectPath(userId, query);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildRedirectPath(userId, query));
     }
 
     private UserRolePageView buildPage(
@@ -113,9 +128,11 @@ public class UserRolePageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 rolePage,
-                uiPaginationPathBuilder.build(request, resolvedQuery, USER_ROLE_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, resolvedQuery, USER_ROLE_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(USER_ROLE_PANEL_ID));
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
+                .id(USER_ROLE_PANEL_ID)
                 .title(assignedMode ? "Assigned Roles" : "Available Roles")
                 .description(assignedMode
                         ? "Roles currently assigned to this user."

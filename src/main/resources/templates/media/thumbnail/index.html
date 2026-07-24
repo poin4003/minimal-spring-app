@@ -83,10 +83,17 @@
                                 </div>
                             </section>
 
+                            <div id="media-thumbnail-workspace" class="d-grid gap-4">
                             <section class="card shadow-sm border-0">
                                 <div class="card-body p-4">
                                     <form method="get"
                                           th:action="${page.listPath}"
+                                          th:attr="hx-get=${page.listPath},
+                                                   hx-target='#media-thumbnail-workspace',
+                                                   hx-select='#media-thumbnail-workspace',
+                                                   hx-swap='outerHTML',
+                                                   hx-push-url='true',
+                                                   hx-disabled-elt='button[type=submit]'"
                                           class="row g-3 align-items-end">
                                         <input type="hidden" name="page" value="0">
 
@@ -105,7 +112,13 @@
 
                                         <div class="col-12 col-lg-4 d-flex justify-content-lg-end gap-2">
                                             <a class="btn btn-outline-secondary"
-                                               th:href="${page.listPath}">
+                                               th:href="${page.listPath}"
+                                               th:attr="hx-get=${page.listPath},
+                                                        hx-target='#media-thumbnail-workspace',
+                                                        hx-select='#media-thumbnail-workspace',
+                                                        hx-swap='outerHTML',
+                                                        hx-push-url='true',
+                                                        hx-disabled-elt='this'">
                                                 Clear
                                             </a>
                                             <button type="submit" class="btn btn-primary">
@@ -117,6 +130,7 @@
                             </section>
 
                             <div th:replace="~{fragments/components/assignment-panel :: panel(${page.assignmentPanel})}"></div>
+                            </div>
                         </div>
                     </div>
                 </div>

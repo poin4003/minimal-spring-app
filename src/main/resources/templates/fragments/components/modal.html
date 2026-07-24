@@ -15,7 +15,13 @@
         <div class="modal-dialog modal-dialog-centered"
              th:classappend="${modal.dialogClass != null ? ' ' + modal.dialogClass : ''}">
             <div class="modal-content">
-                <form th:attr="action=${modal.actionPath},method=${modal.method}">
+                <form th:attr="action=${modal.actionPath},
+                               method=${modal.method},
+                               hx-post=${#strings.equalsIgnoreCase(modal.method, 'post') ? modal.actionPath : null},
+                               hx-target=${#strings.equalsIgnoreCase(modal.method, 'post') ? '#app-modal-host' : null},
+                               hx-swap=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'innerHTML' : null},
+                               hx-disabled-elt=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'button[type=submit]' : null},
+                               data-app-modal-form=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'true' : null}">
                     <input type="hidden"
                            th:if="${_csrf != null}"
                            th:name="${_csrf.parameterName}"

@@ -7,6 +7,8 @@ import lombok.Getter;
 @Builder
 public class UiConfirmModalView {
 
+    public static final String ATTRIBUTE = "modal";
+
     private final String id;
     private final String title;
     private final String description;

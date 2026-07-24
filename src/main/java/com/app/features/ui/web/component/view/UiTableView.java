@@ -9,6 +9,7 @@ import lombok.Getter;
 @Builder
 public class UiTableView {
 
+    private final String id;
     private final String title;
     private final String description;
     private final String emptyMessage;

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.settings.AppProperties;
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
@@ -30,6 +31,7 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiAssignmentActionView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelItemView;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
+import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.enums.UiAssignmentMode;
@@ -38,6 +40,7 @@ import com.app.features.ui.web.view.UiCurrentUserView;
 import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -45,6 +48,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.home-path:/admin}/rbac/roles/{roleId}/permissions")
 public class RolePermissionPageController {
+
+    private static final String ROLE_PERMISSION_PANEL_ID = "role-permission-assignment-panel";
 
     private static final UiPageDefaults ROLE_PERMISSION_PAGE_DEFAULTS = UiPageDefaults.builder()
             .page(0)
@@ -76,21 +81,31 @@ public class RolePermissionPageController {
     @PostMapping("/assign")
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String assign(
+            HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID roleId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
         rbacSvc.assignPermToRole(roleId, List.of(targetId));
-        return "redirect:" + buildRedirectPath(roleId, query);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildRedirectPath(roleId, query));
     }
 
     @PostMapping("/remove")
     @Secured(PermissionConstants.RBAC_MANAGE)
     public String remove(
+            HttpServletRequest request,
+            HttpServletResponse response,
             @PathVariable UUID roleId,
             @RequestParam UUID targetId,
             @Valid @ModelAttribute("query") UiAssignmentPageQuery query) {
         rbacSvc.removePermFromRole(roleId, List.of(targetId));
-        return "redirect:" + buildRedirectPath(roleId, query);
+        return HtmxRequestSupport.redirectView(
+                request,
+                response,
+                buildRedirectPath(roleId, query));
     }
 
     private RolePermissionPageView buildPage(
@@ -113,9 +128,11 @@ public class RolePermissionPageController {
 
         UiPaginationView pagination = uiPaginationFactory.build(
                 permissionPage,
-                uiPaginationPathBuilder.build(request, resolvedQuery, ROLE_PERMISSION_PAGE_DEFAULTS));
+                uiPaginationPathBuilder.build(request, resolvedQuery, ROLE_PERMISSION_PAGE_DEFAULTS),
+                UiHtmxNavigationView.forComponent(ROLE_PERMISSION_PANEL_ID));
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
+                .id(ROLE_PERMISSION_PANEL_ID)
                 .title(assignedMode ? "Assigned Permissions" : "Available Permissions")
                 .description(assignedMode
                         ? "Permissions currently granted to this role."

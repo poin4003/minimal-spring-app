@@ -1,5 +1,7 @@
 (function () {
     const THEME_STORAGE_KEY = "app-theme";
+    const CSRF_COOKIE_NAME = "XSRF-TOKEN";
+    const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
     const root = document.documentElement;
 
     function getTheme() {
@@ -35,7 +37,30 @@
         document.getElementById("app-loader")?.setAttribute("hidden", "");
     }
 
+    function readCookie(name) {
+        const prefix = `${name}=`;
+        const cookie = document.cookie
+            .split("; ")
+            .find(item => item.startsWith(prefix));
+
+        return cookie == null
+            ? null
+            : decodeURIComponent(cookie.substring(prefix.length));
+    }
+
     applyTheme(getTheme());
+
+    document.addEventListener("htmx:configRequest", function (event) {
+        const csrfToken = readCookie(CSRF_COOKIE_NAME);
+        if (csrfToken) {
+            event.detail.headers[CSRF_HEADER_NAME] = csrfToken;
+        }
+    });
+
+    document.addEventListener("htmx:beforeRequest", showLoader);
+    document.addEventListener("htmx:afterRequest", hideLoader);
+    document.addEventListener("htmx:sendError", hideLoader);
+    document.addEventListener("htmx:responseError", hideLoader);
 
     document.addEventListener("DOMContentLoaded", function () {
         updateThemeButtons(getTheme());
