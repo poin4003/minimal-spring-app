@@ -114,7 +114,7 @@ public class MediaServiceImpl implements MediaService {
             creator = userBaseRepo.findById(createdById)
                     .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
             String detectedContentType = mediaFileValidator.validate(
-                    stagedFile.getTemporaryPath(),
+                    stagedFile,
                     policy);
             storedFile = mediaFileStorage.commit(stagedFile, detectedContentType);
         } catch (RuntimeException ex) {

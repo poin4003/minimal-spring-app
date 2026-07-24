@@ -2,6 +2,8 @@ package com.app.features.media.validation;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
@@ -18,6 +20,7 @@ import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.MyException;
 import com.app.features.media.exception.InvalidMediaContentException;
+import com.app.features.media.storage.schema.StagedMediaFile;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
@@ -35,10 +38,11 @@ public class MediaFileValidator {
 
     private final Tika tika = new Tika();
 
-    public String validate(Path file, AllowedMediaType policy) {
+    public String validate(StagedMediaFile stagedFile, AllowedMediaType policy) {
+        Path file = stagedFile.getTemporaryPath();
         String detectedContentType = mediaTypePolicyResolver.validateContentType(
                 policy,
-                detectContentType(file));
+                detectContentType(file, stagedFile.getOriginalName()));
 
         switch (policy.getKind()) {
             case IMAGE -> validateImage(file);
@@ -52,9 +56,9 @@ public class MediaFileValidator {
         return detectedContentType;
     }
 
-    private String detectContentType(Path file) {
-        try {
-            return tika.detect(file);
+    private String detectContentType(Path file, String originalName) {
+        try (InputStream input = Files.newInputStream(file)) {
+            return tika.detect(input, originalName);
         } catch (IOException ex) {
             throw new InvalidMediaContentException(
                     "Unable to detect media content type.");

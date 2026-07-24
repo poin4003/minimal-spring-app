@@ -8,7 +8,6 @@ import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.ui.web.component.view.UiConfirmModalView;
-import com.app.features.ui.web.component.view.UiDetailModalView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.view.UiShellView;
 
@@ -33,12 +32,10 @@ public class MediaListPageView {
     private final MediaGalleryView mediaGallery;
     private final MediaPreviewModalView previewModal;
     private final UiMetadataModalView metadataModal;
-    private final UiDetailModalView detailModal;
     private final UiConfirmModalView deleteModal;
     private final UiConfirmModalView retryModal;
     private final boolean openPreviewModal;
     private final boolean openMetadataModal;
-    private final boolean openDetailModal;
     private final boolean openDeleteModal;
     private final boolean openRetryModal;
 }

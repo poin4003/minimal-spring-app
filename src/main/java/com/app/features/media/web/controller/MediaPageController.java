@@ -1,6 +1,5 @@
 package com.app.features.media.web.controller;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -31,7 +30,6 @@ import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
-import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.web.enums.MediaPreviewType;
@@ -43,8 +41,6 @@ import com.app.features.media.web.view.MediaPreviewModalView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiConfirmModalView;
-import com.app.features.ui.web.component.view.UiDetailItemView;
-import com.app.features.ui.web.component.view.UiDetailModalView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
@@ -62,7 +58,6 @@ public class MediaPageController {
 
     private static final String PREVIEW_MEDIA_ID = "previewMediaId";
     private static final String METADATA_MEDIA_ID = "metadataMediaId";
-    private static final String DETAIL_MEDIA_ID = "detailMediaId";
     private static final String DELETE_MEDIA_ID = "deleteMediaId";
     private static final String RETRY_MEDIA_ID = "retryMediaId";
 
@@ -90,7 +85,6 @@ public class MediaPageController {
             @Valid @ModelAttribute("query") UiPageQuery query,
             @RequestParam(required = false) UUID previewMediaId,
             @RequestParam(required = false) UUID metadataMediaId,
-            @RequestParam(required = false) UUID detailMediaId,
             @RequestParam(required = false) UUID deleteMediaId,
             @RequestParam(required = false) UUID retryMediaId,
             Model model) {
@@ -103,7 +97,6 @@ public class MediaPageController {
                         query,
                         previewMediaId,
                         metadataMediaId,
-                        detailMediaId,
                         deleteMediaId,
                         retryMediaId));
         return "media/index";
@@ -147,17 +140,6 @@ public class MediaPageController {
         return "fragments/components/metadata-modal :: modal (modal=${modal})";
     }
 
-    @GetMapping("/{mediaId}/detail")
-    @Secured(PermissionConstants.MEDIA_VIEW)
-    public String detail(
-            @PathVariable UUID mediaId,
-            Model model) {
-        model.addAttribute(
-                UiDetailModalView.ATTRIBUTE,
-                buildDetailModal(mediaId));
-        return "fragments/components/detail-modal :: modal (modal=${modal})";
-    }
-
     @PostMapping("/{mediaId}/delete")
     @Secured(PermissionConstants.MEDIA_MANAGE)
     public String delete(
@@ -183,7 +165,6 @@ public class MediaPageController {
             UiPageQuery query,
             UUID previewMediaId,
             UUID metadataMediaId,
-            UUID detailMediaId,
             UUID deleteMediaId,
             UUID retryMediaId) {
         MediaGalleryView mediaGallery = buildMediaGallery(
@@ -197,9 +178,6 @@ public class MediaPageController {
         UiMetadataModalView metadataModal = metadataMediaId == null
                 ? null
                 : buildMetadataModal(metadataMediaId);
-        UiDetailModalView detailModal = detailMediaId == null
-                ? null
-                : buildDetailModal(detailMediaId);
         UiConfirmModalView deleteModal = deleteMediaId == null
                 ? null
                 : buildDeleteModal(deleteMediaId, request);
@@ -220,12 +198,10 @@ public class MediaPageController {
                 .mediaGallery(mediaGallery)
                 .previewModal(previewModal)
                 .metadataModal(metadataModal)
-                .detailModal(detailModal)
                 .deleteModal(deleteModal)
                 .retryModal(retryModal)
                 .openPreviewModal(previewModal != null)
                 .openMetadataModal(metadataModal != null)
-                .openDetailModal(detailModal != null)
                 .openDeleteModal(deleteModal != null)
                 .openRetryModal(retryModal != null)
                 .build();
@@ -278,8 +254,6 @@ public class MediaPageController {
                 .previewPartialPath(buildPartialPath(media.getId(), "preview"))
                 .metadataPath(buildSelectionPath(request, METADATA_MEDIA_ID, media.getId()))
                 .metadataPartialPath(buildPartialPath(media.getId(), "metadata"))
-                .detailPath(buildSelectionPath(request, DETAIL_MEDIA_ID, media.getId()))
-                .detailPartialPath(buildPartialPath(media.getId(), "detail"))
                 .thumbnailSelectionPath(canSelectThumbnail(media)
                         ? getMediaListPath() + "/" + media.getId() + "/thumbnail"
                         : null)
@@ -406,51 +380,6 @@ public class MediaPageController {
                                 false),
                         metadataItem("Created At", media.getCreatedAt(), true),
                         metadataItem("Updated At", media.getUpdatedAt(), true)))
-                .build();
-    }
-
-    private UiDetailModalView buildDetailModal(UUID mediaId) {
-        MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
-        List<UiDetailItemView> variants = media.getVariants().stream()
-                .map(variant -> toVariantItem(variant))
-                .toList();
-
-        return UiDetailModalView.builder()
-                .id("media-detail-modal")
-                .title("Media Detail")
-                .description(String.format(
-                        Locale.ROOT,
-                        "%s | %s | %s | %s",
-                        media.getOriginalName(),
-                        media.getKind(),
-                        media.getProcessingStatus(),
-                        formatFileSize(media.getFileSize())))
-                .listTitle("Generated Variants")
-                .items(variants)
-                .emptyMessage("This media uses the original file directly and has no generated variants.")
-                .build();
-    }
-
-    private UiDetailItemView toVariantItem(MediaVariantResult variant) {
-        List<String> details = new ArrayList<>();
-        if (variant.getContentType() != null) {
-            details.add(variant.getContentType());
-        }
-        if (variant.getWidth() != null && variant.getHeight() != null) {
-            details.add(variant.getWidth() + "x" + variant.getHeight());
-        }
-        if (variant.getBitrate() != null) {
-            details.add(variant.getBitrate() / 1_000 + " kbps");
-        }
-
-        String title = variant.getVariantType().name().replace('_', ' ');
-        if (variant.getVariantKey() != null && !variant.getVariantKey().isBlank()) {
-            title += " | " + variant.getVariantKey();
-        }
-
-        return UiDetailItemView.builder()
-                .title(title)
-                .description(details.isEmpty() ? null : String.join(" | ", details))
                 .build();
     }
 
@@ -585,7 +514,6 @@ public class MediaPageController {
     private void clearModalParameters(UriComponentsBuilder builder) {
         builder.replaceQueryParam(PREVIEW_MEDIA_ID)
                 .replaceQueryParam(METADATA_MEDIA_ID)
-                .replaceQueryParam(DETAIL_MEDIA_ID)
                 .replaceQueryParam(DELETE_MEDIA_ID)
                 .replaceQueryParam(RETRY_MEDIA_ID);
     }

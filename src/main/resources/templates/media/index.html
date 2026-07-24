@@ -160,10 +160,6 @@
                                 <div th:replace="~{fragments/components/metadata-modal :: modal(${page.metadataModal})}"></div>
                             </th:block>
 
-                            <th:block th:if="${page.detailModal != null}">
-                                <div th:replace="~{fragments/components/detail-modal :: modal(${page.detailModal})}"></div>
-                            </th:block>
-
                             <th:block th:if="${page.deleteModal != null}">
                                 <div th:replace="~{fragments/components/confirm-modal :: modal(${page.deleteModal})}"></div>
                             </th:block>
@@ -187,12 +183,6 @@
     <script th:if="${page.openMetadataModal}">
         document.addEventListener("DOMContentLoaded", function () {
             bootstrap.Modal.getOrCreateInstance(document.getElementById("media-metadata-modal")).show();
-        });
-    </script>
-
-    <script th:if="${page.openDetailModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("media-detail-modal")).show();
         });
     </script>
 

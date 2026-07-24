@@ -37,8 +37,6 @@ public class MediaGalleryItemView {
     private final String previewPartialPath;
     private final String metadataPath;
     private final String metadataPartialPath;
-    private final String detailPath;
-    private final String detailPartialPath;
     private final String thumbnailSelectionPath;
     private final String retryPath;
     private final String deletePath;
