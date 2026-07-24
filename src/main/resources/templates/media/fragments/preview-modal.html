@@ -32,7 +32,8 @@
                 </div>
 
                 <div th:case="'VIDEO'"
-                     class="d-flex flex-column align-items-center justify-content-center p-3">
+                     class="app-media-preview-player d-flex flex-column align-items-center justify-content-center p-3"
+                     data-media-preview-player>
                     <video class="w-100 rounded bg-black app-media-preview-content"
                            controls
                            playsinline
@@ -40,11 +41,13 @@
                            data-hls-player
                            th:attr="data-hls-source=${modal.sourceUrl},
                                     data-media-progress-id=${modal.mediaId}"></video>
+
                     <div class="alert alert-danger w-100 mt-3 mb-0" data-hls-error hidden></div>
                 </div>
 
                 <div th:case="'AUDIO'"
-                     class="d-flex flex-column align-items-center justify-content-center py-5 px-3">
+                     class="d-flex flex-column align-items-center justify-content-center py-5 px-3"
+                     data-media-preview-player>
                     <audio class="w-100"
                            controls
                            preload="metadata"

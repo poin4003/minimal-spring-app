@@ -17,6 +17,13 @@
     object-fit: contain;
 }
 
+.app-media-preview-player .plyr {
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--bs-border-radius);
+    --plyr-color-main: var(--bs-primary);
+}
+
 .app-media-preview-document {
     min-height: 70vh;
 }

@@ -11,13 +11,24 @@ import lombok.RequiredArgsConstructor;
 public class HlsEncodingProfile {
 
     private final String key;
+    private final Integer width;
     private final Integer height;
     private final int videoBitrate;
     private final int audioBitrate;
 
-    public static HlsEncodingProfile from(HlsRendition rendition) {
+    public static HlsEncodingProfile from(
+            HlsRendition rendition,
+            int sourceWidth,
+            int sourceHeight) {
+        int scaledWidth = (int) Math.round(
+                (double) sourceWidth * rendition.getHeight() / sourceHeight);
+        int evenWidth = scaledWidth % 2 == 0
+                ? scaledWidth
+                : scaledWidth + 1;
+
         return new HlsEncodingProfile(
                 rendition.getKey(),
+                Math.max(2, evenWidth),
                 rendition.getHeight(),
                 rendition.getVideoBitrate(),
                 rendition.getAudioBitrate());
@@ -26,6 +37,7 @@ public class HlsEncodingProfile {
     public static HlsEncodingProfile audio(int audioBitrate) {
         return new HlsEncodingProfile(
                 HlsReservedVariantKey.AUDIO.getKey(),
+                null,
                 null,
                 0,
                 audioBitrate);

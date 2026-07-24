@@ -196,7 +196,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         if (mediaKind == MediaKind.VIDEO && profile.isVideo()) {
             output.setCodec(StreamType.VIDEO, "libx264")
                     .setPixelFormat("yuv420p")
-                    .addArguments("-vf", "scale=-2:" + profile.getHeight())
+                    .addArguments(
+                            "-vf",
+                            "scale=" + profile.getWidth() + ":" + profile.getHeight())
                     .addArguments("-b:v", String.valueOf(profile.getVideoBitrate()))
                     .addArguments("-maxrate", String.valueOf(profile.getVideoBitrate()))
                     .addArguments("-bufsize", String.valueOf(profile.getVideoBitrate() * 2))
@@ -219,14 +221,19 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     }
 
     private List<HlsEncodingProfile> resolveVideoProfiles(Path source) {
-        int sourceHeight = mediaProbe.probe(source).getStreams().stream()
+        var videoStream = mediaProbe.probe(source).getStreams().stream()
                 .filter(stream -> StreamType.VIDEO.equals(stream.getCodecType()))
-                .map(stream -> stream.getHeight())
-                .filter(height -> height != null && height > 0)
-                .mapToInt(height -> height)
-                .max()
+                .filter(stream -> stream.getWidth() != null
+                        && stream.getWidth() > 0
+                        && stream.getHeight() != null
+                        && stream.getHeight() > 0)
+                .max((left, right) -> Integer.compare(
+                        left.getHeight(),
+                        right.getHeight()))
                 .orElseThrow(() -> ExceptionFactory.serverError(
                         "Unable to determine video dimensions."));
+        int sourceWidth = videoStream.getWidth();
+        int sourceHeight = videoStream.getHeight();
 
         List<HlsRendition> configuredProfiles = appProperties.getMedia()
                 .getHls()
@@ -243,7 +250,10 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 : selectedProfiles;
 
         return effectiveProfiles.stream()
-                .map(profile -> HlsEncodingProfile.from(profile))
+                .map(profile -> HlsEncodingProfile.from(
+                        profile,
+                        sourceWidth,
+                        sourceHeight))
                 .toList();
     }
 
@@ -254,8 +264,16 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
         for (HlsEncodingProfile profile : profiles) {
             content.append("#EXT-X-STREAM-INF:BANDWIDTH=")
-                    .append(profile.getTotalBitrate())
-                    .append('\n')
+                    .append(profile.getTotalBitrate());
+
+            if (profile.isVideo()) {
+                content.append(",RESOLUTION=")
+                        .append(profile.getWidth())
+                        .append('x')
+                        .append(profile.getHeight());
+            }
+
+            content.append('\n')
                     .append(profile.getKey())
                     .append("/index.m3u8\n");
         }
