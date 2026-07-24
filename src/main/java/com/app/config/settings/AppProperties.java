@@ -139,8 +139,6 @@ public class AppProperties {
         @Min(0)
         private int videoFrameSecond = 1;
 
-        private boolean pdfEnabled = true;
-
         private boolean audioCoverEnabled = true;
     }
 

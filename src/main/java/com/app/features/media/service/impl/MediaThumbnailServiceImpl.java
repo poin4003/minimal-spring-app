@@ -18,11 +18,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.stream.ImageOutputStream;
 
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.rendering.ImageType;
-import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Service;
 
 import com.app.config.settings.AppProperties;
@@ -69,8 +64,7 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
                 case IMAGE -> extractVisualThumbnail(source, workspace, false);
                 case VIDEO -> extractVisualThumbnail(source, workspace, true);
                 case AUDIO -> extractAudioCover(source, workspace).orElse(null);
-                case DOCUMENT -> renderPdfThumbnail(source);
-                case FILE -> null;
+                case DOCUMENT, FILE -> null;
             };
 
             if (image == null) {
@@ -165,33 +159,6 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
                 .execute();
 
         return Optional.of(readImage(extractedImage));
-    }
-
-    private BufferedImage renderPdfThumbnail(Path source) {
-        try (PDDocument document = Loader.loadPDF(source.toFile())) {
-            if (document.getNumberOfPages() == 0) {
-                throw ExceptionFactory.invalidParam("PDF document has no pages.");
-            }
-
-            PDRectangle cropBox = document.getPage(0).getCropBox();
-            float pageWidth = cropBox.getWidth();
-            float pageHeight = cropBox.getHeight();
-            int rotation = Math.floorMod(document.getPage(0).getRotation(), 360);
-            if (rotation == 90 || rotation == 270) {
-                float previousWidth = pageWidth;
-                pageWidth = pageHeight;
-                pageHeight = previousWidth;
-            }
-
-            AppProperties.Thumbnail config = appProperties.getMedia().getThumbnail();
-            float scale = Math.min(
-                    config.getMaxWidth() / pageWidth,
-                    config.getMaxHeight() / pageHeight);
-            PDFRenderer renderer = new PDFRenderer(document);
-            return renderer.renderImage(0, scale, ImageType.RGB);
-        } catch (IOException ex) {
-            throw ExceptionFactory.invalidParam("Unable to render PDF thumbnail.");
-        }
     }
 
     private long resolveVideoFramePositionMillis(Path source) {

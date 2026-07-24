@@ -38,6 +38,7 @@ public class MediaGalleryItemView {
     private final String metadataPath;
     private final String metadataPartialPath;
     private final String thumbnailSelectionPath;
+    private final String downloadPath;
     private final String retryPath;
     private final String retryPartialPath;
     private final String deletePath;
@@ -63,5 +64,13 @@ public class MediaGalleryItemView {
 
     public boolean canSelectThumbnail() {
         return thumbnailSelectionPath != null;
+    }
+
+    public boolean canPreview() {
+        return previewPath != null && previewPartialPath != null;
+    }
+
+    public boolean canDownload() {
+        return downloadPath != null;
     }
 }

@@ -32,7 +32,6 @@
         <jobrunr.version>7.2.1</jobrunr.version>
         <tika.version>3.3.1</tika.version>
         <jaffree.version>2024.08.29</jaffree.version>
-        <pdfbox.version>3.0.8</pdfbox.version>
         <bucket4j.version>8.19.0</bucket4j.version>
         
         <!-- Plugin Versions -->
@@ -160,12 +159,6 @@
             <groupId>com.github.kokorin.jaffree</groupId>
             <artifactId>jaffree</artifactId>
             <version>${jaffree.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.pdfbox</groupId>
-            <artifactId>pdfbox</artifactId>
-            <version>${pdfbox.version}</version>
         </dependency>
 
         <dependency>

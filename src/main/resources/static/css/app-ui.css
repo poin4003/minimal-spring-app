@@ -63,12 +63,19 @@
     height: 3rem;
 }
 
-.app-media-preview-document {
-    min-height: 70vh;
-}
-
 .app-media-preview-message {
     min-height: 20rem;
+}
+
+.app-icon-button {
+    display: inline-grid;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    place-items: center;
+}
+
+.app-icon-button .bi {
+    line-height: 1;
 }
 
 .app-media-upload-dropzone {

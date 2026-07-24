@@ -37,7 +37,6 @@ app:
             max-height: ${MEDIA_THUMBNAIL_MAX_HEIGHT:480}
             jpeg-quality: ${MEDIA_THUMBNAIL_JPEG_QUALITY:0.82}
             video-frame-second: ${MEDIA_THUMBNAIL_VIDEO_FRAME_SECOND:1}
-            pdf-enabled: ${MEDIA_THUMBNAIL_PDF_ENABLED:true}
             audio-cover-enabled: ${MEDIA_THUMBNAIL_AUDIO_COVER_ENABLED:true}
         chunk-upload:
             chunk-size-bytes: ${MEDIA_CHUNK_SIZE_BYTES:8388608}

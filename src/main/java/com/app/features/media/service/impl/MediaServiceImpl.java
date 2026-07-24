@@ -133,8 +133,7 @@ public class MediaServiceImpl implements MediaService {
         media.setFileSize(storedFile.getFileSize());
         media.setKind(policy.getKind());
         media.setProcessingStatus(mediaProcessingPolicy.requiresProcessing(
-                policy.getKind(),
-                storedFile.getContentType())
+                policy.getKind())
                 ? MediaProcessingStatus.PENDING
                 : MediaProcessingStatus.READY);
         media.setStatus(RecordStatus.ACTIVE);
@@ -321,9 +320,7 @@ public class MediaServiceImpl implements MediaService {
             throw ExceptionFactory.invalidParam("Inactive media cannot be processed.");
         }
 
-        if (!mediaProcessingPolicy.requiresProcessing(
-                media.getKind(),
-                media.getContentType())) {
+        if (!mediaProcessingPolicy.requiresProcessing(media.getKind())) {
             throw ExceptionFactory.invalidParam(
                     "This media type does not require processing.");
         }

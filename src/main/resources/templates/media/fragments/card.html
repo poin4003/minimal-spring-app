@@ -25,12 +25,20 @@
              data-media-thumbnail
              loading="lazy"
              decoding="async">
+
+        <span th:if="${item.processingStatus.name() == 'PENDING'}"
+              class="spinner-border spinner-border-sm text-primary
+                     position-absolute top-0 end-0 m-3 z-2"
+              role="status">
+            <span class="visually-hidden">Processing</span>
+        </span>
     </div>
 
     <div class="card-body">
         <h3 class="h6 text-truncate mb-2"
             th:title="${item.originalName}">
-            <a class="stretched-link text-reset text-decoration-none"
+            <a th:if="${item.canPreview()}"
+               class="stretched-link text-reset text-decoration-none"
                th:href="${item.previewPath}"
                th:text="${item.originalName}"
                th:attr="hx-get=${item.previewPartialPath},
@@ -40,6 +48,10 @@
                         data-app-modal-request='true'">
                 image.jpg
             </a>
+            <span th:unless="${item.canPreview()}"
+                  th:text="${item.originalName}">
+                archive.zip
+            </span>
         </h3>
 
         <p class="small text-secondary text-truncate mb-3"
@@ -84,36 +96,59 @@
         <div class="btn-group btn-group-sm"
              role="group"
              aria-label="Media actions">
-            <a class="btn btn-outline-secondary"
+            <a class="btn btn-outline-secondary app-icon-button"
                th:href="${item.metadataPath}"
+               title="Metadata"
+               aria-label="Metadata"
                th:attr="hx-get=${item.metadataPartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
-                        data-app-modal-request='true'">Metadata</a>
+                        data-app-modal-request='true'">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                <span class="visually-hidden">Metadata</span>
+            </a>
             <a th:if="${item.canSelectThumbnail()}"
-               class="btn btn-outline-primary"
-               th:href="${item.thumbnailSelectionPath}">
-                Thumbnail
+               class="btn btn-outline-primary app-icon-button"
+               th:href="${item.thumbnailSelectionPath}"
+               title="Select thumbnail"
+               aria-label="Select thumbnail">
+                <i class="bi bi-image" aria-hidden="true"></i>
+                <span class="visually-hidden">Select thumbnail</span>
+            </a>
+            <a th:if="${item.canDownload()}"
+               class="btn btn-outline-success app-icon-button"
+               th:href="${item.downloadPath}"
+               th:attr="download=${item.originalName}"
+               title="Download"
+               aria-label="Download">
+                <i class="bi bi-download" aria-hidden="true"></i>
+                <span class="visually-hidden">Download</span>
             </a>
             <a th:if="${item.canRetry()}"
-               class="btn btn-outline-warning"
+               class="btn btn-outline-warning app-icon-button"
                th:href="${item.retryPath}"
+               title="Retry processing"
+               aria-label="Retry processing"
                th:attr="hx-get=${item.retryPartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
                         data-app-modal-request='true'">
-                Retry
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                <span class="visually-hidden">Retry processing</span>
             </a>
-            <a class="btn btn-outline-danger"
+            <a class="btn btn-outline-danger app-icon-button"
                th:href="${item.deletePath}"
+               title="Delete"
+               aria-label="Delete"
                th:attr="hx-get=${item.deletePartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
                         data-app-modal-request='true'">
-                Delete
+                <i class="bi bi-trash" aria-hidden="true"></i>
+                <span class="visually-hidden">Delete</span>
             </a>
         </div>
     </div>

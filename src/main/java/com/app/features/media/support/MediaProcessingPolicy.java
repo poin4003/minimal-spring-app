@@ -12,19 +12,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class MediaProcessingPolicy {
 
-    private static final String PDF_CONTENT_TYPE = "application/pdf";
-
     private final AppProperties appProperties;
 
-    public boolean requiresProcessing(MediaKind kind, String contentType) {
-        return requiresHls(kind) || shouldGenerateThumbnail(kind, contentType);
+    public boolean requiresProcessing(MediaKind kind) {
+        return requiresHls(kind) || shouldGenerateThumbnail(kind);
     }
 
     public boolean shouldGenerateThumbnail(MediaEntity media) {
-        return shouldGenerateThumbnail(media.getKind(), media.getContentType());
+        return shouldGenerateThumbnail(media.getKind());
     }
 
-    public boolean shouldGenerateThumbnail(MediaKind kind, String contentType) {
+    public boolean shouldGenerateThumbnail(MediaKind kind) {
         AppProperties.Thumbnail config = appProperties.getMedia().getThumbnail();
         if (!config.isEnabled()) {
             return false;
@@ -33,9 +31,7 @@ public class MediaProcessingPolicy {
         return switch (kind) {
             case IMAGE, VIDEO -> true;
             case AUDIO -> config.isAudioCoverEnabled();
-            case DOCUMENT -> config.isPdfEnabled()
-                    && PDF_CONTENT_TYPE.equalsIgnoreCase(contentType);
-            case FILE -> false;
+            case DOCUMENT, FILE -> false;
         };
     }
 

@@ -22,6 +22,7 @@ import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
+import com.app.core.exception.ExceptionFactory;
 import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
@@ -276,6 +277,8 @@ public class MediaPageController {
     private MediaGalleryItemView toGalleryItem(
             MediaResult media,
             HttpServletRequest request) {
+        boolean previewSupported = supportsPreview(media.getKind());
+
         return MediaGalleryItemView.builder()
                 .id(media.getId())
                 .originalName(media.getOriginalName())
@@ -288,12 +291,19 @@ public class MediaPageController {
                         : media.getCreatedBy().getEmail())
                 .fileSizeLabel(formatFileSize(media.getFileSize()))
                 .createdAt(media.getCreatedAt())
-                .previewPath(buildSelectionPath(request, PREVIEW_MEDIA_ID, media.getId()))
-                .previewPartialPath(buildPartialPath(media.getId(), "preview"))
+                .previewPath(previewSupported
+                        ? buildSelectionPath(request, PREVIEW_MEDIA_ID, media.getId())
+                        : null)
+                .previewPartialPath(previewSupported
+                        ? buildPartialPath(media.getId(), "preview")
+                        : null)
                 .metadataPath(buildSelectionPath(request, METADATA_MEDIA_ID, media.getId()))
                 .metadataPartialPath(buildPartialPath(media.getId(), "metadata"))
                 .thumbnailSelectionPath(canSelectThumbnail(media)
                         ? getMediaListPath() + "/" + media.getId() + "/thumbnail"
+                        : null)
+                .downloadPath(canDownload(media)
+                        ? buildOriginalUrl(media.getPublicKey())
                         : null)
                 .retryPath(canRetry(media)
                         ? buildSelectionPath(request, RETRY_MEDIA_ID, media.getId())
@@ -315,8 +325,17 @@ public class MediaPageController {
                 && mediaProcessingPolicy.supportsManualThumbnail(media.getKind());
     }
 
+    private boolean canDownload(MediaResult media) {
+        return media.getStatus() == RecordStatus.ACTIVE
+                && media.getProcessingStatus() == MediaProcessingStatus.READY;
+    }
+
     private MediaPreviewModalView buildPreviewModal(UUID mediaId) {
         MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
+        if (!supportsPreview(media.getKind())) {
+            throw ExceptionFactory.notFound("Media preview is not available.");
+        }
+
         boolean deliveryAvailable = media.getStatus() == RecordStatus.ACTIVE
                 && media.getProcessingStatus() == MediaProcessingStatus.READY;
 
@@ -328,7 +347,7 @@ public class MediaPageController {
                 : null;
         String sourceUrl = switch (previewType) {
             case VIDEO, AUDIO -> buildHlsUrl(media.getPublicKey());
-            case IMAGE, PDF, DOWNLOAD -> originalUrl;
+            case IMAGE -> originalUrl;
             case UNAVAILABLE -> null;
         };
 
@@ -346,7 +365,7 @@ public class MediaPageController {
                 .sourceUrl(sourceUrl)
                 .originalUrl(originalUrl)
                 .unavailableMessage(deliveryAvailable
-                        ? "This file type cannot be previewed in the browser."
+                        ? null
                         : buildUnavailableMessage(media))
                 .build();
     }
@@ -356,11 +375,15 @@ public class MediaPageController {
             case IMAGE -> MediaPreviewType.IMAGE;
             case VIDEO -> MediaPreviewType.VIDEO;
             case AUDIO -> MediaPreviewType.AUDIO;
-            case DOCUMENT -> "application/pdf".equalsIgnoreCase(media.getContentType())
-                    ? MediaPreviewType.PDF
-                    : MediaPreviewType.DOWNLOAD;
-            case FILE -> MediaPreviewType.DOWNLOAD;
+            case DOCUMENT, FILE ->
+                throw ExceptionFactory.notFound("Media preview is not available.");
         };
+    }
+
+    private boolean supportsPreview(MediaKind kind) {
+        return kind == MediaKind.IMAGE
+                || kind == MediaKind.VIDEO
+                || kind == MediaKind.AUDIO;
     }
 
     private String buildUnavailableMessage(MediaDetailResult media) {
@@ -391,9 +414,7 @@ public class MediaPageController {
 
     private boolean canRetry(MediaResult media) {
         return media.getProcessingStatus() == MediaProcessingStatus.FAILED
-                && mediaProcessingPolicy.requiresProcessing(
-                        media.getKind(),
-                        media.getContentType());
+                && mediaProcessingPolicy.requiresProcessing(media.getKind());
     }
 
     private UiMetadataModalView buildMetadataModal(UUID mediaId) {

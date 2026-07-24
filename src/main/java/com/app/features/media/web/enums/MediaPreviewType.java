@@ -4,7 +4,5 @@ public enum MediaPreviewType {
     IMAGE,
     VIDEO,
     AUDIO,
-    PDF,
-    DOWNLOAD,
     UNAVAILABLE
 }
