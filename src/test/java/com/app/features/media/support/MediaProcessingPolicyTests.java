@@ -20,34 +20,20 @@ class MediaProcessingPolicyTests {
     }
 
     @Test
-    void processesImagesVideosAudioAndPdfDocuments() {
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.IMAGE,
-                "image/jpeg"))
+    void processesImagesVideosAndAudio() {
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.IMAGE))
                 .isTrue();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.VIDEO,
-                "video/mp4"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.VIDEO))
                 .isTrue();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.AUDIO,
-                "audio/mpeg"))
-                .isTrue();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.DOCUMENT,
-                "application/pdf"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.AUDIO))
                 .isTrue();
     }
 
     @Test
-    void leavesDirectDocumentsAndFilesReadyImmediately() {
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.DOCUMENT,
-                "text/markdown"))
+    void leavesDocumentsAndFilesReadyImmediately() {
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.DOCUMENT))
                 .isFalse();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.FILE,
-                "application/zip"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.FILE))
                 .isFalse();
     }
 
@@ -55,17 +41,11 @@ class MediaProcessingPolicyTests {
     void disablingThumbnailsDoesNotDisableHlsProcessing() {
         appProperties.getMedia().getThumbnail().setEnabled(false);
 
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.IMAGE,
-                "image/png"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.IMAGE))
                 .isFalse();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.VIDEO,
-                "video/mp4"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.VIDEO))
                 .isTrue();
-        assertThat(mediaProcessingPolicy.requiresProcessing(
-                MediaKind.AUDIO,
-                "audio/mpeg"))
+        assertThat(mediaProcessingPolicy.requiresProcessing(MediaKind.AUDIO))
                 .isTrue();
     }
 }

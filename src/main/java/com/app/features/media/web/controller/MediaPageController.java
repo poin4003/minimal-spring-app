@@ -302,6 +302,9 @@ public class MediaPageController {
                 .thumbnailSelectionPath(canSelectThumbnail(media)
                         ? getMediaListPath() + "/" + media.getId() + "/thumbnail"
                         : null)
+                .hoverPreviewUrl(canHoverPreview(media)
+                        ? buildHlsUrl(media.getPublicKey())
+                        : null)
                 .downloadPath(canDownload(media)
                         ? buildOriginalUrl(media.getPublicKey())
                         : null)
@@ -327,6 +330,12 @@ public class MediaPageController {
 
     private boolean canDownload(MediaResult media) {
         return media.getStatus() == RecordStatus.ACTIVE
+                && media.getProcessingStatus() == MediaProcessingStatus.READY;
+    }
+
+    private boolean canHoverPreview(MediaResult media) {
+        return media.getKind() == MediaKind.VIDEO
+                && media.getStatus() == RecordStatus.ACTIVE
                 && media.getProcessingStatus() == MediaProcessingStatus.READY;
     }
 
