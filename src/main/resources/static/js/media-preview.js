@@ -3,8 +3,6 @@
 
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
-    const PLYR_ICON_URL = "/vendor/plyr/plyr.svg";
-    const PLYR_BLANK_VIDEO_URL = "/vendor/plyr/blank.mp4";
     const playerSessions = new Map();
     const progressTrackers = new Map();
 
@@ -35,7 +33,7 @@
         }
     }
 
-    function initializeWatchProgress(mediaElement) {
+    function initializeWatchProgress(mediaElement, player) {
         if (!(mediaElement instanceof HTMLVideoElement)
                 || progressTrackers.has(mediaElement)) {
             return;
@@ -55,26 +53,28 @@
                 return;
             }
 
-            const nearCompletion = Number.isFinite(mediaElement.duration)
-                    && mediaElement.duration - savedTime <= SAVE_INTERVAL_SECONDS;
+            const duration = player.duration();
+            const nearCompletion = Number.isFinite(duration)
+                    && duration - savedTime <= SAVE_INTERVAL_SECONDS;
             if (nearCompletion) {
                 removeProgress(storageKey);
                 return;
             }
 
-            mediaElement.currentTime = savedTime;
+            player.currentTime(savedTime);
             lastSavedSecond = Math.floor(savedTime);
         }
 
         function saveProgress(force) {
-            const currentSecond = Math.floor(mediaElement.currentTime);
+            const currentSecond = Math.floor(player.currentTime());
             if (!Number.isFinite(currentSecond) || currentSecond <= 0) {
                 return;
             }
 
-            const completed = mediaElement.ended
-                    || Number.isFinite(mediaElement.duration)
-                    && mediaElement.duration - currentSecond <= SAVE_INTERVAL_SECONDS;
+            const duration = player.duration();
+            const completed = player.ended()
+                    || Number.isFinite(duration)
+                    && duration - currentSecond <= SAVE_INTERVAL_SECONDS;
             if (completed) {
                 removeProgress(storageKey);
                 return;
@@ -101,27 +101,26 @@
             removeProgress(storageKey);
         }
 
-        mediaElement.addEventListener("loadedmetadata", restoreProgress);
-        mediaElement.addEventListener("timeupdate", handleTimeUpdate);
-        mediaElement.addEventListener("pause", handlePause);
-        mediaElement.addEventListener("ended", handleEnded);
+        player.one("loadedmetadata", restoreProgress);
+        player.on("timeupdate", handleTimeUpdate);
+        player.on("pause", handlePause);
+        player.on("ended", handleEnded);
 
         progressTrackers.set(mediaElement, {
             save: function () {
                 saveProgress(true);
             },
             destroy: function () {
-                mediaElement.removeEventListener("loadedmetadata", restoreProgress);
-                mediaElement.removeEventListener("timeupdate", handleTimeUpdate);
-                mediaElement.removeEventListener("pause", handlePause);
-                mediaElement.removeEventListener("ended", handleEnded);
+                player.off("timeupdate", handleTimeUpdate);
+                player.off("pause", handlePause);
+                player.off("ended", handleEnded);
             }
         });
     }
 
     function showPlaybackError(mediaElement, message) {
         const previewElement = mediaElement.closest("[data-media-preview-player]");
-        const errorElement = previewElement?.querySelector("[data-hls-error]");
+        const errorElement = previewElement?.querySelector("[data-video-error]");
         if (!errorElement) {
             return;
         }
@@ -130,149 +129,36 @@
         errorElement.hidden = false;
     }
 
-    function resolveLevelHeight(level) {
-        return Number.isFinite(level.height) && level.height > 0
-            ? level.height
-            : null;
-    }
-
-    function resolveQualityOptions(hls) {
-        const heights = hls.levels
-            .map(function (level) {
-                return resolveLevelHeight(level);
-            })
-            .filter(function (height) {
-                return Number.isFinite(height) && height > 0;
-            });
-
-        return [
-            0,
-            ...new Set(heights)
-        ].sort(function (left, right) {
-            if (left === 0) {
-                return -1;
-            }
-            if (right === 0) {
-                return 1;
-            }
-            return right - left;
-        });
-    }
-
-    function changeHlsQuality(hls, quality) {
-        const height = Number(quality);
-        if (height === 0) {
-            hls.currentLevel = -1;
-            return;
-        }
-
-        const levelIndex = hls.levels.findIndex(function (level) {
-            return resolveLevelHeight(level) === height;
-        });
-        if (levelIndex >= 0) {
-            hls.currentLevel = levelIndex;
-        }
-    }
-
-    function createVideoPlayer(mediaElement, hls) {
-        if (!window.Plyr) {
-            return null;
-        }
-
+    function createPlayerOptions(mediaElement) {
+        const isVideo = mediaElement instanceof HTMLVideoElement;
         const options = {
-            controls: [
-                "play-large",
-                "play",
-                "rewind",
-                "fast-forward",
-                "progress",
-                "current-time",
-                "duration",
-                "mute",
-                "volume",
-                "settings",
-                "pip",
-                "fullscreen"
-            ],
-            settings: hls ? ["quality", "speed"] : ["speed"],
-            seekTime: 10,
-            iconUrl: PLYR_ICON_URL,
-            blankVideo: PLYR_BLANK_VIDEO_URL,
-            storage: {
-                enabled: true,
-                key: "media-player"
-            },
-            speed: {
-                selected: 1,
-                options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]
+            controls: true,
+            preload: "metadata",
+            responsive: true,
+            fluid: isVideo,
+            audioOnlyMode: !isVideo,
+            playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
+            html5: {
+                vhs: {
+                    overrideNative: true
+                },
+                nativeAudioTracks: false,
+                nativeVideoTracks: false
             }
         };
 
-        if (hls) {
-            options.quality = {
-                default: 0,
-                options: resolveQualityOptions(hls),
-                forced: true,
-                onChange: function (quality) {
-                    changeHlsQuality(hls, quality);
-                }
-            };
-            options.i18n = {
-                qualityLabel: {
-                    0: "Auto"
-                }
+        if (isVideo) {
+            options.controlBar = {
+                skipButtons: {
+                    backward: 10,
+                    forward: 10
+                },
+                pictureInPictureToggle: true,
+                fullscreenToggle: true
             };
         }
 
-        return new window.Plyr(mediaElement, options);
-    }
-
-    function initializeNativePlayer(mediaElement, sourceUrl) {
-        mediaElement.src = sourceUrl;
-
-        playerSessions.set(mediaElement, {
-            hls: null,
-            plyr: mediaElement instanceof HTMLVideoElement
-                ? createVideoPlayer(mediaElement, null)
-                : null
-        });
-    }
-
-    function initializeHlsPlayer(mediaElement, sourceUrl) {
-        const hls = new window.Hls();
-        const session = {
-            hls: hls,
-            plyr: null
-        };
-        playerSessions.set(mediaElement, session);
-
-        hls.on(window.Hls.Events.MANIFEST_PARSED, function () {
-            if (mediaElement instanceof HTMLVideoElement && !session.plyr) {
-                session.plyr = createVideoPlayer(mediaElement, hls);
-            }
-        });
-
-        hls.on(window.Hls.Events.ERROR, function (_event, data) {
-            if (!data.fatal) {
-                return;
-            }
-
-            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR) {
-                hls.startLoad();
-                return;
-            }
-            if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
-                hls.recoverMediaError();
-                return;
-            }
-
-            hls.destroy();
-            session.hls = null;
-            showPlaybackError(mediaElement, "The stream could not be played.");
-        });
-
-        hls.loadSource(sourceUrl);
-        hls.attachMedia(mediaElement);
+        return options;
     }
 
     function initializePlayer(mediaElement) {
@@ -280,25 +166,40 @@
             return;
         }
 
-        const sourceUrl = mediaElement.dataset.hlsSource;
+        const sourceUrl = mediaElement.dataset.videoSource;
         if (!sourceUrl) {
             showPlaybackError(mediaElement, "No stream source is available.");
             return;
         }
 
-        initializeWatchProgress(mediaElement);
-
-        if (mediaElement.canPlayType("application/vnd.apple.mpegurl")) {
-            initializeNativePlayer(mediaElement, sourceUrl);
+        if (!window.videojs) {
+            showPlaybackError(mediaElement, "The media player is unavailable.");
             return;
         }
 
-        if (!window.Hls || !window.Hls.isSupported()) {
-            showPlaybackError(mediaElement, "HLS playback is not supported by this browser.");
-            return;
-        }
+        const player = window.videojs(mediaElement, createPlayerOptions(mediaElement));
+        playerSessions.set(mediaElement, {
+            player: player
+        });
 
-        initializeHlsPlayer(mediaElement, sourceUrl);
+        player.ready(function () {
+            if (mediaElement instanceof HTMLVideoElement
+                    && typeof player.hlsQualitySelector === "function") {
+                player.hlsQualitySelector({
+                    displayCurrentQuality: true
+                });
+            }
+
+            initializeWatchProgress(mediaElement, player);
+            player.src({
+                src: sourceUrl,
+                type: "application/x-mpegURL"
+            });
+        });
+
+        player.on("error", function () {
+            showPlaybackError(mediaElement, "The stream could not be played.");
+        });
     }
 
     function destroyPlayer(mediaElement) {
@@ -310,16 +211,9 @@
         }
 
         const session = playerSessions.get(mediaElement);
-        if (session?.plyr) {
-            session.plyr.destroy();
+        if (session?.player && !session.player.isDisposed()) {
+            session.player.dispose();
         }
-        if (session?.hls) {
-            session.hls.destroy();
-        }
-
-        mediaElement.pause();
-        mediaElement.removeAttribute("src");
-        mediaElement.load();
         playerSessions.delete(mediaElement);
     }
 
@@ -336,7 +230,7 @@
             return;
         }
 
-        modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
+        modalElement.querySelectorAll("[data-video-player]").forEach(function (mediaElement) {
             initializePlayer(mediaElement);
         });
     });
@@ -348,7 +242,7 @@
             return;
         }
 
-        modalElement.querySelectorAll("[data-hls-player]").forEach(function (mediaElement) {
+        modalElement.querySelectorAll("[data-video-player]").forEach(function (mediaElement) {
             destroyPlayer(mediaElement);
         });
     });

@@ -17,11 +17,50 @@
     object-fit: contain;
 }
 
-.app-media-preview-player .plyr {
+.app-media-preview-player .video-js {
     width: 100%;
     overflow: hidden;
     border-radius: var(--bs-border-radius);
-    --plyr-color-main: var(--bs-primary);
+    background-color: #000;
+    color: #fff;
+    font-family: var(--bs-body-font-family);
+}
+
+.app-media-preview-player .video-js .vjs-control-bar {
+    background-color: rgba(0, 0, 0, 0.72);
+}
+
+.app-media-preview-player .video-js .vjs-big-play-button {
+    border: 0;
+    border-radius: var(--bs-border-radius-pill);
+    background-color: rgba(var(--bs-primary-rgb), 0.9);
+}
+
+.app-media-preview-player .video-js:hover .vjs-big-play-button,
+.app-media-preview-player .video-js .vjs-big-play-button:focus {
+    background-color: var(--bs-primary);
+}
+
+.app-media-preview-player .video-js .vjs-play-progress,
+.app-media-preview-player .video-js .vjs-volume-level {
+    background-color: var(--bs-primary);
+}
+
+.app-media-preview-player .video-js .vjs-menu-content {
+    color: var(--bs-body-color);
+    background-color: rgba(var(--bs-body-bg-rgb), 0.96);
+    border: var(--bs-border-width) solid var(--bs-border-color);
+    border-radius: var(--bs-border-radius);
+}
+
+.app-media-preview-player .video-js .vjs-menu li.vjs-selected {
+    color: #fff;
+    background-color: var(--bs-primary);
+}
+
+.app-media-preview-audio.video-js {
+    width: 100%;
+    height: 3rem;
 }
 
 .app-media-preview-document {
