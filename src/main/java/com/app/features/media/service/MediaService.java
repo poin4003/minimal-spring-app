@@ -14,11 +14,18 @@ import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.storage.schema.StagedMediaFile;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
 public interface MediaService {
 
-    MediaResult createMedia(UUID createdById, CreateMediaPayload payload);
+    MediaResult createMedia(
+            @NotNull UUID createdById,
+            @NotNull @Valid CreateMediaPayload payload);
 
-    MediaResult createMedia(UUID createdById, StagedMediaFile stagedFile);
+    MediaResult createMedia(
+            @NotNull UUID createdById,
+            @NotNull StagedMediaFile stagedFile);
 
     void deleteOwnedMedia(UUID mediaId, UUID createdById);
 

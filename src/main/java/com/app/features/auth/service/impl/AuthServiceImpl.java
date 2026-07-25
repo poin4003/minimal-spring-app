@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.app.config.jwt.JwtAccessPayload;
 import com.app.config.jwt.JwtTokenProvider;
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
+@Validated
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -137,10 +139,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private UserBaseEntity authenticateCredentials(LoginPayload payload) {
-        if (payload.getEmail() == null || payload.getPassword() == null) {
-            throw ExceptionFactory.invalidCredentials();
-        }
-
         UserBaseEntity user = userBaseRepo.findByEmail(payload.getEmail())
                 .orElseThrow(() -> ExceptionFactory.invalidCredentials());
 

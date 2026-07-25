@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -59,6 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Validated
 public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepo;
@@ -77,10 +79,6 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public MediaResult createMedia(UUID createdById, CreateMediaPayload payload) {
-        if (payload == null || payload.getFile() == null) {
-            throw ExceptionFactory.invalidParam("Media file is required.");
-        }
-
         MultipartFile upload = payload.getFile();
         if (upload.getSize() > appProperties.getMedia()
                 .getChunkUpload()
@@ -96,10 +94,6 @@ public class MediaServiceImpl implements MediaService {
     @Transactional
     @Override
     public MediaResult createMedia(UUID createdById, StagedMediaFile stagedFile) {
-        if (stagedFile == null) {
-            throw ExceptionFactory.invalidParam("Staged media file is required.");
-        }
-
         AllowedMediaType policy = mediaTypePolicyResolver.resolve(stagedFile.getOriginalName());
         return createStagedMedia(createdById, stagedFile, policy);
     }

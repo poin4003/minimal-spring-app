@@ -7,25 +7,40 @@ import com.app.features.media.schema.payload.StartMediaUploadPayload;
 import com.app.features.media.schema.result.MediaResult;
 import com.app.features.media.schema.result.MediaUploadSessionResult;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+
 public interface MediaUploadService {
 
     MediaUploadSessionResult startUpload(
-            UUID createdById,
-            StartMediaUploadPayload payload);
+            @NotNull UUID createdById,
+            @NotNull @Valid StartMediaUploadPayload payload);
 
-    MediaUploadSessionResult getUpload(UUID uploadId, UUID createdById);
+    MediaUploadSessionResult getUpload(
+            @NotNull UUID uploadId,
+            @NotNull UUID createdById);
 
     void uploadChunk(
-            UUID uploadId,
-            UUID createdById,
-            int chunkIndex,
-            long contentLength,
+            @NotNull UUID uploadId,
+            @NotNull UUID createdById,
+            @PositiveOrZero int chunkIndex,
+            @Positive long contentLength,
+            @NotBlank
+            @Pattern(regexp = "^[a-fA-F0-9]{64}$")
             String checksum,
-            InputStream inputStream);
+            @NotNull InputStream inputStream);
 
-    MediaResult completeUpload(UUID uploadId, UUID createdById);
+    MediaResult completeUpload(
+            @NotNull UUID uploadId,
+            @NotNull UUID createdById);
 
-    void cancelUpload(UUID uploadId, UUID createdById);
+    void cancelUpload(
+            @NotNull UUID uploadId,
+            @NotNull UUID createdById);
 
     int cleanupExpiredUploads();
 }

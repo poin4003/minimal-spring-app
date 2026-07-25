@@ -6,11 +6,16 @@ import com.app.features.auth.schema.payload.LoginPayload;
 import com.app.features.auth.schema.payload.RefreshTokenPayload;
 import com.app.features.auth.schema.result.LoginResult;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+
 public interface AuthService {
     
-    LoginResult login(LoginPayload req, String ipAddress);
+    LoginResult login(
+            @NotNull @Valid LoginPayload req,
+            String ipAddress);
 
-    LoginResult refreshToken(RefreshTokenPayload req);
+    LoginResult refreshToken(@NotNull @Valid RefreshTokenPayload req);
 
-    void logout(UUID userId, UUID keyStoreId);
+    void logout(@NotNull UUID userId, UUID keyStoreId);
 }
