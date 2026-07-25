@@ -17,6 +17,7 @@ import com.app.core.exception.MyException;
 import com.app.features.ui.web.support.WebErrorPageFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -88,6 +89,19 @@ public class WebExceptionHandler {
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
     public ModelAndView handleValidationException(Exception ex, HttpServletRequest request) {
         log.warn("Web validation error: {}", ex.getMessage());
+
+        return webErrorPageFactory.build(
+                HttpStatus.BAD_REQUEST,
+                request,
+                "COMMON_VALIDATION_ERROR",
+                "Invalid request data.");
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ModelAndView handleConstraintViolationException(
+            ConstraintViolationException ex,
+            HttpServletRequest request) {
+        log.warn("Web constraint violation: {}", ex.getMessage());
 
         return webErrorPageFactory.build(
                 HttpStatus.BAD_REQUEST,

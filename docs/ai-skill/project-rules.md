@@ -79,6 +79,13 @@
 - Avoid loose `ModelAndView.addObject(...)` chains for web error pages; prefer structured page objects passed as one root model attribute.
 - When Thymeleaf pages need to surface backend business validation errors, prefer structured `fieldErrors` from `MyException` and a dedicated resolver/helper instead of mutating `BindingResult` from custom exceptions.
 
+## Validation Rule
+- Prefer Jakarta Bean Validation annotations on payloads, forms, filters, configuration classes, and service method parameters.
+- Use `@Valid` for nested object validation and `@Validated` when service-level method validation is required.
+- Do not write manual null, blank, length, range, pattern, or collection-size validation when an equivalent Jakarta constraint exists.
+- Keep manual validation only for cross-field rules, state-dependent business rules, database-backed checks, or constraints that Jakarta validation cannot express clearly.
+- Map `ConstraintViolationException` through the global API and web exception handlers instead of converting validation failures inside individual services.
+
 ## Repository Query Rule
 - Prefer Spring Data derived query methods for simple lookups, existence checks, relation traversal, and small delete operations.
 - Prefer `@EntityGraph` for defining fetch plans instead of writing manual `JOIN FETCH` queries.
@@ -98,6 +105,13 @@
 - For composite indexes, place equality and join columns before range or sort columns.
 - Do not add a standalone index when the same leading-column lookup is already covered by a primary key, unique index, or composite index.
 - Keep JPA index declarations and Flyway migration indexes synchronized.
+
+## JSON Column Rule
+- JSON columns are allowed when supported by the current database and Hibernate stack.
+- Restrict JSON to metadata, snapshots, or document-shaped values that are consumed as one unit and do not participate in filtering, joins, sorting, or independent constraints.
+- Prefer typed Java models over raw JSON strings and ad-hoc maps when the metadata structure is known.
+- Keep stable domain fields, lifecycle state, ownership, and relationships in relational columns.
+- If JSON fields become queryable business data, promote them into relational columns or tables instead of adding database-specific JSON query logic by default.
 
 ## Session Revocation Rule
 - Use `@RevokeSessions` on service methods whose successful changes invalidate active JWT authorization state.

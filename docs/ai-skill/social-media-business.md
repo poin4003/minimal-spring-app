@@ -127,5 +127,4 @@ Allowed transitions:
 - Personalized feeds
 - Likes and reactions
 - Direct messages
-- Notifications
 - Hashtags and mentions

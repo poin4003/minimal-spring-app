@@ -27,6 +27,7 @@ import com.app.core.exception.FieldErrorItem;
 import com.app.core.exception.MyException;
 import com.app.core.response.ApiResult;
 
+import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,6 +101,33 @@ public class ApiExceptionHandler {
                 .collect(Collectors.joining(", "));
 
         log.warn("Validation Error: {}", errorDetails);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResult.error(
+                        "COMMON_VALIDATION_ERROR",
+                        "Invalid params: " + errorDetails,
+                        fieldErrors));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResult<Void>> handleConstraintViolationException(
+            ConstraintViolationException ex) {
+        List<FieldErrorItem> fieldErrors = ex.getConstraintViolations().stream()
+                .map(violation -> new FieldErrorItem(
+                        violation.getPropertyPath().toString(),
+                        violation.getConstraintDescriptor()
+                                .getAnnotation()
+                                .annotationType()
+                                .getSimpleName(),
+                        violation.getMessage(),
+                        violation.getInvalidValue()))
+                .toList();
+
+        String errorDetails = fieldErrors.stream()
+                .map(item -> item.field() + ": " + item.message())
+                .collect(Collectors.joining(", "));
+
+        log.warn("Constraint violation: {}", errorDetails);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResult.error(
