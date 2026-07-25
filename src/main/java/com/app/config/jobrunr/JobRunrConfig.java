@@ -35,6 +35,7 @@ public class JobRunrConfig {
         BackgroundJobServerConfiguration serverConfiguration =
                 usingStandardBackgroundJobServerConfiguration()
                         .andWorkerCount(backgroundJobServer.getWorkerCount())
+                        .andPollInterval(backgroundJobServer.getPollInterval())
                         .andDeleteSucceededJobsAfter(
                                 backgroundJobServer.getDeleteSucceededJobsAfter())
                         .andPermanentlyDeleteDeletedJobsAfter(

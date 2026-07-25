@@ -38,14 +38,18 @@ public class JobRunrProperties {
         private int workerCount = 2;
 
         @NotNull
+        private Duration pollInterval = Duration.ofSeconds(30);
+
+        @NotNull
         private Duration deleteSucceededJobsAfter = Duration.ofDays(3);
 
         @NotNull
         private Duration permanentlyDeleteDeletedJobsAfter = Duration.ofDays(1);
 
-        @AssertTrue(message = "JobRunr succeeded and deleted job retention values must be positive.")
-        public boolean isRetentionConfigurationValid() {
-            return isPositive(deleteSucceededJobsAfter)
+        @AssertTrue(message = "JobRunr duration values must be positive.")
+        public boolean isDurationConfigurationValid() {
+            return isPositive(pollInterval)
+                    && isPositive(deleteSucceededJobsAfter)
                     && isPositive(permanentlyDeleteDeletedJobsAfter);
         }
     }

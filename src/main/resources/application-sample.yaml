@@ -225,6 +225,7 @@ org:
         background-job-server:
             enabled: true
             worker-count: ${JOBRUNR_WORKER_COUNT:2}
+            poll-interval: ${JOBRUNR_POLL_INTERVAL:30s}
             delete-succeeded-jobs-after: ${JOBRUNR_DELETE_SUCCEEDED_AFTER:3d}
             permanently-delete-deleted-jobs-after: ${JOBRUNR_PERMANENT_DELETE_AFTER:1d}
         dashboard:
