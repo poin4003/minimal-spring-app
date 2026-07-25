@@ -35,6 +35,7 @@ public class AppProperties {
     private final Cors cors = new Cors();
     private final Jwt jwt = new Jwt();
     private final Media media = new Media();
+    private final NotificationSettings notification = new NotificationSettings();
     private final Security security = new Security();
     private final Ui ui = new Ui();
 
@@ -316,6 +317,32 @@ public class AppProperties {
 
         @Positive
         private int processTimeoutMinutes = 30;
+    }
+
+    @Data
+    public static class NotificationSettings {
+        @Valid
+        private final NotificationSse sse = new NotificationSse();
+    }
+
+    @Data
+    public static class NotificationSse {
+        @NotNull
+        private Duration connectionTimeout = Duration.ofMinutes(30);
+
+        @NotNull
+        private Duration heartbeatInterval = Duration.ofSeconds(20);
+
+        @AssertTrue(message = "Notification SSE durations are invalid.")
+        public boolean isDurationConfigurationValid() {
+            return isPositive(connectionTimeout)
+                    && isPositive(heartbeatInterval)
+                    && heartbeatInterval.compareTo(connectionTimeout) < 0;
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
     }
 
     @Data

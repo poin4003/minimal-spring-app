@@ -49,7 +49,10 @@ public class WebSessionRefreshFilter extends OncePerRequestFilter {
         return SecurityContextHolder.getContext().getAuthentication() == null
                 && request.getAttribute(WebJwtAuthenticationFilter.EXPIRED_ACCESS_TOKEN_ATTRIBUTE) != null
                 && (HtmxRequestSupport.isHtmxRequest(request)
-                        || accept != null && accept.contains(MediaType.TEXT_HTML_VALUE));
+                        || accept != null
+                                && (accept.contains(MediaType.TEXT_HTML_VALUE)
+                                        || accept.contains(
+                                                MediaType.TEXT_EVENT_STREAM_VALUE)));
     }
 
     private void refreshSession(

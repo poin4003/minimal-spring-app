@@ -37,6 +37,7 @@ public class UiShellFactory {
                 .notificationWidget(NotificationWidgetView.builder()
                         .inboxPath(notificationPath + "/inbox")
                         .unreadCountPath(notificationPath + "/unread-count")
+                        .streamPath(notificationPath + "/stream")
                         .build())
                 .build();
     }

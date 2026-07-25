@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
-    <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </head>
 <body class="app-shell bg-body-tertiary">

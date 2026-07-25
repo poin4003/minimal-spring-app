@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -14,6 +15,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.notification.entity.NotificationEntity;
+import com.app.features.notification.event.NotificationCreatedEvent;
 import com.app.features.notification.repository.NotificationRepository;
 import com.app.features.notification.repository.spec.NotificationSpecification;
 import com.app.features.notification.schema.filter.NotificationFilterCriteria;
@@ -33,6 +35,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepo;
     private final UserBaseRepository userBaseRepo;
     private final ModelMapper mapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -69,6 +72,8 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setContent(payload.getContent().trim());
 
         notification = notificationRepo.save(notification);
+        eventPublisher.publishEvent(new NotificationCreatedEvent(
+                notification.getRecipient().getId()));
         return mapper.map(notification, NotificationResult.class);
     }
 

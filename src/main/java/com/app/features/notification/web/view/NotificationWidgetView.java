@@ -9,4 +9,5 @@ public class NotificationWidgetView {
 
     private final String inboxPath;
     private final String unreadCountPath;
+    private final String streamPath;
 }

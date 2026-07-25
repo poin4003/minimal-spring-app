@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="trigger(widget)" class="dropdown">
+    <div th:fragment="trigger(widget)"
+         class="dropdown"
+         hx-ext="sse"
+         th:attr="sse-connect=${widget.streamPath}">
         <button type="button"
                 class="btn btn-outline-secondary app-header-action position-relative"
                 data-bs-toggle="dropdown"
@@ -27,6 +30,10 @@
 
         <div class="dropdown-menu dropdown-menu-end p-0 border overflow-hidden app-notification-dropdown">
             <div id="notification-inbox-body"
+                 th:attr="hx-get=${widget.inboxPath}"
+                 hx-trigger="sse:notification"
+                 hx-target="this"
+                 hx-swap="innerHTML"
                  aria-live="polite">
                 <div class="d-flex justify-content-center p-4">
                     <div class="spinner-border spinner-border-sm text-primary"
@@ -45,7 +52,7 @@
           data-app-loader="manual"
           th:attr="hx-get=${count.refreshPath},
                    aria-label=|${count.count} unread notifications|"
-          hx-trigger="notification:changed from:body"
+          hx-trigger="notification:changed from:body, sse:notification"
           hx-target="this"
           hx-swap="outerHTML"
           th:text="${count.count > 99 ? '99+' : count.count}">

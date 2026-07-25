@@ -112,6 +112,10 @@ app:
             orphan-directory-ttl: ${MEDIA_ORPHAN_DIRECTORY_TTL:24h}
             missing-original-audit-ttl: ${MEDIA_MISSING_ORIGINAL_AUDIT_TTL:10m}
             batch-size: ${MEDIA_MAINTENANCE_BATCH_SIZE:100}
+    notification:
+        sse:
+            connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
+            heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}
     security:
         rate-limit:
             enabled: ${RATE_LIMIT_ENABLED:true}
