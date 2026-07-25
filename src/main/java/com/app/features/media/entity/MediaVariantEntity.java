@@ -30,9 +30,7 @@ import lombok.ToString;
         @Index(
                 name = "uk_media_variant_media_type_key",
                 columnList = "media_id, variant_type, variant_key",
-                unique = true),
-        @Index(name = "idx_media_variant_created_at", columnList = "created_at"),
-        @Index(name = "idx_media_variant_updated_at", columnList = "updated_at")
+                unique = true)
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

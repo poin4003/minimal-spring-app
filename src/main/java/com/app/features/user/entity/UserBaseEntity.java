@@ -30,8 +30,7 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "user_base", indexes = {
-        @Index(name = "idx_user_base_created_at", columnList = "created_at"),
-        @Index(name = "idx_user_base_updated_at", columnList = "updated_at")
+        @Index(name = "idx_user_base_created_at", columnList = "created_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -62,7 +61,13 @@ public class UserBaseEntity extends BaseAuditEntity {
     private String loginIp;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"),
+            indexes = @Index(
+                    name = "idx_user_roles_role_user",
+                    columnList = "role_id, user_id"))
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Set<RoleEntity> roles;

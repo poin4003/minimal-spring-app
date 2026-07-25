@@ -30,19 +30,14 @@ import lombok.ToString;
 @Entity
 @Table(name = "media", indexes = {
         @Index(name = "uk_media_storage_key", columnList = "storage_key", unique = true),
-        @Index(
-                name = "uk_media_thumbnail_storage_key",
-                columnList = "thumbnail_storage_key",
-                unique = true),
         @Index(name = "uk_media_public_key", columnList = "public_key", unique = true),
-        @Index(name = "idx_media_created_by_created_at", columnList = "created_by, created_at"),
-        @Index(name = "idx_media_status_created_at", columnList = "status, created_at"),
-        @Index(name = "idx_media_processing_status_created_at", columnList = "processing_status, created_at"),
         @Index(
-                name = "idx_media_pending_recovery",
-                columnList = "status, processing_status, updated_at"),
-        @Index(name = "idx_media_created_at", columnList = "created_at"),
-        @Index(name = "idx_media_updated_at", columnList = "updated_at")
+                name = "idx_media_created_by_status_created_at",
+                columnList = "created_by, status, created_at"),
+        @Index(
+                name = "idx_media_processing_status_updated_at",
+                columnList = "processing_status, status, updated_at"),
+        @Index(name = "idx_media_created_at", columnList = "created_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

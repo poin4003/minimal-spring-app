@@ -15,16 +15,12 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Entity
-@Table(name = "cronjob_config", indexes = {
-        @Index(name = "idx_cronjob_config_created_at", columnList = "created_at"),
-        @Index(name = "idx_cronjob_config_updated_at", columnList = "updated_at")
-})
+@Table(name = "cronjob_config")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class CronJobConfigEntity extends BaseAuditEntity {

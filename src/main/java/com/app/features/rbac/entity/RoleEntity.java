@@ -13,7 +13,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -23,10 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @Entity
-@Table(name = "role", indexes = {
-        @Index(name = "idx_role_created_at", columnList = "created_at"),
-        @Index(name = "idx_role_updated_at", columnList = "updated_at")
-})
+@Table(name = "role")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class RoleEntity extends BaseAuditEntity {

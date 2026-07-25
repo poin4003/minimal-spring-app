@@ -28,9 +28,7 @@ import lombok.ToString;
 @Entity
 @Table(name = "media_upload_session", indexes = {
         @Index(name = "idx_media_upload_created_by_status", columnList = "created_by, status"),
-        @Index(name = "idx_media_upload_expires_at", columnList = "expires_at"),
-        @Index(name = "idx_media_upload_created_at", columnList = "created_at"),
-        @Index(name = "idx_media_upload_updated_at", columnList = "updated_at")
+        @Index(name = "idx_media_upload_expires_at", columnList = "expires_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
