@@ -76,6 +76,7 @@ public class NotificationInboxViewFactory {
 
     private String resolveIconClass(NotificationResult notification) {
         return switch (notification.getType()) {
+            case MEDIA_UPLOADED -> "bi-cloud-check-fill";
             case MEDIA_READY -> "bi-check-circle-fill";
             case MEDIA_PROCESSING_FAILED ->
                 "bi-exclamation-triangle-fill";
@@ -84,6 +85,8 @@ public class NotificationInboxViewFactory {
 
     private String resolveIconThemeClass(NotificationResult notification) {
         return switch (notification.getType()) {
+            case MEDIA_UPLOADED ->
+                "bg-primary-subtle text-primary-emphasis";
             case MEDIA_READY ->
                 "bg-success-subtle text-success-emphasis";
             case MEDIA_PROCESSING_FAILED ->

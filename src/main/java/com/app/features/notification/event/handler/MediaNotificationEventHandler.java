@@ -8,6 +8,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.app.features.media.event.MediaProcessingFailedEvent;
 import com.app.features.media.event.MediaReadyEvent;
+import com.app.features.media.event.MediaUploadedEvent;
+import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.notification.enums.NotificationResourceType;
 import com.app.features.notification.enums.NotificationType;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
@@ -24,6 +26,26 @@ public class MediaNotificationEventHandler {
     private final NotificationService notificationSvc;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleMediaUploaded(MediaUploadedEvent event) {
+        boolean requiresProcessing =
+                event.processingStatus() == MediaProcessingStatus.PENDING;
+
+        CreateNotificationPayload payload = new CreateNotificationPayload();
+        payload.setRecipientId(event.recipientId());
+        payload.setType(NotificationType.MEDIA_UPLOADED);
+        payload.setResourceType(NotificationResourceType.MEDIA);
+        payload.setResourceId(event.mediaId());
+        payload.setTitle("Media upload completed");
+        payload.setContent(requiresProcessing
+                ? event.originalName()
+                        + " was uploaded and is being processed."
+                : event.originalName()
+                        + " was uploaded and is ready to use.");
+
+        createNotificationSafely(payload, event.mediaId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleMediaReady(MediaReadyEvent event) {
         CreateNotificationPayload payload = new CreateNotificationPayload();
         payload.setRecipientId(event.recipientId());
@@ -31,7 +53,7 @@ public class MediaNotificationEventHandler {
         payload.setResourceType(NotificationResourceType.MEDIA);
         payload.setResourceId(event.mediaId());
         payload.setTitle("Media is ready");
-        payload.setContent(event.originalName() + " is ready to stream.");
+        payload.setContent(event.originalName() + " is ready to use.");
 
         createNotificationSafely(payload, event.mediaId());
     }

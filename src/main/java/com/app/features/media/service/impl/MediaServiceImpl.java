@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.modelmapper.ModelMapper;
 import org.jobrunr.jobs.context.JobContext;
 import org.jobrunr.scheduling.JobScheduler;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -31,6 +32,7 @@ import com.app.features.media.entity.MediaEntity_;
 import com.app.features.media.entity.MediaProcessingLeaseEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
+import com.app.features.media.event.MediaUploadedEvent;
 import com.app.features.media.job.MediaProcessingJob;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaProcessingLeaseRepository;
@@ -73,6 +75,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final JobScheduler jobScheduler;
+    private final ApplicationEventPublisher eventPublisher;
     private final ModelMapper mapper;
     private final AppProperties appProperties;
 
@@ -136,6 +139,12 @@ public class MediaServiceImpl implements MediaService {
         MediaProcessingLeaseEntity processingLease = new MediaProcessingLeaseEntity();
         processingLease.setMediaId(media.getId());
         mediaProcessingLeaseRepo.save(processingLease);
+
+        eventPublisher.publishEvent(new MediaUploadedEvent(
+                media.getId(),
+                creator.getId(),
+                media.getOriginalName(),
+                media.getProcessingStatus()));
 
         if (media.getProcessingStatus() == MediaProcessingStatus.PENDING) {
             registerProcessingJob(media.getId());
