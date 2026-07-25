@@ -13,6 +13,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import com.app.config.settings.AppProperties;
 
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -52,6 +53,7 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception ->
                         exception.authenticationEntryPoint(webAuthenticationEntryPoint))
                 .authorizeHttpRequests(authorize -> authorize
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(publicPaths).permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(webSessionRefreshFilter, AnonymousAuthenticationFilter.class)

@@ -13,7 +13,9 @@
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
-<body class="app-shell bg-body-tertiary">
+<body class="app-shell bg-body-tertiary"
+      hx-ext="sse"
+      th:attr="sse-connect=${page.shell.notificationWidget.streamPath}">
     <div class="container-fluid px-0 py-0">
         <div class="row g-0 align-items-stretch app-shell-row">
             <aside class="col-12 col-lg-3 col-xxl-2">

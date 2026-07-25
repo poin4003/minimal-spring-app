@@ -73,7 +73,8 @@ public class NotificationServiceImpl implements NotificationService {
 
         notification = notificationRepo.save(notification);
         eventPublisher.publishEvent(new NotificationCreatedEvent(
-                notification.getRecipient().getId()));
+                notification.getRecipient().getId(),
+                notification.getResourceType()));
         return mapper.map(notification, NotificationResult.class);
     }
 

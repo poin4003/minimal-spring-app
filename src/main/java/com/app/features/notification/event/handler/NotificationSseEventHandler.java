@@ -17,6 +17,8 @@ public class NotificationSseEventHandler {
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleNotificationCreated(NotificationCreatedEvent event) {
-        notificationSseSvc.signalChanged(event.recipientId());
+        notificationSseSvc.signalChanged(
+                event.recipientId(),
+                event.resourceType());
     }
 }

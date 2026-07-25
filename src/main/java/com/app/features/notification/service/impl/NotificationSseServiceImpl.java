@@ -13,6 +13,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.app.config.settings.AppProperties;
+import com.app.features.notification.constant.NotificationSseEventNames;
+import com.app.features.notification.enums.NotificationResourceType;
 import com.app.features.notification.service.NotificationSseService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,8 +23,6 @@ import lombok.RequiredArgsConstructor;
 @Validated
 @RequiredArgsConstructor
 public class NotificationSseServiceImpl implements NotificationSseService {
-
-    private static final String NOTIFICATION_EVENT = "notification";
 
     private final ConcurrentMap<UUID, ConcurrentMap<UUID, SseEmitter>>
             connections = new ConcurrentHashMap<>();
@@ -67,12 +67,18 @@ public class NotificationSseServiceImpl implements NotificationSseService {
     }
 
     @Override
-    public void signalChanged(UUID userId) {
-        sendToUser(
+    public void signalChanged(
+            UUID userId,
+            NotificationResourceType resourceType) {
+        sendChangedEvent(
                 userId,
-                () -> SseEmitter.event()
-                        .name(NOTIFICATION_EVENT)
-                        .data("changed"));
+                NotificationSseEventNames.NOTIFICATION);
+
+        String resourceEventName =
+                NotificationSseEventNames.BY_RESOURCE_TYPE.get(resourceType);
+        if (resourceEventName != null) {
+            sendChangedEvent(userId, resourceEventName);
+        }
     }
 
     @Scheduled(
@@ -102,6 +108,14 @@ public class NotificationSseServiceImpl implements NotificationSseService {
     @Override
     public Set<UUID> getOnlineUserIds() {
         return Set.copyOf(connections.keySet());
+    }
+
+    private void sendChangedEvent(UUID userId, String eventName) {
+        sendToUser(
+                userId,
+                () -> SseEmitter.event()
+                        .name(eventName)
+                        .data("changed"));
     }
 
     private void sendToUser(

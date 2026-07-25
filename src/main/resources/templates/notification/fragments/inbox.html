@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="trigger(widget)"
-         class="dropdown"
-         hx-ext="sse"
-         th:attr="sse-connect=${widget.streamPath}">
+    <div th:fragment="trigger(widget)" class="dropdown">
         <button type="button"
                 class="btn btn-outline-secondary app-header-action position-relative"
                 data-bs-toggle="dropdown"
@@ -30,6 +27,7 @@
 
         <div class="dropdown-menu dropdown-menu-end p-0 border overflow-hidden app-notification-dropdown">
             <div id="notification-inbox-body"
+                 data-app-loader="manual"
                  th:attr="hx-get=${widget.inboxPath}"
                  hx-trigger="sse:notification"
                  hx-target="this"
