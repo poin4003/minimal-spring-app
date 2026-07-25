@@ -5,12 +5,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import com.app.config.settings.AppProperties;
-import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
+import com.app.features.ui.web.support.UiShellFactory;
 import com.app.features.ui.web.view.HomePageView;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +16,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class HomePageController {
 
-    private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
 
     @GetMapping("${app.ui.home-path:/admin}")
     public String home(
@@ -28,17 +24,9 @@ public class HomePageController {
             HttpServletRequest request,
             Model model) {
         HomePageView page = HomePageView.builder()
-                .shell(UiShellView.builder()
-                        .title(appProperties.getUi().getApplicationTitle())
-                        .logoutPath(appProperties.getUi().getLogoutPath())
-                        .currentUser(UiCurrentUserView.builder()
-                                .email(currentUser.getEmail())
-                                .authorities(currentUser.getAuthorities().stream()
-                                        .map(authority -> authority.getAuthority())
-                                        .toList())
-                                .build())
-                        .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
-                        .build())
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .build();
 
         model.addAttribute(HomePageView.ATTRIBUTE, page);

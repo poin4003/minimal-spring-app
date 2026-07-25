@@ -23,7 +23,6 @@ import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
-import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -47,8 +46,7 @@ import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -75,7 +73,7 @@ public class MediaPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final MediaService mediaSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final MediaUploadComponentFactory mediaUploadComponentFactory;
@@ -226,7 +224,9 @@ public class MediaPageController {
         return MediaListPageView.builder()
                 .title("Media Library")
                 .listPath(getMediaListPath())
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .filter(filter)
                 .query(query.applyDefaults(MEDIA_PAGE_DEFAULTS))
                 .kinds(Arrays.asList(MediaKind.values()))
@@ -495,22 +495,6 @@ public class MediaPageController {
                 .label(label)
                 .value(value == null ? "-" : value)
                 .monospace(monospace)
-                .build();
-    }
-
-    private UiShellView buildShell(
-            UserPrincipal currentUser,
-            HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 

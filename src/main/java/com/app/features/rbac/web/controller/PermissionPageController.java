@@ -3,21 +3,19 @@ package com.app.features.rbac.web.controller;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
-import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.app.config.settings.AppProperties;
 import com.app.core.constant.PermissionConstants;
-import com.app.core.menu.MenuService;
-import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
+import com.app.core.security.UserPrincipal;
 import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
 import com.app.features.rbac.schema.result.PermissionResult;
 import com.app.features.rbac.service.RbacService;
@@ -27,12 +25,11 @@ import com.app.features.rbac.web.view.PermissionTableRowView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.support.UiTableFactory;
-import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
+import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -52,8 +49,7 @@ public class PermissionPageController {
             .sortDirection(Sort.Direction.ASC)
             .build();
 
-    private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
@@ -84,7 +80,8 @@ public class PermissionPageController {
 
         var permissionPage = rbacSvc.getManyPermissions(criteria, query.toPageable(PERMISSION_PAGE_DEFAULTS));
         List<PermissionTableRowView> rows = permissionPage.getContent().stream()
-                .map((PermissionResult permission) -> mapper.map(permission, PermissionTableRowView.class))
+                .map((PermissionResult permission) -> mapper.map(permission,
+                        PermissionTableRowView.class))
                 .toList();
 
         UiPaginationView pagination = uiPaginationFactory.build(
@@ -105,22 +102,10 @@ public class PermissionPageController {
 
         return PermissionListPageView.builder()
                 .title("Permission Management")
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .permissionTable(permissionTable)
-                .build();
-    }
-
-    private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
                 .build();
     }
 }

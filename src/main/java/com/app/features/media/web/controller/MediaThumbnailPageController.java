@@ -21,7 +21,6 @@ import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
-import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -43,8 +42,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -66,7 +64,7 @@ public class MediaThumbnailPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final MediaService mediaSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final UiPaginationFactory uiPaginationFactory;
@@ -143,7 +141,9 @@ public class MediaThumbnailPageController {
                 .uploadPartialPath(
                         appProperties.getUi().getHomePath()
                                 + "/media/uploads/thumbnail-modal")
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .breadcrumb(UiBreadcrumbView.builder()
                         .items(List.of(
                                 UiBreadcrumbItemView.builder()
@@ -210,22 +210,6 @@ public class MediaThumbnailPageController {
             throw ExceptionFactory.invalidParam(
                     "Target media must be active and ready.");
         }
-    }
-
-    private UiShellView buildShell(
-            UserPrincipal currentUser,
-            HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
-                .build();
     }
 
     private String getThumbnailPath(UUID mediaId) {

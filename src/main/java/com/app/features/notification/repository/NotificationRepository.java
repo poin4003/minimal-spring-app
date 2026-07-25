@@ -41,6 +41,8 @@ public interface NotificationRepository
             NotificationResourceType resourceType,
             UUID resourceId);
 
+    long countByRecipient_IdAndReadAtIsNull(UUID recipientId);
+
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             UPDATE NotificationEntity notification

@@ -41,9 +41,11 @@
 - Use typed Java component/view models when HTMX needs target, swap, navigation, or refresh metadata; do not transport this behavior through ad-hoc maps.
 - Login, logout, downloads, public media delivery, and upload progress or chunk transport may remain native or use dedicated JavaScript when HTMX does not fit their browser lifecycle.
 - HTMX does not automatically echo a CSRF cookie in the required request header. The shared HTMX infrastructure must send the current `XSRF-TOKEN` cookie as `X-XSRF-TOKEN` for state-changing requests.
+- Background widgets such as unread counters should opt out of the full-page loader and provide their own Bootstrap loading state.
 
 ## HTML And Thymeleaf
 - Reuse existing fragments under `templates/fragments`, feature fragments, and shared component models before creating page-specific markup.
+- Build authenticated page shells through the shared `UiShellFactory` and render the shared application header fragment; do not duplicate menu, current-user, notification, theme, or logout markup in feature templates.
 - Keep templates focused on rendering structured Java view models instead of assembling business state or loose key-value data.
 - For HTMX fragment endpoints, add one typed view model to `Model` and return a named Thymeleaf fragment parameter such as `template :: fragment (modal=${modal})`.
 - Keep a normal `href` or form action as progressive fallback when adding HTMX behavior.

@@ -7,6 +7,7 @@ public final class HtmxRequestSupport {
 
     private static final String REQUEST_HEADER = "HX-Request";
     private static final String REDIRECT_HEADER = "HX-Redirect";
+    private static final String TRIGGER_HEADER = "HX-Trigger";
     private static final String EMPTY_RESPONSE_VIEW =
             "fragments/components/htmx-response :: empty";
 
@@ -21,6 +22,12 @@ public final class HtmxRequestSupport {
     public static void redirect(HttpServletResponse response, String path) {
         response.setHeader(REDIRECT_HEADER, path);
         response.setStatus(HttpServletResponse.SC_OK);
+    }
+
+    public static void trigger(
+            HttpServletResponse response,
+            String eventName) {
+        response.setHeader(TRIGGER_HEADER, eventName);
     }
 
     public static String redirectView(

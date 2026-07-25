@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
-import com.app.core.menu.MenuService;
 import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.features.rbac.schema.filter.RoleFilterCriteria;
@@ -36,8 +35,7 @@ import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.enums.UiAssignmentMode;
 import com.app.features.ui.web.query.UiAssignmentPageQuery;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.service.UserService;
 import com.app.features.user.web.view.UserRolePageView;
@@ -62,7 +60,7 @@ public class UserRolePageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final UserService userSvc;
     private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -174,7 +172,9 @@ public class UserRolePageController {
                                 .value(String.valueOf(user.getStatus()))
                                 .monospace(false)
                                 .build()))
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .backPath(appProperties.getUi().getHomePath() + "/users")
                 .assignedPath(buildModePath(userId, resolvedQuery, UiAssignmentMode.ASSIGNED))
                 .availablePath(buildModePath(userId, resolvedQuery, UiAssignmentMode.AVAILABLE))
@@ -228,17 +228,4 @@ public class UserRolePageController {
                 USER_ROLE_PAGE_DEFAULTS);
     }
 
-    private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
-                .build();
-    }
 }

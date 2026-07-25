@@ -33,4 +33,6 @@ public interface NotificationService {
             @NotNull UUID notificationId);
 
     int markAllAsRead(@NotNull UUID recipientId);
+
+    long countUnreadNotifications(@NotNull UUID recipientId);
 }

@@ -39,6 +39,14 @@
 - Use an entity graph when inbox results include related actor information.
 - Default inbox ordering is `createdAt DESC`.
 
+## Inbox UI
+- Render the notification inbox as a shared authenticated-header widget rather than duplicating it in feature pages.
+- Load the unread count when the page opens and load the latest notification page only when the Bootstrap dropdown opens.
+- Mark-one and mark-all actions must use HTMX, the shared CSRF infrastructure, and typed view models.
+- Successful inbox mutations emit the shared `notification:changed` browser event so the unread badge refreshes independently.
+- Keep the widget page size intentionally small; a future full inbox page must reuse the same pageable service instead of loading every notification.
+- SSE must emit only a refresh signal and reuse the existing unread-count and inbox endpoints.
+
 ## In-App Service
 - Notification creation uses a structured payload and performs an insert rather than an implicit upsert.
 - The notification business unique key is a database guard against duplicate creation, not an instruction to update an existing notification.

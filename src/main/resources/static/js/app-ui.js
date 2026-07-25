@@ -23,6 +23,9 @@
                 button.setAttribute(
                     "aria-label",
                     darkThemeActive ? "Switch to light theme" : "Switch to dark theme");
+                const icon = button.querySelector("[data-app-theme-icon]");
+                icon.classList.toggle("bi-sun", darkThemeActive);
+                icon.classList.toggle("bi-moon-stars", !darkThemeActive);
                 button.querySelector("[data-app-theme-label]").textContent = darkThemeActive
                     ? "Light theme"
                     : "Dark theme";
@@ -57,7 +60,11 @@
         }
     });
 
-    document.addEventListener("htmx:beforeRequest", showLoader);
+    document.addEventListener("htmx:beforeRequest", function (event) {
+        if (event.detail.elt.closest("[data-app-loader='manual']") == null) {
+            showLoader();
+        }
+    });
     document.addEventListener("htmx:afterRequest", hideLoader);
     document.addEventListener("htmx:sendError", hideLoader);
     document.addEventListener("htmx:responseError", hideLoader);

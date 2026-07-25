@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="trigger(widget)" class="dropdown">
+        <button type="button"
+                class="btn btn-outline-secondary app-header-action position-relative"
+                data-bs-toggle="dropdown"
+                data-bs-auto-close="outside"
+                data-app-loader="manual"
+                aria-expanded="false"
+                aria-label="Open notifications"
+                title="Notifications"
+                th:attr="hx-get=${widget.inboxPath}"
+                hx-target="#notification-inbox-body"
+                hx-swap="innerHTML">
+            <i class="bi bi-bell" aria-hidden="true"></i>
+
+            <span id="notification-unread-count"
+                  class="d-none position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+                  data-app-loader="manual"
+                  th:attr="hx-get=${widget.unreadCountPath}"
+                  hx-trigger="load"
+                  hx-target="this"
+                  hx-swap="outerHTML">
+            </span>
+        </button>
+
+        <div class="dropdown-menu dropdown-menu-end p-0 border overflow-hidden app-notification-dropdown">
+            <div id="notification-inbox-body"
+                 aria-live="polite">
+                <div class="d-flex justify-content-center p-4">
+                    <div class="spinner-border spinner-border-sm text-primary"
+                         role="status">
+                        <span class="visually-hidden">Loading notifications...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <span th:fragment="unreadCount(count)"
+          id="notification-unread-count"
+          class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
+          th:classappend="${count.count == 0} ? 'd-none' : ''"
+          data-app-loader="manual"
+          th:attr="hx-get=${count.refreshPath},
+                   aria-label=|${count.count} unread notifications|"
+          hx-trigger="notification:changed from:body"
+          hx-target="this"
+          hx-swap="outerHTML"
+          th:text="${count.count > 99 ? '99+' : count.count}">
+        0
+    </span>
+
+    <section th:fragment="inbox(inbox)"
+             class="w-100"
+             aria-label="Notifications">
+        <div class="d-flex align-items-center justify-content-between gap-3 p-3 border-bottom">
+            <h2 class="h6 mb-0">Notifications</h2>
+
+            <form th:if="${inbox.unreadCount > 0}"
+                  method="post"
+                  class="mb-0"
+                  data-app-loader="manual"
+                  th:attr="action=${inbox.markAllReadPath},
+                           hx-post=${inbox.markAllReadPath}"
+                  hx-target="#notification-inbox-body"
+                  hx-swap="innerHTML">
+                <button type="submit" class="btn btn-sm btn-link text-nowrap">
+                    Mark all as read
+                </button>
+            </form>
+        </div>
+
+        <div th:if="${#lists.isEmpty(inbox.items)}"
+             class="p-4 text-center text-secondary">
+            No notifications yet.
+        </div>
+
+        <div th:unless="${#lists.isEmpty(inbox.items)}"
+             class="list-group list-group-flush app-notification-list">
+            <form th:each="item : ${inbox.items}"
+                  method="post"
+                  class="list-group-item p-0"
+                  data-app-loader="manual"
+                  th:attr="action=${item.markReadPath},
+                           hx-post=${item.markReadPath}"
+                  hx-target="#notification-inbox-body"
+                  hx-swap="innerHTML">
+                <button type="submit"
+                        class="btn w-100 border-0 rounded-0 p-3 text-start app-notification-item"
+                        th:classappend="${item.unread} ? 'bg-primary-subtle' : ''">
+                    <span class="d-flex align-items-start gap-3">
+                        <span class="app-notification-type-icon rounded-circle d-inline-flex align-items-center justify-content-center"
+                              th:classappend="${item.iconThemeClass}">
+                            <i class="bi"
+                               th:classappend="${item.iconClass}"
+                               aria-hidden="true"></i>
+                        </span>
+
+                        <span class="app-notification-copy flex-grow-1">
+                            <strong class="d-block small text-truncate"
+                                    th:text="${item.title}">
+                                Notification title
+                            </strong>
+                            <span class="d-block small text-body-secondary text-truncate"
+                                  th:text="${item.content}">
+                                Notification content
+                            </span>
+                            <time class="d-block small text-secondary"
+                                  th:text="${item.createdAt}">
+                                Created time
+                            </time>
+                        </span>
+
+                        <i th:if="${item.unread}"
+                           class="bi bi-circle-fill text-primary app-notification-unread-indicator"
+                           aria-label="Unread"></i>
+                    </span>
+                </button>
+            </form>
+        </div>
+    </section>
+</body>
+</html>

@@ -23,7 +23,6 @@ import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
-import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -48,8 +47,7 @@ import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -71,7 +69,7 @@ public class CronJobPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final CronJobService cronJobSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
@@ -243,7 +241,9 @@ public class CronJobPageController {
 
         return CronJobListPageView.builder()
                 .title("Cronjob Management")
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .cronJobTable(cronJobTable)
                 .metadataModal(metadataModal)
                 .detailModal(detailModal)
@@ -372,17 +372,4 @@ public class CronJobPageController {
                 CRONJOB_PAGE_DEFAULTS);
     }
 
-    private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
-                .build();
-    }
 }

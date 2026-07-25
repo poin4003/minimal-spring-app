@@ -111,6 +111,11 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationRepo.markAllAsRead(recipientId, LocalDateTime.now());
     }
 
+    @Override
+    public long countUnreadNotifications(UUID recipientId) {
+        return notificationRepo.countByRecipient_IdAndReadAtIsNull(recipientId);
+    }
+
     private NotificationEntity requireOwned(
             UUID recipientId,
             UUID notificationId) {

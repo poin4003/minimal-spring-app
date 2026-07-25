@@ -23,7 +23,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
-import com.app.core.menu.MenuService;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -45,8 +44,7 @@ import com.app.features.ui.web.enums.UiAssignmentMode;
 import com.app.features.ui.web.query.UiAssignmentPageQuery;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
-import com.app.features.ui.web.view.UiCurrentUserView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.support.UiShellFactory;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
@@ -84,7 +82,7 @@ public class UserPageController {
             .build();
 
     private final AppProperties appProperties;
-    private final MenuService menuSvc;
+    private final UiShellFactory uiShellFactory;
     private final UserService userSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
@@ -325,7 +323,9 @@ public class UserPageController {
 
         return UserListPageView.builder()
                 .title("User Management")
-                .shell(buildShell(currentUser, request))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
                 .userTable(userTable)
                 .createUserModal(createUserModal)
                 .metadataModal(metadataModal)
@@ -440,20 +440,6 @@ public class UserPageController {
                         .selected(status == selectedStatus)
                         .build())
                 .toList();
-    }
-
-    private UiShellView buildShell(UserPrincipal currentUser, HttpServletRequest request) {
-        return UiShellView.builder()
-                .title(appProperties.getUi().getApplicationTitle())
-                .logoutPath(appProperties.getUi().getLogoutPath())
-                .currentUser(UiCurrentUserView.builder()
-                        .email(currentUser.getEmail())
-                        .authorities(currentUser.getAuthorities().stream()
-                                .map(authority -> authority.getAuthority())
-                                .toList())
-                        .build())
-                .menuTree(menuSvc.getMenuTree(request.getRequestURI()))
-                .build();
     }
 
     private String buildMetadataPath(UUID userId, UiPageQuery query) {
