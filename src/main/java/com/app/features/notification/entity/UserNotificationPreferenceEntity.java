@@ -1,14 +1,13 @@
-package com.app.features.user.entity;
+package com.app.features.notification.entity;
 
 import java.util.UUID;
 
 import com.app.core.db.BaseAuditEntity;
+import com.app.features.user.entity.UserBaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
@@ -16,25 +15,24 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
-@Table(name = "user_info")
+@Table(name = "user_notification_preference")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserInfoEntity extends BaseAuditEntity {
+public class UserNotificationPreferenceEntity extends BaseAuditEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID userId;
+    private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "id")
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private UserBaseEntity user;
 
-    @Column(name = "username")
-    private String username;
-
-    @Column(name = "phone_number")
-    private String phoneNumber;
+    @Column(name = "email_enabled", nullable = false)
+    private boolean emailEnabled;
 }

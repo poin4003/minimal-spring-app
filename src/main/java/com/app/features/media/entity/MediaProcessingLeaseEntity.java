@@ -15,9 +15,7 @@ import lombok.EqualsAndHashCode;
 
 @Entity
 @Table(name = "media_processing_lease", indexes = {
-        @Index(name = "idx_media_processing_lease_expires_at", columnList = "expires_at"),
-        @Index(name = "idx_media_processing_lease_created_at", columnList = "created_at"),
-        @Index(name = "idx_media_processing_lease_updated_at", columnList = "updated_at")
+        @Index(name = "idx_media_processing_lease_expires_at", columnList = "expires_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -10,7 +10,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -18,10 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 @Entity
-@Table(name = "permission", indexes = {
-        @Index(name = "idx_permission_created_at", columnList = "created_at"),
-        @Index(name = "idx_permission_updated_at", columnList = "updated_at")
-})
+@Table(name = "permission")
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PermissionEntity extends BaseAuditEntity {

@@ -92,10 +92,12 @@
 - Native SQL requires an explicit database-specific requirement and must be shown to the user before being added.
 - Flyway schema and data migrations are exempt because SQL is their intended format.
 
-## Audit Index Rule
-- Every concrete entity extending `BaseAuditEntity` must declare table-specific indexes for both `created_at` and `updated_at`.
-- Flyway migrations must create the matching audit indexes immediately after the related `CREATE TABLE` statement instead of grouping them at the end of the migration.
-- Join tables without audit columns are excluded from this rule.
+## Database Index Rule
+- Do not add indexes solely because an entity contains `created_at` or `updated_at`.
+- Add indexes only for concrete query patterns involving `WHERE`, `JOIN`, `ORDER BY`, uniqueness, foreign-key traversal, or cleanup/recovery operations.
+- For composite indexes, place equality and join columns before range or sort columns.
+- Do not add a standalone index when the same leading-column lookup is already covered by a primary key, unique index, or composite index.
+- Keep JPA index declarations and Flyway migration indexes synchronized.
 
 ## Session Revocation Rule
 - Use `@RevokeSessions` on service methods whose successful changes invalidate active JWT authorization state.

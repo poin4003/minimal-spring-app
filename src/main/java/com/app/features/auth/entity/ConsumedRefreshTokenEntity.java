@@ -18,9 +18,7 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Table(name = "consumed_refresh_token", indexes = {
         @Index(name = "idx_consumed_token_value", columnList = "token_value"),
-        @Index(name = "idx_comsumed_user", columnList = "user_id"),
-        @Index(name = "idx_consumed_refresh_token_created_at", columnList = "created_at"),
-        @Index(name = "idx_consumed_refresh_token_updated_at", columnList = "updated_at")
+        @Index(name = "idx_comsumed_user", columnList = "user_id")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
