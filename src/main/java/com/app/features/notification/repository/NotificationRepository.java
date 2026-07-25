@@ -16,6 +16,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.app.features.notification.entity.NotificationEntity;
 import com.app.features.notification.entity.NotificationEntity_;
+import com.app.features.notification.enums.NotificationResourceType;
+import com.app.features.notification.enums.NotificationType;
 
 public interface NotificationRepository
         extends JpaRepository<NotificationEntity, UUID>,
@@ -31,6 +33,13 @@ public interface NotificationRepository
     Optional<NotificationEntity> findByIdAndRecipient_Id(
             UUID notificationId,
             UUID recipientId);
+
+    @EntityGraph(attributePaths = NotificationEntity_.ACTOR)
+    Optional<NotificationEntity> findByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+            UUID recipientId,
+            NotificationType type,
+            NotificationResourceType resourceType,
+            UUID resourceId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""

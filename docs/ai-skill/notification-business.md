@@ -44,6 +44,11 @@
 - The notification business unique key is a database guard against duplicate creation, not an instruction to update an existing notification.
 - Idempotent creation, refresh, and aggregation must use separately named service methods when a concrete business flow requires those behaviors.
 - Generic create methods must not reset an existing notification to unread.
+- Business features publish typed events and must not call `NotificationService` directly.
+- Notification event handlers use `@TransactionalEventListener(AFTER_COMMIT)` so source-domain state commits before notification work starts.
+- Notification persistence triggered by an event uses a separate `REQUIRES_NEW` transaction.
+- Notification failures are best-effort: handlers log and contain the failure instead of rolling back or changing source-domain state.
+- Do not hide event construction behind a generic producer annotation or SpEL-based event mapping.
 - Every single-notification read or update operation must include recipient ownership in its repository lookup.
 - Marking one notification as read is idempotent.
 - Marking all notifications as read must use one recipient-scoped JPQL bulk update instead of loading entities into application memory.

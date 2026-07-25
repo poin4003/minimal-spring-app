@@ -17,6 +17,9 @@ public interface NotificationService {
     NotificationResult createNotification(
             @NotNull @Valid CreateNotificationPayload payload);
 
+    NotificationResult createNotificationIfAbsent(
+            @NotNull @Valid CreateNotificationPayload payload);
+
     Page<NotificationResult> getManyNotifications(
             @NotNull NotificationFilterCriteria criteria,
             @NotNull Pageable pageable);

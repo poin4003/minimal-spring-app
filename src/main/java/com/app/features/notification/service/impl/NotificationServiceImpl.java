@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
@@ -36,6 +37,25 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationResult createNotification(CreateNotificationPayload payload) {
+        return saveNotification(payload);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public NotificationResult createNotificationIfAbsent(
+            CreateNotificationPayload payload) {
+        return notificationRepo
+                .findByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+                        payload.getRecipientId(),
+                        payload.getType(),
+                        payload.getResourceType(),
+                        payload.getResourceId())
+                .map(notification -> mapper.map(notification, NotificationResult.class))
+                .orElseGet(() -> saveNotification(payload));
+    }
+
+    private NotificationResult saveNotification(
+            CreateNotificationPayload payload) {
         NotificationEntity notification = new NotificationEntity();
         notification.setRecipient(
                 userBaseRepo.getReferenceById(payload.getRecipientId()));

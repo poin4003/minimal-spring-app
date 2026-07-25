@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,8 @@ import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.entity.MediaVariantEntity;
+import com.app.features.media.event.MediaProcessingFailedEvent;
+import com.app.features.media.event.MediaReadyEvent;
 import com.app.features.media.enums.HlsReservedVariantKey;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
@@ -59,6 +62,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaFfmpegFactory mediaFfmpegFactory;
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final AppProperties appProperties;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public void process(UUID mediaId, UUID executionId) {
@@ -338,12 +342,21 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     : thumbnailResult.getStorageKey());
         }
         media.setProcessingStatus(MediaProcessingStatus.READY);
+
+        eventPublisher.publishEvent(new MediaReadyEvent(
+                media.getId(),
+                media.getCreatedBy().getId(),
+                media.getOriginalName()));
     }
 
     @Transactional
     private void markFailed(UUID mediaId) {
-        mediaRepo.findById(mediaId)
-                .ifPresent(media -> media.setProcessingStatus(MediaProcessingStatus.FAILED));
+        mediaRepo.findById(mediaId).ifPresent(media -> {
+            media.setProcessingStatus(MediaProcessingStatus.FAILED);
+            eventPublisher.publishEvent(new MediaProcessingFailedEvent(
+                    media.getId(),
+                    media.getCreatedBy().getId(),
+                    media.getOriginalName()));
+        });
     }
-
 }
