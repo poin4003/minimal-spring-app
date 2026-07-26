@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import com.app.features.media.event.MediaDeletedEvent;
 import com.app.features.media.event.MediaProcessingFailedEvent;
 import com.app.features.media.event.MediaReadyEvent;
 import com.app.features.media.event.MediaUploadedEvent;
@@ -55,7 +56,21 @@ public class MediaNotificationEventHandler {
         payload.setTitle("Media is ready");
         payload.setContent(event.originalName() + " is ready to use.");
 
-        createNotificationSafely(payload, event.mediaId());
+        replaceUploadedNotificationSafely(payload, event.mediaId());
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void handleMediaDeleted(MediaDeletedEvent event) {
+        try {
+            notificationSvc.deleteResourceNotifications(
+                    NotificationResourceType.MEDIA,
+                    event.mediaId());
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Unable to delete notifications for media [{}].",
+                    event.mediaId(),
+                    exception);
+        }
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -71,7 +86,7 @@ public class MediaNotificationEventHandler {
                 event.originalName()
                         + " could not be prepared. You can retry processing.");
 
-        createNotificationSafely(payload, event.mediaId());
+        replaceUploadedNotificationSafely(payload, event.mediaId());
     }
 
     private void createNotificationSafely(
@@ -82,6 +97,21 @@ public class MediaNotificationEventHandler {
         } catch (RuntimeException exception) {
             log.error(
                     "Unable to create media notification [{}].",
+                    mediaId,
+                    exception);
+        }
+    }
+
+    private void replaceUploadedNotificationSafely(
+            CreateNotificationPayload payload,
+            UUID mediaId) {
+        try {
+            notificationSvc.replaceNotification(
+                    payload,
+                    NotificationType.MEDIA_UPLOADED);
+        } catch (RuntimeException exception) {
+            log.error(
+                    "Unable to replace media notification [{}].",
                     mediaId,
                     exception);
         }

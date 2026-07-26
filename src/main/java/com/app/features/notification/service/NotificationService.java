@@ -8,6 +8,8 @@ import org.springframework.data.domain.Pageable;
 import com.app.features.notification.schema.filter.NotificationFilterCriteria;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
 import com.app.features.notification.schema.result.NotificationResult;
+import com.app.features.notification.enums.NotificationResourceType;
+import com.app.features.notification.enums.NotificationType;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -19,6 +21,14 @@ public interface NotificationService {
 
     NotificationResult createNotificationIfAbsent(
             @NotNull @Valid CreateNotificationPayload payload);
+
+    NotificationResult replaceNotification(
+            @NotNull @Valid CreateNotificationPayload payload,
+            @NotNull NotificationType obsoleteType);
+
+    long deleteResourceNotifications(
+            @NotNull NotificationResourceType resourceType,
+            @NotNull UUID resourceId);
 
     Page<NotificationResult> getManyNotifications(
             @NotNull NotificationFilterCriteria criteria,

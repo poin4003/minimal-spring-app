@@ -113,6 +113,17 @@ app:
             missing-original-audit-ttl: ${MEDIA_MISSING_ORIGINAL_AUDIT_TTL:10m}
             batch-size: ${MEDIA_MAINTENANCE_BATCH_SIZE:100}
     notification:
+        email:
+            enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
+            from-address: ${NOTIFICATION_EMAIL_FROM:no-reply@example.com}
+        policy:
+            ttl: ${NOTIFICATION_TTL:30d}
+            hard-limit-per-user: ${NOTIFICATION_HARD_LIMIT:100}
+        telegram:
+            enabled: ${NOTIFICATION_TELEGRAM_ENABLED:false}
+            api-base-url: ${TELEGRAM_API_BASE_URL:https://api.telegram.org}
+            bot-token: '${TELEGRAM_BOT_TOKEN:}'
+            group-chat-id: '${TELEGRAM_GROUP_CHAT_ID:}'
         sse:
             connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
             heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}
@@ -159,6 +170,18 @@ app:
 spring:
     application:
         name: spring_app
+
+    mail:
+        host: ${MAIL_HOST:localhost}
+        port: ${MAIL_PORT:1025}
+        username: '${MAIL_USERNAME:}'
+        password: '${MAIL_PASSWORD:}'
+        properties:
+            "[mail.smtp.auth]": ${MAIL_SMTP_AUTH:false}
+            "[mail.smtp.starttls.enable]": ${MAIL_SMTP_STARTTLS:false}
+            "[mail.smtp.connectiontimeout]": ${MAIL_CONNECTION_TIMEOUT_MS:5000}
+            "[mail.smtp.timeout]": ${MAIL_READ_TIMEOUT_MS:5000}
+            "[mail.smtp.writetimeout]": ${MAIL_WRITE_TIMEOUT_MS:5000}
 
     datasource:
         url: jdbc:h2:file:./data/minimal_db;AUTO_SERVER=TRUE

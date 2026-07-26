@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.features.media.enums.HlsReservedVariantKey;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -322,7 +324,43 @@ public class AppProperties {
     @Data
     public static class NotificationSettings {
         @Valid
+        private final NotificationEmail email = new NotificationEmail();
+
+        @Valid
+        private final NotificationPolicy policy =
+                new NotificationPolicy();
+
+        @Valid
         private final NotificationSse sse = new NotificationSse();
+
+        @Valid
+        private final NotificationTelegram telegram =
+                new NotificationTelegram();
+    }
+
+    @Data
+    public static class NotificationEmail {
+        private boolean enabled;
+
+        @NotBlank
+        @Email
+        private String fromAddress = "no-reply@example.com";
+    }
+
+    @Data
+    public static class NotificationPolicy {
+        @NotNull
+        private Duration ttl = Duration.ofDays(30);
+
+        @Positive
+        private int hardLimitPerUser = 100;
+
+        @AssertTrue(message = "Notification TTL must be positive.")
+        public boolean isTtlValid() {
+            return ttl != null
+                    && !ttl.isZero()
+                    && !ttl.isNegative();
+        }
     }
 
     @Data
@@ -342,6 +380,25 @@ public class AppProperties {
 
         private boolean isPositive(Duration value) {
             return value != null && !value.isZero() && !value.isNegative();
+        }
+    }
+
+    @Data
+    public static class NotificationTelegram {
+        private boolean enabled;
+
+        @NotBlank
+        private String apiBaseUrl = "https://api.telegram.org";
+
+        private String botToken;
+        private String groupChatId;
+
+        @AssertTrue(
+                message = "Telegram bot token and group chat ID are required when Telegram is enabled.")
+        public boolean isProviderConfigurationValid() {
+            return !enabled
+                    || (StringUtils.hasText(botToken)
+                            && StringUtils.hasText(groupChatId));
         }
     }
 

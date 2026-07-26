@@ -32,6 +32,7 @@ import com.app.features.media.entity.MediaEntity_;
 import com.app.features.media.entity.MediaProcessingLeaseEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.enums.MediaProcessingStatus;
+import com.app.features.media.event.MediaDeletedEvent;
 import com.app.features.media.event.MediaUploadedEvent;
 import com.app.features.media.job.MediaProcessingJob;
 import com.app.features.media.repository.MediaRepository;
@@ -428,8 +429,12 @@ public class MediaServiceImpl implements MediaService {
     }
 
     private void deleteMediaEntity(MediaEntity media) {
+        UUID mediaId = media.getId();
+        String storageKey = media.getStorageKey();
+
         mediaRepo.delete(media);
-        registerAfterCommitCleanup(media.getStorageKey());
+        eventPublisher.publishEvent(new MediaDeletedEvent(mediaId));
+        registerAfterCommitCleanup(storageKey);
     }
 
     private void registerRollbackCleanup(String storageKey) {

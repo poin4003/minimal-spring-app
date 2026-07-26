@@ -20,7 +20,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -59,8 +58,10 @@ public class NotificationDeliveryEntity extends BaseAuditEntity {
     @Column(name = "subject_snapshot", length = 500)
     private String subjectSnapshot;
 
-    @Lob
-    @Column(name = "content_snapshot", nullable = false)
+    @Column(
+            name = "content_snapshot",
+            nullable = false,
+            columnDefinition = "TEXT")
     private String contentSnapshot;
 
     @Enumerated(EnumType.STRING)

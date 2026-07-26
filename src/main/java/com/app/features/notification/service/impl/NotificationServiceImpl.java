@@ -15,12 +15,15 @@ import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.notification.entity.NotificationEntity;
+import com.app.features.notification.enums.NotificationResourceType;
+import com.app.features.notification.enums.NotificationType;
 import com.app.features.notification.event.NotificationCreatedEvent;
 import com.app.features.notification.repository.NotificationRepository;
 import com.app.features.notification.repository.spec.NotificationSpecification;
 import com.app.features.notification.schema.filter.NotificationFilterCriteria;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
 import com.app.features.notification.schema.result.NotificationResult;
+import com.app.features.notification.service.NotificationPolicyService;
 import com.app.features.notification.service.NotificationService;
 import com.app.features.user.repository.UserBaseRepository;
 
@@ -34,6 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepo;
     private final UserBaseRepository userBaseRepo;
+    private final NotificationPolicyService notificationPolicySvc;
     private final ModelMapper mapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -46,6 +50,36 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResult createNotificationIfAbsent(
+            CreateNotificationPayload payload) {
+        return saveNotificationIfAbsent(payload);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public NotificationResult replaceNotification(
+            CreateNotificationPayload payload,
+            NotificationType obsoleteType) {
+        notificationRepo
+                .deleteAllByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+                        payload.getRecipientId(),
+                        obsoleteType,
+                        payload.getResourceType(),
+                        payload.getResourceId());
+
+        return saveNotificationIfAbsent(payload);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public long deleteResourceNotifications(
+            NotificationResourceType resourceType,
+            UUID resourceId) {
+        return notificationRepo.deleteAllByResourceTypeAndResourceId(
+                resourceType,
+                resourceId);
+    }
+
+    private NotificationResult saveNotificationIfAbsent(
             CreateNotificationPayload payload) {
         return notificationRepo
                 .findByRecipient_IdAndTypeAndResourceTypeAndResourceId(
@@ -72,8 +106,12 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setContent(payload.getContent().trim());
 
         notification = notificationRepo.save(notification);
+        notificationPolicySvc.enforceHardLimit(
+                payload.getRecipientId());
         eventPublisher.publishEvent(new NotificationCreatedEvent(
-                notification.getRecipient().getId(),
+                notification.getId(),
+                payload.getRecipientId(),
+                notification.getType(),
                 notification.getResourceType()));
         return mapper.map(notification, NotificationResult.class);
     }

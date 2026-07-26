@@ -1,6 +1,7 @@
 package com.app.features.notification.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +41,50 @@ public interface NotificationRepository
             NotificationType type,
             NotificationResourceType resourceType,
             UUID resourceId);
+
+    long deleteAllByResourceTypeAndResourceId(
+            NotificationResourceType resourceType,
+            UUID resourceId);
+
+    long deleteAllByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+            UUID recipientId,
+            NotificationType type,
+            NotificationResourceType resourceType,
+            UUID resourceId);
+
+    List<NotificationEntity> findAllByRecipient_Id(
+            UUID recipientId,
+            Pageable pageable);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            DELETE FROM NotificationEntity notification
+            WHERE notification.createdAt < :cutoff
+            """)
+    int deleteExpiredNotifications(
+            @Param("cutoff") LocalDateTime cutoff);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            DELETE FROM notification
+            WHERE id IN (
+                SELECT ranked.id
+                FROM (
+                    SELECT
+                        notification.id,
+                        ROW_NUMBER() OVER (
+                            PARTITION BY notification.recipient_id
+                            ORDER BY
+                                notification.created_at DESC,
+                                notification.id DESC
+                        ) AS row_number
+                    FROM notification
+                ) ranked
+                WHERE ranked.row_number > :hardLimit
+            )
+            """, nativeQuery = true)
+    int deleteOverflowNotifications(
+            @Param("hardLimit") int hardLimit);
 
     long countByRecipient_IdAndReadAtIsNull(UUID recipientId);
 
