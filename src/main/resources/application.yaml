@@ -1,6 +1,6 @@
 # Server config
 server:
-    port: 8080
+    port: ${PORT:8080}
     forward-headers-strategy: native
     tomcat:
         remoteip:
@@ -11,25 +11,21 @@ server:
 app:
     auth:
         cookie:
-            access-token-name: ACCESS_TOKEN
-            refresh-token-name: REFRESH_TOKEN
-            path: /
-            same-site: Lax
-            secure: false
+            access-token-name: ${ACCESS_TOKEN_COOKIE_NAME:ACCESS_TOKEN}
+            refresh-token-name: ${REFRESH_TOKEN_COOKIE_NAME:REFRESH_TOKEN}
+            path: ${AUTH_COOKIE_PATH:/}
+            same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
+            secure: ${AUTH_COOKIE_SECURE:true}
     cache:
         key-store:
             maximum-size: ${KEY_STORE_CACHE_MAXIMUM_SIZE:100000}
             ttl: ${KEY_STORE_CACHE_TTL:1m}
     cors:
-        allowed-origins:
-            - "http://localhost:5173"
-            - "http://localhost:3000"
-            - "http://localhost:3090"
-            - "http://127.0.0.1:5500"
+        allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
     jwt:
-        secret-key: "1234567890123456789012345678901234567890" # At least 256 bits (32 characters) for HS256
-        access-token-expiration-ms: 3600000 # 1 hour
-        refresh-token-expiration-ms: 604800000 # 7 days
+        secret-key: ${JWT_SECRET_KEY}
+        access-token-expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION_MS:3600000}
+        refresh-token-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION_MS:604800000}
     media:
         storage-path: ${MEDIA_STORAGE_PATH:./data/media}
         public-path: ${MEDIA_PUBLIC_PATH:/api/v1/public/media}
@@ -102,8 +98,8 @@ app:
         ffmpeg:
             executable: ${FFMPEG_PATH:ffmpeg}
             ffprobe-executable: ${FFPROBE_PATH:ffprobe}
-            segment-duration-seconds: 6
-            process-timeout-minutes: 30
+            segment-duration-seconds: ${FFMPEG_SEGMENT_DURATION_SECONDS:6}
+            process-timeout-minutes: ${FFMPEG_PROCESS_TIMEOUT_MINUTES:30}
         maintenance:
             pending-recovery-ttl: ${MEDIA_PENDING_RECOVERY_TTL:15m}
             staging-ttl: ${MEDIA_STAGING_TTL:1h}
@@ -160,16 +156,16 @@ app:
             - /admin/rbac/**
             - /admin/cronjobs/**
     ui:
-        login-path: /login
-        home-path: /admin
-        login-title: Sign in
-        logout-path: /logout
-        application-title: Minimal Spring App
+        login-path: ${UI_LOGIN_PATH:/login}
+        home-path: ${UI_HOME_PATH:/admin}
+        login-title: ${UI_LOGIN_TITLE:Sign in}
+        logout-path: ${UI_LOGOUT_PATH:/logout}
+        application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}
 
 # Spring config
 spring:
     application:
-        name: spring_app
+        name: ${SPRING_APPLICATION_NAME:minimal-spring-app}
 
     mail:
         host: ${MAIL_HOST:localhost}
@@ -184,40 +180,39 @@ spring:
             "[mail.smtp.writetimeout]": ${MAIL_WRITE_TIMEOUT_MS:5000}
 
     datasource:
-        url: jdbc:h2:file:./data/minimal_db;AUTO_SERVER=TRUE
-        driverClassName: org.h2.Driver
-        username: sa
-        password:
+        url: ${DATABASE_URL:jdbc:h2:file:./data/minimal_db}
+        driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
+        username: ${DATABASE_USERNAME:sa}
+        password: '${DATABASE_PASSWORD:}'
 
     h2:
         console:
-            enabled: true
-            path: /h2-console
+            enabled: ${H2_CONSOLE_ENABLED:false}
+            path: ${H2_CONSOLE_PATH:/h2-console}
 
     flyway:
-        enabled: true
+        enabled: ${FLYWAY_ENABLED:true}
         table: FLYWAY_SCHEMA_HISTORY
         placeholders:
             bootstrapAdminEmail: '${BOOTSTRAP_ADMIN_EMAIL:system@admin.com}'
-            bootstrapAdminPasswordHash: '${BOOTSTRAP_ADMIN_PASSWORD_HASH:$2b$10$aFCsDS3JNrk3lR/mopRPROvACMVX4rj8v0QTpalcFbuUc9YuYqwFu}'
-            bootstrapAdminName: '${BOOTSTRAP_ADMIN_NAME:Tài khoản Super Admin}'
+            bootstrapAdminPasswordHash: '${BOOTSTRAP_ADMIN_PASSWORD_HASH}'
+            bootstrapAdminName: '${BOOTSTRAP_ADMIN_NAME:System Administrator}'
 
     thymeleaf:
         enabled: true
         prefix: classpath:/templates/
         suffix: .html
         mode: HTML
-        cache: false
+        cache: ${THYMELEAF_CACHE:true}
 
     jpa:
-        show-sql: true
+        show-sql: ${JPA_SHOW_SQL:false}
         hibernate:
-            # ddl-auto: create
             ddl-auto: validate
         properties:
             hibernate:
-                "[format_sql]": true
-                "[highlight_sql]": true
+                "[format_sql]": ${HIBERNATE_FORMAT_SQL:false}
+                "[highlight_sql]": ${HIBERNATE_HIGHLIGHT_SQL:false}
 
     servlet:
         multipart:
@@ -234,18 +229,20 @@ spring:
 
 # Swagger
 springdoc:
+    api-docs:
+        enabled: ${SWAGGER_ENABLED:false}
     swagger-ui:
+        enabled: ${SWAGGER_ENABLED:false}
         path: /swagger-ui.html
 
 # Logger
 logging:
     level:
-        "[org.hibernate.SQL]": DEBUG
-        "[org.hibernate.orm.jdbc.bind]": TRACE
-
-        "[org.springframework.jdbc.core]": DEBUG
-        "[java.sql.Connection]": TRACE
-        "[java.sql]": TRACE
+        "[org.hibernate.SQL]": ${LOG_LEVEL_HIBERNATE_SQL:INFO}
+        "[org.hibernate.orm.jdbc.bind]": ${LOG_LEVEL_HIBERNATE_BIND:INFO}
+        "[org.springframework.jdbc.core]": ${LOG_LEVEL_SPRING_JDBC:INFO}
+        "[java.sql.Connection]": ${LOG_LEVEL_SQL_CONNECTION:INFO}
+        "[java.sql]": ${LOG_LEVEL_SQL:INFO}
 
 org:
     jobrunr:
@@ -256,7 +253,7 @@ org:
             delete-succeeded-jobs-after: ${JOBRUNR_DELETE_SUCCEEDED_AFTER:3d}
             permanently-delete-deleted-jobs-after: ${JOBRUNR_PERMANENT_DELETE_AFTER:1d}
         dashboard:
-            enabled: false
-            port: 8000
+            enabled: ${JOBRUNR_DASHBOARD_ENABLED:false}
+            port: ${JOBRUNR_DASHBOARD_PORT:8000}
         maintenance:
             failed-job-retention: ${JOBRUNR_FAILED_JOB_RETENTION:30d}
