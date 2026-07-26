@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import com.app.features.email.enums.EmailTemplate;
 import com.app.features.notification.enums.NotificationResourceType;
 import com.app.features.notification.enums.NotificationType;
 import com.app.features.notification.event.NotificationCreatedEvent;
@@ -42,7 +43,8 @@ public class MediaEmailDeliveryEventHandler {
         try {
             notificationEmailDeliverySvc.createDeliveryIfEnabled(
                     event.notificationId(),
-                    event.recipientId());
+                    event.recipientId(),
+                    EmailTemplate.MEDIA_NOTIFICATION);
         } catch (RuntimeException exception) {
             log.error(
                     "Unable to create Email delivery for notification [{}].",

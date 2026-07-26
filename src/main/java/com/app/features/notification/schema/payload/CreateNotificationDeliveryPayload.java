@@ -21,4 +21,10 @@ public class CreateNotificationDeliveryPayload {
     @NotBlank
     @Size(max = 512)
     private String recipientAddress;
+
+    @Size(max = 500)
+    private String subjectSnapshot;
+
+    @NotBlank
+    private String contentSnapshot;
 }

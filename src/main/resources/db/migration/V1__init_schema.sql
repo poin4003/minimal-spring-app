@@ -126,7 +126,7 @@ CREATE TABLE notification_delivery (
     channel NotificationChannelEnum NOT NULL,
     recipient_address VARCHAR(512) NOT NULL,
     subject_snapshot VARCHAR(500),
-    content_snapshot CLOB NOT NULL,
+    content_snapshot TEXT NOT NULL,
     status NotificationDeliveryStatusEnum NOT NULL,
     attempt_count INTEGER DEFAULT 0 NOT NULL,
     provider_message_id VARCHAR(255),

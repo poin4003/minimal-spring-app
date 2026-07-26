@@ -68,8 +68,8 @@ public class NotificationDeliveryServiceImpl
         delivery.setChannel(payload.getChannel());
         delivery.setRecipientAddress(
                 payload.getRecipientAddress().trim());
-        delivery.setSubjectSnapshot(notification.getTitle());
-        delivery.setContentSnapshot(notification.getContent());
+        delivery.setSubjectSnapshot(payload.getSubjectSnapshot());
+        delivery.setContentSnapshot(payload.getContentSnapshot());
         delivery.setStatus(NotificationDeliveryStatus.PENDING);
         delivery.setAttemptCount(0);
 

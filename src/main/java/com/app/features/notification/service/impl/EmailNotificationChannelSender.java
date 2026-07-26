@@ -33,6 +33,7 @@ public class EmailNotificationChannelSender
         payload.setRecipientEmail(message.getRecipientAddress());
         payload.setSubject(message.getSubject());
         payload.setContent(message.getContent());
+        payload.setHtml(true);
 
         return emailSvc.send(payload);
     }

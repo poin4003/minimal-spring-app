@@ -19,4 +19,6 @@ public class EmailPayload {
 
     @NotBlank
     private String content;
+
+    private boolean html;
 }
