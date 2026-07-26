@@ -23,6 +23,7 @@ import com.app.features.notification.repository.spec.NotificationSpecification;
 import com.app.features.notification.schema.filter.NotificationFilterCriteria;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
 import com.app.features.notification.schema.result.NotificationResult;
+import com.app.features.notification.service.NotificationPolicyService;
 import com.app.features.notification.service.NotificationService;
 import com.app.features.user.repository.UserBaseRepository;
 
@@ -36,6 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final NotificationRepository notificationRepo;
     private final UserBaseRepository userBaseRepo;
+    private final NotificationPolicyService notificationPolicySvc;
     private final ModelMapper mapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -104,9 +106,11 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setContent(payload.getContent().trim());
 
         notification = notificationRepo.save(notification);
+        notificationPolicySvc.enforceHardLimit(
+                payload.getRecipientId());
         eventPublisher.publishEvent(new NotificationCreatedEvent(
                 notification.getId(),
-                notification.getRecipient().getId(),
+                payload.getRecipientId(),
                 notification.getType(),
                 notification.getResourceType()));
         return mapper.map(notification, NotificationResult.class);

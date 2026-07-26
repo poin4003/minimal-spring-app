@@ -327,6 +327,10 @@ public class AppProperties {
         private final NotificationEmail email = new NotificationEmail();
 
         @Valid
+        private final NotificationPolicy policy =
+                new NotificationPolicy();
+
+        @Valid
         private final NotificationSse sse = new NotificationSse();
 
         @Valid
@@ -341,6 +345,22 @@ public class AppProperties {
         @NotBlank
         @Email
         private String fromAddress = "no-reply@example.com";
+    }
+
+    @Data
+    public static class NotificationPolicy {
+        @NotNull
+        private Duration ttl = Duration.ofDays(30);
+
+        @Positive
+        private int hardLimitPerUser = 100;
+
+        @AssertTrue(message = "Notification TTL must be positive.")
+        public boolean isTtlValid() {
+            return ttl != null
+                    && !ttl.isZero()
+                    && !ttl.isNegative();
+        }
     }
 
     @Data

@@ -116,6 +116,9 @@ app:
         email:
             enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
             from-address: ${NOTIFICATION_EMAIL_FROM:no-reply@example.com}
+        policy:
+            ttl: ${NOTIFICATION_TTL:30d}
+            hard-limit-per-user: ${NOTIFICATION_HARD_LIMIT:100}
         telegram:
             enabled: ${NOTIFICATION_TELEGRAM_ENABLED:false}
             api-base-url: ${TELEGRAM_API_BASE_URL:https://api.telegram.org}

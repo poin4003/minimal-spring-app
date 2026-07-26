@@ -1,6 +1,7 @@
 package com.app.features.notification.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -50,6 +51,10 @@ public interface NotificationRepository
             NotificationType type,
             NotificationResourceType resourceType,
             UUID resourceId);
+
+    List<NotificationEntity> findAllByRecipient_Id(
+            UUID recipientId,
+            Pageable pageable);
 
     long countByRecipient_IdAndReadAtIsNull(UUID recipientId);
 
