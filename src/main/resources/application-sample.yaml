@@ -116,6 +116,11 @@ app:
         email:
             enabled: ${NOTIFICATION_EMAIL_ENABLED:false}
             from-address: ${NOTIFICATION_EMAIL_FROM:no-reply@example.com}
+        telegram:
+            enabled: ${NOTIFICATION_TELEGRAM_ENABLED:false}
+            api-base-url: ${TELEGRAM_API_BASE_URL:https://api.telegram.org}
+            bot-token: '${TELEGRAM_BOT_TOKEN:}'
+            group-chat-id: '${TELEGRAM_GROUP_CHAT_ID:}'
         sse:
             connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
             heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}

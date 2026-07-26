@@ -6,8 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EmailTemplate {
-    SAMPLE("email/sample"),
-    MEDIA_NOTIFICATION("email/media-notification");
+    SAMPLE("email/sample");
 
     private final String path;
 }

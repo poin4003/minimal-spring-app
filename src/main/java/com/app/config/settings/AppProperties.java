@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.features.media.enums.HlsReservedVariantKey;
@@ -327,6 +328,10 @@ public class AppProperties {
 
         @Valid
         private final NotificationSse sse = new NotificationSse();
+
+        @Valid
+        private final NotificationTelegram telegram =
+                new NotificationTelegram();
     }
 
     @Data
@@ -355,6 +360,25 @@ public class AppProperties {
 
         private boolean isPositive(Duration value) {
             return value != null && !value.isZero() && !value.isNegative();
+        }
+    }
+
+    @Data
+    public static class NotificationTelegram {
+        private boolean enabled;
+
+        @NotBlank
+        private String apiBaseUrl = "https://api.telegram.org";
+
+        private String botToken;
+        private String groupChatId;
+
+        @AssertTrue(
+                message = "Telegram bot token and group chat ID are required when Telegram is enabled.")
+        public boolean isProviderConfigurationValid() {
+            return !enabled
+                    || (StringUtils.hasText(botToken)
+                            && StringUtils.hasText(groupChatId));
         }
     }
 

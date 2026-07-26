@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
@@ -34,6 +36,7 @@ public class NotificationEmailDeliveryServiceImpl
     private final ModelMapper mapper;
 
     @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createDeliveryIfEnabled(
             UUID notificationId,
             UUID recipientId,
