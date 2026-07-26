@@ -10,11 +10,14 @@
 - Notification templates, provider tables, event-route tables, and social aggregation are out of scope until a concrete business requirement needs them.
 
 ## Media Notifications
+- `MEDIA_UPLOADED` is created after an upload transaction commits.
+- If post-processing is required, `MEDIA_UPLOADED` reports that processing is in progress.
+- If post-processing is not required, `MEDIA_UPLOADED` reports that the media is ready to use.
 - `MEDIA_READY` is created when asynchronously processed media reaches `READY`.
 - For video and audio, `MEDIA_READY` means HLS content is ready to stream.
 - For images, `MEDIA_READY` means required thumbnail processing completed successfully.
 - `MEDIA_PROCESSING_FAILED` is created when required media processing fails.
-- Immediate upload success, retry start, manual thumbnail assignment, and media deletion do not create notifications.
+- Retry start, manual thumbnail assignment, and media deletion do not create notifications.
 - Media notifications are system-generated, so their actor may be null.
 - Starting a retry removes the existing failure notification for that media.
 - A successful retry removes any stale failure notification before creating or refreshing the ready notification.
