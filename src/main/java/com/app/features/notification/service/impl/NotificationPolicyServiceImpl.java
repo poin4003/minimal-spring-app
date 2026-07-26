@@ -1,5 +1,7 @@
 package com.app.features.notification.service.impl;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,5 +57,26 @@ public class NotificationPolicyServiceImpl
         } while (!overflow.isEmpty());
 
         return deletedCount;
+    }
+
+    @Override
+    @Transactional
+    public long deleteExpiredNotifications() {
+        Duration ttl = appProperties.getNotification()
+                .getPolicy()
+                .getTtl();
+        LocalDateTime cutoff = LocalDateTime.now().minus(ttl);
+
+        return notificationRepo.deleteExpiredNotifications(cutoff);
+    }
+
+    @Override
+    @Transactional
+    public long deleteOverflowNotifications() {
+        int hardLimit = appProperties.getNotification()
+                .getPolicy()
+                .getHardLimitPerUser();
+
+        return notificationRepo.deleteOverflowNotifications(hardLimit);
     }
 }
