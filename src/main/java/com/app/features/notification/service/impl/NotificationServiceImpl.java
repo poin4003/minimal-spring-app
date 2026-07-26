@@ -15,6 +15,8 @@ import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.notification.entity.NotificationEntity;
+import com.app.features.notification.enums.NotificationResourceType;
+import com.app.features.notification.enums.NotificationType;
 import com.app.features.notification.event.NotificationCreatedEvent;
 import com.app.features.notification.repository.NotificationRepository;
 import com.app.features.notification.repository.spec.NotificationSpecification;
@@ -46,6 +48,36 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResult createNotificationIfAbsent(
+            CreateNotificationPayload payload) {
+        return saveNotificationIfAbsent(payload);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public NotificationResult replaceNotification(
+            CreateNotificationPayload payload,
+            NotificationType obsoleteType) {
+        notificationRepo
+                .deleteAllByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+                        payload.getRecipientId(),
+                        obsoleteType,
+                        payload.getResourceType(),
+                        payload.getResourceId());
+
+        return saveNotificationIfAbsent(payload);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public long deleteResourceNotifications(
+            NotificationResourceType resourceType,
+            UUID resourceId) {
+        return notificationRepo.deleteAllByResourceTypeAndResourceId(
+                resourceType,
+                resourceId);
+    }
+
+    private NotificationResult saveNotificationIfAbsent(
             CreateNotificationPayload payload) {
         return notificationRepo
                 .findByRecipient_IdAndTypeAndResourceTypeAndResourceId(

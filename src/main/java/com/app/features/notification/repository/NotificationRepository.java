@@ -41,6 +41,16 @@ public interface NotificationRepository
             NotificationResourceType resourceType,
             UUID resourceId);
 
+    long deleteAllByResourceTypeAndResourceId(
+            NotificationResourceType resourceType,
+            UUID resourceId);
+
+    long deleteAllByRecipient_IdAndTypeAndResourceTypeAndResourceId(
+            UUID recipientId,
+            NotificationType type,
+            NotificationResourceType resourceType,
+            UUID resourceId);
+
     long countByRecipient_IdAndReadAtIsNull(UUID recipientId);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
