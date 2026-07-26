@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -322,7 +323,19 @@ public class AppProperties {
     @Data
     public static class NotificationSettings {
         @Valid
+        private final NotificationEmail email = new NotificationEmail();
+
+        @Valid
         private final NotificationSse sse = new NotificationSse();
+    }
+
+    @Data
+    public static class NotificationEmail {
+        private boolean enabled;
+
+        @NotBlank
+        @Email
+        private String fromAddress = "no-reply@example.com";
     }
 
     @Data
