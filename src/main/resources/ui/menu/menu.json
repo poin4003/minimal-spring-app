@@ -2,25 +2,30 @@
   {
     "id": "dashboard",
     "label": "Dashboard",
+    "icon": "speedometer2",
     "path": "/admin"
   },
   {
     "id": "user-management",
     "label": "User Management",
+    "icon": "people",
     "children": [
       {
         "id": "users",
         "label": "Users",
+        "icon": "person",
         "path": "/admin/users"
       },
       {
         "id": "roles",
         "label": "Roles",
+        "icon": "shield-lock",
         "path": "/admin/rbac/roles"
       },
       {
         "id": "permissions",
         "label": "Permissions",
+        "icon": "key",
         "path": "/admin/rbac/permissions"
       }
     ]
@@ -28,11 +33,13 @@
   {
     "id": "media-library",
     "label": "Media Library",
+    "icon": "images",
     "path": "/admin/media"
   },
   {
     "id": "cronjobs",
     "label": "Cronjobs",
+    "icon": "clock-history",
     "path": "/admin/cronjobs"
   }
 ]

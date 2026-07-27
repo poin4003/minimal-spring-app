@@ -4,6 +4,9 @@
 CREATE DOMAIN UserStatusEnum AS VARCHAR(8)
     CHECK (VALUE IN ('ACTIVE', 'INACTIVE', 'LOCKED'));
 
+CREATE DOMAIN AppLanguageEnum AS VARCHAR(2)
+    CHECK (VALUE IN ('EN', 'VI'));
+
 CREATE DOMAIN SimStatusEnum AS VARCHAR(8)
     CHECK (VALUE IN ('ACTIVE', 'INACTIVE', 'BLOCKED', 'PICKED', 'DELETED'));
 
@@ -75,8 +78,10 @@ CREATE INDEX idx_user_base_created_at ON user_base(created_at);
 
 CREATE TABLE user_info (
     id UUID PRIMARY KEY,
-    username VARCHAR(255),
-    phone_number VARCHAR(255),
+    full_name VARCHAR(150),
+    avatar_media_id UUID,
+    language AppLanguageEnum DEFAULT 'EN' NOT NULL,
+    dark_theme_enabled BOOLEAN DEFAULT FALSE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     CONSTRAINT fk_user_info_user
@@ -167,6 +172,11 @@ CREATE INDEX idx_media_created_by_status_created_at
 CREATE INDEX idx_media_processing_status_updated_at
     ON media(processing_status, status, updated_at);
 CREATE INDEX idx_media_created_at ON media(created_at);
+
+ALTER TABLE user_info
+    ADD CONSTRAINT fk_user_info_avatar_media
+    FOREIGN KEY (avatar_media_id) REFERENCES media(id)
+    ON DELETE SET NULL;
 
 CREATE TABLE media_processing_lease (
     media_id UUID PRIMARY KEY,

@@ -51,6 +51,19 @@ body {
     display: block;
 }
 
+.app-menu-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: 0 0 1.25rem;
+    background-color: currentColor;
+    -webkit-mask: var(--app-menu-icon) center / contain no-repeat;
+    mask: var(--app-menu-icon) center / contain no-repeat;
+}
+
+.app-menu-label {
+    min-width: 0;
+}
+
 .app-menu-link,
 .app-menu-toggle {
     border: 1px solid var(--bs-border-color);

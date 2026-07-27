@@ -28,9 +28,16 @@ INSERT INTO user_base (id, email, password, status) VALUES (
     'ACTIVE'
 );
 
-INSERT INTO user_info (id, username) VALUES (
+INSERT INTO user_info (
+    id,
+    full_name,
+    language,
+    dark_theme_enabled
+) VALUES (
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01',
-    '${bootstrapAdminName}'
+    '${bootstrapAdminName}',
+    'EN',
+    FALSE
 );
 
 INSERT INTO user_roles (user_id, role_id) VALUES (

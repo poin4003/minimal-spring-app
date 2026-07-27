@@ -38,6 +38,7 @@ public class MenuService {
         MenuItem item = new MenuItem();
         item.setId(source.getId());
         item.setLabel(source.getLabel());
+        item.setIcon(source.getIcon());
         item.setPath(source.getPath());
         item.setDisabled(source.isDisabled());
 

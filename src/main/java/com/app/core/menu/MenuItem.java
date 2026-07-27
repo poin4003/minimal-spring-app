@@ -10,6 +10,7 @@ public class MenuItem {
 
     private String id;
     private String label;
+    private String icon;
     private String path;
     private boolean disabled;
     private boolean active;
