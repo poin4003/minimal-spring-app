@@ -1,13 +1,20 @@
 (function () {
     const THEME_STORAGE_KEY = "app-theme";
+    const THEME_COOKIE_NAME = "APP_THEME";
     const CSRF_COOKIE_NAME = "XSRF-TOKEN";
     const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
     const root = document.documentElement;
 
     function getTheme() {
+        const cookieTheme = readCookie(THEME_COOKIE_NAME);
+        if (cookieTheme === "dark" || cookieTheme === "light") {
+            localStorage.setItem(THEME_STORAGE_KEY, cookieTheme);
+            return cookieTheme;
+        }
+
         return localStorage.getItem(THEME_STORAGE_KEY) === "dark"
-            ? "dark"
-            : "light";
+                ? "dark"
+                : "light";
     }
 
     function applyTheme(theme) {
@@ -75,9 +82,20 @@
         document.querySelectorAll("[data-app-theme-toggle]")
             .forEach(button => {
                 button.addEventListener("click", function () {
-                    const theme = getTheme() === "dark" ? "light" : "dark";
+                    const currentTheme =
+                        root.getAttribute("data-bs-theme") === "dark"
+                            ? "dark"
+                            : "light";
+                    const theme = currentTheme === "dark" ? "light" : "dark";
                     applyTheme(theme);
                     updateThemeButtons(theme);
+
+                    const form = button.closest("[data-app-theme-form]");
+                    if (form?.dataset.appThemePersist === "true") {
+                        form.querySelector("[data-app-theme-value]").value =
+                            String(theme === "dark");
+                        form.requestSubmit();
+                    }
                 });
             });
 

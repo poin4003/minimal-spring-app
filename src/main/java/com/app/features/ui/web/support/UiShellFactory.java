@@ -27,6 +27,9 @@ public class UiShellFactory {
         return UiShellView.builder()
                 .title(appProperties.getUi().getApplicationTitle())
                 .logoutPath(appProperties.getUi().getLogoutPath())
+                .profilePath(appProperties.getUi().getHomePath() + "/profile")
+                .themeUpdatePath(
+                        appProperties.getUi().getHomePath() + "/profile/theme")
                 .currentUser(UiCurrentUserView.builder()
                         .email(currentUser.getEmail())
                         .authorities(currentUser.getAuthorities().stream()

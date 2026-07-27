@@ -239,14 +239,14 @@ Allowed transitions:
 - Product commerce and inventory workflows
 
 ## Implementation Order
-1. Profile and preference schema, service, and UI.
-2. Backend and Thymeleaf internationalization.
-3. OTP registration and restricted credential onboarding.
-4. Shared responsive admin shell and icon-based menu.
-5. Common post kernel, moderation, and media attachments.
-6. Standard posts and shorts.
-7. Movies, seasons, and episodes.
-8. Products, categories, typed attributes, and flexible filters.
-9. Wikis and blogs with sanitized Markdown.
-10. Public profiles and typed content galleries.
-11. Two-level text comments and replies.
+1. [x] Profile and preference schema, service, and UI.
+2. [ ] Backend and Thymeleaf internationalization.
+3. [ ] OTP registration and restricted credential onboarding.
+4. [ ] Shared responsive admin shell and icon-based menu. JSON-driven local Bootstrap icons are complete; desktop collapse and mobile offcanvas remain.
+5. [ ] Common post kernel, moderation, and media attachments.
+6. [ ] Standard posts and shorts.
+7. [ ] Movies, seasons, and episodes.
+8. [ ] Products, categories, typed attributes, and flexible filters.
+9. [ ] Wikis and blogs with sanitized Markdown.
+10. [ ] Public profiles and typed content galleries.
+11. [ ] Two-level text comments and replies.

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.security.session.RevokeSessions;
@@ -17,8 +18,10 @@ import com.app.features.rbac.entity.PermissionEntity;
 import com.app.features.rbac.repository.PermissionRepository;
 import com.app.features.rbac.schema.result.PermissionResult;
 import com.app.features.user.entity.UserBaseEntity;
+import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.enums.UserStatusEnum;
 import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.repository.UserInfoRepository;
 import com.app.features.user.schema.payload.CreateUserPayload;
 import com.app.features.user.schema.result.UserDetailResult;
 import com.app.features.user.schema.result.UserResult;
@@ -31,11 +34,13 @@ import lombok.RequiredArgsConstructor;
 public class UserServiceImpl implements UserService {
 
     private final UserBaseRepository userBaseRepo;
+    private final UserInfoRepository userInfoRepo;
     private final PermissionRepository permRepo;
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper mapper;
 
     @Override
+    @Transactional
     public UserResult createUser(CreateUserPayload payload) {
         checkEmailUnique(payload.getEmail());
 
@@ -45,6 +50,10 @@ public class UserServiceImpl implements UserService {
         userBase.setStatus(UserStatusEnum.ACTIVE);
 
         userBase = userBaseRepo.save(userBase);
+
+        UserInfoEntity userInfo = new UserInfoEntity();
+        userInfo.setUser(userBase);
+        userInfoRepo.save(userInfo);
 
         return mapper.map(userBase, UserResult.class);
     }

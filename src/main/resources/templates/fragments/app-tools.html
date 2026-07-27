@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-    <button th:fragment="themeToggle"
-            type="button"
-            class="btn btn-outline-secondary app-header-action app-icon-button"
-            data-app-theme-toggle
-            aria-label="Switch to dark theme"
-            title="Switch theme">
-        <i class="bi bi-moon-stars"
-           data-app-theme-icon
-           aria-hidden="true"></i>
-        <span class="visually-hidden" data-app-theme-label>Dark theme</span>
-    </button>
+    <form th:fragment="themeToggle(themeUpdatePath)"
+          class="mb-0"
+          data-app-theme-form
+          data-app-loader="manual"
+          th:data-app-theme-persist="${themeUpdatePath != null}"
+          th:attr="hx-post=${themeUpdatePath},
+                   hx-swap='none',
+                   hx-disabled-elt='button'">
+        <input th:if="${themeUpdatePath != null}"
+               type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}">
+        <input type="hidden"
+               name="darkThemeEnabled"
+               data-app-theme-value>
+        <button type="button"
+                class="btn btn-outline-secondary app-header-action app-icon-button"
+                data-app-theme-toggle
+                aria-label="Switch to dark theme"
+                title="Switch theme">
+            <i class="bi bi-moon-stars"
+               data-app-theme-icon
+               aria-hidden="true"></i>
+            <span class="visually-hidden" data-app-theme-label>Dark theme</span>
+        </button>
+    </form>
 
     <div th:fragment="loader"
          id="app-loader"

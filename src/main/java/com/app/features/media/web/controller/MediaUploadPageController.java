@@ -43,7 +43,6 @@ public class MediaUploadPageController {
 
     @RateLimited(RateLimitPolicy.MEDIA_DIRECT_UPLOAD)
     @PostMapping(path = "/direct", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public String uploadDirect(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @ModelAttribute CreateMediaPayload payload,

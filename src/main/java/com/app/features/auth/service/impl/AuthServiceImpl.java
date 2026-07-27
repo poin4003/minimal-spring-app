@@ -176,6 +176,7 @@ public class AuthServiceImpl implements AuthService {
         keyStoreSvc.updateKeyStore(keyStore);
 
         LoginResult response = new LoginResult();
+        response.setUserId(user.getId());
         response.setAccessToken(newAccessToken);
         response.setRefreshToken(newRefreshToken);
         return response;

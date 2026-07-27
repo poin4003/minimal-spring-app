@@ -6,7 +6,6 @@ import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
-import com.app.core.constant.PermissionConstants;
 import com.app.core.exception.ExceptionFactory;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
@@ -44,7 +42,6 @@ public class MediaUploadTransportController {
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<MediaUploadSessionResult> startUpload(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody StartMediaUploadPayload payload) {
@@ -56,7 +53,6 @@ public class MediaUploadTransportController {
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @GetMapping("/{uploadId}")
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<MediaUploadSessionResult> getUpload(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId) {
@@ -70,7 +66,6 @@ public class MediaUploadTransportController {
     @PutMapping(
             path = "/{uploadId}/chunks/{chunkIndex}",
             consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<Void> uploadChunk(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId,
@@ -94,7 +89,6 @@ public class MediaUploadTransportController {
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @PostMapping("/{uploadId}/complete")
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<MediaResult> completeUpload(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId) {
@@ -106,7 +100,6 @@ public class MediaUploadTransportController {
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @DeleteMapping("/{uploadId}")
-    @Secured(PermissionConstants.MEDIA_MANAGE)
     public ApiResult<Void> cancelUpload(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId) {

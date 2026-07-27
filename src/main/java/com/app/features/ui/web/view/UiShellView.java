@@ -14,6 +14,8 @@ public class UiShellView {
 
     private final String title;
     private final String logoutPath;
+    private final String profilePath;
+    private final String themeUpdatePath;
     private final UiCurrentUserView currentUser;
     private final List<MenuItem> menuTree;
     private final NotificationWidgetView notificationWidget;

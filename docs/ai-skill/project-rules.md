@@ -127,11 +127,14 @@
 - Changes may only be applied after the user explicitly confirms by saying `apply`.
 - If the user clearly says something like `apply now`, `apply directly`, or otherwise shows that the change should be made immediately, the AI may apply it in that same turn.
 - The AI does not need to fully confirm every runtime case or edge case in advance; it only needs to show the code or proposed changes clearly so the user can decide the direction.
+- A backend proposal must disclose its complete effect radius before approval, including changes to public payloads or results, service contracts, authentication or session flows, authorization, persistence schema, migrations, configuration, dependencies, and supporting controllers or jobs.
+- Do not silently add fields to an existing API/result contract or change backend behavior merely because the change supports the requested feature; show that supporting change and its reason as part of the proposal.
 - This exception does not apply to reading source code, analysis, review, or proposing a fix.
 - If implementation reveals a substantial source, schema, architecture, or infrastructure change outside the explicit prompt scope, the AI must pause and ask the user before proposing or applying that additional direction.
+- If implementation reveals any behavior-affecting backend change that was not included in the approved proposal, the AI must stop, show the additional code or contract change, explain why it is required, and wait for explicit approval before applying it.
 - If a requested change has a large effect radius and still contains unclear product, domain, security, ownership, lifecycle, or architecture decisions, the AI must pause before implementation even when the user requested an immediate apply.
 - In that situation, explain the unresolved decisions, provide concrete options with their main trade-offs and a recommendation, then wait for the user to choose a direction before applying changes.
-- Do not silently bundle large out-of-scope refactors or redesigns into an approved change. Small compile-safe adjustments that do not alter the agreed behavior remain allowed.
+- Do not silently bundle out-of-scope refactors or redesigns into an approved change. Only mechanical compile-safe adjustments such as imports, formatting, and equivalent syntax fixes may be applied without another approval.
 
 ## Verification Scope Rule
 - For normal code changes, verify correctness with source review, focused compilation, static syntax checks, and diff inspection.

@@ -33,6 +33,26 @@ public class MediaUploadComponentFactory {
     }
 
     public MediaUploadComponentView buildThumbnailUpload() {
+        return buildImageUpload(
+                "media-thumbnail-upload",
+                "Upload Thumbnail Image",
+                "Upload Thumbnail Image",
+                "Upload one image to the media library. Select it after processing reaches READY.");
+    }
+
+    public MediaUploadComponentView buildProfileAvatarUpload() {
+        return buildImageUpload(
+                "profile-avatar-upload",
+                "Upload Avatar Image",
+                "Upload Avatar Image",
+                "Upload one image. Select it as your avatar after processing reaches READY.");
+    }
+
+    private MediaUploadComponentView buildImageUpload(
+            String id,
+            String triggerLabel,
+            String title,
+            String description) {
         List<AllowedMediaType> imageTypes = appProperties.getMedia()
                 .getAllowedTypes()
                 .stream()
@@ -40,10 +60,10 @@ public class MediaUploadComponentFactory {
                 .toList();
 
         return buildUpload(
-                "media-thumbnail-upload",
-                "Upload Thumbnail Image",
-                "Upload Thumbnail Image",
-                "Upload one image to the media library. Select it after processing reaches READY.",
+                id,
+                triggerLabel,
+                title,
+                description,
                 "Upload image",
                 false,
                 imageTypes);

@@ -19,6 +19,9 @@ import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.web.support.AuthCookieService;
 import com.app.features.auth.web.view.LoginPageView;
+import com.app.features.user.schema.result.ProfileResult;
+import com.app.features.user.service.ProfileService;
+import com.app.features.user.web.support.ProfilePreferenceCookieService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,6 +35,8 @@ public class LoginPageController {
     private final AppProperties appProperties;
     private final AuthService authSvc;
     private final AuthCookieService authCookieSvc;
+    private final ProfileService profileSvc;
+    private final ProfilePreferenceCookieService profilePreferenceCookieSvc;
 
     @GetMapping("${app.ui.login-path:/login}")
     public String loginPage(
@@ -65,7 +70,10 @@ public class LoginPageController {
             HttpServletResponse response) {
         try {
             LoginResult tokens = authSvc.login(form, HttpUtils.getClientIp(request));
+            ProfileResult profile = profileSvc.getProfile(tokens.getUserId());
+
             authCookieSvc.writeAuthenticationCookies(response, tokens);
+            profilePreferenceCookieSvc.writePreferences(response, profile);
 
             return "redirect:" + appProperties.getUi().getHomePath();
         } catch (RuntimeException ex) {
