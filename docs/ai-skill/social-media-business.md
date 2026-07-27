@@ -242,7 +242,7 @@ Allowed transitions:
 1. [x] Profile and preference schema, service, and UI.
 2. [ ] Backend and Thymeleaf internationalization.
 3. [ ] OTP registration and restricted credential onboarding.
-4. [ ] Shared responsive admin shell and icon-based menu. JSON-driven local Bootstrap icons are complete; desktop collapse and mobile offcanvas remain.
+4. [x] Shared responsive admin shell and icon-based menu with JSON-driven local Bootstrap icons, desktop icon rail, and mobile offcanvas.
 5. [ ] Common post kernel, moderation, and media attachments.
 6. [ ] Standard posts and shorts.
 7. [ ] Movies, seasons, and episodes.

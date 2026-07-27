@@ -3,7 +3,10 @@
     const THEME_COOKIE_NAME = "APP_THEME";
     const CSRF_COOKIE_NAME = "XSRF-TOKEN";
     const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
+    const SIDEBAR_STORAGE_KEY = "app-sidebar-collapsed";
     const root = document.documentElement;
+    const desktopViewport = window.matchMedia("(min-width: 992px)");
+    let sidebarTooltips = [];
 
     function getTheme() {
         const cookieTheme = readCookie(THEME_COOKIE_NAME);
@@ -47,6 +50,53 @@
         document.getElementById("app-loader")?.setAttribute("hidden", "");
     }
 
+    function isSidebarCollapsed() {
+        return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
+    }
+
+    function disposeSidebarTooltips() {
+        sidebarTooltips.forEach(tooltip => tooltip.dispose());
+        sidebarTooltips = [];
+    }
+
+    function syncSidebarTooltips(collapsed) {
+        disposeSidebarTooltips();
+
+        if (!collapsed
+                || !desktopViewport.matches
+                || typeof bootstrap === "undefined") {
+            return;
+        }
+
+        sidebarTooltips = Array.from(
+            document.querySelectorAll("[data-app-menu-tooltip]"))
+            .map(element => new bootstrap.Tooltip(element, {
+                placement: "right",
+                trigger: "hover focus",
+                container: "body"
+            }));
+    }
+
+    function applySidebarState(collapsed) {
+        root.dataset.appSidebar = collapsed ? "collapsed" : "expanded";
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(collapsed));
+
+        document.querySelectorAll("[data-app-sidebar-toggle]")
+            .forEach(button => {
+                button.setAttribute("aria-expanded", String(!collapsed));
+                button.setAttribute(
+                    "aria-label",
+                    collapsed ? "Expand menu" : "Collapse menu");
+
+                const icon = button.querySelector(
+                    "[data-app-sidebar-toggle-icon]");
+                icon?.classList.toggle("bi-layout-sidebar-inset", !collapsed);
+                icon?.classList.toggle("bi-layout-sidebar", collapsed);
+            });
+
+        syncSidebarTooltips(collapsed);
+    }
+
     function readCookie(name) {
         const prefix = `${name}=`;
         const cookie = document.cookie
@@ -59,6 +109,9 @@
     }
 
     applyTheme(getTheme());
+    root.dataset.appSidebar = isSidebarCollapsed()
+        ? "collapsed"
+        : "expanded";
 
     document.addEventListener("htmx:configRequest", function (event) {
         const csrfToken = readCookie(CSRF_COOKIE_NAME);
@@ -78,6 +131,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         updateThemeButtons(getTheme());
+        applySidebarState(isSidebarCollapsed());
 
         document.querySelectorAll("[data-app-theme-toggle]")
             .forEach(button => {
@@ -98,6 +152,27 @@
                     }
                 });
             });
+
+        document.addEventListener("click", function (event) {
+            const sidebarToggle = event.target.closest(
+                "[data-app-sidebar-toggle]");
+            if (sidebarToggle != null) {
+                applySidebarState(
+                    root.dataset.appSidebar !== "collapsed");
+                return;
+            }
+
+            const menuGroup = event.target.closest(".app-menu-toggle");
+            if (menuGroup != null
+                    && desktopViewport.matches
+                    && root.dataset.appSidebar === "collapsed") {
+                applySidebarState(false);
+            }
+        }, true);
+
+        desktopViewport.addEventListener("change", function () {
+            syncSidebarTooltips(isSidebarCollapsed());
+        });
 
         document.addEventListener("submit", function (event) {
             const form = event.target;

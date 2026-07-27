@@ -5,13 +5,16 @@
     <li th:each="item : ${items}" class="app-menu-item">
         <a th:if="${#lists.isEmpty(item.children)}"
            th:href="${item.disabled or item.path == null ? '#' : item.path}"
-           class="app-menu-link d-flex align-items-center gap-3 text-decoration-none"
+           class="app-menu-link d-flex align-items-center gap-2 text-decoration-none"
            th:classappend="${item.active} ? ' active' : ''"
-           th:attr="aria-disabled=${item.disabled}">
-            <span th:if="${item.icon != null}"
-                  class="app-menu-icon"
-                  th:style="|--app-menu-icon: url('/vendor/bootstrap-icons/icons/${item.icon}.svg')|"
-                  aria-hidden="true"></span>
+           data-app-menu-tooltip
+           th:attr="aria-disabled=${item.disabled},
+                    aria-label=${item.label},
+                    data-bs-title=${item.label}">
+            <i th:if="${item.icon != null}"
+               class="app-menu-icon bi"
+               th:classappend="${' bi-' + item.icon}"
+               aria-hidden="true"></i>
             <span class="app-menu-label" th:text="${item.label}">Dashboard</span>
         </a>
 
@@ -20,13 +23,17 @@
                     class="app-menu-toggle btn w-100 text-start d-flex align-items-center justify-content-between"
                     th:classappend="${item.open} ? ' active' : ''"
                     data-bs-toggle="collapse"
+                    data-app-menu-tooltip
                     th:data-bs-target="${'#menu-' + item.id}"
-                    th:attr="aria-expanded=${item.open},aria-controls=${'menu-' + item.id}">
-                <span class="d-flex align-items-center gap-3">
-                    <span th:if="${item.icon != null}"
-                          class="app-menu-icon"
-                          th:style="|--app-menu-icon: url('/vendor/bootstrap-icons/icons/${item.icon}.svg')|"
-                          aria-hidden="true"></span>
+                    th:attr="aria-expanded=${item.open},
+                             aria-controls=${'menu-' + item.id},
+                             aria-label=${item.label},
+                             data-bs-title=${item.label}">
+                <span class="d-flex align-items-center gap-2">
+                    <i th:if="${item.icon != null}"
+                       class="app-menu-icon bi"
+                       th:classappend="${' bi-' + item.icon}"
+                       aria-hidden="true"></i>
                     <span class="app-menu-label" th:text="${item.label}">
                         User Management
                     </span>

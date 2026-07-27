@@ -3,6 +3,7 @@ package com.app.features.auth.service.impl;
 import java.time.Instant;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.app.features.auth.repository.ConsumedRefreshTokenRepository;
 import com.app.features.auth.service.RefreshTokenService;
@@ -17,15 +18,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private final ConsumedRefreshTokenRepository consumedRefreshTokenRepo;
 
-    // @Scheduled(cron = "0/10 * * * * *")
     @Override
+    @Transactional
     public void cleanupExpiredConsumedTokens() {
-        log.info("Starting cleanup of expired consumed refresh token...");
-
         Instant now = Instant.now();
-
         int deleteCount = consumedRefreshTokenRepo.deleteAllExpiredSince(now);
 
-        log.info("Finished cleanup. Deleted {} expired consumed token at {}", deleteCount, now);
+        if (deleteCount > 0) {
+            log.info("Deleted [{}] expired consumed refresh tokens.", deleteCount);
+        }
     }
 }
