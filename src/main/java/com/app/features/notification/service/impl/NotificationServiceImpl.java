@@ -21,6 +21,7 @@ import com.app.features.notification.event.NotificationCreatedEvent;
 import com.app.features.notification.repository.NotificationRepository;
 import com.app.features.notification.repository.spec.NotificationSpecification;
 import com.app.features.notification.schema.filter.NotificationFilterCriteria;
+import com.app.features.notification.schema.model.NotificationTextSnapshot;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
 import com.app.features.notification.schema.result.NotificationResult;
 import com.app.features.notification.service.NotificationPolicyService;
@@ -38,6 +39,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepo;
     private final UserBaseRepository userBaseRepo;
     private final NotificationPolicyService notificationPolicySvc;
+    private final NotificationTextResolver notificationTextResolver;
     private final ModelMapper mapper;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -93,6 +95,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     private NotificationResult saveNotification(
             CreateNotificationPayload payload) {
+        NotificationTextSnapshot text = notificationTextResolver.resolve(
+                payload.getRecipientId(),
+                payload.getText());
+
         NotificationEntity notification = new NotificationEntity();
         notification.setRecipient(
                 userBaseRepo.getReferenceById(payload.getRecipientId()));
@@ -102,8 +108,8 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setType(payload.getType());
         notification.setResourceType(payload.getResourceType());
         notification.setResourceId(payload.getResourceId());
-        notification.setTitle(payload.getTitle().trim());
-        notification.setContent(payload.getContent().trim());
+        notification.setTitle(text.title());
+        notification.setContent(text.content());
 
         notification = notificationRepo.save(notification);
         notificationPolicySvc.enforceHardLimit(

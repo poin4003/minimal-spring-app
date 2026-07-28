@@ -5,9 +5,8 @@ import java.util.UUID;
 import com.app.features.notification.enums.NotificationResourceType;
 import com.app.features.notification.enums.NotificationType;
 
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -27,11 +26,7 @@ public class CreateNotificationPayload {
     @NotNull
     private UUID resourceId;
 
-    @NotBlank
-    @Size(max = 255)
-    private String title;
-
-    @NotBlank
-    @Size(max = 2000)
-    private String content;
+    @Valid
+    @NotNull
+    private NotificationTextPayload text;
 }

@@ -43,6 +43,8 @@
 - API clients select localized messages through `Accept-Language`.
 - Jakarta validation messages must use the same localization infrastructure.
 - `MyException` and its factories should carry stable error codes and resolvable message keys or arguments instead of pre-localizing inside domain services.
+- Notification producers pass message keys and arguments; the notification service resolves them with the recipient's persisted profile language and stores rendered title/content snapshots.
+- Background jobs and transactional event handlers must resolve recipient-specific text with an explicit locale instead of relying on the request-scoped `LocaleContextHolder`.
 - Existing notifications may retain the language used when their content snapshot was created; changing profile language does not rewrite notification history.
 
 ## Navigation
@@ -240,7 +242,7 @@ Allowed transitions:
 
 ## Implementation Order
 1. [x] Profile and preference schema, service, and UI.
-2. [ ] Backend and Thymeleaf internationalization.
+2. [x] Backend and Thymeleaf internationalization.
 3. [ ] OTP registration and restricted credential onboarding.
 4. [x] Shared responsive admin shell and icon-based menu with JSON-driven local Bootstrap icons, desktop icon rail, and mobile offcanvas.
 5. [ ] Common post kernel, moderation, and media attachments.

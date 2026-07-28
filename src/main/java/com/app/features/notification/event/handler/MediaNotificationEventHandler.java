@@ -1,5 +1,6 @@
 package com.app.features.notification.event.handler;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.notification.enums.NotificationResourceType;
 import com.app.features.notification.enums.NotificationType;
 import com.app.features.notification.schema.payload.CreateNotificationPayload;
+import com.app.features.notification.schema.payload.NotificationTextPayload;
 import com.app.features.notification.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
@@ -36,12 +38,14 @@ public class MediaNotificationEventHandler {
         payload.setType(NotificationType.MEDIA_UPLOADED);
         payload.setResourceType(NotificationResourceType.MEDIA);
         payload.setResourceId(event.mediaId());
-        payload.setTitle("Media upload completed");
-        payload.setContent(requiresProcessing
-                ? event.originalName()
-                        + " was uploaded and is being processed."
-                : event.originalName()
-                        + " was uploaded and is ready to use.");
+
+        NotificationTextPayload text = new NotificationTextPayload();
+        text.setTitleKey("notification.media.uploaded.title");
+        text.setContentKey(requiresProcessing
+                ? "notification.media.uploaded.processing"
+                : "notification.media.uploaded.ready");
+        text.setContentArguments(List.of(event.originalName()));
+        payload.setText(text);
 
         createNotificationSafely(payload, event.mediaId());
     }
@@ -53,8 +57,12 @@ public class MediaNotificationEventHandler {
         payload.setType(NotificationType.MEDIA_READY);
         payload.setResourceType(NotificationResourceType.MEDIA);
         payload.setResourceId(event.mediaId());
-        payload.setTitle("Media is ready");
-        payload.setContent(event.originalName() + " is ready to use.");
+
+        NotificationTextPayload text = new NotificationTextPayload();
+        text.setTitleKey("notification.media.ready.title");
+        text.setContentKey("notification.media.ready.content");
+        text.setContentArguments(List.of(event.originalName()));
+        payload.setText(text);
 
         replaceUploadedNotificationSafely(payload, event.mediaId());
     }
@@ -81,10 +89,12 @@ public class MediaNotificationEventHandler {
         payload.setType(NotificationType.MEDIA_PROCESSING_FAILED);
         payload.setResourceType(NotificationResourceType.MEDIA);
         payload.setResourceId(event.mediaId());
-        payload.setTitle("Media processing failed");
-        payload.setContent(
-                event.originalName()
-                        + " could not be prepared. You can retry processing.");
+
+        NotificationTextPayload text = new NotificationTextPayload();
+        text.setTitleKey("notification.media.failed.title");
+        text.setContentKey("notification.media.failed.content");
+        text.setContentArguments(List.of(event.originalName()));
+        payload.setText(text);
 
         replaceUploadedNotificationSafely(payload, event.mediaId());
     }
