@@ -32,13 +32,15 @@
             .forEach(button => {
                 button.setAttribute(
                     "aria-label",
-                    darkThemeActive ? "Switch to light theme" : "Switch to dark theme");
+                    darkThemeActive
+                        ? button.dataset.switchLightLabel
+                        : button.dataset.switchDarkLabel);
                 const icon = button.querySelector("[data-app-theme-icon]");
                 icon.classList.toggle("bi-sun", darkThemeActive);
                 icon.classList.toggle("bi-moon-stars", !darkThemeActive);
                 button.querySelector("[data-app-theme-label]").textContent = darkThemeActive
-                    ? "Light theme"
-                    : "Dark theme";
+                    ? button.dataset.lightLabel
+                    : button.dataset.darkLabel;
             });
     }
 
@@ -86,7 +88,9 @@
                 button.setAttribute("aria-expanded", String(!collapsed));
                 button.setAttribute(
                     "aria-label",
-                    collapsed ? "Expand menu" : "Collapse menu");
+                    collapsed
+                        ? button.dataset.expandLabel
+                        : button.dataset.collapseLabel);
 
                 const icon = button.querySelector(
                     "[data-app-sidebar-toggle-icon]");

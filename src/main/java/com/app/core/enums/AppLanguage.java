@@ -30,6 +30,10 @@ public enum AppLanguage {
         return Locale.forLanguageTag(languageTag);
     }
 
+    public String getMessageKey() {
+        return "language." + languageTag;
+    }
+
     public static Optional<AppLanguage> fromLocale(Locale locale) {
         if (locale == null) {
             return Optional.empty();

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
 <nav th:fragment="pagination(pagination)"
      th:if="${pagination != null and pagination.totalPages > 1}"
-     aria-label="Pagination">
+     th:attr="aria-label=#{pagination.label}">
     <ul class="pagination mb-0">
         <li class="page-item" th:classappend="${!pagination.hasPrevious} ? ' disabled' : ''">
             <a class="page-link"
@@ -13,7 +14,8 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
-                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}"
+               th:text="#{action.previous}">
                 Previous
             </a>
         </li>
@@ -44,7 +46,8 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
-                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}"
+               th:text="#{action.next}">
                 Next
             </a>
         </li>

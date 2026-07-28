@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
     <header th:fragment="header(shell)"
             class="app-header d-flex align-items-center justify-content-between gap-3 px-3 px-md-4 py-3 border-bottom">
@@ -9,7 +10,7 @@
                     data-bs-toggle="offcanvas"
                     data-bs-target="#app-sidebar"
                     aria-controls="app-sidebar"
-                    aria-label="Open menu">
+                    th:attr="aria-label=#{shell.openMenu}">
                 <i class="bi bi-list" aria-hidden="true"></i>
             </button>
 
@@ -17,14 +18,19 @@
                     class="btn btn-outline-secondary app-header-action app-icon-button d-none d-lg-inline-grid"
                     data-app-sidebar-toggle
                     aria-expanded="true"
-                    aria-label="Collapse menu">
+                    th:attr="aria-label=#{shell.collapseMenu},
+                             data-expand-label=#{shell.expandMenu},
+                             data-collapse-label=#{shell.collapseMenu}">
                 <i class="bi bi-layout-sidebar-inset"
                    data-app-sidebar-toggle-icon
                    aria-hidden="true"></i>
             </button>
 
             <div th:if="${shell.currentUser != null}" class="min-w-0">
-                <p class="text-secondary small mb-1">Signed in as</p>
+                <p class="text-secondary small mb-1"
+                   th:text="#{shell.signedInAs}">
+                    Signed in as
+                </p>
                 <div class="fw-semibold text-truncate"
                      th:text="${shell.currentUser.email}"></div>
             </div>
@@ -34,10 +40,13 @@
             <div th:replace="~{notification/fragments/inbox :: trigger(${shell.notificationWidget})}"></div>
             <a th:href="${shell.profilePath}"
                class="btn btn-outline-secondary app-header-action app-icon-button"
-               aria-label="Profile settings"
-               title="Profile settings">
+               th:attr="aria-label=#{profile.title},
+                        title=#{profile.title}">
                 <i class="bi bi-person-circle" aria-hidden="true"></i>
-                <span class="visually-hidden">Profile settings</span>
+                <span class="visually-hidden"
+                      th:text="#{profile.title}">
+                    Profile settings
+                </span>
             </a>
             <div th:replace="~{fragments/app-tools
                     :: themeToggle(${shell.themeUpdatePath})}"></div>
@@ -48,10 +57,13 @@
                        th:value="${_csrf.token}">
                 <button type="submit"
                         class="btn btn-outline-secondary app-header-action app-icon-button"
-                        aria-label="Sign out"
-                        title="Sign out">
+                        th:attr="aria-label=#{action.signOut},
+                                 title=#{action.signOut}">
                     <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
-                    <span class="visually-hidden">Sign out</span>
+                    <span class="visually-hidden"
+                          th:text="#{action.signOut}">
+                        Sign out
+                    </span>
                 </button>
             </form>
         </div>

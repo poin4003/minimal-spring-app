@@ -7,13 +7,18 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.app.config.security.web.HtmxRequestSupport;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.features.ui.web.component.view.UiErrorAlertView;
 import com.app.features.ui.web.view.ErrorPageView;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class WebErrorPageFactory {
+
+    private final AppMessageResolver messageResolver;
 
     public ModelAndView build(
             HttpStatus status,
@@ -55,11 +60,12 @@ public class WebErrorPageFactory {
     }
 
     private String resolveTitle(HttpStatus status) {
-        return switch (status) {
-            case FORBIDDEN -> "Forbidden";
-            case NOT_FOUND -> "Not Found";
-            case CONTENT_TOO_LARGE -> "Content Too Large";
-            default -> "System Error";
+        String messageKey = switch (status) {
+            case FORBIDDEN -> "error.forbidden.title";
+            case NOT_FOUND -> "error.notFound.title";
+            case CONTENT_TOO_LARGE -> "error.contentTooLarge.title";
+            default -> "error.system.title";
         };
+        return messageResolver.get(messageKey);
     }
 }

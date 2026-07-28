@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import com.app.core.i18n.AppMessageResolver;
+
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -18,6 +20,7 @@ public class MenuService {
     private static final String MENU_RESOURCE = "ui/menu/menu.json";
 
     private final ObjectMapper objectMapper;
+    private final AppMessageResolver messageResolver;
 
     public List<MenuItem> getMenuTree(String currentPath) {
         return readMenuTree().stream()
@@ -37,7 +40,7 @@ public class MenuService {
     private MenuItem markState(MenuItem source, String currentPath) {
         MenuItem item = new MenuItem();
         item.setId(source.getId());
-        item.setLabel(source.getLabel());
+        item.setLabel(messageResolver.get(source.getMessageKey()));
         item.setIcon(source.getIcon());
         item.setPath(source.getPath());
         item.setDisabled(source.isDisabled());

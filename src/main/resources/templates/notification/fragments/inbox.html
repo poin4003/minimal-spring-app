@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
     <div th:fragment="trigger(widget)" class="dropdown">
         <button type="button"
@@ -8,9 +9,9 @@
                 data-bs-auto-close="outside"
                 data-app-loader="manual"
                 aria-expanded="false"
-                aria-label="Open notifications"
-                title="Notifications"
-                th:attr="hx-get=${widget.inboxPath}"
+                th:attr="aria-label=#{notification.open},
+                         title=#{notification.title},
+                         hx-get=${widget.inboxPath}"
                 hx-target="#notification-inbox-body"
                 hx-swap="innerHTML">
             <i class="bi bi-bell" aria-hidden="true"></i>
@@ -36,7 +37,10 @@
                 <div class="d-flex justify-content-center p-4">
                     <div class="spinner-border spinner-border-sm text-primary"
                          role="status">
-                        <span class="visually-hidden">Loading notifications...</span>
+                        <span class="visually-hidden"
+                              th:text="#{notification.loading}">
+                            Loading notifications...
+                        </span>
                     </div>
                 </div>
             </div>
@@ -49,7 +53,7 @@
           th:classappend="${count.count == 0} ? 'd-none' : ''"
           data-app-loader="manual"
           th:attr="hx-get=${count.refreshPath},
-                   aria-label=|${count.count} unread notifications|"
+                   aria-label=#{notification.unreadCount(${count.count})}"
           hx-trigger="notification:changed from:body, sse:notification"
           hx-target="this"
           hx-swap="outerHTML"
@@ -59,9 +63,12 @@
 
     <section th:fragment="inbox(inbox)"
              class="w-100"
-             aria-label="Notifications">
+             th:attr="aria-label=#{notification.title}">
         <div class="d-flex align-items-center justify-content-between gap-3 p-3 border-bottom">
-            <h2 class="h6 mb-0">Notifications</h2>
+            <h2 class="h6 mb-0"
+                th:text="#{notification.title}">
+                Notifications
+            </h2>
 
             <form th:if="${inbox.unreadCount > 0}"
                   method="post"
@@ -71,14 +78,17 @@
                            hx-post=${inbox.markAllReadPath}"
                   hx-target="#notification-inbox-body"
                   hx-swap="innerHTML">
-                <button type="submit" class="btn btn-sm btn-link text-nowrap">
+                <button type="submit"
+                        class="btn btn-sm btn-link text-nowrap"
+                        th:text="#{notification.markAllRead}">
                     Mark all as read
                 </button>
             </form>
         </div>
 
         <div th:if="${#lists.isEmpty(inbox.items)}"
-             class="p-4 text-center text-secondary">
+             class="p-4 text-center text-secondary"
+             th:text="#{notification.empty}">
             No notifications yet.
         </div>
 
@@ -120,7 +130,7 @@
 
                         <i th:if="${item.unread}"
                            class="bi bi-circle-fill text-primary app-notification-unread-indicator"
-                           aria-label="Unread"></i>
+                           th:attr="aria-label=#{notification.unread}"></i>
                     </span>
                 </button>
             </form>

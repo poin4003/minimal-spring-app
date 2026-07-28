@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.config.settings.AppProperties;
 import com.app.core.enums.RecordStatus;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -62,6 +63,7 @@ public class ProfileAvatarPageController {
                     .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final ProfileService profileSvc;
     private final MediaService mediaSvc;
@@ -123,9 +125,11 @@ public class ProfileAvatarPageController {
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .id(AVATAR_PANEL_ID)
-                .title("Ready Images")
-                .description("Choose a ready image from your media library.")
-                .emptyMessage("No ready images are available.")
+                .title(messageResolver.get("profile.avatar.readyImages"))
+                .description(messageResolver.get(
+                        "profile.avatar.readyImagesDescription"))
+                .emptyMessage(messageResolver.get(
+                        "profile.avatar.noReadyImages"))
                 .rows(imagePage.getContent().stream()
                         .map(image -> toPanelItem(image))
                         .toList())
@@ -133,7 +137,7 @@ public class ProfileAvatarPageController {
                 .build();
 
         return ProfileAvatarPageView.builder()
-                .title("Select Avatar")
+                .title(messageResolver.get("profile.avatar.select"))
                 .listPath(getAvatarPath())
                 .backPath(getProfilePath())
                 .uploadPartialPath(getAvatarPath() + "/upload-modal")
@@ -143,11 +147,13 @@ public class ProfileAvatarPageController {
                 .breadcrumb(UiBreadcrumbView.builder()
                         .items(List.of(
                                 UiBreadcrumbItemView.builder()
-                                        .label("Profile Settings")
+                                        .label(messageResolver.get(
+                                                "profile.title"))
                                         .path(getProfilePath())
                                         .build(),
                                 UiBreadcrumbItemView.builder()
-                                        .label("Select Avatar")
+                                        .label(messageResolver.get(
+                                                "profile.avatar.select"))
                                         .active(true)
                                         .build()))
                         .build())
@@ -177,7 +183,8 @@ public class ProfileAvatarPageController {
                 .imageUrl(image.getThumbnailUrl())
                 .action(UiAssignmentActionView.builder()
                         .path(getAvatarPath())
-                        .label("Use Avatar")
+                        .label(messageResolver.get(
+                                "profile.avatar.use"))
                         .buttonClass("btn-outline-primary")
                         .targetId(image.getId().toString())
                         .build())

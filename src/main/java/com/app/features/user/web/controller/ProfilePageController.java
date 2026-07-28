@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.config.settings.AppProperties;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.features.ui.web.support.UiShellFactory;
 import com.app.features.user.schema.payload.UpdateProfilePayload;
@@ -36,6 +37,7 @@ public class ProfilePageController {
             "fragments/components/htmx-response :: empty";
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final ProfileService profileSvc;
     private final ProfilePreferenceCookieService profilePreferenceCookieSvc;
@@ -124,7 +126,7 @@ public class ProfilePageController {
             HttpServletRequest request,
             ProfileResult profile) {
         return ProfilePageView.builder()
-                .title("Profile Settings")
+                .title(messageResolver.get("profile.title"))
                 .updatePath(getProfilePath())
                 .avatarSelectionPath(getProfilePath() + "/avatar")
                 .removeAvatarPath(getProfilePath() + "/avatar/remove")

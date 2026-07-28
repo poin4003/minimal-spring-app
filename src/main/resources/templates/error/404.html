@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}"
       th:with="
           viewStatus=${page != null ? page.status : (status != null ? status : 404)},
-          viewTitle=${page != null ? page.title : 'Page not found'},
-          viewMessage=${page != null ? page.message : (#strings.isEmpty(message) ? 'The page or resource you requested does not exist.' : message)},
+          viewTitle=${page != null ? page.title : #messages.msg('error.notFound.title')},
+          viewMessage=${page != null ? page.message : (#strings.isEmpty(message) ? #messages.msg('error.notFound.message') : message)},
           viewPath=${page != null ? page.path : path}">
 <head>
     <meta charset="UTF-8">
@@ -32,14 +33,18 @@
                             </p>
 
                             <div class="d-flex justify-content-center">
-                                <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">
+                                <button type="button"
+                                        class="btn btn-outline-secondary"
+                                        onclick="window.history.back()"
+                                        th:text="#{action.back}">
                                     Back
                                 </button>
                             </div>
 
                             <div class="mt-4 small text-secondary">
                                 <span th:if="${viewPath != null and !#strings.isEmpty(viewPath)}">
-                                    Path: <code th:text="${viewPath}">/missing-page</code>
+                                    <span th:text="#{common.path}">Path</span>:
+                                    <code th:text="${viewPath}">/missing-page</code>
                                 </span>
                             </div>
                         </div>

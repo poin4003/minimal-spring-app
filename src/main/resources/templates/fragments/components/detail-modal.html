@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
 <div th:fragment="modal(modal)"
      class="modal fade"
@@ -17,7 +18,10 @@
                         Detail summary
                     </p>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        th:attr="aria-label=#{action.close}"></button>
             </div>
 
             <div class="modal-body d-grid gap-3">

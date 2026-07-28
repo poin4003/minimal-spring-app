@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,6 +26,7 @@
                             <div class="d-flex justify-content-end">
                                 <a class="btn btn-primary"
                                    th:href="${page.listPath}"
+                                   th:text="#{profile.avatar.upload}"
                                    th:attr="hx-get=${page.uploadPartialPath},
                                             hx-target='#app-modal-host',
                                             hx-swap='innerHTML',
@@ -51,7 +53,8 @@
 
                                             <div class="col-12 col-lg-8">
                                                 <label for="avatar-original-name"
-                                                       class="form-label">
+                                                       class="form-label"
+                                                       th:text="#{profile.avatar.imageName}">
                                                     Image Name
                                                 </label>
                                                 <input id="avatar-original-name"
@@ -59,13 +62,14 @@
                                                        type="text"
                                                        class="form-control"
                                                        maxlength="255"
-                                                       placeholder="Search your ready images"
+                                                       th:placeholder="#{profile.avatar.searchPlaceholder}"
                                                        th:value="${page.filter.originalName}">
                                             </div>
 
                                             <div class="col-12 col-lg-4 d-flex justify-content-lg-end gap-2">
                                                 <a class="btn btn-outline-secondary"
                                                    th:href="${page.listPath}"
+                                                   th:text="#{action.clear}"
                                                    th:attr="hx-get=${page.listPath},
                                                             hx-target='#profile-avatar-workspace',
                                                             hx-select='#profile-avatar-workspace',
@@ -75,7 +79,8 @@
                                                     Clear
                                                 </a>
                                                 <button type="submit"
-                                                        class="btn btn-primary">
+                                                        class="btn btn-primary"
+                                                        th:text="#{action.search}">
                                                     Search
                                                 </button>
                                             </div>

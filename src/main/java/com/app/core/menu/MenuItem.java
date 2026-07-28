@@ -9,6 +9,7 @@ import lombok.Data;
 public class MenuItem {
 
     private String id;
+    private String messageKey;
     private String label;
     private String icon;
     private String path;

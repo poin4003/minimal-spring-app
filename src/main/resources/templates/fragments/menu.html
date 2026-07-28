@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
 <ul class="app-menu list-unstyled mb-0" th:fragment="tree(items)">
     <li th:each="item : ${items}" class="app-menu-item">

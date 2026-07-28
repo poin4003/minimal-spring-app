@@ -1,30 +1,30 @@
 [
   {
     "id": "dashboard",
-    "label": "Dashboard",
+    "messageKey": "menu.dashboard",
     "icon": "speedometer2",
     "path": "/admin"
   },
   {
     "id": "user-management",
-    "label": "User Management",
+    "messageKey": "menu.userManagement",
     "icon": "people",
     "children": [
       {
         "id": "users",
-        "label": "Users",
+        "messageKey": "menu.users",
         "icon": "person",
         "path": "/admin/users"
       },
       {
         "id": "roles",
-        "label": "Roles",
+        "messageKey": "menu.roles",
         "icon": "shield-lock",
         "path": "/admin/rbac/roles"
       },
       {
         "id": "permissions",
-        "label": "Permissions",
+        "messageKey": "menu.permissions",
         "icon": "key",
         "path": "/admin/rbac/permissions"
       }
@@ -32,13 +32,13 @@
   },
   {
     "id": "media-library",
-    "label": "Media Library",
+    "messageKey": "menu.mediaLibrary",
     "icon": "images",
     "path": "/admin/media"
   },
   {
     "id": "cronjobs",
-    "label": "Cronjobs",
+    "messageKey": "menu.cronjobs",
     "icon": "clock-history",
     "path": "/admin/cronjobs"
   }

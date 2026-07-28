@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
 import com.app.config.settings.AppProperties;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.core.utils.HttpUtils;
 import com.app.features.auth.schema.payload.LoginPayload;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class LoginPageController {
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final AuthService authSvc;
     private final AuthCookieService authCookieSvc;
     private final ProfileService profileSvc;
@@ -50,7 +52,7 @@ public class LoginPageController {
         }
 
         LoginPageView page = LoginPageView.builder()
-                .title(appProperties.getUi().getLoginTitle())
+                .title(messageResolver.get("auth.login.title"))
                 .applicationTitle(appProperties.getUi().getApplicationTitle())
                 .loginPath(appProperties.getUi().getLoginPath())
                 .hasError(error != null)

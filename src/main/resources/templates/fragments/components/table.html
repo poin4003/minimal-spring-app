@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
 <section th:fragment="table(table)"
          th:id="${table.id}"
@@ -18,7 +19,12 @@
                 <thead>
                     <tr>
                         <th th:each="column : ${table.columns}" scope="col" th:text="${column.label}">Column</th>
-                        <th th:if="${table.showActions}" scope="col" class="text-end">Actions</th>
+                        <th th:if="${table.showActions}"
+                            scope="col"
+                            class="text-end"
+                            th:text="#{table.actions}">
+                            Actions
+                        </th>
                     </tr>
                 </thead>
 

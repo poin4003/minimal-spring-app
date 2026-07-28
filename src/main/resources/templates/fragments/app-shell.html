@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
     <div th:fragment="layout(shell, content)"
          class="app-shell-layout"
@@ -19,23 +20,27 @@
                         class="btn-close"
                         data-bs-dismiss="offcanvas"
                         data-bs-target="#app-sidebar"
-                        aria-label="Close menu"></button>
+                        th:attr="aria-label=#{shell.closeMenu}"></button>
             </div>
 
             <div class="offcanvas-body d-flex flex-column p-0">
                 <div class="app-sidebar-brand p-3">
-                    <p class="app-menu-caption mb-2">Menu</p>
+                    <p class="app-menu-caption mb-2"
+                       th:text="#{shell.menu}">
+                        Menu
+                    </p>
                     <h1 class="app-sidebar-copy h3 mb-2"
                         th:text="${shell.title}">
                         Minimal Spring App
                     </h1>
-                    <p class="app-sidebar-copy text-secondary mb-0">
+                    <p class="app-sidebar-copy text-secondary mb-0"
+                       th:text="#{shell.internalControlPanel}">
                         Internal control panel
                     </p>
                 </div>
 
                 <nav class="app-sidebar-navigation overflow-y-auto px-3 pb-4"
-                     aria-label="Main navigation">
+                     th:attr="aria-label=#{shell.mainNavigation}">
                     <div th:replace="~{fragments/menu
                             :: tree(${shell.menuTree})}"></div>
                 </nav>

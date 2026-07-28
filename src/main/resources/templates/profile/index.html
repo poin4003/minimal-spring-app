@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,12 +24,12 @@
                                             <div class="text-center">
                                                 <a th:href="${page.avatarSelectionPath}"
                                                    class="position-relative d-inline-block rounded-circle"
-                                                   aria-label="Change avatar"
-                                                   title="Change avatar">
+                                                   th:attr="aria-label=#{profile.avatar.change},
+                                                            title=#{profile.avatar.change}">
                                                     <img th:if="${page.profile.avatar != null
                                                             and page.profile.avatar.thumbnailUrl != null}"
                                                          th:src="${page.profile.avatar.thumbnailUrl}"
-                                                         alt="Current avatar"
+                                                         th:alt="#{profile.avatar.current}"
                                                          class="rounded-circle border object-fit-cover"
                                                          width="160"
                                                          height="160">
@@ -61,7 +62,9 @@
                                                             class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
                                                         <i class="bi bi-trash"
                                                            aria-hidden="true"></i>
-                                                        <span>Remove Avatar</span>
+                                                        <span th:text="#{profile.avatar.remove}">
+                                                            Remove Avatar
+                                                        </span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -88,7 +91,8 @@
 
                                                 <div>
                                                     <label for="profile-email"
-                                                           class="form-label">
+                                                           class="form-label"
+                                                           th:text="#{field.email}">
                                                         Email
                                                     </label>
                                                     <input id="profile-email"
@@ -100,7 +104,8 @@
 
                                                 <div>
                                                     <label for="profile-full-name"
-                                                           class="form-label">
+                                                           class="form-label"
+                                                           th:text="#{profile.fullName}">
                                                         Full Name
                                                     </label>
                                                     <input id="profile-full-name"
@@ -119,7 +124,8 @@
 
                                                 <div>
                                                     <label for="profile-language"
-                                                           class="form-label">
+                                                           class="form-label"
+                                                           th:text="#{profile.language}">
                                                         Language
                                                     </label>
                                                     <select id="profile-language"
@@ -129,7 +135,7 @@
                                                             th:field="*{language}">
                                                         <option th:each="language : ${T(com.app.core.enums.AppLanguage).values()}"
                                                                 th:value="${language}"
-                                                                th:text="${language}">
+                                                                th:text="#{${language.messageKey}}">
                                                             EN
                                                         </option>
                                                     </select>
@@ -146,14 +152,16 @@
                                                            role="switch"
                                                            th:field="*{darkThemeEnabled}">
                                                     <label for="profile-dark-theme"
-                                                           class="form-check-label">
+                                                           class="form-check-label"
+                                                           th:text="#{profile.darkTheme}">
                                                         Prefer dark theme
                                                     </label>
                                                 </div>
 
                                                 <div class="d-flex justify-content-end">
                                                     <button type="submit"
-                                                            class="btn btn-primary">
+                                                            class="btn btn-primary"
+                                                            th:text="#{profile.save}">
                                                         Save Changes
                                                     </button>
                                                 </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -46,7 +46,8 @@
                                         Upload Thumbnail Image
                                     </a>
                                     <a th:href="${page.backPath}"
-                                       class="btn btn-outline-secondary">
+                                       class="btn btn-outline-secondary"
+                                       th:text="#{action.back}">
                                         Back
                                     </a>
                                 </div>

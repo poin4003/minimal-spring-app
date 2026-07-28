@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
 <section th:fragment="modal(modal)">
     <button th:if="${modal.triggerLabel != null}"
@@ -36,7 +37,10 @@
                                 Modal description
                             </p>
                         </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                th:attr="aria-label=#{action.close}"></button>
                     </div>
 
                     <div class="modal-body">
@@ -128,7 +132,10 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                data-bs-dismiss="modal"
+                                th:text="#{action.close}">
                             Close
                         </button>
                         <button type="submit" class="btn btn-primary" th:text="${modal.submitLabel}">

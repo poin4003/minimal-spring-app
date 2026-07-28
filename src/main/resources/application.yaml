@@ -158,7 +158,6 @@ app:
     ui:
         login-path: ${UI_LOGIN_PATH:/login}
         home-path: ${UI_HOME_PATH:/admin}
-        login-title: ${UI_LOGIN_TITLE:Sign in}
         logout-path: ${UI_LOGOUT_PATH:/logout}
         application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}
 

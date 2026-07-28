@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
 <body>
-<nav th:fragment="breadcrumb(breadcrumb)" aria-label="breadcrumb">
+<nav th:fragment="breadcrumb(breadcrumb)"
+     th:attr="aria-label=#{breadcrumb.label}">
     <ol class="breadcrumb mb-0">
         <li th:each="item : ${breadcrumb.items}"
             class="breadcrumb-item"

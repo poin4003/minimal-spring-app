@@ -439,9 +439,6 @@ public class AppProperties {
         private String homePath = "/admin";
 
         @NotBlank
-        private String loginTitle = "Sign in";
-
-        @NotBlank
         private String logoutPath = "/logout";
 
         @NotBlank
