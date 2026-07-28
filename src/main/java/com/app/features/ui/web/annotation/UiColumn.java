@@ -19,7 +19,7 @@ public @interface UiColumn {
 
     UiCellType type() default UiCellType.TEXT;
 
-    String emptyValue() default "-";
+    String emptyValue() default "common.emptyValue";
 
     String badgeClass() default "";
 }

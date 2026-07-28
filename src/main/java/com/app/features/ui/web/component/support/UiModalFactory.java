@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.app.core.i18n.AppMessageResolver;
 import com.app.features.ui.web.annotation.UiField;
 import com.app.features.ui.web.component.view.UiModalDefinition;
 import com.app.features.ui.web.component.view.UiModalFieldOptionView;
@@ -14,8 +15,13 @@ import com.app.features.ui.web.component.view.UiModalFieldView;
 import com.app.features.ui.web.component.view.UiModalView;
 import com.app.features.ui.web.enums.UiInputType;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class UiModalFactory {
+
+    private final AppMessageResolver messageResolver;
 
     public <T> UiModalView build(
             UiModalDefinition definition,
@@ -78,11 +84,11 @@ public class UiModalFactory {
 
         return UiModalFieldView.builder()
                 .name(fieldName)
-                .label(annotation.label())
+                .label(messageResolver.get(annotation.label()))
                 .type(annotation.type())
                 .value(value)
-                .placeholder(emptyToNull(annotation.placeholder()))
-                .helpText(emptyToNull(annotation.helpText()))
+                .placeholder(resolveOptionalMessage(annotation.placeholder()))
+                .helpText(resolveOptionalMessage(annotation.helpText()))
                 .required(annotation.required())
                 .readOnly(annotation.readOnly())
                 .checked(resolveChecked(annotation.type(), rawValue))
@@ -118,9 +124,9 @@ public class UiModalFactory {
                 : fallbackKey;
     }
 
-    private String emptyToNull(String value) {
+    private String resolveOptionalMessage(String value) {
         return StringUtils.hasText(value)
-                ? value
+                ? messageResolver.get(value)
                 : null;
     }
 }

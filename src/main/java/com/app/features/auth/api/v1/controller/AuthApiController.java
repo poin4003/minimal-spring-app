@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.response.ApiResult;
 import com.app.core.utils.HttpUtils;
 import com.app.features.auth.schema.payload.LoginPayload;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthApiController {
 
     private final AuthService authSvc;
+    private final AppMessageResolver messageResolver;
 
     @RateLimited(RateLimitPolicy.AUTH_LOGIN)
     @PostMapping("/login")
@@ -31,7 +33,9 @@ public class AuthApiController {
             @Valid @RequestBody LoginPayload payload,
             HttpServletRequest request) {
         LoginResult result = authSvc.login(payload, HttpUtils.getClientIp(request));
-        return ApiResult.ok(result, "Login successful.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.auth.login.success"));
     }
 
     @RateLimited(RateLimitPolicy.AUTH_REFRESH)
@@ -39,6 +43,8 @@ public class AuthApiController {
     public ApiResult<LoginResult> refreshToken(
             @Valid @RequestBody RefreshTokenPayload payload) {
         LoginResult result = authSvc.refreshToken(payload);
-        return ApiResult.ok(result, "Token refreshed successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.auth.refresh.success"));
     }
 }

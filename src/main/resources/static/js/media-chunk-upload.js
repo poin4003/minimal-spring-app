@@ -15,12 +15,14 @@ export class MediaChunkUploader {
         baseUrl = "/api/v1/media/uploads",
         concurrency = 3,
         accessTokenProvider = null,
-        requestHeadersProvider = null
+        requestHeadersProvider = null,
+        messages
     } = {}) {
         this.baseUrl = baseUrl;
         this.concurrency = Math.max(1, concurrency);
         this.accessTokenProvider = accessTokenProvider;
         this.requestHeadersProvider = requestHeadersProvider;
+        this.messages = messages;
     }
 
     async upload(file, {
@@ -38,13 +40,13 @@ export class MediaChunkUploader {
         }
         if (session.status !== "UPLOADING") {
             throw new MediaChunkUploadError(
-                "The upload session cannot be resumed in its current state.",
+                this.messages.sessionNotResumable,
                 { error: "UPLOAD_SESSION_NOT_RESUMABLE" }
             );
         }
         if (session.originalName !== file.name || session.fileSize !== file.size) {
             throw new MediaChunkUploadError(
-                "The selected file does not match the saved upload session.",
+                this.messages.fileMismatch,
                 { error: "UPLOAD_FILE_MISMATCH" }
             );
         }
@@ -186,7 +188,7 @@ export class MediaChunkUploader {
         const redirectPath = response.headers.get("HX-Redirect");
         if (redirectPath) {
             window.location.assign(redirectPath);
-            throw new MediaChunkUploadError("Authentication is required.", {
+            throw new MediaChunkUploadError(this.messages.authRequired, {
                 status: response.status,
                 error: "AUTHENTICATION_REQUIRED"
             });
@@ -199,7 +201,7 @@ export class MediaChunkUploader {
 
         if (!response.ok || payload?.success !== true) {
             throw new MediaChunkUploadError(
-                payload?.message || "Media upload request failed.",
+                payload?.message || this.messages.requestFailed,
                 {
                     status: response.status,
                     error: payload?.error || null

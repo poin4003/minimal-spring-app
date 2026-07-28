@@ -81,9 +81,9 @@
         </div>
 
         <dl class="row small mb-0">
-            <dt class="col-5">Size</dt>
+            <dt class="col-5" th:text="#{field.size}">Size</dt>
             <dd class="col-7 text-end" th:text="${item.fileSizeLabel}">1.2 MB</dd>
-            <dt class="col-5">Created</dt>
+            <dt class="col-5" th:text="#{field.createdAt}">Created</dt>
             <dd class="col-7 text-end text-truncate"
                 th:title="${item.createdAt}"
                 th:text="${item.createdAt}">
@@ -95,68 +95,80 @@
     <div class="card-footer bg-transparent position-relative z-2">
         <div class="btn-group btn-group-sm"
              role="group"
-             aria-label="Media actions">
+             th:aria-label="#{media.actions}">
             <a class="btn btn-outline-secondary app-icon-button"
                th:href="${item.metadataPath}"
-               title="Metadata"
-               aria-label="Metadata"
                th:attr="hx-get=${item.metadataPartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
-                        data-app-modal-request='true'">
+                        data-app-modal-request='true',
+                        title=#{action.metadata},
+                        aria-label=#{action.metadata}">
                 <i class="bi bi-info-circle" aria-hidden="true"></i>
-                <span class="visually-hidden">Metadata</span>
+                <span class="visually-hidden" th:text="#{action.metadata}">
+                    Metadata
+                </span>
             </a>
             <a th:if="${item.canSelectThumbnail()}"
                class="btn btn-outline-primary app-icon-button"
                th:href="${item.thumbnailSelectionPath}"
-               title="Select thumbnail"
-               aria-label="Select thumbnail">
+               th:title="#{media.thumbnail.select}"
+               th:aria-label="#{media.thumbnail.select}">
                 <i class="bi bi-image" aria-hidden="true"></i>
-                <span class="visually-hidden">Select thumbnail</span>
+                <span class="visually-hidden" th:text="#{media.thumbnail.select}">
+                    Select thumbnail
+                </span>
             </a>
             <a th:if="${item.canDownload()}"
                class="btn btn-outline-success app-icon-button"
                th:href="${item.downloadPath}"
                th:attr="download=${item.originalName}"
-               title="Download"
-               aria-label="Download">
+               th:title="#{action.download}"
+               th:aria-label="#{action.download}">
                 <i class="bi bi-download" aria-hidden="true"></i>
-                <span class="visually-hidden">Download</span>
+                <span class="visually-hidden" th:text="#{action.download}">
+                    Download
+                </span>
             </a>
             <span th:if="${item.processingStatus.name() == 'PENDING'}"
                   class="btn btn-outline-warning app-icon-button disabled"
                   role="status"
-                  title="Processing"
-                  aria-label="Processing">
+                  th:title="#{media.processing}"
+                  th:aria-label="#{media.processing}">
                 <i class="bi bi-arrow-repeat app-icon-spin" aria-hidden="true"></i>
-                <span class="visually-hidden">Processing</span>
+                <span class="visually-hidden" th:text="#{media.processing}">
+                    Processing
+                </span>
             </span>
             <a th:if="${item.canRetry()}"
                class="btn btn-outline-warning app-icon-button"
                th:href="${item.retryPath}"
-               title="Retry processing"
-               aria-label="Retry processing"
                th:attr="hx-get=${item.retryPartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
-                        data-app-modal-request='true'">
+                        data-app-modal-request='true',
+                        title=#{media.retry.confirm},
+                        aria-label=#{media.retry.confirm}">
                 <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
-                <span class="visually-hidden">Retry processing</span>
+                <span class="visually-hidden" th:text="#{media.retry.confirm}">
+                    Retry processing
+                </span>
             </a>
             <a class="btn btn-outline-danger app-icon-button"
                th:href="${item.deletePath}"
-               title="Delete"
-               aria-label="Delete"
                th:attr="hx-get=${item.deletePartialPath},
                         hx-target='#app-modal-host',
                         hx-swap='innerHTML',
                         hx-disabled-elt='this',
-                        data-app-modal-request='true'">
+                        data-app-modal-request='true',
+                        title=#{action.delete},
+                        aria-label=#{action.delete}">
                 <i class="bi bi-trash" aria-hidden="true"></i>
-                <span class="visually-hidden">Delete</span>
+                <span class="visually-hidden" th:text="#{action.delete}">
+                    Delete
+                </span>
             </a>
         </div>
     </div>

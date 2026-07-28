@@ -31,7 +31,9 @@
                             <div id="media-library-workspace" class="d-grid gap-4">
                             <section class="card shadow-sm border-0">
                                 <div class="card-body p-4">
-                                    <h2 class="h5 mb-3">Filter Media</h2>
+                                    <h2 class="h5 mb-3" th:text="#{media.filter.title}">
+                                        Filter Media
+                                    </h2>
 
                                     <form method="get"
                                           th:attr="action=${page.listPath},
@@ -48,42 +50,60 @@
                                         <input type="hidden" name="sortDirection" th:value="${page.query.sortDirection}">
 
                                         <div class="col-12 col-lg-4">
-                                            <label for="media-original-name" class="form-label">Original Name</label>
+                                            <label for="media-original-name"
+                                                   class="form-label"
+                                                   th:text="#{field.originalName}">
+                                                Original Name
+                                            </label>
                                             <input id="media-original-name"
                                                    name="originalName"
                                                    type="text"
                                                    class="form-control"
                                                    maxlength="255"
-                                                   placeholder="Search file name"
+                                                   th:placeholder="#{media.filter.originalNamePlaceholder}"
                                                    th:value="${page.filter.originalName}">
                                         </div>
 
                                         <div class="col-12 col-lg-4">
-                                            <label for="media-public-key" class="form-label">Public Key</label>
+                                            <label for="media-public-key"
+                                                   class="form-label"
+                                                   th:text="#{field.publicKey}">
+                                                Public Key
+                                            </label>
                                             <input id="media-public-key"
                                                    name="publicKey"
                                                    type="text"
                                                    class="form-control"
                                                    maxlength="64"
-                                                   placeholder="Exact public key"
+                                                   th:placeholder="#{media.filter.publicKeyPlaceholder}"
                                                    th:value="${page.filter.publicKey}">
                                         </div>
 
                                         <div class="col-12 col-lg-4">
-                                            <label for="media-created-by" class="form-label">Created By Email</label>
+                                            <label for="media-created-by"
+                                                   class="form-label"
+                                                   th:text="#{field.createdByEmail}">
+                                                Created By Email
+                                            </label>
                                             <input id="media-created-by"
                                                    name="createdByEmail"
                                                    type="text"
                                                    class="form-control"
                                                    maxlength="255"
-                                                   placeholder="creator@example.com"
+                                                   th:placeholder="#{media.filter.createdByEmailPlaceholder}"
                                                    th:value="${page.filter.createdByEmail}">
                                         </div>
 
                                         <div class="col-12 col-md-4">
-                                            <label for="media-kind" class="form-label">Kind</label>
+                                            <label for="media-kind"
+                                                   class="form-label"
+                                                   th:text="#{field.kind}">
+                                                Kind
+                                            </label>
                                             <select id="media-kind" name="kind" class="form-select">
-                                                <option value="">All kinds</option>
+                                                <option value="" th:text="#{media.filter.allKinds}">
+                                                    All kinds
+                                                </option>
                                                 <option th:each="kind : ${page.kinds}"
                                                         th:value="${kind.name()}"
                                                         th:selected="${kind == page.filter.kind}"
@@ -94,9 +114,16 @@
                                         </div>
 
                                         <div class="col-12 col-md-4">
-                                            <label for="media-processing-status" class="form-label">Processing</label>
+                                            <label for="media-processing-status"
+                                                   class="form-label"
+                                                   th:text="#{field.processingStatus}">
+                                                Processing
+                                            </label>
                                             <select id="media-processing-status" name="processingStatus" class="form-select">
-                                                <option value="">All processing states</option>
+                                                <option value=""
+                                                        th:text="#{media.filter.allProcessingStatuses}">
+                                                    All processing states
+                                                </option>
                                                 <option th:each="processingStatus : ${page.processingStatuses}"
                                                         th:value="${processingStatus.name()}"
                                                         th:selected="${processingStatus == page.filter.processingStatus}"
@@ -107,9 +134,15 @@
                                         </div>
 
                                         <div class="col-12 col-md-4">
-                                            <label for="media-status" class="form-label">Status</label>
+                                            <label for="media-status"
+                                                   class="form-label"
+                                                   th:text="#{field.status}">
+                                                Status
+                                            </label>
                                             <select id="media-status" name="status" class="form-select">
-                                                <option value="">All statuses</option>
+                                                <option value="" th:text="#{media.filter.allStatuses}">
+                                                    All statuses
+                                                </option>
                                                 <option th:each="status : ${page.statuses}"
                                                         th:value="${status.name()}"
                                                         th:selected="${status == page.filter.status}"
@@ -128,9 +161,13 @@
                                                         hx-swap='outerHTML',
                                                         hx-push-url='true',
                                                         hx-disabled-elt='this'">
-                                                Clear
+                                                <span th:text="#{action.clear}">Clear</span>
                                             </a>
-                                            <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                            <button type="submit"
+                                                    class="btn btn-primary"
+                                                    th:text="#{action.applyFilters}">
+                                                Apply Filters
+                                            </button>
                                         </div>
                                     </form>
                                 </div>

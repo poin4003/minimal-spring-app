@@ -21,6 +21,7 @@ import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -69,6 +70,7 @@ public class MediaThumbnailPageController {
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
+    private final AppMessageResolver messageResolver;
 
     @GetMapping
     @Secured(PermissionConstants.MEDIA_MANAGE)
@@ -124,9 +126,11 @@ public class MediaThumbnailPageController {
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .id(THUMBNAIL_PANEL_ID)
-                .title("Ready Images")
-                .description("Choose any ready image available in the media library.")
-                .emptyMessage("No ready images are available.")
+                .title(messageResolver.get("media.thumbnail.readyImages"))
+                .description(messageResolver.get(
+                        "media.thumbnail.readyImagesDescription"))
+                .emptyMessage(messageResolver.get(
+                        "media.thumbnail.noReadyImages"))
                 .rows(imagePage.getContent().stream()
                         .map(image -> toPanelItem(mediaId, image))
                         .toList())
@@ -134,7 +138,7 @@ public class MediaThumbnailPageController {
                 .build();
 
         return MediaThumbnailPageView.builder()
-                .title("Select Thumbnail")
+                .title(messageResolver.get("media.thumbnail.select"))
                 .listPath(getThumbnailPath(mediaId))
                 .backPath(getMediaListPath())
                 .uploadFallbackPath(getMediaListPath())
@@ -147,23 +151,25 @@ public class MediaThumbnailPageController {
                 .breadcrumb(UiBreadcrumbView.builder()
                         .items(List.of(
                                 UiBreadcrumbItemView.builder()
-                                        .label("Media Library")
+                                        .label(messageResolver.get(
+                                                "menu.mediaLibrary"))
                                         .path(getMediaListPath())
                                         .build(),
                                 UiBreadcrumbItemView.builder()
-                                        .label("Select Thumbnail")
+                                        .label(messageResolver.get(
+                                                "media.thumbnail.select"))
                                         .active(true)
                                         .build()))
                         .build())
                 .filter(filter)
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()
-                                .label("Media")
+                                .label(messageResolver.get("field.media"))
                                 .value(targetMedia.getOriginalName())
                                 .monospace(false)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Kind")
+                                .label(messageResolver.get("field.kind"))
                                 .value(targetMedia.getKind().name())
                                 .monospace(true)
                                 .build()))
@@ -193,7 +199,7 @@ public class MediaThumbnailPageController {
                 .imageUrl(image.getThumbnailUrl())
                 .action(UiAssignmentActionView.builder()
                         .path(getThumbnailPath(mediaId) + "/assign")
-                        .label("Use Thumbnail")
+                        .label(messageResolver.get("media.thumbnail.use"))
                         .buttonClass("btn-outline-primary")
                         .targetId(image.getId().toString())
                         .build())

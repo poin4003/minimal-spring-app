@@ -1,10 +1,12 @@
 export class MediaDirectUploader {
     constructor({
         uploadUrl,
-        requestHeadersProvider = null
+        requestHeadersProvider = null,
+        messages
     }) {
         this.uploadUrl = uploadUrl;
         this.requestHeadersProvider = requestHeadersProvider;
+        this.messages = messages;
     }
 
     upload(file, {
@@ -44,11 +46,14 @@ export class MediaDirectUploader {
             });
 
             xhr.addEventListener("error", () => {
-                reject(new Error("The upload request could not reach the server."));
+                reject(new Error(this.messages.requestFailed));
             });
 
             xhr.addEventListener("abort", () => {
-                reject(new DOMException("Upload cancelled.", "AbortError"));
+                reject(new DOMException(
+                    this.messages.cancelled,
+                    "AbortError"
+                ));
             });
 
             xhr.send(formData);

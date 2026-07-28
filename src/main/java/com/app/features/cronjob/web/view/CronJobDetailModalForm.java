@@ -17,69 +17,69 @@ import lombok.Setter;
 public class CronJobDetailModalForm {
 
     @UiField(
-            label = "Job Type",
+            label = "field.jobType",
             order = 10,
             type = UiInputType.TEXT,
             readOnly = true)
     private String jobType;
 
     @UiField(
-            label = "Job Name",
+            label = "field.jobName",
             order = 20,
             type = UiInputType.TEXT,
             readOnly = true)
     private String name;
 
     @UiField(
-            label = "Default Cron",
+            label = "field.defaultCron",
             order = 30,
             type = UiInputType.TEXT,
             readOnly = true)
     private String defaultCron;
 
     @UiField(
-            label = "Effective Cron",
+            label = "field.effectiveCron",
             order = 40,
             type = UiInputType.TEXT,
             readOnly = true)
     private String effectiveCron;
 
     @UiField(
-            label = "Zone Id",
+            label = "field.zoneId",
             order = 50,
             type = UiInputType.TEXT,
             readOnly = true)
     private String zoneId;
 
     @UiField(
-            label = "Created At",
+            label = "field.createdAt",
             order = 60,
             type = UiInputType.TEXT,
             readOnly = true)
     private String createdAt;
 
     @UiField(
-            label = "Updated At",
+            label = "field.updatedAt",
             order = 70,
             type = UiInputType.TEXT,
             readOnly = true)
     private String updatedAt;
 
     @UiField(
-            label = "Cron Expression",
+            label = "field.cronExpression",
             order = 80,
             type = UiInputType.TEXT,
-            placeholder = "0 0 1 * * *",
-            helpText = "Leave blank to use the default cron from the job annotation.")
+            placeholder = "cronjob.form.expressionPlaceholder",
+            helpText = "cronjob.form.expressionHelp")
     @Size(max = 100, message = "{validation.cronjob.expression.max}")
     @ValidJobRunrCron(allowBlank = true)
     private String cronExpression;
 
     @UiField(
-            label = "Status",
+            label = "field.status",
             order = 90,
             type = UiInputType.SELECT,
-            placeholder = "Select status",
+            placeholder = "field.status.select",
             required = true)
     @NotNull(message = "{validation.cronjob.status.required}")
     private RecordStatus status;

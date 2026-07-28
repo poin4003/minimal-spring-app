@@ -15,7 +15,7 @@
             <h2 class="h5 mb-0" th:text="${gallery.title}">Media Gallery</h2>
             <span class="spinner-border spinner-border-sm text-primary htmx-indicator"
                   role="status"
-                  aria-label="Refreshing media library"></span>
+                  th:aria-label="#{media.gallery.refreshing}"></span>
         </div>
         <p class="text-secondary mb-0" th:text="${gallery.description}">
             Browse uploaded media.

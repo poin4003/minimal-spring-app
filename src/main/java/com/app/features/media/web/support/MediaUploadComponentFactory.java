@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.web.view.MediaUploadComponentView;
 import com.app.features.media.web.view.MediaUploadRuleView;
@@ -20,14 +21,15 @@ import lombok.RequiredArgsConstructor;
 public class MediaUploadComponentFactory {
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
 
     public MediaUploadComponentView buildLibraryUpload() {
         return buildUpload(
                 "media-library-upload",
-                "Upload Media",
-                "Upload Media",
-                "Select files to add to the media library.",
-                "Upload queued",
+                messageResolver.get("media.upload.trigger"),
+                messageResolver.get("media.upload.title"),
+                messageResolver.get("media.upload.description"),
+                messageResolver.get("media.upload.submit"),
                 true,
                 appProperties.getMedia().getAllowedTypes());
     }
@@ -35,17 +37,17 @@ public class MediaUploadComponentFactory {
     public MediaUploadComponentView buildThumbnailUpload() {
         return buildImageUpload(
                 "media-thumbnail-upload",
-                "Upload Thumbnail Image",
-                "Upload Thumbnail Image",
-                "Upload one image to the media library. Select it after processing reaches READY.");
+                messageResolver.get("media.thumbnail.upload.trigger"),
+                messageResolver.get("media.thumbnail.upload.title"),
+                messageResolver.get("media.thumbnail.upload.description"));
     }
 
     public MediaUploadComponentView buildProfileAvatarUpload() {
         return buildImageUpload(
                 "profile-avatar-upload",
-                "Upload Avatar Image",
-                "Upload Avatar Image",
-                "Upload one image. Select it as your avatar after processing reaches READY.");
+                messageResolver.get("profile.avatar.upload"),
+                messageResolver.get("profile.avatar.upload"),
+                messageResolver.get("profile.avatar.uploadDescription"));
     }
 
     private MediaUploadComponentView buildImageUpload(
@@ -64,7 +66,7 @@ public class MediaUploadComponentFactory {
                 triggerLabel,
                 title,
                 description,
-                "Upload image",
+                messageResolver.get("media.upload.image"),
                 false,
                 imageTypes);
     }

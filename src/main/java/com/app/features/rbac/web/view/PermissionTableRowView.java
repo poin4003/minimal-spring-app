@@ -16,9 +16,9 @@ public class PermissionTableRowView {
 
     private UUID id;
 
-    @UiColumn(label = "Key", order = 10, type = UiCellType.MONOSPACE)
+    @UiColumn(label = "field.key", order = 10, type = UiCellType.MONOSPACE)
     private String key;
 
-    @UiColumn(label = "Name", order = 20)
+    @UiColumn(label = "field.name", order = 20)
     private String name;
 }

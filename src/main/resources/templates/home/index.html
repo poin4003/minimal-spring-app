@@ -21,9 +21,12 @@
                                 <div class="col-md-4">
                                     <article class="card h-100 shadow-sm border-0">
                                         <div class="card-body">
-                                            <h3 class="h5">Users</h3>
-                                            <p class="text-secondary mb-0">
-                                                Next step is `UserPageController` and templates under `templates/user/`.
+                                            <h3 class="h5" th:text="#{home.users.title}">
+                                                Users
+                                            </h3>
+                                            <p class="text-secondary mb-0"
+                                               th:text="#{home.users.description}">
+                                                Manage user accounts.
                                             </p>
                                         </div>
                                     </article>
@@ -32,9 +35,12 @@
                                 <div class="col-md-4">
                                     <article class="card h-100 shadow-sm border-0">
                                         <div class="card-body">
-                                            <h3 class="h5">RBAC</h3>
-                                            <p class="text-secondary mb-0">
-                                                Roles and permissions pages should live under `features/rbac/web/controller`.
+                                            <h3 class="h5" th:text="#{home.rbac.title}">
+                                                RBAC
+                                            </h3>
+                                            <p class="text-secondary mb-0"
+                                               th:text="#{home.rbac.description}">
+                                                Manage roles and permissions.
                                             </p>
                                         </div>
                                     </article>
@@ -43,9 +49,12 @@
                                 <div class="col-md-4">
                                     <article class="card h-100 shadow-sm border-0">
                                         <div class="card-body">
-                                            <h3 class="h5">Cronjobs</h3>
-                                            <p class="text-secondary mb-0">
-                                                Scheduler management pages should live under `features/cronjob/web/controller`.
+                                            <h3 class="h5" th:text="#{home.cronjobs.title}">
+                                                Cronjobs
+                                            </h3>
+                                            <p class="text-secondary mb-0"
+                                               th:text="#{home.cronjobs.description}">
+                                                Manage recurring jobs.
                                             </p>
                                         </div>
                                     </article>
@@ -54,7 +63,9 @@
 
                             <section class="card shadow-sm border-0">
                                 <div class="card-body p-4">
-                                    <h3 class="h5 mb-3">Authorities</h3>
+                                    <h3 class="h5 mb-3" th:text="#{home.authorities}">
+                                        Authorities
+                                    </h3>
                                     <div class="d-flex flex-wrap gap-2">
                                         <span class="badge text-bg-primary"
                                               th:each="authority : ${page.shell.currentUser.authorities}"

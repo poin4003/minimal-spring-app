@@ -23,6 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -82,6 +83,7 @@ public class UserPageController {
             .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final UserService userSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -188,7 +190,7 @@ public class UserPageController {
                         form,
                         new UserDetailModalForm(),
                         submitResult.fieldErrors(),
-                        "Please correct the form and try again.",
+                        messageResolver.get("form.validation.correct"),
                         true,
                         null,
                         false,
@@ -245,7 +247,7 @@ public class UserPageController {
                         new CreateUserModalForm(),
                         form,
                         submitResult.fieldErrors(),
-                        "Please correct the form and try again.",
+                        messageResolver.get("form.validation.correct"),
                         false,
                         null,
                         false,
@@ -283,28 +285,28 @@ public class UserPageController {
         UiTableView userTable = uiTableFactory.build(
                 UiTableDefinition.builder()
                         .id(USER_TABLE_ID)
-                        .title("User List")
-                        .description("Review user accounts, statuses, and audit timestamps.")
-                        .emptyMessage("No users found.")
+                        .title(messageResolver.get("user.table.title"))
+                        .description(messageResolver.get("user.table.description"))
+                        .emptyMessage(messageResolver.get("user.table.empty"))
                         .pagination(pagination)
                         .build(),
                 rows,
                 UserTableRowView.class,
                 row -> List.of(
                         UiTableActionView.builder()
-                                .label("Metadata")
+                                .label(messageResolver.get("action.metadata"))
                                 .path(buildMetadataPath(row.getId(), query))
                                 .partialPath(buildMetadataPartialPath(row.getId()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
-                                .label("Detail")
+                                .label(messageResolver.get("action.detail"))
                                 .path(buildDetailPath(row.getId(), query))
                                 .partialPath(buildDetailPartialPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
-                                .label("Manage Roles")
+                                .label(messageResolver.get("action.manageRoles"))
                                 .path(buildManageRolesPath(row.getId()))
                                 .buttonClass("btn-primary")
                                 .build()));
@@ -322,7 +324,7 @@ public class UserPageController {
                 : buildUserDetailModal(detailUserId, query, detailForm, modalErrors, preserveDetailForm);
 
         return UserListPageView.builder()
-                .title("User Management")
+                .title(messageResolver.get("user.page.title"))
                 .shell(uiShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
@@ -343,12 +345,12 @@ public class UserPageController {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("create-user-modal")
-                        .title("Create User")
-                        .description("Add a new user account.")
-                        .triggerLabel("New User")
+                        .title(messageResolver.get("user.create.title"))
+                        .description(messageResolver.get("user.create.description"))
+                        .triggerLabel(messageResolver.get("user.create.trigger"))
                         .triggerButtonClass("btn-primary")
                         .actionPath(appProperties.getUi().getHomePath() + "/users")
-                        .submitLabel("Create User")
+                        .submitLabel(messageResolver.get("user.create.submit"))
                         .build(),
                 CreateUserModalForm.class,
                 form,
@@ -361,30 +363,30 @@ public class UserPageController {
 
         return UiMetadataModalView.builder()
                 .id("user-metadata-modal")
-                .title("User Metadata")
+                .title(messageResolver.get("user.metadata.title"))
                 .items(List.of(
                         UiMetadataItemView.builder()
-                                .label("User Id")
+                                .label(messageResolver.get("field.userId"))
                                 .value(String.valueOf(user.getId()))
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Email")
+                                .label(messageResolver.get("field.email"))
                                 .value(user.getEmail())
                                 .monospace(false)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Status")
+                                .label(messageResolver.get("field.status"))
                                 .value(String.valueOf(user.getStatus()))
                                 .monospace(false)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Created At")
+                                .label(messageResolver.get("field.createdAt"))
                                 .value(user.getCreatedAt())
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Updated At")
+                                .label(messageResolver.get("field.updatedAt"))
                                 .value(user.getUpdatedAt())
                                 .monospace(true)
                                 .build()))
@@ -406,12 +408,12 @@ public class UserPageController {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("user-detail-modal")
-                        .title("User Detail")
-                        .description("Review account information and update the current status.")
+                        .title(messageResolver.get("user.detail.title"))
+                        .description(messageResolver.get("user.detail.description"))
                         .actionPath(query.toUri(
                                 appProperties.getUi().getHomePath() + "/users/" + userId + "/status",
                                 USER_PAGE_DEFAULTS))
-                        .submitLabel("Save Changes")
+                        .submitLabel(messageResolver.get("action.saveChanges"))
                         .build(),
                 UserDetailModalForm.class,
                 modalForm,

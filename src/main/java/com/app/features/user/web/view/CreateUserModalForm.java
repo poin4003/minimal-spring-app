@@ -16,21 +16,21 @@ import lombok.Setter;
 public class CreateUserModalForm {
 
     @UiField(
-            label = "Email",
+            label = "field.email",
             order = 10,
             type = UiInputType.EMAIL,
-            placeholder = "user@example.com",
+            placeholder = "user.form.emailPlaceholder",
             required = true)
     @NotBlank(message = "{validation.user.email.required}")
     @Email(message = "{validation.user.email.invalid}")
     private String email;
 
     @UiField(
-            label = "Password",
+            label = "field.password",
             order = 20,
             type = UiInputType.PASSWORD,
-            placeholder = "At least 6 characters",
-            helpText = "The password can be changed later.",
+            placeholder = "user.form.passwordPlaceholder",
+            helpText = "user.form.passwordHelp",
             required = true)
     @NotBlank(message = "{validation.user.password.required}")
     @Size(min = 6, message = "{validation.user.password.min}")

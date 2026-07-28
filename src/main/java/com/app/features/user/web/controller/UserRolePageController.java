@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.features.rbac.schema.filter.RoleFilterCriteria;
@@ -60,6 +61,7 @@ public class UserRolePageController {
             .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final UserService userSvc;
     private final RbacService rbacSvc;
@@ -133,13 +135,15 @@ public class UserRolePageController {
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .id(USER_ROLE_PANEL_ID)
-                .title(assignedMode ? "Assigned Roles" : "Available Roles")
+                .title(messageResolver.get(assignedMode
+                        ? "user.role.assigned.title"
+                        : "user.role.available.title"))
                 .description(assignedMode
-                        ? "Roles currently assigned to this user."
-                        : "Roles that can be assigned to this user.")
+                        ? messageResolver.get("user.role.assigned.description")
+                        : messageResolver.get("user.role.available.description"))
                 .emptyMessage(assignedMode
-                        ? "No roles assigned."
-                        : "No roles available.")
+                        ? messageResolver.get("user.role.assigned.empty")
+                        : messageResolver.get("user.role.available.empty"))
                 .rows(rolePage.getContent().stream()
                         .map(role -> this.toPanelItem(userId, resolvedQuery, assignedMode, role))
                         .toList())
@@ -147,28 +151,28 @@ public class UserRolePageController {
                 .build();
 
         return UserRolePageView.builder()
-                .title("User Roles")
-                .heading("User Roles")
-                .description("Manage roles for the selected user.")
+                .title(messageResolver.get("user.role.page.title"))
+                .heading(messageResolver.get("user.role.page.title"))
+                .description(messageResolver.get("user.role.page.description"))
                 .breadcrumb(UiBreadcrumbView.builder()
                         .items(List.of(
                                 UiBreadcrumbItemView.builder()
-                                        .label("Users")
+                                        .label(messageResolver.get("menu.users"))
                                         .path(appProperties.getUi().getHomePath() + "/users")
                                         .build(),
                                 UiBreadcrumbItemView.builder()
-                                        .label("Assign Roles")
+                                        .label(messageResolver.get("user.role.assign"))
                                         .active(true)
                                         .build()))
                         .build())
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()
-                                .label("Email")
+                                .label(messageResolver.get("field.email"))
                                 .value(user.getEmail())
                                 .monospace(false)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Status")
+                                .label(messageResolver.get("field.status"))
                                 .value(String.valueOf(user.getStatus()))
                                 .monospace(false)
                                 .build()))
@@ -208,7 +212,9 @@ public class UserRolePageController {
                         .path(assignedMode
                                 ? appProperties.getUi().getHomePath() + "/users/" + userId + "/roles/remove"
                                 : appProperties.getUi().getHomePath() + "/users/" + userId + "/roles/assign")
-                        .label(assignedMode ? "Remove" : "Assign")
+                        .label(messageResolver.get(assignedMode
+                                ? "action.remove"
+                                : "action.assign"))
                         .buttonClass(assignedMode ? "btn-outline-danger" : "btn-outline-primary")
                         .targetId(role.getId().toString())
                         .query(query)

@@ -17,15 +17,15 @@ public class UserTableRowView {
 
     private UUID id;
 
-    @UiColumn(label = "Email", order = 10)
+    @UiColumn(label = "field.email", order = 10)
     private String email;
 
-    @UiColumn(label = "Status", order = 20, type = UiCellType.BADGE)
+    @UiColumn(label = "field.status", order = 20, type = UiCellType.BADGE)
     private UserStatusEnum status;
 
-    @UiColumn(label = "Created At", order = 30)
+    @UiColumn(label = "field.createdAt", order = 30)
     private String createdAt;
 
-    @UiColumn(label = "Updated At", order = 40)
+    @UiColumn(label = "field.updatedAt", order = 40)
     private String updatedAt;
 }

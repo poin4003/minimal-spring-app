@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
 import com.app.core.exception.ExceptionFactory;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.StartMediaUploadPayload;
@@ -38,6 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class MediaUploadApiController {
 
     private final MediaUploadService mediaUploadSvc;
+    private final AppMessageResolver messageResolver;
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
     @PostMapping
@@ -48,7 +50,9 @@ public class MediaUploadApiController {
         MediaUploadSessionResult result = mediaUploadSvc.startUpload(
                 currentUser.getUserId(),
                 payload);
-        return ApiResult.ok(result, "Media upload session created successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.media.uploadSession.create.success"));
     }
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
@@ -59,7 +63,9 @@ public class MediaUploadApiController {
         MediaUploadSessionResult result = mediaUploadSvc.getUpload(
                 uploadId,
                 currentUser.getUserId());
-        return ApiResult.ok(result, "Media upload session retrieved successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.media.uploadSession.get.success"));
     }
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_CHUNK)
@@ -86,7 +92,9 @@ public class MediaUploadApiController {
                     "error.media.chunkRequestReadFailed",
                     ex);
         }
-        return ApiResult.ok(null, "Media chunk uploaded successfully.");
+        return ApiResult.ok(
+                null,
+                messageResolver.get("api.media.chunk.upload.success"));
     }
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
@@ -97,7 +105,9 @@ public class MediaUploadApiController {
         MediaResult result = mediaUploadSvc.completeUpload(
                 uploadId,
                 currentUser.getUserId());
-        return ApiResult.ok(result, "Media upload completed successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.media.upload.complete.success"));
     }
 
     @RateLimited(RateLimitPolicy.MEDIA_UPLOAD_SESSION)
@@ -106,6 +116,8 @@ public class MediaUploadApiController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID uploadId) {
         mediaUploadSvc.cancelUpload(uploadId, currentUser.getUserId());
-        return ApiResult.ok(null, "Media upload cancelled successfully.");
+        return ApiResult.ok(
+                null,
+                messageResolver.get("api.media.upload.cancel.success"));
     }
 }

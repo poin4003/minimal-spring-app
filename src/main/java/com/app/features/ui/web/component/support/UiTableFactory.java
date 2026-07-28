@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.app.core.i18n.AppMessageResolver;
 import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.component.view.UiTableActionView;
@@ -20,8 +21,13 @@ import com.app.features.ui.web.component.view.UiTableRowView;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.enums.UiCellType;
 
+import lombok.RequiredArgsConstructor;
+
 @Component
+@RequiredArgsConstructor
 public class UiTableFactory {
+
+    private final AppMessageResolver messageResolver;
 
     public <T> UiTableView build(
             UiTableDefinition definition,
@@ -70,7 +76,7 @@ public class UiTableFactory {
     private UiTableColumnView toColumn(Field field, UiColumn annotation) {
         return UiTableColumnView.builder()
                 .key(resolveKey(annotation.key(), field.getName()))
-                .label(annotation.label())
+                .label(messageResolver.get(annotation.label()))
                 .type(annotation.type())
                 .build();
     }
@@ -100,7 +106,9 @@ public class UiTableFactory {
         return UiTableCellView.builder()
                 .key(resolveKey(annotation.key(), field.getName()))
                 .type(annotation.type())
-                .text(formatValue(rawValue, annotation.emptyValue()))
+                .text(formatValue(
+                        rawValue,
+                        messageResolver.get(annotation.emptyValue())))
                 .badgeClass(resolveBadgeClass(annotation, rawValue))
                 .build();
     }
@@ -140,7 +148,7 @@ public class UiTableFactory {
             }
 
             return values.stream()
-                    .map(this::formatSingleValue)
+                    .map(value -> formatSingleValue(value))
                     .collect(Collectors.joining(", "));
         }
 

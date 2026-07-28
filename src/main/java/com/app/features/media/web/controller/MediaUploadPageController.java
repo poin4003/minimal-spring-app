@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaResult;
@@ -31,6 +32,7 @@ public class MediaUploadPageController {
 
     private final MediaService mediaSvc;
     private final MediaUploadComponentFactory mediaUploadComponentFactory;
+    private final AppMessageResolver messageResolver;
 
     @GetMapping("/thumbnail-modal")
     @Secured(PermissionConstants.MEDIA_MANAGE)
@@ -55,7 +57,7 @@ public class MediaUploadPageController {
                 MediaUploadResultView.ATTRIBUTE,
                 MediaUploadResultView.builder()
                         .media(media)
-                        .message("Media uploaded successfully.")
+                        .message(messageResolver.get("media.upload.success"))
                         .build());
 
         return "media/fragments/upload-result :: result (result=${result})";

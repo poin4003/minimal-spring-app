@@ -23,6 +23,7 @@ import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -79,6 +80,7 @@ public class MediaPageController {
     private final MediaUploadComponentFactory mediaUploadComponentFactory;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
+    private final AppMessageResolver messageResolver;
 
     @GetMapping
     @Secured(PermissionConstants.MEDIA_VIEW)
@@ -222,7 +224,7 @@ public class MediaPageController {
                 : buildRetryModal(retryMediaId, request);
 
         return MediaListPageView.builder()
-                .title("Media Library")
+                .title(messageResolver.get("media.page.title"))
                 .listPath(getMediaListPath())
                 .shell(uiShellFactory.build(
                         currentUser,
@@ -265,9 +267,9 @@ public class MediaPageController {
                         MEDIA_PAGE_DEFAULTS),
                 UiHtmxNavigationView.forComponent(MEDIA_GALLERY_ID));
         return MediaGalleryView.builder()
-                .title("Media Gallery")
-                .description("Browse uploaded media and review its processing state.")
-                .emptyMessage("No media found.")
+                .title(messageResolver.get("media.gallery.title"))
+                .description(messageResolver.get("media.gallery.description"))
+                .emptyMessage(messageResolver.get("media.gallery.empty"))
                 .refreshPath(buildGalleryRefreshPath(request))
                 .items(items)
                 .pagination(pagination)
@@ -363,7 +365,7 @@ public class MediaPageController {
         return MediaPreviewModalView.builder()
                 .mediaId(media.getId())
                 .id("media-preview-modal")
-                .title("Media Preview")
+                .title(messageResolver.get("media.preview.title"))
                 .description(String.format(
                         Locale.ROOT,
                         "%s | %s | %s",
@@ -397,12 +399,12 @@ public class MediaPageController {
 
     private String buildUnavailableMessage(MediaDetailResult media) {
         if (media.getStatus() != RecordStatus.ACTIVE) {
-            return "Preview is unavailable because this media is inactive.";
+            return messageResolver.get("media.preview.inactive");
         }
         if (media.getProcessingStatus() == MediaProcessingStatus.FAILED) {
-            return "Preview is unavailable because media processing failed.";
+            return messageResolver.get("media.preview.failed");
         }
-        return "Preview will be available after media processing is complete.";
+        return messageResolver.get("media.preview.pending");
     }
 
     private String buildOriginalUrl(String publicKey) {
@@ -431,30 +433,48 @@ public class MediaPageController {
 
         return UiMetadataModalView.builder()
                 .id("media-metadata-modal")
-                .title("Media Metadata")
+                .title(messageResolver.get("media.metadata.title"))
                 .items(List.of(
-                        metadataItem("Media Id", String.valueOf(media.getId()), true),
-                        metadataItem("Public Key", media.getPublicKey(), true),
-                        metadataItem("Original Name", media.getOriginalName(), false),
-                        metadataItem("Content Type", media.getContentType(), true),
                         metadataItem(
-                                "Thumbnail URL",
+                                messageResolver.get("field.mediaId"),
+                                String.valueOf(media.getId()),
+                                true),
+                        metadataItem(
+                                messageResolver.get("field.publicKey"),
+                                media.getPublicKey(),
+                                true),
+                        metadataItem(
+                                messageResolver.get("field.originalName"),
+                                media.getOriginalName(),
+                                false),
+                        metadataItem(
+                                messageResolver.get("field.contentType"),
+                                media.getContentType(),
+                                true),
+                        metadataItem(
+                                messageResolver.get("field.thumbnailUrl"),
                                 media.getThumbnailUrl(),
                                 true),
                         metadataItem(
-                                "Created By Id",
+                                messageResolver.get("field.createdById"),
                                 media.getCreatedBy() == null
                                         ? null
                                         : String.valueOf(media.getCreatedBy().getId()),
                                 true),
                         metadataItem(
-                                "Created By Email",
+                                messageResolver.get("field.createdByEmail"),
                                 media.getCreatedBy() == null
                                         ? null
                                         : media.getCreatedBy().getEmail(),
                                 false),
-                        metadataItem("Created At", media.getCreatedAt(), true),
-                        metadataItem("Updated At", media.getUpdatedAt(), true)))
+                        metadataItem(
+                                messageResolver.get("field.createdAt"),
+                                media.getCreatedAt(),
+                                true),
+                        metadataItem(
+                                messageResolver.get("field.updatedAt"),
+                                media.getUpdatedAt(),
+                                true)))
                 .build();
     }
 
@@ -464,11 +484,12 @@ public class MediaPageController {
         MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
         return UiConfirmModalView.builder()
                 .id("media-delete-modal")
-                .title("Delete Media")
-                .description("Delete '" + media.getOriginalName()
-                        + "' and all of its stored variants. This action cannot be undone.")
+                .title(messageResolver.get("media.delete.title"))
+                .description(messageResolver.get(
+                        "media.delete.description",
+                        media.getOriginalName()))
                 .actionPath(buildPostPath(request, mediaId, "delete"))
-                .confirmLabel("Delete Media")
+                .confirmLabel(messageResolver.get("media.delete.confirm"))
                 .confirmButtonClass("btn-danger")
                 .build();
     }
@@ -479,10 +500,12 @@ public class MediaPageController {
         MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
         return UiConfirmModalView.builder()
                 .id("media-retry-modal")
-                .title("Retry Media Processing")
-                .description("Queue '" + media.getOriginalName() + "' for processing again.")
+                .title(messageResolver.get("media.retry.title"))
+                .description(messageResolver.get(
+                        "media.retry.description",
+                        media.getOriginalName()))
                 .actionPath(buildPostPath(request, mediaId, "retry"))
-                .confirmLabel("Retry Processing")
+                .confirmLabel(messageResolver.get("media.retry.confirm"))
                 .confirmButtonClass("btn-warning")
                 .build();
     }
@@ -493,7 +516,9 @@ public class MediaPageController {
             boolean monospace) {
         return UiMetadataItemView.builder()
                 .label(label)
-                .value(value == null ? "-" : value)
+                .value(value == null
+                        ? messageResolver.get("common.emptyValue")
+                        : value)
                 .monospace(monospace)
                 .build();
     }

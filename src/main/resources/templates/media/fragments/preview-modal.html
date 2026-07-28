@@ -6,6 +6,9 @@
      tabindex="-1"
      aria-hidden="true"
      data-media-preview-modal
+     th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+     th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+     th:data-message-stream-failed="#{media.preview.streamFailed}"
      th:id="${modal.id}">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -19,7 +22,7 @@
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                        th:aria-label="#{action.close}"></button>
             </div>
 
             <div class="modal-body bg-body-tertiary"
@@ -69,7 +72,9 @@
                    th:href="${modal.originalUrl}"
                    target="_blank"
                    rel="noopener">
-                    Open Original
+                    <span th:text="#{media.preview.openOriginal}">
+                        Open Original
+                    </span>
                 </a>
             </div>
         </div>

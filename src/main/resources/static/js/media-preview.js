@@ -118,14 +118,15 @@
         });
     }
 
-    function showPlaybackError(mediaElement, message) {
+    function showPlaybackError(mediaElement, messageKey) {
         const previewElement = mediaElement.closest("[data-media-preview-player]");
         const errorElement = previewElement?.querySelector("[data-video-error]");
+        const modalElement = mediaElement.closest("[data-media-preview-modal]");
         if (!errorElement) {
             return;
         }
 
-        errorElement.textContent = message;
+        errorElement.textContent = modalElement?.dataset[messageKey] || "";
         errorElement.hidden = false;
     }
 
@@ -168,12 +169,12 @@
 
         const sourceUrl = mediaElement.dataset.videoSource;
         if (!sourceUrl) {
-            showPlaybackError(mediaElement, "No stream source is available.");
+            showPlaybackError(mediaElement, "messageSourceUnavailable");
             return;
         }
 
         if (!window.videojs) {
-            showPlaybackError(mediaElement, "The media player is unavailable.");
+            showPlaybackError(mediaElement, "messagePlayerUnavailable");
             return;
         }
 
@@ -198,7 +199,7 @@
         });
 
         player.on("error", function () {
-            showPlaybackError(mediaElement, "The stream could not be played.");
+            showPlaybackError(mediaElement, "messageStreamFailed");
         });
     }
 

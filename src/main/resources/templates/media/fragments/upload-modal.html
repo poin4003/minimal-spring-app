@@ -6,6 +6,27 @@
      tabindex="-1"
      aria-hidden="true"
      data-media-upload
+     th:data-message-status-queued="#{media.upload.status.queued}"
+     th:data-message-status-uploading="#{media.upload.status.uploading}"
+     th:data-message-status-uploaded="#{media.upload.status.uploaded}"
+     th:data-message-status-failed="#{media.upload.status.failed}"
+     th:data-message-status-cancelled="#{media.upload.status.cancelled}"
+     th:data-message-transport-chunked="#{media.upload.transport.chunked}"
+     th:data-message-transport-resumable="#{media.upload.transport.resumable}"
+     th:data-message-transport-direct="#{media.upload.transport.direct}"
+     th:data-message-file-empty="#{media.upload.error.fileEmpty}"
+     th:data-message-extension-not-allowed="#{media.upload.error.extensionNotAllowed}"
+     th:data-message-file-too-large="#{media.upload.error.fileTooLarge}"
+     th:data-message-upload-cancelled="#{media.upload.error.cancelled}"
+     th:data-message-session-cancel-failed="#{media.upload.error.sessionCancelFailed}"
+     th:data-message-chunk-failed="#{media.upload.error.chunkFailed}"
+     th:data-message-upload-success="#{media.upload.success}"
+     th:data-message-auth-expired="#{media.upload.error.authExpired}"
+     th:data-message-upload-failed="#{media.upload.error.failed}"
+     th:data-message-request-failed="#{media.upload.error.requestFailed}"
+     th:data-message-auth-required="#{error.auth.required}"
+     th:data-message-session-not-resumable="#{media.upload.error.sessionNotResumable}"
+     th:data-message-file-mismatch="#{media.upload.error.fileMismatch}"
      th:id="${upload.id + '-modal'}">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <form class="modal-content"
@@ -31,7 +52,7 @@
                 <button type="button"
                         class="btn-close"
                         data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+                        th:aria-label="#{action.close}"></button>
             </div>
 
             <div class="modal-body d-grid gap-3">
@@ -39,8 +60,12 @@
                        data-media-upload-dropzone
                        tabindex="0"
                        th:for="${upload.id + '-file'}">
-                    <span class="d-block fw-semibold">Drop files here or browse</span>
-                    <span class="d-block text-secondary small mt-1">
+                    <span class="d-block fw-semibold"
+                          th:text="#{media.upload.dropzone}">
+                        Drop files here or browse
+                    </span>
+                    <span class="d-block text-secondary small mt-1"
+                          th:text="#{media.upload.chunkHint}">
                         Large files use resumable chunk upload automatically.
                     </span>
                 </label>
@@ -53,7 +78,8 @@
                        th:accept="${upload.accept}"
                        th:multiple="${upload.multiple}">
 
-                <div class="d-flex flex-wrap gap-2" aria-label="Allowed file types">
+                <div class="d-flex flex-wrap gap-2"
+                     th:aria-label="#{media.upload.allowedTypes}">
                     <span th:each="rule : ${upload.rules}"
                           class="badge text-bg-secondary"
                           th:text="${'.' + rule.extension + ' | ' + rule.kind.name()}">
@@ -69,7 +95,8 @@
 
                 <div class="border rounded">
                     <div class="p-3 text-secondary text-center"
-                         data-media-upload-empty>
+                         data-media-upload-empty
+                         th:text="#{media.upload.emptyQueue}">
                         No files selected.
                     </div>
                     <div class="list-group list-group-flush"
@@ -84,13 +111,15 @@
                                 <div class="small text-secondary" data-upload-size></div>
                             </div>
                             <span class="badge text-bg-secondary" data-upload-status>
-                                Queued
+                                <span th:text="#{media.upload.status.queued}">
+                                    Queued
+                                </span>
                             </span>
                         </div>
 
                         <div class="progress mt-3"
                              role="progressbar"
-                             aria-label="Upload progress"
+                             th:aria-label="#{media.upload.progress}"
                              aria-valuemin="0"
                              aria-valuemax="100"
                              aria-valuenow="0">
@@ -104,18 +133,21 @@
                         <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
                             <button type="button"
                                     class="btn btn-sm btn-outline-secondary"
-                                    data-upload-action="cancel">
+                                    data-upload-action="cancel"
+                                    th:text="#{action.cancel}">
                                 Cancel
                             </button>
                             <button type="button"
                                     class="btn btn-sm btn-outline-primary"
                                     data-upload-action="retry"
-                                    hidden>
+                                    hidden
+                                    th:text="#{action.retry}">
                                 Retry
                             </button>
                             <button type="button"
                                     class="btn btn-sm btn-outline-danger"
-                                    data-upload-action="remove">
+                                    data-upload-action="remove"
+                                    th:text="#{action.remove}">
                                 Remove
                             </button>
                         </div>
@@ -126,12 +158,14 @@
             <div class="modal-footer">
                 <button type="button"
                         class="btn btn-outline-secondary me-auto"
-                        data-media-upload-clear>
+                        data-media-upload-clear
+                        th:text="#{media.upload.clearCompleted}">
                     Clear completed
                 </button>
                 <button type="button"
                         class="btn btn-outline-secondary"
-                        data-bs-dismiss="modal">
+                        data-bs-dismiss="modal"
+                        th:text="#{action.close}">
                     Close
                 </button>
                 <button type="submit"

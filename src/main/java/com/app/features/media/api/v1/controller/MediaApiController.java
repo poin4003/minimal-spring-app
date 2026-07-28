@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.response.ApiResult;
 import com.app.core.security.UserPrincipal;
 import com.app.features.media.schema.payload.CreateMediaPayload;
@@ -29,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class MediaApiController {
 
     private final MediaService mediaSvc;
+    private final AppMessageResolver messageResolver;
 
     @RateLimited(RateLimitPolicy.MEDIA_DIRECT_UPLOAD)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -40,7 +42,9 @@ public class MediaApiController {
                 currentUser.getUserId(),
                 payload);
 
-        return ApiResult.ok(result, "Media uploaded successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.media.upload.success"));
     }
 
     @PutMapping("/thumbnail")
@@ -52,6 +56,8 @@ public class MediaApiController {
                 currentUser.getUserId(),
                 payload.getThumbnailMediaId());
 
-        return ApiResult.ok(result, "Media thumbnail updated successfully.");
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.media.thumbnail.update.success"));
     }
 }

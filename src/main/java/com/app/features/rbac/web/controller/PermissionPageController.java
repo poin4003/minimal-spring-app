@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -49,6 +50,7 @@ public class PermissionPageController {
             .sortDirection(Sort.Direction.ASC)
             .build();
 
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -92,16 +94,16 @@ public class PermissionPageController {
         UiTableView permissionTable = uiTableFactory.build(
                 UiTableDefinition.builder()
                         .id(PERMISSION_TABLE_ID)
-                        .title("Permission List")
-                        .description("Review permission identifiers and display names.")
-                        .emptyMessage("No permissions found.")
+                        .title(messageResolver.get("rbac.permission.table.title"))
+                        .description(messageResolver.get("rbac.permission.table.description"))
+                        .emptyMessage(messageResolver.get("rbac.permission.table.empty"))
                         .pagination(pagination)
                         .build(),
                 rows,
                 PermissionTableRowView.class);
 
         return PermissionListPageView.builder()
-                .title("Permission Management")
+                .title(messageResolver.get("rbac.permission.page.title"))
                 .shell(uiShellFactory.build(
                         currentUser,
                         request.getRequestURI()))

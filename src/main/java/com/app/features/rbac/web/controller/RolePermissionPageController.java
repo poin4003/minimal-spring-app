@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.features.rbac.schema.filter.PermissionFilterCriteria;
@@ -59,6 +60,7 @@ public class RolePermissionPageController {
             .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -133,13 +135,15 @@ public class RolePermissionPageController {
 
         UiAssignmentPanelView assignmentPanel = UiAssignmentPanelView.builder()
                 .id(ROLE_PERMISSION_PANEL_ID)
-                .title(assignedMode ? "Assigned Permissions" : "Available Permissions")
+                .title(messageResolver.get(assignedMode
+                        ? "rbac.rolePermission.assigned.title"
+                        : "rbac.rolePermission.available.title"))
                 .description(assignedMode
-                        ? "Permissions currently granted to this role."
-                        : "Permissions that can be assigned to this role.")
+                        ? messageResolver.get("rbac.rolePermission.assigned.description")
+                        : messageResolver.get("rbac.rolePermission.available.description"))
                 .emptyMessage(assignedMode
-                        ? "No permissions assigned."
-                        : "No permissions available.")
+                        ? messageResolver.get("rbac.rolePermission.assigned.empty")
+                        : messageResolver.get("rbac.rolePermission.available.empty"))
                 .rows(permissionPage.getContent().stream()
                         .map(permission -> this.toPanelItem(roleId, resolvedQuery, assignedMode, permission))
                         .toList())
@@ -147,28 +151,28 @@ public class RolePermissionPageController {
                 .build();
 
         return RolePermissionPageView.builder()
-                .title("Role Permissions")
-                .heading("Role Permissions")
-                .description("Manage permissions for the selected role.")
+                .title(messageResolver.get("rbac.rolePermission.page.title"))
+                .heading(messageResolver.get("rbac.rolePermission.page.title"))
+                .description(messageResolver.get("rbac.rolePermission.page.description"))
                 .breadcrumb(UiBreadcrumbView.builder()
                         .items(List.of(
                                 UiBreadcrumbItemView.builder()
-                                        .label("Roles")
+                                        .label(messageResolver.get("menu.roles"))
                                         .path(appProperties.getUi().getHomePath() + "/rbac/roles")
                                         .build(),
                                 UiBreadcrumbItemView.builder()
-                                        .label("Assign Permissions")
+                                        .label(messageResolver.get("rbac.rolePermission.assign"))
                                         .active(true)
                                         .build()))
                         .build())
                 .metadataItems(List.of(
                         UiMetadataItemView.builder()
-                                .label("Role Key")
+                                .label(messageResolver.get("field.roleKey"))
                                 .value(role.getKey())
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Role Name")
+                                .label(messageResolver.get("field.roleName"))
                                 .value(role.getName())
                                 .monospace(false)
                                 .build()))
@@ -208,7 +212,9 @@ public class RolePermissionPageController {
                         .path(assignedMode
                                 ? appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/remove"
                                 : appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId + "/permissions/assign")
-                        .label(assignedMode ? "Remove" : "Assign")
+                        .label(messageResolver.get(assignedMode
+                                ? "action.remove"
+                                : "action.assign"))
                         .buttonClass(assignedMode ? "btn-outline-danger" : "btn-outline-primary")
                         .targetId(permission.getId().toString())
                         .query(query)

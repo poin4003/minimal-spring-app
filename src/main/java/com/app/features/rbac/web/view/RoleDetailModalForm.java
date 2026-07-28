@@ -14,33 +14,33 @@ import lombok.Setter;
 public class RoleDetailModalForm {
 
     @UiField(
-            label = "Role Name",
+            label = "field.roleName",
             order = 10,
             type = UiInputType.TEXT,
-            placeholder = "Super Admin",
+            placeholder = "rbac.role.form.namePlaceholder",
             required = true)
     @NotBlank(message = "{validation.rbac.roleName.required}")
     private String name;
 
     @UiField(
-            label = "Role Key",
+            label = "field.roleKey",
             order = 20,
             type = UiInputType.TEXT,
-            placeholder = "SUPER_ADMIN",
-            helpText = "Use an uppercase key for authorization mapping.",
+            placeholder = "rbac.role.form.keyPlaceholder",
+            helpText = "rbac.role.form.keyHelp",
             required = true)
     @NotBlank(message = "{validation.rbac.roleKey.required}")
     private String key;
 
     @UiField(
-            label = "Created At",
+            label = "field.createdAt",
             order = 30,
             type = UiInputType.TEXT,
             readOnly = true)
     private String createdAt;
 
     @UiField(
-            label = "Updated At",
+            label = "field.updatedAt",
             order = 40,
             type = UiInputType.TEXT,
             readOnly = true)

@@ -43,7 +43,9 @@
                                                 hx-swap='innerHTML',
                                                 hx-disabled-elt='this',
                                                 data-app-modal-request='true'">
-                                        Upload Thumbnail Image
+                                        <span th:text="#{media.thumbnail.upload.trigger}">
+                                            Upload Thumbnail Image
+                                        </span>
                                     </a>
                                     <a th:href="${page.backPath}"
                                        class="btn btn-outline-secondary"
@@ -69,14 +71,16 @@
 
                                         <div class="col-12 col-lg-8">
                                             <label for="thumbnail-original-name" class="form-label">
-                                                Image Name
+                                                <span th:text="#{media.thumbnail.imageName}">
+                                                    Image Name
+                                                </span>
                                             </label>
                                             <input id="thumbnail-original-name"
                                                    name="originalName"
                                                    type="text"
                                                    class="form-control"
                                                    maxlength="255"
-                                                   placeholder="Search ready images"
+                                                   th:placeholder="#{media.thumbnail.searchPlaceholder}"
                                                    th:value="${page.filter.originalName}">
                                         </div>
 
@@ -89,10 +93,10 @@
                                                         hx-swap='outerHTML',
                                                         hx-push-url='true',
                                                         hx-disabled-elt='this'">
-                                                Clear
+                                                <span th:text="#{action.clear}">Clear</span>
                                             </a>
                                             <button type="submit" class="btn btn-primary">
-                                                Search
+                                                <span th:text="#{action.search}">Search</span>
                                             </button>
                                         </div>
                                     </form>

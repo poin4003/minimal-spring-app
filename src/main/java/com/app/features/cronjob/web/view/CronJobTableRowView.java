@@ -13,15 +13,19 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CronJobTableRowView {
 
-    @UiColumn(label = "Job Type", order = 10, type = UiCellType.MONOSPACE)
+    @UiColumn(label = "field.jobType", order = 10, type = UiCellType.MONOSPACE)
     private String jobType;
 
-    @UiColumn(label = "Cron Override", order = 20, type = UiCellType.MONOSPACE, emptyValue = "Default cron")
+    @UiColumn(
+            label = "field.cronOverride",
+            order = 20,
+            type = UiCellType.MONOSPACE,
+            emptyValue = "cronjob.defaultCron")
     private String cronExpression;
 
-    @UiColumn(label = "Status", order = 30, type = UiCellType.BADGE)
+    @UiColumn(label = "field.status", order = 30, type = UiCellType.BADGE)
     private RecordStatus status;
 
-    @UiColumn(label = "Updated At", order = 40)
+    @UiColumn(label = "field.updatedAt", order = 40)
     private String updatedAt;
 }

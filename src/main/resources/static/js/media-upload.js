@@ -14,12 +14,12 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         CANCELLED: "CANCELLED"
     });
 
-    const STATUS_VIEW = Object.freeze({
-        QUEUED: ["Queued", "text-bg-secondary"],
-        UPLOADING: ["Uploading", "text-bg-primary"],
-        SUCCESS: ["Uploaded", "text-bg-success"],
-        FAILED: ["Failed", "text-bg-danger"],
-        CANCELLED: ["Cancelled", "text-bg-warning"]
+    const STATUS_CLASS = Object.freeze({
+        QUEUED: "text-bg-secondary",
+        UPLOADING: "text-bg-primary",
+        SUCCESS: "text-bg-success",
+        FAILED: "text-bg-danger",
+        CANCELLED: "text-bg-warning"
     });
 
     class MediaUploadResumeStore {
@@ -91,6 +91,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             this.itemTemplate = root.querySelector("[data-media-upload-item-template]");
             this.startButton = root.querySelector("[data-media-upload-start]");
             this.clearButton = root.querySelector("[data-media-upload-clear]");
+            this.messages = this.readMessages();
             this.rules = this.readRules();
             this.transport = this.readTransport();
             this.resumeStore = new MediaUploadResumeStore();
@@ -113,6 +114,34 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             );
         }
 
+        readMessages() {
+            return {
+                status: {
+                    QUEUED: this.root.dataset.messageStatusQueued,
+                    UPLOADING: this.root.dataset.messageStatusUploading,
+                    SUCCESS: this.root.dataset.messageStatusUploaded,
+                    FAILED: this.root.dataset.messageStatusFailed,
+                    CANCELLED: this.root.dataset.messageStatusCancelled
+                },
+                transportChunked: this.root.dataset.messageTransportChunked,
+                transportResumable: this.root.dataset.messageTransportResumable,
+                transportDirect: this.root.dataset.messageTransportDirect,
+                fileEmpty: this.root.dataset.messageFileEmpty,
+                extensionNotAllowed: this.root.dataset.messageExtensionNotAllowed,
+                fileTooLarge: this.root.dataset.messageFileTooLarge,
+                uploadCancelled: this.root.dataset.messageUploadCancelled,
+                sessionCancelFailed: this.root.dataset.messageSessionCancelFailed,
+                chunkFailed: this.root.dataset.messageChunkFailed,
+                uploadSuccess: this.root.dataset.messageUploadSuccess,
+                authExpired: this.root.dataset.messageAuthExpired,
+                uploadFailed: this.root.dataset.messageUploadFailed,
+                requestFailed: this.root.dataset.messageRequestFailed,
+                authRequired: this.root.dataset.messageAuthRequired,
+                sessionNotResumable: this.root.dataset.messageSessionNotResumable,
+                fileMismatch: this.root.dataset.messageFileMismatch
+            };
+        }
+
         readTransport() {
             return {
                 directUploadThresholdBytes: Number(
@@ -126,7 +155,11 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         createDirectUploader() {
             return new MediaDirectUploader({
                 uploadUrl: this.form.action,
-                requestHeadersProvider: () => this.requestHeaders("text/html")
+                requestHeadersProvider: () => this.requestHeaders("text/html"),
+                messages: {
+                    requestFailed: this.messages.requestFailed,
+                    cancelled: this.messages.uploadCancelled
+                }
             });
         }
 
@@ -134,7 +167,13 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             return new MediaChunkUploader({
                 baseUrl: this.transport.chunkUploadPath,
                 concurrency: this.transport.parallelChunks,
-                requestHeadersProvider: () => this.requestHeaders("application/json")
+                requestHeadersProvider: () => this.requestHeaders("application/json"),
+                messages: {
+                    authRequired: this.messages.authRequired,
+                    requestFailed: this.messages.uploadFailed,
+                    sessionNotResumable: this.messages.sessionNotResumable,
+                    fileMismatch: this.messages.fileMismatch
+                }
             });
         }
 
@@ -247,9 +286,9 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                 : null;
             const transportLabel = chunked
                 ? uploadSessionId == null
-                    ? "Chunked upload"
-                    : "Resumable upload found"
-                : "Direct upload";
+                    ? this.messages.transportChunked
+                    : this.messages.transportResumable
+                : this.messages.transportDirect;
 
             element.dataset.uploadId = id;
             element.querySelector("[data-upload-name]").textContent = file.name;
@@ -270,16 +309,19 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
 
         validate(file) {
             if (file.size <= 0) {
-                return "The selected file is empty.";
+                return this.messages.fileEmpty;
             }
 
             const extension = this.getExtension(file.name);
             const maxFileSize = this.rules.get(extension);
             if (maxFileSize == null) {
-                return "This file extension is not allowed.";
+                return this.messages.extensionNotAllowed;
             }
             if (file.size > maxFileSize) {
-                return `The file exceeds the ${this.formatBytes(maxFileSize)} limit.`;
+                return this.formatMessage(
+                    this.messages.fileTooLarge,
+                    this.formatBytes(maxFileSize)
+                );
             }
             return null;
         }
@@ -315,7 +357,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
 
             if (item.status === STATUS.QUEUED) {
                 this.setStatus(item, STATUS.CANCELLED);
-                this.showLocalError(item, "Upload cancelled.");
+                this.showLocalError(item, this.messages.uploadCancelled);
                 this.updateControls();
             }
         }
@@ -360,7 +402,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                             && error.error === "RESOURCE_NOT_FOUND")) {
                     this.showLocalError(
                         item,
-                        error.message || "The upload session could not be cancelled."
+                        error.message || this.messages.sessionCancelFailed
                     );
                 }
             }
@@ -424,7 +466,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             } catch (error) {
                 if (error.name === "AbortError" || item.cancelRequested) {
                     this.setStatus(item, STATUS.CANCELLED);
-                    this.showLocalError(item, "Upload cancelled.");
+                    this.showLocalError(item, this.messages.uploadCancelled);
                 } else {
                     this.setStatus(item, STATUS.FAILED);
                     this.showLocalError(item, error.message);
@@ -463,7 +505,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             } catch (error) {
                 if (error.name === "AbortError" || item.cancelRequested) {
                     this.setStatus(item, STATUS.CANCELLED);
-                    this.showLocalError(item, "Upload cancelled.");
+                    this.showLocalError(item, this.messages.uploadCancelled);
                 } else {
                     if (error instanceof MediaChunkUploadError
                             && (error.error === "UPLOAD_FILE_MISMATCH"
@@ -473,7 +515,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                     this.setStatus(item, STATUS.FAILED);
                     this.showLocalError(
                         item,
-                        error.message || "Chunk upload failed."
+                        error.message || this.messages.chunkFailed
                     );
                 }
             } finally {
@@ -522,7 +564,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             }
 
             title.className = "fw-semibold";
-            title.textContent = "Media uploaded successfully.";
+            title.textContent = this.messages.uploadSuccess;
             fileName.className = "small mt-1 text-break";
             fileName.textContent = media.originalName;
             alert.append(title, fileName);
@@ -550,8 +592,8 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             }
 
             const message = response.status === 403
-                ? "Upload authorization expired. Please reload the page and try again."
-                : "Media upload failed.";
+                ? this.messages.authExpired
+                : this.messages.uploadFailed;
             this.showLocalError(item, message);
         }
 
@@ -582,10 +624,9 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         setStatus(item, status) {
             item.status = status;
 
-            const [label, badgeClass] = STATUS_VIEW[status];
             const badge = item.element.querySelector("[data-upload-status]");
-            badge.className = `badge ${badgeClass}`;
-            badge.textContent = label;
+            badge.className = `badge ${STATUS_CLASS[status]}`;
+            badge.textContent = this.messages.status[status];
 
             const cancelButton = item.element.querySelector("[data-upload-action='cancel']");
             const retryButton = item.element.querySelector("[data-upload-action='retry']");
@@ -622,6 +663,16 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                 unitIndex++;
             }
             return `${value.toFixed(1)} ${units[unitIndex]}`;
+        }
+
+        formatMessage(template, ...arguments_) {
+            return arguments_.reduce(
+                (message, value, index) => message.replace(
+                    `{${index}}`,
+                    String(value)
+                ),
+                template
+            );
         }
     }
 

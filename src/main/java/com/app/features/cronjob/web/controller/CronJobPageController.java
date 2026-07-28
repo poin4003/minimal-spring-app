@@ -23,6 +23,7 @@ import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
 import com.app.core.enums.RecordStatus;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
@@ -69,6 +70,7 @@ public class CronJobPageController {
             .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final CronJobService cronJobSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -176,7 +178,7 @@ public class CronJobPageController {
                         query,
                         form,
                         submitResult.fieldErrors(),
-                        "Please correct the form and try again.",
+                        messageResolver.get("form.validation.correct"),
                         null,
                         false,
                         jobType,
@@ -210,22 +212,22 @@ public class CronJobPageController {
         UiTableView cronJobTable = uiTableFactory.build(
                 UiTableDefinition.builder()
                         .id(CRONJOB_TABLE_ID)
-                        .title("Cronjob List")
-                        .description("Review recurring job configs stored in the database.")
-                        .emptyMessage("No cronjobs found.")
+                        .title(messageResolver.get("cronjob.table.title"))
+                        .description(messageResolver.get("cronjob.table.description"))
+                        .emptyMessage(messageResolver.get("cronjob.table.empty"))
                         .pagination(pagination)
                         .build(),
                 rows,
                 CronJobTableRowView.class,
                 row -> List.of(
                         UiTableActionView.builder()
-                                .label("Metadata")
+                                .label(messageResolver.get("action.metadata"))
                                 .path(buildMetadataPath(row.getJobType(), query))
                                 .partialPath(buildMetadataPartialPath(row.getJobType()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
-                                .label("Detail")
+                                .label(messageResolver.get("action.detail"))
                                 .path(buildDetailPath(row.getJobType(), query))
                                 .partialPath(buildDetailPartialPath(row.getJobType(), query))
                                 .buttonClass("btn-primary")
@@ -240,7 +242,7 @@ public class CronJobPageController {
                 : buildDetailModal(detailJobType, query, form, modalErrors, preserveDetailForm);
 
         return CronJobListPageView.builder()
-                .title("Cronjob Management")
+                .title(messageResolver.get("cronjob.page.title"))
                 .shell(uiShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
@@ -258,19 +260,19 @@ public class CronJobPageController {
 
         return UiMetadataModalView.builder()
                 .id("cronjob-metadata-modal")
-                .title("Cronjob Metadata")
+                .title(messageResolver.get("cronjob.metadata.title"))
                 .items(List.of(
-                        item("Id", String.valueOf(cronJob.getId()), true),
-                        item("Job Type", cronJob.getJobType(), true),
+                        item(messageResolver.get("field.id"), String.valueOf(cronJob.getId()), true),
+                        item(messageResolver.get("field.jobType"), cronJob.getJobType(), true),
                         item(
-                                "Cron Override",
+                                messageResolver.get("field.cronOverride"),
                                 cronJob.isUsingDefaultCron()
-                                        ? "Using default cron"
+                                        ? messageResolver.get("cronjob.usingDefaultCron")
                                         : cronJob.getCronExpression(),
                                 true),
-                        item("Status", String.valueOf(cronJob.getStatus()), false),
-                        item("Created At", cronJob.getCreatedAt(), true),
-                        item("Updated At", cronJob.getUpdatedAt(), true)))
+                        item(messageResolver.get("field.status"), String.valueOf(cronJob.getStatus()), false),
+                        item(messageResolver.get("field.createdAt"), cronJob.getCreatedAt(), true),
+                        item(messageResolver.get("field.updatedAt"), cronJob.getUpdatedAt(), true)))
                 .build();
     }
 
@@ -287,12 +289,12 @@ public class CronJobPageController {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("cronjob-detail-modal")
-                        .title("Cronjob Detail")
-                        .description("Review job metadata and update the cron override or status.")
+                        .title(messageResolver.get("cronjob.detail.title"))
+                        .description(messageResolver.get("cronjob.detail.description"))
                         .actionPath(query.toUri(
                                 appProperties.getUi().getHomePath() + "/cronjobs/" + jobType,
                                 CRONJOB_PAGE_DEFAULTS))
-                        .submitLabel("Save Changes")
+                        .submitLabel(messageResolver.get("action.saveChanges"))
                         .build(),
                 CronJobDetailModalForm.class,
                 modalForm,

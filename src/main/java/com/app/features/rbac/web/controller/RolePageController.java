@@ -22,6 +22,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.app.config.settings.AppProperties;
 import com.app.config.security.web.HtmxRequestSupport;
 import com.app.core.constant.PermissionConstants;
+import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
@@ -81,6 +82,7 @@ public class RolePageController {
             .build();
 
     private final AppProperties appProperties;
+    private final AppMessageResolver messageResolver;
     private final UiShellFactory uiShellFactory;
     private final RbacService rbacSvc;
     private final UiPaginationFactory uiPaginationFactory;
@@ -187,7 +189,7 @@ public class RolePageController {
                         form,
                         new RoleDetailModalForm(),
                         submitResult.fieldErrors(),
-                        "Please correct the form and try again.",
+                        messageResolver.get("form.validation.correct"),
                         true,
                         null,
                         false,
@@ -244,7 +246,7 @@ public class RolePageController {
                         new CreateRoleModalForm(),
                         form,
                         submitResult.fieldErrors(),
-                        "Please correct the form and try again.",
+                        messageResolver.get("form.validation.correct"),
                         false,
                         null,
                         false,
@@ -285,28 +287,28 @@ public class RolePageController {
         UiTableView roleTable = uiTableFactory.build(
                 UiTableDefinition.builder()
                         .id(ROLE_TABLE_ID)
-                        .title("Role List")
-                        .description("Review role keys and display names.")
-                        .emptyMessage("No roles found.")
+                        .title(messageResolver.get("rbac.role.table.title"))
+                        .description(messageResolver.get("rbac.role.table.description"))
+                        .emptyMessage(messageResolver.get("rbac.role.table.empty"))
                         .pagination(pagination)
                         .build(),
                 rows,
                 RoleTableRowView.class,
                 row -> List.of(
                         UiTableActionView.builder()
-                                .label("Metadata")
+                                .label(messageResolver.get("action.metadata"))
                                 .path(buildMetadataPath(row.getId(), query))
                                 .partialPath(buildMetadataPartialPath(row.getId()))
                                 .buttonClass("btn-outline-secondary")
                                 .build(),
                         UiTableActionView.builder()
-                                .label("Detail")
+                                .label(messageResolver.get("action.detail"))
                                 .path(buildDetailPath(row.getId(), query))
                                 .partialPath(buildDetailPartialPath(row.getId(), query))
                                 .buttonClass("btn-outline-primary")
                                 .build(),
                         UiTableActionView.builder()
-                                .label("Manage Permissions")
+                                .label(messageResolver.get("action.managePermissions"))
                                 .path(buildManagePermissionsPath(row.getId()))
                                 .buttonClass("btn-primary")
                                 .build()));
@@ -324,7 +326,7 @@ public class RolePageController {
                 : buildRoleDetailModal(detailRoleId, query, detailForm, modalErrors, preserveDetailForm);
 
         return RoleListPageView.builder()
-                .title("Role Management")
+                .title(messageResolver.get("rbac.role.page.title"))
                 .shell(uiShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
@@ -345,12 +347,12 @@ public class RolePageController {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("create-role-modal")
-                        .title("Create Role")
-                        .description("Add a new role for access control.")
-                        .triggerLabel("New Role")
+                        .title(messageResolver.get("rbac.role.create.title"))
+                        .description(messageResolver.get("rbac.role.create.description"))
+                        .triggerLabel(messageResolver.get("rbac.role.create.trigger"))
                         .triggerButtonClass("btn-primary")
                         .actionPath(appProperties.getUi().getHomePath() + "/rbac/roles")
-                        .submitLabel("Create Role")
+                        .submitLabel(messageResolver.get("rbac.role.create.submit"))
                         .build(),
                 CreateRoleModalForm.class,
                 form,
@@ -363,20 +365,20 @@ public class RolePageController {
 
         return UiMetadataModalView.builder()
                 .id("role-metadata-modal")
-                .title("Role Metadata")
+                .title(messageResolver.get("rbac.role.metadata.title"))
                 .items(List.of(
                         UiMetadataItemView.builder()
-                                .label("Role Id")
+                                .label(messageResolver.get("field.roleId"))
                                 .value(role.getId())
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Role Key")
+                                .label(messageResolver.get("field.roleKey"))
                                 .value(role.getKey())
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
-                                .label("Role Name")
+                                .label(messageResolver.get("field.roleName"))
                                 .value(role.getName())
                                 .monospace(false)
                                 .build()))
@@ -398,12 +400,12 @@ public class RolePageController {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("role-detail-modal")
-                        .title("Role Detail")
-                        .description("Review role information and update the role name or key.")
+                        .title(messageResolver.get("rbac.role.detail.title"))
+                        .description(messageResolver.get("rbac.role.detail.description"))
                         .actionPath(query.toUri(
                                 appProperties.getUi().getHomePath() + "/rbac/roles/" + roleId,
                                 ROLE_PAGE_DEFAULTS))
-                        .submitLabel("Save Changes")
+                        .submitLabel(messageResolver.get("action.saveChanges"))
                         .build(),
                 RoleDetailModalForm.class,
                 modalForm,
