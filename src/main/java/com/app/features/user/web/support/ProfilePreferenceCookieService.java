@@ -5,10 +5,12 @@ import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.LocaleResolver;
 
 import com.app.config.settings.AppProperties;
 import com.app.features.user.schema.result.ProfileResult;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -16,20 +18,21 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ProfilePreferenceCookieService {
 
-    public static final String LANGUAGE_COOKIE_NAME = "APP_LANGUAGE";
     public static final String THEME_COOKIE_NAME = "APP_THEME";
 
     private static final Duration COOKIE_MAX_AGE = Duration.ofDays(365);
 
     private final AppProperties appProperties;
+    private final LocaleResolver localeResolver;
 
     public void writePreferences(
+            HttpServletRequest request,
             HttpServletResponse response,
             ProfileResult profile) {
-        writeCookie(
+        localeResolver.setLocale(
+                request,
                 response,
-                LANGUAGE_COOKIE_NAME,
-                profile.getLanguage().name());
+                profile.getLanguage().toLocale());
         writeTheme(response, profile.isDarkThemeEnabled());
     }
 

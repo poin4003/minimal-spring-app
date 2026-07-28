@@ -167,6 +167,11 @@ spring:
     application:
         name: ${SPRING_APPLICATION_NAME:minimal-spring-app}
 
+    messages:
+        basename: i18n/messages
+        encoding: UTF-8
+        fallback-to-system-locale: false
+
     mail:
         host: ${MAIL_HOST:localhost}
         port: ${MAIL_PORT:1025}

@@ -77,7 +77,10 @@ public class ProfilePageController {
         ProfileResult profile = profileSvc.updateProfile(
                 currentUser.getUserId(),
                 mapper.map(form, UpdateProfilePayload.class));
-        profilePreferenceCookieSvc.writePreferences(response, profile);
+        profilePreferenceCookieSvc.writePreferences(
+                request,
+                response,
+                profile);
 
         return HtmxRequestSupport.redirectView(
                 request,

@@ -73,7 +73,10 @@ public class LoginPageController {
             ProfileResult profile = profileSvc.getProfile(tokens.getUserId());
 
             authCookieSvc.writeAuthenticationCookies(response, tokens);
-            profilePreferenceCookieSvc.writePreferences(response, profile);
+            profilePreferenceCookieSvc.writePreferences(
+                    request,
+                    response,
+                    profile);
 
             return "redirect:" + appProperties.getUi().getHomePath();
         } catch (RuntimeException ex) {
