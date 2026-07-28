@@ -45,7 +45,8 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
                         publicKey,
                         RecordStatus.ACTIVE,
                         MediaProcessingStatus.READY)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media not found."));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFoundWithoutId"));
 
         Path path = resolveReadableFile(media.getStorageKey());
         return new MediaDeliveryResult(
@@ -64,7 +65,8 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
                         MediaProcessingStatus.READY)
                 .filter(candidate -> candidate.getThumbnailStorageKey() != null)
                 .filter(candidate -> !candidate.getThumbnailStorageKey().isBlank())
-                .orElseThrow(() -> ExceptionFactory.notFound("Media thumbnail not found."));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.thumbnailNotFound"));
 
         Path path = resolveReadableFile(media.getThumbnailStorageKey());
         return new MediaDeliveryResult(
@@ -108,14 +110,14 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
             String variantKey,
             String segmentName) {
         if (segmentName == null || !HLS_SEGMENT_PATTERN.matcher(segmentName).matches()) {
-            throw ExceptionFactory.notFound("Media stream segment not found.");
+            throw ExceptionFactory.notFound("error.media.streamSegmentNotFound");
         }
 
         MediaVariantEntity rendition = getHlsRenditionVariant(publicKey, variantKey);
         String manifestKey = rendition.getStorageKey();
         int separatorIndex = manifestKey.lastIndexOf('/');
         if (separatorIndex < 0) {
-            throw ExceptionFactory.notFound("Media stream not found.");
+            throw ExceptionFactory.notFound("error.media.streamNotFound");
         }
 
         String segmentStorageKey = manifestKey.substring(0, separatorIndex + 1) + segmentName;
@@ -129,7 +131,7 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
 
     private MediaVariantEntity getHlsRenditionVariant(String publicKey, String variantKey) {
         if (variantKey == null || !HLS_VARIANT_KEY_PATTERN.matcher(variantKey).matches()) {
-            throw ExceptionFactory.notFound("Media stream rendition not found.");
+            throw ExceptionFactory.notFound("error.media.streamRenditionNotFound");
         }
         return getHlsVariant(publicKey, MediaVariantType.HLS_RENDITION, variantKey);
     }
@@ -145,13 +147,14 @@ public class MediaDeliveryServiceImpl implements MediaDeliveryService {
                         MediaProcessingStatus.READY,
                         variantType,
                         variantKey)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media stream not found."));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.streamNotFound"));
     }
 
     private Path resolveReadableFile(String storageKey) {
         Path path = mediaFileStorage.resolve(storageKey);
         if (!Files.isRegularFile(path) || !Files.isReadable(path)) {
-            throw ExceptionFactory.notFound("Media file not found.");
+            throw ExceptionFactory.notFound("error.media.fileNotFound");
         }
         return path;
     }

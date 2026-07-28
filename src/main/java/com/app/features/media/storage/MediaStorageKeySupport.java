@@ -10,12 +10,12 @@ public final class MediaStorageKeySupport {
 
     public static String directoryOf(String storageKey) {
         if (storageKey == null || storageKey.isBlank()) {
-            throw ExceptionFactory.invalidParam("Media storage key is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.storageKeyInvalid");
         }
 
         int separatorIndex = storageKey.lastIndexOf('/');
         if (separatorIndex <= 0) {
-            throw ExceptionFactory.invalidParam("Media storage key is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.storageKeyInvalid");
         }
         return storageKey.substring(0, separatorIndex);
     }

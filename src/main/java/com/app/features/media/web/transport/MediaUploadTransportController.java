@@ -82,7 +82,9 @@ public class MediaUploadTransportController {
                     checksum,
                     request.getInputStream());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to read media chunk request.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.chunkRequestReadFailed",
+                    ex);
         }
         return ApiResult.ok(null, "Media chunk uploaded successfully.");
     }

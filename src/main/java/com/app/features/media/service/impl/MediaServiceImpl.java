@@ -88,7 +88,7 @@ public class MediaServiceImpl implements MediaService {
                 .getChunkUpload()
                 .getDirectUploadThresholdBytes()) {
             throw ExceptionFactory.invalidParam(
-                    "Media file exceeds the direct upload limit. Use chunk upload.");
+                    "error.media.directUploadLimitExceeded");
         }
         AllowedMediaType policy = mediaTypePolicyResolver.resolve(upload.getOriginalFilename());
         StagedMediaFile stagedFile = mediaFileStorage.stage(upload, policy);
@@ -110,7 +110,9 @@ public class MediaServiceImpl implements MediaService {
         UserBaseEntity creator;
         try {
             creator = userBaseRepo.findById(createdById)
-                    .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
+                    .orElseThrow(() -> ExceptionFactory.notFound(
+                            "error.user.notFound",
+                            createdById));
             String detectedContentType = mediaFileValidator.validate(
                     stagedFile,
                     policy);
@@ -158,7 +160,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public void deleteOwnedMedia(UUID mediaId, UUID createdById) {
         MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         deleteMediaEntity(media);
     }
@@ -167,7 +171,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public void deleteMedia(UUID mediaId) {
         MediaEntity media = mediaRepo.findById(mediaId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         deleteMediaEntity(media);
     }
@@ -194,7 +200,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaDetailResult getMediaDetail(UUID mediaId) {
         MediaEntity media = mediaRepo.findOneById(mediaId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         return toMediaDetailResult(media);
     }
@@ -202,7 +210,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaDetailResult getOwnedMediaDetail(UUID mediaId, UUID ownerId) {
         MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         return toMediaDetailResult(media);
     }
@@ -211,7 +221,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaResult retryProcessing(UUID mediaId) {
         MediaEntity media = mediaRepo.findById(mediaId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         return retryMedia(media);
     }
@@ -220,7 +232,9 @@ public class MediaServiceImpl implements MediaService {
     @Override
     public MediaResult retryOwnedProcessing(UUID mediaId, UUID ownerId) {
         MediaEntity media = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
 
         return retryMedia(media);
     }
@@ -231,10 +245,13 @@ public class MediaServiceImpl implements MediaService {
             UUID mediaId,
             UUID thumbnailMediaId) {
         MediaEntity targetMedia = mediaRepo.findById(mediaId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
         MediaEntity thumbnailMedia = mediaRepo.findById(thumbnailMediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Media: " + thumbnailMediaId));
+                        "error.media.notFound",
+                        thumbnailMediaId));
 
         return applyThumbnail(targetMedia, thumbnailMedia);
     }
@@ -246,11 +263,14 @@ public class MediaServiceImpl implements MediaService {
             UUID ownerId,
             UUID thumbnailMediaId) {
         MediaEntity targetMedia = mediaRepo.findByIdAndCreatedBy_Id(mediaId, ownerId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media: " + mediaId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.notFound",
+                        mediaId));
         MediaEntity thumbnailMedia = mediaRepo
                 .findByIdAndCreatedBy_Id(thumbnailMediaId, ownerId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Media: " + thumbnailMediaId));
+                        "error.media.notFound",
+                        thumbnailMediaId));
 
         return applyThumbnail(targetMedia, thumbnailMedia);
     }
@@ -258,17 +278,21 @@ public class MediaServiceImpl implements MediaService {
     private MediaResult applyThumbnail(
             MediaEntity targetMedia,
             MediaEntity thumbnailMedia) {
-        requireReadyActiveMedia(targetMedia, "Target media");
-        requireReadyActiveMedia(thumbnailMedia, "Thumbnail media");
+        requireReadyActiveMedia(
+                targetMedia,
+                "error.media.targetMustBeActiveReady");
+        requireReadyActiveMedia(
+                thumbnailMedia,
+                "error.media.thumbnailMustBeActiveReady");
         if (!mediaProcessingPolicy.supportsManualThumbnail(targetMedia.getKind())) {
             throw ExceptionFactory.invalidParam(
-                    "Only video and audio media support a custom thumbnail.");
+                    "error.media.thumbnailKindUnsupported");
         }
         if (thumbnailMedia.getKind() != MediaKind.IMAGE
                 || thumbnailMedia.getThumbnailStorageKey() == null
                 || thumbnailMedia.getThumbnailStorageKey().isBlank()) {
             throw ExceptionFactory.invalidParam(
-                    "Source media must be a ready image with a generated thumbnail.");
+                    "error.media.thumbnailSourceInvalid");
         }
 
         MediaThumbnailResult thumbnail = mediaThumbnailSvc.copyThumbnail(
@@ -321,17 +345,17 @@ public class MediaServiceImpl implements MediaService {
 
     private MediaResult retryMedia(MediaEntity media) {
         if (media.getStatus() != RecordStatus.ACTIVE) {
-            throw ExceptionFactory.invalidParam("Inactive media cannot be processed.");
+            throw ExceptionFactory.invalidParam("error.media.inactiveCannotProcess");
         }
 
         if (!mediaProcessingPolicy.requiresProcessing(media.getKind())) {
             throw ExceptionFactory.invalidParam(
-                    "This media type does not require processing.");
+                    "error.media.processingNotRequired");
         }
 
         if (media.getProcessingStatus() != MediaProcessingStatus.FAILED) {
             throw ExceptionFactory.invalidParam(
-                    "Only failed media can be retried.");
+                    "error.media.retryRequiresFailed");
         }
 
         media.setProcessingStatus(MediaProcessingStatus.PENDING);
@@ -365,7 +389,7 @@ public class MediaServiceImpl implements MediaService {
         LinkedHashSet<UUID> distinctIds = new LinkedHashSet<>(mediaIds);
 
         if (distinctIds.size() != mediaIds.size()) {
-            throw ExceptionFactory.invalidParam("Duplicate media IDs are not allowed.");
+            throw ExceptionFactory.invalidParam("error.media.duplicateIds");
         }
 
         List<MediaEntity> media = mediaRepo.findAllByIdInAndCreatedBy_IdAndStatusAndProcessingStatus(
@@ -376,7 +400,7 @@ public class MediaServiceImpl implements MediaService {
 
         if (media.size() != distinctIds.size()) {
             throw ExceptionFactory.invalidParam(
-                    "Some media are missing, inactive, or owned by another user.");
+                    "error.media.ownedSelectionInvalid");
         }
 
         return media;
@@ -403,10 +427,12 @@ public class MediaServiceImpl implements MediaService {
                 .toUriString();
     }
 
-    private void requireReadyActiveMedia(MediaEntity media, String label) {
+    private void requireReadyActiveMedia(
+            MediaEntity media,
+            String messageKey) {
         if (media.getStatus() != RecordStatus.ACTIVE
                 || media.getProcessingStatus() != MediaProcessingStatus.READY) {
-            throw ExceptionFactory.invalidParam(label + " must be active and ready.");
+            throw ExceptionFactory.invalidParam(messageKey);
         }
     }
 

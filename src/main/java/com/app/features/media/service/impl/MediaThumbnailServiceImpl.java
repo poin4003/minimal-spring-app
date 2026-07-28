@@ -89,7 +89,7 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
         Path sourceThumbnail = mediaFileStorage.resolve(
                 sourceMedia.getThumbnailStorageKey());
         if (!Files.isRegularFile(sourceThumbnail) || !Files.isReadable(sourceThumbnail)) {
-            throw ExceptionFactory.invalidParam("Source media thumbnail is unavailable.");
+            throw ExceptionFactory.invalidParam("error.media.thumbnailUnavailable");
         }
 
         MediaThumbnailWorkspace workspace = mediaFileStorage
@@ -103,7 +103,9 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
             mediaFileStorage.publishThumbnailWorkspace(workspace);
             return new MediaThumbnailResult(workspace.getPublishedStorageKey());
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to copy media thumbnail.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.thumbnailCopyFailed",
+                    ex);
         } finally {
             mediaFileStorage.discardThumbnailWorkspace(workspace);
         }
@@ -215,18 +217,20 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
         try {
             BufferedImage image = ImageIO.read(path.toFile());
             if (image == null) {
-                throw ExceptionFactory.invalidParam("Generated thumbnail is not a valid image.");
+                throw ExceptionFactory.invalidParam(
+                        "error.media.generatedThumbnailInvalid");
             }
             return image;
         } catch (IOException ex) {
-            throw ExceptionFactory.invalidParam("Unable to read generated thumbnail.");
+            throw ExceptionFactory.invalidParam(
+                    "error.media.generatedThumbnailReadFailed");
         }
     }
 
     private void writeJpeg(BufferedImage image, Path output) {
         Iterator<ImageWriter> writers = ImageIO.getImageWritersByFormatName(JPEG_FORMAT);
         if (!writers.hasNext()) {
-            throw ExceptionFactory.serverError("JPEG image writer is unavailable.");
+            throw ExceptionFactory.serverError("error.media.jpegWriterUnavailable");
         }
 
         ImageWriter writer = writers.next();
@@ -239,7 +243,9 @@ public class MediaThumbnailServiceImpl implements MediaThumbnailService {
             writer.setOutput(outputStream);
             writer.write(null, new IIOImage(image, null, null), parameters);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to write media thumbnail.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.thumbnailWriteFailed",
+                    ex);
         } finally {
             writer.dispose();
         }

@@ -342,7 +342,7 @@ public class MediaPageController {
     private MediaPreviewModalView buildPreviewModal(UUID mediaId) {
         MediaDetailResult media = mediaSvc.getMediaDetail(mediaId);
         if (!supportsPreview(media.getKind())) {
-            throw ExceptionFactory.notFound("Media preview is not available.");
+            throw ExceptionFactory.notFound("error.media.previewUnavailable");
         }
 
         boolean deliveryAvailable = media.getStatus() == RecordStatus.ACTIVE
@@ -385,7 +385,7 @@ public class MediaPageController {
             case VIDEO -> MediaPreviewType.VIDEO;
             case AUDIO -> MediaPreviewType.AUDIO;
             case DOCUMENT, FILE ->
-                throw ExceptionFactory.notFound("Media preview is not available.");
+                throw ExceptionFactory.notFound("error.media.previewUnavailable");
         };
     }
 

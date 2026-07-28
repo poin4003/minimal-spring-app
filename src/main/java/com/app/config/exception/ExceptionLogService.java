@@ -22,7 +22,7 @@ public class ExceptionLogService {
                     ex.getError(),
                     method,
                     path,
-                    ex.getMessage(),
+                    ex.getMessageKey(),
                     ex);
             return;
         }
@@ -33,7 +33,7 @@ public class ExceptionLogService {
                     ex.getError(),
                     method,
                     path,
-                    ex.getMessage());
+                    ex.getMessageKey());
             return;
         }
 
@@ -42,7 +42,7 @@ public class ExceptionLogService {
                 ex.getError(),
                 method,
                 path,
-                ex.getMessage());
+                ex.getMessageKey());
     }
 
     public void logUnexpected(Exception ex, HttpServletRequest request) {

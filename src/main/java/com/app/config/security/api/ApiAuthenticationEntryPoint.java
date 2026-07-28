@@ -33,6 +33,6 @@ public class ApiAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(response),
                 null,
-                ExceptionFactory.tokenInvalid("No access or invalid token"));
+                ExceptionFactory.tokenInvalid("error.auth.tokenInvalid"));
     }
 }

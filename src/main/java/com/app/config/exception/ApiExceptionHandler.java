@@ -25,6 +25,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.app.core.exception.FieldErrorItem;
 import com.app.core.exception.MyException;
+import com.app.core.i18n.AppMessageResolver;
+import com.app.core.i18n.ExceptionMessageResolver;
 import com.app.core.response.ApiResult;
 
 import jakarta.validation.ConstraintViolationException;
@@ -39,6 +41,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ApiExceptionHandler {
 
     private final ExceptionLogService exceptionLogSvc;
+    private final AppMessageResolver messageResolver;
+    private final ExceptionMessageResolver exceptionMessageResolver;
 
     @ExceptionHandler(MyException.class)
     public ResponseEntity<ApiResult<Void>> handleMyException(
@@ -47,7 +51,10 @@ public class ApiExceptionHandler {
         exceptionLogSvc.log(ex, request);
 
         return ResponseEntity.status(ex.getHttpStatusCode())
-                .body(ApiResult.error(ex.getError(), ex.getMessage(), ex.getFieldErrors()));
+                .body(ApiResult.error(
+                        ex.getError(),
+                        exceptionMessageResolver.resolve(ex),
+                        exceptionMessageResolver.resolveFieldErrors(ex)));
     }
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -55,7 +62,9 @@ public class ApiExceptionHandler {
         log.warn("Login failed: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResult.error("INVALID_CREDENTIALS", "Incorrect email or password!"));
+                .body(ApiResult.error(
+                        "INVALID_CREDENTIALS",
+                        messageResolver.get("error.auth.invalidCredentials")));
     }
 
     @ExceptionHandler({
@@ -68,7 +77,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResult.error(
                         "PERMISSION_ERROR",
-                        "You are not authorized to perform this action."));
+                        messageResolver.get("error.permission.denied")));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -79,7 +88,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
                 .body(ApiResult.error(
                         "PAYLOAD_TOO_LARGE",
-                        "Uploaded file exceeds the multipart limit. Use chunk upload for large media."));
+                        messageResolver.get("error.upload.multipartTooLarge")));
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
@@ -105,7 +114,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResult.error(
                         "COMMON_VALIDATION_ERROR",
-                        "Invalid params: " + errorDetails,
+                        messageResolver.get("validation.invalidParams", errorDetails),
                         fieldErrors));
     }
 
@@ -132,7 +141,7 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResult.error(
                         "COMMON_VALIDATION_ERROR",
-                        "Invalid params: " + errorDetails,
+                        messageResolver.get("validation.invalidParams", errorDetails),
                         fieldErrors));
     }
 
@@ -146,7 +155,9 @@ public class ApiExceptionHandler {
         log.warn("Missing Parameter: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResult.error("MISSING_PARAM", "Missing param."));
+                .body(ApiResult.error(
+                        "MISSING_PARAM",
+                        messageResolver.get("error.request.missingParam")));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -154,7 +165,9 @@ public class ApiExceptionHandler {
         log.warn("Resource not found: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResult.error("NOT_FOUND", "Resource not found."));
+                .body(ApiResult.error(
+                        "NOT_FOUND",
+                        messageResolver.get("error.resource.notFound")));
     }
 
     @ExceptionHandler(AsyncRequestNotUsableException.class)
@@ -174,6 +187,8 @@ public class ApiExceptionHandler {
         exceptionLogSvc.logUnexpected(ex, request);
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResult.error("INTERNAL_SERVER_ERROR", "Unknown system error."));
+                .body(ApiResult.error(
+                        "INTERNAL_SERVER_ERROR",
+                        messageResolver.get("error.system.unknown")));
     }
 }

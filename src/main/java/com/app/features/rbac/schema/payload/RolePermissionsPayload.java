@@ -10,9 +10,9 @@ import lombok.Data;
 @Data
 public class RolePermissionsPayload {
 
-    @NotNull(message = "Require role id")
+    @NotNull(message = "{validation.rbac.roleId.required}")
     private UUID roleId;
 
-    @NotEmpty(message = "List permission id must not be empty")
+    @NotEmpty(message = "{validation.rbac.permissionIds.required}")
     private List<UUID> permIds;
 }

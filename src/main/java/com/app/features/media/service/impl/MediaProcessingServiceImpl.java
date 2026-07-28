@@ -122,7 +122,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     .generateThumbnail(media);
             if (result.isEmpty()
                     && mediaProcessingPolicy.isThumbnailRequired(media.getKind())) {
-                throw ExceptionFactory.serverError("Required media thumbnail was not generated.");
+                throw ExceptionFactory.serverError(
+                        "error.media.requiredThumbnailMissing");
             }
             return result;
         } catch (RuntimeException ex) {
@@ -182,7 +183,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         try {
             Files.createDirectories(renditionDirectory);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to prepare HLS rendition directory.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.hlsDirectoryPrepareFailed",
+                    ex);
         }
 
         UrlOutput output = UrlOutput.toPath(playlist)
@@ -235,7 +238,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         left.getHeight(),
                         right.getHeight()))
                 .orElseThrow(() -> ExceptionFactory.serverError(
-                        "Unable to determine video dimensions."));
+                        "error.media.videoDimensionsUndetermined"));
         int sourceWidth = videoStream.getWidth();
         int sourceHeight = videoStream.getHeight();
 
@@ -290,7 +293,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     StandardOpenOption.CREATE,
                     StandardOpenOption.TRUNCATE_EXISTING);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to write HLS master playlist.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.hlsMasterWriteFailed",
+                    ex);
         }
     }
 

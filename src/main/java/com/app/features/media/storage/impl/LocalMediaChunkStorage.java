@@ -83,7 +83,8 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             long written = copyAndDigest(inputStream, temporary, expectedSize, digest);
             String actualChecksum = HexFormat.of().formatHex(digest.digest());
             if (written != expectedSize || !actualChecksum.equals(normalizedChecksum)) {
-                throw ExceptionFactory.invalidParam("Media chunk size or checksum is invalid.");
+                throw ExceptionFactory.invalidParam(
+                        "error.media.chunkSizeOrChecksumInvalid");
             }
 
             moveAtomically(temporary, target);
@@ -92,7 +93,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             throw ex;
         } catch (IOException ex) {
             deleteQuietly(temporary);
-            throw ExceptionFactory.serverError("Unable to store media chunk.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.chunkStoreFailed",
+                    ex);
         } finally {
             chunkLock.unlock();
         }
@@ -115,7 +118,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
                     .sorted()
                     .toList();
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to inspect uploaded media chunks.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.chunkInspectFailed",
+                    ex);
         }
     }
 
@@ -130,7 +135,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         try {
             assembledFile = Files.createTempFile(stagingRoot, "assembled-", ".tmp");
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to prepare assembled media file.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.assembledFilePrepareFailed",
+                    ex);
         }
 
         try (OutputStream output = Files.newOutputStream(assembledFile)) {
@@ -141,7 +148,8 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
                         chunk,
                         LinkOption.NOFOLLOW_LINKS)) {
                     throw ExceptionFactory.invalidParam(
-                            "Media upload is missing chunk: " + chunkIndex);
+                            "error.media.chunkMissing",
+                            chunkIndex);
                 }
 
                 try (InputStream input = Files.newInputStream(chunk)) {
@@ -150,7 +158,8 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             }
 
             if (assembledSize != expectedFileSize) {
-                throw ExceptionFactory.invalidParam("Assembled media file size is invalid.");
+                throw ExceptionFactory.invalidParam(
+                        "error.media.assembledFileSizeInvalid");
             }
 
             return new StagedMediaFile(
@@ -163,7 +172,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             throw ex;
         } catch (IOException ex) {
             deleteQuietly(assembledFile);
-            throw ExceptionFactory.serverError("Unable to assemble media chunks.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.chunkAssembleFailed",
+                    ex);
         }
     }
 
@@ -173,7 +184,9 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         try {
             deleteRecursively(uploadDirectory);
         } catch (IOException ex) {
-            throw ExceptionFactory.serverError("Unable to delete media upload chunks.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.chunkDeleteFailed",
+                    ex);
         }
     }
 
@@ -193,7 +206,8 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
                 }
                 written += read;
                 if (written > expectedSize) {
-                    throw ExceptionFactory.invalidParam("Media chunk exceeds its expected size.");
+                    throw ExceptionFactory.invalidParam(
+                            "error.media.chunkExpectedSizeExceeded");
                 }
                 digest.update(buffer, 0, read);
                 output.write(buffer, 0, read);
@@ -209,7 +223,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)
                 || Files.size(target) != expectedSize) {
             throw ExceptionFactory.invalidParam(
-                    "Media chunk already exists with different content.");
+                    "error.media.chunkConflict");
         }
 
         MessageDigest digest = sha256();
@@ -226,20 +240,20 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
         String actualChecksum = HexFormat.of().formatHex(digest.digest());
         if (!actualChecksum.equals(expectedChecksum)) {
             throw ExceptionFactory.invalidParam(
-                    "Media chunk already exists with different content.");
+                    "error.media.chunkConflict");
         }
     }
 
     private Path resolveUploadDirectory(UUID uploadId) {
         if (uploadId == null) {
-            throw ExceptionFactory.invalidParam("Media upload ID is required.");
+            throw ExceptionFactory.invalidParam("error.media.uploadIdRequired");
         }
         return uploadRoot.resolve(uploadId.toString()).normalize();
     }
 
     private Path resolveChunk(UUID uploadId, int chunkIndex) {
         if (chunkIndex < 0) {
-            throw ExceptionFactory.invalidParam("Media chunk index is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.chunkIndexInvalid");
         }
         return resolveUploadDirectory(uploadId).resolve(chunkFilename(chunkIndex));
     }
@@ -257,7 +271,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
 
     private String normalizeChecksum(String checksum) {
         if (checksum == null || !checksum.matches("^[a-fA-F0-9]{64}$")) {
-            throw ExceptionFactory.invalidParam("Media chunk SHA-256 checksum is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.chunkChecksumInvalid");
         }
         return checksum.toLowerCase(java.util.Locale.ROOT);
     }
@@ -299,7 +313,7 @@ public class LocalMediaChunkStorage implements MediaChunkStorage {
             return;
         }
         if (!directory.startsWith(uploadRoot) || directory.equals(uploadRoot)) {
-            throw ExceptionFactory.invalidParam("Media upload directory is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.uploadDirectoryInvalid");
         }
 
         List<Path> paths;

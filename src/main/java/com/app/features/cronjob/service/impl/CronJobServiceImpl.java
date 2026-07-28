@@ -44,7 +44,9 @@ public class CronJobServiceImpl implements CronJobService {
     @Override
     public CronJobDetailResult getCronJobDetail(String jobType) {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
-                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.cronjob.notFound",
+                        jobType));
 
         return toCronJobDetailResult(config);
     }
@@ -59,7 +61,9 @@ public class CronJobServiceImpl implements CronJobService {
     @Override
     public void refreshRecurringJob(String jobType) {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
-                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.cronjob.notFound",
+                        jobType));
 
         applyRecurringJob(
                 config.getJobType(),
@@ -71,7 +75,9 @@ public class CronJobServiceImpl implements CronJobService {
     @Override
     public void updateConfig(String jobType, String cronExpression, RecordStatus status) {
         CronJobConfigEntity config = jobConfigRepo.findByJobType(jobType)
-                .orElseThrow(() -> ExceptionFactory.notFound("Cronjob config: " + jobType));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.cronjob.notFound",
+                        jobType));
 
         String normalizedExpression = normalizeCronExpression(cronExpression);
 

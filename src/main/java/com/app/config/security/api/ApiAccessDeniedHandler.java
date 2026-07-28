@@ -34,6 +34,6 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
                 Objects.requireNonNull(request),
                 Objects.requireNonNull(response),
                 null,
-                ExceptionFactory.permissionError("You are not authorized to perform this action."));
+                ExceptionFactory.permissionError("error.permission.denied"));
     }
 }

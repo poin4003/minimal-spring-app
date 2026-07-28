@@ -7,11 +7,11 @@ import lombok.Data;
 
 @Data
 public class CreateUserPayload {
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email format is invalid")
+    @NotBlank(message = "{validation.user.email.required}")
+    @Email(message = "{validation.user.email.invalid}")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 6, message = "Password must be at least 6 characters")
+    @NotBlank(message = "{validation.user.password.required}")
+    @Size(min = 6, message = "{validation.user.password.min}")
     private String password;
 }

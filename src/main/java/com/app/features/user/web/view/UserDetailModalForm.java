@@ -69,6 +69,6 @@ public class UserDetailModalForm {
             type = UiInputType.SELECT,
             placeholder = "Select status",
             required = true)
-    @NotNull(message = "User status is required")
+    @NotNull(message = "{validation.user.status.required}")
     private UserStatusEnum status;
 }

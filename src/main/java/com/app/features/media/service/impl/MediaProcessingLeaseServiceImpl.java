@@ -28,7 +28,8 @@ public class MediaProcessingLeaseServiceImpl implements MediaProcessingLeaseServ
     public boolean acquire(UUID mediaId, UUID executionId) {
         MediaProcessingLeaseEntity lease = mediaRepo.findById(mediaId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Media processing lease: " + mediaId));
+                        "error.media.processingLeaseNotFound",
+                        mediaId));
 
         LocalDateTime now = LocalDateTime.now();
         boolean heldByAnotherExecution = lease.getExecutionId() != null

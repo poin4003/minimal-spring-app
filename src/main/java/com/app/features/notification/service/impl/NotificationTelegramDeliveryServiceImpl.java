@@ -39,7 +39,8 @@ public class NotificationTelegramDeliveryServiceImpl
         NotificationEntity notification = notificationRepo
                 .findById(notificationId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Notification: " + notificationId));
+                        "error.notification.notFound",
+                        notificationId));
 
         CreateNotificationDeliveryPayload payload =
                 new CreateNotificationDeliveryPayload();

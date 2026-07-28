@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 public class UserFilter {
 
-    @Size(max = 100, message = "Keyword must be less than or equal to 100 characters")
+    @Size(max = 100, message = "{validation.filter.keyword.max}")
     private String keyword;
 
     private UserStatusEnum status;

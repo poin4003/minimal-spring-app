@@ -71,7 +71,7 @@ public class CronJobDetailModalForm {
             type = UiInputType.TEXT,
             placeholder = "0 0 1 * * *",
             helpText = "Leave blank to use the default cron from the job annotation.")
-    @Size(max = 100, message = "Cron expression must be less than or equal to 100 characters")
+    @Size(max = 100, message = "{validation.cronjob.expression.max}")
     @ValidJobRunrCron(allowBlank = true)
     private String cronExpression;
 
@@ -81,6 +81,6 @@ public class CronJobDetailModalForm {
             type = UiInputType.SELECT,
             placeholder = "Select status",
             required = true)
-    @NotNull(message = "Cronjob status is required")
+    @NotNull(message = "{validation.cronjob.status.required}")
     private RecordStatus status;
 }

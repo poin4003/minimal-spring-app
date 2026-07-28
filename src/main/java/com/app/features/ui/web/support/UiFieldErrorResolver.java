@@ -9,9 +9,15 @@ import org.springframework.validation.FieldError;
 
 import com.app.core.exception.FieldErrorItem;
 import com.app.core.exception.MyException;
+import com.app.core.i18n.ExceptionMessageResolver;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class UiFieldErrorResolver {
+
+    private final ExceptionMessageResolver exceptionMessageResolver;
 
     public Map<String, String> fromBinding(BindingResult bindingResult) {
         Map<String, String> errors = new LinkedHashMap<>();
@@ -26,7 +32,7 @@ public class UiFieldErrorResolver {
     public Map<String, String> fromException(MyException ex) {
         Map<String, String> errors = new LinkedHashMap<>();
 
-        for (FieldErrorItem fieldError : ex.getFieldErrors()) {
+        for (FieldErrorItem fieldError : exceptionMessageResolver.resolveFieldErrors(ex)) {
             if (fieldError.field() == null || fieldError.field().isBlank()) {
                 continue;
             }

@@ -19,7 +19,7 @@ public class RoleDetailModalForm {
             type = UiInputType.TEXT,
             placeholder = "Super Admin",
             required = true)
-    @NotBlank(message = "Role name is required")
+    @NotBlank(message = "{validation.rbac.roleName.required}")
     private String name;
 
     @UiField(
@@ -29,7 +29,7 @@ public class RoleDetailModalForm {
             placeholder = "SUPER_ADMIN",
             helpText = "Use an uppercase key for authorization mapping.",
             required = true)
-    @NotBlank(message = "Role key is required")
+    @NotBlank(message = "{validation.rbac.roleKey.required}")
     private String key;
 
     @UiField(

@@ -165,6 +165,7 @@ public class NotificationServiceImpl implements NotificationService {
             UUID notificationId) {
         return notificationRepo.findByIdAndRecipient_Id(notificationId, recipientId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Notification: " + notificationId));
+                        "error.notification.notFound",
+                        notificationId));
     }
 }

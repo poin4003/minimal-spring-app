@@ -14,19 +14,19 @@ public final class MediaFilenameSupport {
 
     public static String normalize(String originalFilename) {
         if (originalFilename == null || originalFilename.isBlank()) {
-            throw ExceptionFactory.invalidParam("Media filename is required.");
+            throw ExceptionFactory.invalidParam("error.media.filenameRequired");
         }
 
         String normalizedSeparators = originalFilename.replace('\\', '/');
         String filename = normalizedSeparators.substring(normalizedSeparators.lastIndexOf('/') + 1).trim();
 
         if (filename.isBlank() || filename.length() > MAXIMUM_FILENAME_LENGTH) {
-            throw ExceptionFactory.invalidParam("Media filename is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.filenameInvalid");
         }
 
         for (int index = 0; index < filename.length(); index++) {
             if (Character.isISOControl(filename.charAt(index))) {
-                throw ExceptionFactory.invalidParam("Media filename is invalid.");
+                throw ExceptionFactory.invalidParam("error.media.filenameInvalid");
             }
         }
 
@@ -36,12 +36,12 @@ public final class MediaFilenameSupport {
     public static String extensionOf(String filename) {
         int separatorIndex = filename.lastIndexOf('.');
         if (separatorIndex <= 0 || separatorIndex == filename.length() - 1) {
-            throw ExceptionFactory.invalidParam("Media filename must include an extension.");
+            throw ExceptionFactory.invalidParam("error.media.filenameExtensionRequired");
         }
 
         String extension = filename.substring(separatorIndex + 1).toLowerCase(Locale.ROOT);
         if (!extension.matches("^[a-z0-9]+$")) {
-            throw ExceptionFactory.invalidParam("Media file extension is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.extensionInvalid");
         }
 
         return extension;

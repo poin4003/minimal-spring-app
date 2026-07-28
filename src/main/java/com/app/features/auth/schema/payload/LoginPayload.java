@@ -7,10 +7,10 @@ import lombok.Data;
 @Data
 public class LoginPayload {
 
-    @NotBlank(message = "Email must be not blank")
+    @NotBlank(message = "{validation.user.email.required}")
     @Email()
     private String email;
 
-    @NotBlank(message = "Password must be not blank")
+    @NotBlank(message = "{validation.user.password.required}")
     private String password;
 }

@@ -61,20 +61,20 @@ public class MediaFileValidator {
             return tika.detect(input, originalName);
         } catch (IOException ex) {
             throw new InvalidMediaContentException(
-                    "Unable to detect media content type.");
+                    "error.media.contentTypeUndetected");
         }
     }
 
     private void validateImage(Path file) {
         try (ImageInputStream input = ImageIO.createImageInputStream(file.toFile())) {
             if (input == null) {
-                throw new InvalidMediaContentException("Invalid image file.");
+                throw new InvalidMediaContentException("error.media.imageFileInvalid");
             }
 
             Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
             if (!readers.hasNext()) {
                 throw new InvalidMediaContentException(
-                        "Unsupported image content.");
+                        "error.media.imageUnsupported");
             }
 
             ImageReader reader = readers.next();
@@ -85,22 +85,22 @@ public class MediaFileValidator {
                         reader.getHeight(0));
                 if (pixels > appProperties.getMedia().getMaxImagePixels()) {
                     throw new InvalidMediaContentException(
-                            "Image dimensions exceed the allowed pixel count.");
+                            "error.media.imagePixelLimitExceeded");
                 }
 
                 BufferedImage decodedImage = reader.read(0);
                 if (decodedImage == null) {
                     throw new InvalidMediaContentException(
-                            "Invalid image content.");
+                            "error.media.imageContentInvalid");
                 }
             } finally {
                 reader.dispose();
             }
         } catch (ArithmeticException ex) {
             throw new InvalidMediaContentException(
-                    "Image dimensions are invalid.");
+                    "error.media.imageDimensionsInvalid");
         } catch (IOException ex) {
-            throw new InvalidMediaContentException("Invalid image content.");
+            throw new InvalidMediaContentException("error.media.imageContentInvalid");
         }
     }
 
@@ -112,7 +112,9 @@ public class MediaFileValidator {
             if (ex.getHttpStatusCode() >= HttpStatus.INTERNAL_SERVER_ERROR.value()) {
                 throw ex;
             }
-            throw new InvalidMediaContentException(ex.getMessage());
+            throw new InvalidMediaContentException(
+                    ex.getMessageKey(),
+                    ex.getMessageArguments().toArray());
         }
         List<Stream> streams = result.getStreams() == null
                 ? List.of()
@@ -123,8 +125,8 @@ public class MediaFileValidator {
         if (!requiredStreamPresent || resolveDuration(result, streams) <= 0) {
             throw new InvalidMediaContentException(
                     requiredStreamType == StreamType.VIDEO
-                            ? "Invalid video content."
-                            : "Invalid audio content.");
+                            ? "error.media.videoContentInvalid"
+                            : "error.media.audioContentInvalid");
         }
     }
 

@@ -39,7 +39,8 @@ public class NotificationChannelSenderRegistry {
 
         if (sender == null) {
             throw ExceptionFactory.serverError(
-                    "Notification sender is not configured: " + channel);
+                    "error.notification.senderNotConfigured",
+                    channel);
         }
 
         return sender;

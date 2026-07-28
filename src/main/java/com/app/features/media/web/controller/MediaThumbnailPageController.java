@@ -203,12 +203,12 @@ public class MediaThumbnailPageController {
     private void requireManualThumbnailSupport(MediaDetailResult media) {
         if (!mediaProcessingPolicy.supportsManualThumbnail(media.getKind())) {
             throw ExceptionFactory.invalidParam(
-                    "Only video and audio media support a custom thumbnail.");
+                    "error.media.thumbnailKindUnsupported");
         }
         if (media.getStatus() != RecordStatus.ACTIVE
                 || media.getProcessingStatus() != MediaProcessingStatus.READY) {
             throw ExceptionFactory.invalidParam(
-                    "Target media must be active and ready.");
+                    "error.media.targetMustBeActiveReady");
         }
     }
 

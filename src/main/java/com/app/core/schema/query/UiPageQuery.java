@@ -14,11 +14,11 @@ import lombok.Setter;
 @Setter
 public class UiPageQuery {
 
-    @Min(value = 0, message = "Page must be greater than or equal to 0")
+    @Min(value = 0, message = "{validation.pagination.page.min}")
     private Integer page;
 
-    @Min(value = 1, message = "Size must be greater than or equal to 1")
-    @Max(value = 100, message = "Size must be less than or equal to 100")
+    @Min(value = 1, message = "{validation.pagination.size.min}")
+    @Max(value = 100, message = "{validation.pagination.size.max}")
     private Integer size;
 
     private String sortBy;

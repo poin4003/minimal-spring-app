@@ -41,7 +41,9 @@ public class MediaTypePolicyResolver {
         AllowedMediaType policy = policiesByExtension.get(extension);
 
         if (policy == null) {
-            throw ExceptionFactory.invalidParam("Unsupported media extension: " + extension);
+            throw ExceptionFactory.invalidParam(
+                    "error.media.extensionUnsupported",
+                    extension);
         }
 
         return policy;
@@ -55,7 +57,7 @@ public class MediaTypePolicyResolver {
 
         if (!allowed) {
             throw new InvalidMediaContentException(
-                    "Detected media type does not match the file extension.");
+                    "error.media.contentTypeMismatch");
         }
 
         return normalizedContentType;
@@ -64,7 +66,7 @@ public class MediaTypePolicyResolver {
     private String normalizeContentType(String contentType) {
         if (contentType == null || contentType.isBlank()) {
             throw new InvalidMediaContentException(
-                    "Unable to detect media content type.");
+                    "error.media.contentTypeUndetected");
         }
 
         int parameterIndex = contentType.indexOf(';');

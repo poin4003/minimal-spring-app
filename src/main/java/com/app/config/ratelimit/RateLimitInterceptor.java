@@ -37,7 +37,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
                     HttpHeaders.RETRY_AFTER,
                     Long.toString(retryAfterSeconds));
             throw ExceptionFactory.rateLimitExceeded(
-                    "Too many requests. Please retry later.");
+                    "error.rateLimit.exceeded");
         }
 
         return true;

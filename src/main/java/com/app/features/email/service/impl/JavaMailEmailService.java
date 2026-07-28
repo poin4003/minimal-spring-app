@@ -50,7 +50,7 @@ public class JavaMailEmailService implements EmailService {
             return message.getMessageID();
         } catch (MessagingException | MailException exception) {
             throw ExceptionFactory.serverError(
-                    "Unable to send Email.",
+                    "error.email.sendFailed",
                     exception);
         }
     }

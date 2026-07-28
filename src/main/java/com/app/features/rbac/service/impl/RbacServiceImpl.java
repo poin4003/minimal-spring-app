@@ -44,7 +44,10 @@ public class RbacServiceImpl implements RbacService {
     @Override
     public RoleResult createRole(CreateRolePayload payload) {
         if (roleRepo.existsByKey(payload.getKey())) {
-            throw ExceptionFactory.alreadyExists("key", payload.getKey(), "Role key already exists.");
+            throw ExceptionFactory.alreadyExists(
+                    "key",
+                    payload.getKey(),
+                    "error.rbac.roleKeyAlreadyExists");
         }
 
         RoleEntity role = new RoleEntity();
@@ -60,7 +63,7 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void deleteRole(UUID roleId) {
         if (!roleRepo.existsById(roleId)) {
-            throw ExceptionFactory.notFound("Role: " + roleId);
+            throw ExceptionFactory.notFound("error.rbac.roleNotFound", roleId);
         }
 
         roleRepo.deleteById(roleId);
@@ -69,7 +72,9 @@ public class RbacServiceImpl implements RbacService {
     @Override
     public RoleResult getRole(UUID roleId) {
         RoleEntity role = roleRepo.findById(roleId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.rbac.roleNotFound",
+                        roleId));
 
         return mapper.map(role, RoleResult.class);
     }
@@ -79,12 +84,17 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public RoleResult updateRole(UUID roleId, UpdateRolePayload payload) {
         RoleEntity role = roleRepo.findById(roleId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Role: " + roleId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.rbac.roleNotFound",
+                        roleId));
 
         if (payload.getKey() != null
                 && !payload.getKey().equals(role.getKey())
                 && roleRepo.existsByKey(payload.getKey())) {
-            throw ExceptionFactory.alreadyExists("key", payload.getKey(), "Role key already exists.");
+            throw ExceptionFactory.alreadyExists(
+                    "key",
+                    payload.getKey(),
+                    "error.rbac.roleKeyAlreadyExists");
         }
 
         mapper.getConfiguration().setSkipNullEnabled(true);
@@ -100,12 +110,14 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public void assignRoleToUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         List<RoleEntity> roles = roleRepo.findAllById(roleIds);
 
         if (roles.size() != roleIds.size()) {
-            throw ExceptionFactory.notFound("Missing some role");
+            throw ExceptionFactory.notFound("error.rbac.rolesMissing");
         }
 
         HashSet<RoleEntity> currentRoles = user.getRoles() == null
@@ -123,12 +135,14 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void assignPermToRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.rbac.roleNotFound",
+                        roleId));
 
         List<PermissionEntity> perms = permRepo.findAllById(permIds);
 
         if (perms.size() != permIds.size()) {
-            throw ExceptionFactory.notFound("Missing some permission");
+            throw ExceptionFactory.notFound("error.rbac.permissionsMissing");
         }
 
         HashSet<PermissionEntity> currentPermissions = role.getPermissions() == null
@@ -146,7 +160,9 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public void removeRoleFromUser(UUID userId, List<UUID> roleIds) {
         UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User id: " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         List<RoleEntity> roles = roleRepo.findAllById(roleIds);
 
@@ -165,7 +181,9 @@ public class RbacServiceImpl implements RbacService {
     @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void removePermFromRole(UUID roleId, List<UUID> permIds) {
         RoleEntity role = roleRepo.findById(roleId)
-                .orElseThrow(() -> ExceptionFactory.notFound("Role id: " + roleId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.rbac.roleNotFound",
+                        roleId));
 
         List<PermissionEntity> perms = permRepo.findAllById(permIds);
 

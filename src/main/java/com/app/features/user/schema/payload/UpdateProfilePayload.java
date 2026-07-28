@@ -10,11 +10,11 @@ import lombok.Data;
 @Data
 public class UpdateProfilePayload {
 
-    @NotBlank(message = "Full name is required")
-    @Size(max = 150, message = "Full name must not exceed 150 characters")
+    @NotBlank(message = "{validation.profile.fullName.required}")
+    @Size(max = 150, message = "{validation.profile.fullName.max}")
     private String fullName;
 
-    @NotNull(message = "Language is required")
+    @NotNull(message = "{validation.profile.language.required}")
     private AppLanguage language;
 
     private boolean darkThemeEnabled;

@@ -49,7 +49,8 @@ public class NotificationEmailDeliveryServiceImpl
                                     notificationId,
                                     recipientId)
                             .orElseThrow(() -> ExceptionFactory.notFound(
-                                    "Notification: " + notificationId));
+                                    "error.notification.notFound",
+                                    notificationId));
                     NotificationEmailTemplateModel model = mapper.map(
                             notification,
                             NotificationEmailTemplateModel.class);

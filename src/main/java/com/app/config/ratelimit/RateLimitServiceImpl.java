@@ -71,7 +71,7 @@ public class RateLimitServiceImpl implements RateLimitService {
                 SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null
                 || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
-            throw ExceptionFactory.tokenInvalid("Authentication is required.");
+            throw ExceptionFactory.tokenInvalid("error.auth.required");
         }
 
         return "user:" + principal.getUserId();

@@ -72,16 +72,18 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         String originalName = MediaFilenameSupport.normalize(payload.getOriginalName());
         AllowedMediaType policy = mediaTypePolicyResolver.resolve(originalName);
         if (payload.getFileSize() > policy.getMaxFileSizeBytes()) {
-            throw ExceptionFactory.invalidParam("Media file exceeds the allowed size.");
+            throw ExceptionFactory.invalidParam("error.media.fileTooLarge");
         }
 
         UserBaseEntity creator = userBaseRepo.findOneById(createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + createdById));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        createdById));
         AppProperties.ChunkUpload config = appProperties.getMedia().getChunkUpload();
         validateUploadQuota(createdById, payload.getFileSize(), config);
         long totalChunks = Math.ceilDiv(payload.getFileSize(), (long) config.getChunkSizeBytes());
         if (totalChunks > Integer.MAX_VALUE) {
-            throw ExceptionFactory.invalidParam("Media upload contains too many chunks.");
+            throw ExceptionFactory.invalidParam("error.media.tooManyChunks");
         }
 
         MediaUploadSessionEntity session = new MediaUploadSessionEntity();
@@ -130,7 +132,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             validateUploading(session);
             long expectedSize = expectedChunkSize(session, chunkIndex);
             if (contentLength != expectedSize) {
-                throw ExceptionFactory.invalidParam("Media chunk content length is invalid.");
+                throw ExceptionFactory.invalidParam("error.media.chunkLengthInvalid");
             }
 
             mediaChunkStorage.storeChunk(
@@ -254,7 +256,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             return null;
         }
         if (session.getStatus() != MediaUploadStatus.UPLOADING) {
-            throw ExceptionFactory.invalidParam("Media upload cannot be assembled in its current state.");
+            throw ExceptionFactory.invalidParam("error.media.uploadCannotAssemble");
         }
 
         session.setStatus(MediaUploadStatus.ASSEMBLING);
@@ -274,7 +276,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             StagedMediaFile stagedFile) {
         MediaUploadSessionEntity session = requireLockedSession(uploadId, createdById);
         if (session.getStatus() != MediaUploadStatus.ASSEMBLING) {
-            throw ExceptionFactory.invalidParam("Media upload is not being assembled.");
+            throw ExceptionFactory.invalidParam("error.media.uploadNotAssembling");
         }
 
         MediaResult result = mediaSvc.createMedia(createdById, stagedFile);
@@ -301,7 +303,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private void deleteSession(UUID uploadId, UUID createdById) {
         MediaUploadSessionEntity session = requireLockedSession(uploadId, createdById);
         if (session.getStatus() == MediaUploadStatus.COMPLETED) {
-            throw ExceptionFactory.invalidParam("Completed media upload cannot be cancelled.");
+            throw ExceptionFactory.invalidParam("error.media.completedUploadCannotCancel");
         }
         mediaUploadSessionRepo.delete(session);
     }
@@ -328,25 +330,29 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     private MediaUploadSessionEntity requireOwnedSession(UUID uploadId, UUID createdById) {
         return mediaUploadSessionRepo.findByIdAndCreatedBy_Id(uploadId, createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media upload: " + uploadId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.uploadNotFound",
+                        uploadId));
     }
 
     private MediaUploadSessionEntity requireLockedSession(UUID uploadId, UUID createdById) {
         return mediaUploadSessionRepo.findOneByIdAndCreatedBy_Id(uploadId, createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound("Media upload: " + uploadId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.media.uploadNotFound",
+                        uploadId));
     }
 
     private void validateUploading(MediaUploadSessionEntity session) {
         validateNotExpired(session);
         if (session.getStatus() != MediaUploadStatus.UPLOADING) {
-            throw ExceptionFactory.invalidParam("Media upload is not accepting chunks.");
+            throw ExceptionFactory.invalidParam("error.media.uploadNotAcceptingChunks");
         }
     }
 
     private void validateNotExpired(MediaUploadSessionEntity session) {
         if (session.getStatus() != MediaUploadStatus.COMPLETED
                 && session.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw ExceptionFactory.invalidParam("Media upload session has expired.");
+            throw ExceptionFactory.invalidParam("error.media.uploadExpired");
         }
     }
 
@@ -360,7 +366,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                         ACTIVE_UPLOAD_STATUSES);
         if (activeSessions >= config.getMaxActiveSessionsPerUser()) {
             throw ExceptionFactory.invalidParam(
-                    "Active media upload session limit exceeded.");
+                    "error.media.activeUploadLimitExceeded");
         }
 
         long reservedBytes = mediaUploadSessionRepo
@@ -370,7 +376,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         long availableBytes = config.getMaxReservedBytesPerUser() - reservedBytes;
         if (requestedFileSize > availableBytes) {
             throw ExceptionFactory.invalidParam(
-                    "Reserved media upload size limit exceeded.");
+                    "error.media.reservedUploadLimitExceeded");
         }
     }
 
@@ -401,7 +407,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     private long expectedChunkSize(MediaUploadSessionEntity session, int chunkIndex) {
         if (chunkIndex < 0 || chunkIndex >= session.getTotalChunks()) {
-            throw ExceptionFactory.invalidParam("Media chunk index is invalid.");
+            throw ExceptionFactory.invalidParam("error.media.chunkIndexInvalid");
         }
 
         long offset = (long) chunkIndex * session.getChunkSize();
@@ -423,7 +429,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     private MediaResult completedMediaResult(MediaUploadSessionEntity session) {
         if (session.getCompletedMedia() == null) {
-            throw ExceptionFactory.serverError("Completed media upload has no media record.");
+            throw ExceptionFactory.serverError("error.media.completedUploadMissingMedia");
         }
         return mapper.map(session.getCompletedMedia(), MediaResult.class);
     }

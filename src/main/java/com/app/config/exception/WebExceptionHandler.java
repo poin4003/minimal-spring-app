@@ -14,6 +14,8 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.app.core.exception.MyException;
+import com.app.core.i18n.AppMessageResolver;
+import com.app.core.i18n.ExceptionMessageResolver;
 import com.app.features.ui.web.support.WebErrorPageFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,6 +38,8 @@ public class WebExceptionHandler {
 
     private final WebErrorPageFactory webErrorPageFactory;
     private final ExceptionLogService exceptionLogSvc;
+    private final AppMessageResolver messageResolver;
+    private final ExceptionMessageResolver exceptionMessageResolver;
 
     @ExceptionHandler({
             AuthorizationDeniedException.class,
@@ -48,7 +52,7 @@ public class WebExceptionHandler {
                 HttpStatus.FORBIDDEN,
                 request,
                 "PERMISSION_ERROR",
-                "You are not authorized to perform this action.");
+                messageResolver.get("error.permission.denied"));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
@@ -59,7 +63,7 @@ public class WebExceptionHandler {
                 HttpStatus.NOT_FOUND,
                 request,
                 "NOT_FOUND",
-                "Resource not found.");
+                messageResolver.get("error.resource.notFound"));
     }
 
     @ExceptionHandler(MyException.class)
@@ -70,7 +74,7 @@ public class WebExceptionHandler {
                 HttpStatus.valueOf(ex.getHttpStatusCode()),
                 request,
                 ex.getError(),
-                ex.getMessage());
+                exceptionMessageResolver.resolve(ex));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -83,7 +87,7 @@ public class WebExceptionHandler {
                 HttpStatus.CONTENT_TOO_LARGE,
                 request,
                 "PAYLOAD_TOO_LARGE",
-                "Uploaded file exceeds the multipart limit. Use chunk upload for large media.");
+                messageResolver.get("error.upload.multipartTooLarge"));
     }
 
     @ExceptionHandler({ MethodArgumentNotValidException.class, BindException.class })
@@ -94,7 +98,7 @@ public class WebExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 request,
                 "COMMON_VALIDATION_ERROR",
-                "Invalid request data.");
+                messageResolver.get("validation.invalidRequest"));
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -107,7 +111,7 @@ public class WebExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 request,
                 "COMMON_VALIDATION_ERROR",
-                "Invalid request data.");
+                messageResolver.get("validation.invalidRequest"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -118,6 +122,6 @@ public class WebExceptionHandler {
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 request,
                 "INTERNAL_SERVER_ERROR",
-                "Unknown system error.");
+                messageResolver.get("error.system.unknown"));
     }
 }

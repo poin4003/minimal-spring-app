@@ -67,30 +67,30 @@ public class AuthServiceImpl implements AuthService {
         if (usedToken != null) {
             log.warn("Refresh Token reuse detected! keyStoreId: {}", usedToken.getKeyStoreId());
             keyStoreSvc.deleteKeyStoreById(usedToken.getKeyStoreId());
-            throw ExceptionFactory.permissionError("Something wrong happened! Please relogin.");
+            throw ExceptionFactory.permissionError("error.auth.refreshTokenReuse");
         }
 
         UUID keyStoreId = jwtTokenProvider.getKeyStoreIdFromTokenUnverified(tokenStr);
         if (keyStoreId == null) {
-            throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
+            throw ExceptionFactory.permissionError("error.auth.refreshTokenInvalid");
         }
 
         KeyStoreEntity keyStore = keyStoreRepo.findById(keyStoreId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User keystore not found. Please login again."));
+                .orElseThrow(() -> ExceptionFactory.notFound("error.auth.keyStoreNotFound"));
 
         UUID userId;
         try {
             userId = jwtTokenProvider.getUserId(tokenStr, keyStore.getSigningKey());
         } catch (Exception e) {
-            throw ExceptionFactory.permissionError("RefreshToken Expired or Invalid Signature");
+            throw ExceptionFactory.permissionError("error.auth.refreshTokenExpired");
         }
 
         if (!userId.equals(keyStore.getUserId())) {
-            throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
+            throw ExceptionFactory.permissionError("error.auth.refreshTokenInvalid");
         }
 
         if (!tokenStr.equals(keyStore.getRefreshToken())) {
-            throw ExceptionFactory.permissionError("Invalid refresh token, please relogin!");
+            throw ExceptionFactory.permissionError("error.auth.refreshTokenInvalid");
         }
 
         ConsumedRefreshTokenEntity history = new ConsumedRefreshTokenEntity();
@@ -104,7 +104,9 @@ public class AuthServiceImpl implements AuthService {
         consumedRefreshTokenRepo.save(history);
 
         UserBaseEntity user = userBaseRepo.findWithAuthoritiesById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         if (user.getStatus() != UserStatusEnum.ACTIVE) {
             throw ExceptionFactory.invalidCredentials();
@@ -117,7 +119,9 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void logout(UUID userId, UUID keyStoreId) {
         UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         user.setLogoutTime(LocalDateTime.now());
         userBaseRepo.save(user);

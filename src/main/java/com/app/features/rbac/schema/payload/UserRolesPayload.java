@@ -10,9 +10,9 @@ import lombok.Data;
 @Data
 public class UserRolesPayload {
 
-    @NotNull(message = "Require user id")
+    @NotNull(message = "{validation.rbac.userId.required}")
     private UUID userId;
 
-    @NotEmpty(message = "List role id must not be empty")
+    @NotEmpty(message = "{validation.rbac.roleIds.required}")
     private List<UUID> roleIds;
 }

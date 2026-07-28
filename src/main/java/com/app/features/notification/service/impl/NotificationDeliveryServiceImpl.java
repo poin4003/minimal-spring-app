@@ -60,7 +60,8 @@ public class NotificationDeliveryServiceImpl
         NotificationEntity notification = notificationRepo
                 .findById(payload.getNotificationId())
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Notification: " + payload.getNotificationId()));
+                        "error.notification.notFound",
+                        payload.getNotificationId()));
 
         NotificationDeliveryEntity delivery =
                 new NotificationDeliveryEntity();
@@ -157,7 +158,8 @@ public class NotificationDeliveryServiceImpl
             UUID deliveryId) {
         return notificationDeliveryRepo.findOneById(deliveryId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Notification delivery: " + deliveryId));
+                        "error.notification.deliveryNotFound",
+                        deliveryId));
     }
 
     private void registerDeliveryJob(UUID deliveryId) {

@@ -65,7 +65,7 @@ public class ProfileServiceImpl implements ProfileService {
                 .getFirst();
 
         if (avatar.getKind() != MediaKind.IMAGE) {
-            throw ExceptionFactory.invalidParam("Avatar must be an image.");
+            throw ExceptionFactory.invalidParam("error.profile.avatarMustBeImage");
         }
 
         requireProfile(userId).setAvatarMedia(avatar);
@@ -80,7 +80,8 @@ public class ProfileServiceImpl implements ProfileService {
     private UserInfoEntity requireProfile(UUID userId) {
         return userInfoRepo.findOneByUserId(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
-                        "Profile: " + userId));
+                        "error.profile.notFound",
+                        userId));
     }
 
     private ProfileResult toResult(UserInfoEntity profile) {

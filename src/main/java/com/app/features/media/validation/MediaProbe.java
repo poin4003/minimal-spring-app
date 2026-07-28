@@ -35,13 +35,15 @@ public class MediaProbe {
                     TimeUnit.MINUTES);
         } catch (TimeoutException ex) {
             resultFuture.cancel(true);
-            throw ExceptionFactory.invalidParam("Media probing timed out.");
+            throw ExceptionFactory.invalidParam("error.media.probeTimedOut");
         } catch (InterruptedException ex) {
             Thread.currentThread().interrupt();
             resultFuture.cancel(true);
-            throw ExceptionFactory.serverError("Media probing was interrupted.", ex);
+            throw ExceptionFactory.serverError(
+                    "error.media.probeInterrupted",
+                    ex);
         } catch (ExecutionException ex) {
-            throw ExceptionFactory.invalidParam("Unable to probe audio or video content.");
+            throw ExceptionFactory.invalidParam("error.media.probeFailed");
         }
     }
 

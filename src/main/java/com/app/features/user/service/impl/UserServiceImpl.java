@@ -68,7 +68,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDetailResult getUserDetailById(UUID userId) {
         UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         // LAZY load List role
         UserDetailResult response = mapper.map(user, UserDetailResult.class);
@@ -85,7 +87,9 @@ public class UserServiceImpl implements UserService {
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public UserResult updateUserStatus(UUID userId, UserStatusEnum status) {
         UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound("User: " + userId));
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
 
         user.setStatus(status);
 
@@ -97,7 +101,10 @@ public class UserServiceImpl implements UserService {
     @Override
     public void checkEmailUnique(String email) {
         if (userBaseRepo.existsByEmail(email)) {
-            throw ExceptionFactory.alreadyExists("email", email, "Email already exists.");
+            throw ExceptionFactory.alreadyExists(
+                    "email",
+                    email,
+                    "error.user.emailAlreadyExists");
         }
     }
 }

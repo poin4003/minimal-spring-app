@@ -62,18 +62,19 @@ public class TelegramBotService implements TelegramService {
                     || response.result() == null
                     || response.result().messageId() == null) {
                 throw ExceptionFactory.serverError(
-                        "Telegram Bot API returned an invalid response.");
+                        "error.telegram.invalidResponse");
             }
 
             return response.result().messageId().toString();
         } catch (RestClientResponseException exception) {
             throw ExceptionFactory.serverError(
-                    "Telegram Bot API returned HTTP "
-                            + exception.getStatusCode().value()
-                            + ".");
+                    "error.telegram.httpResponse",
+                    exception,
+                    exception.getStatusCode().value());
         } catch (RestClientException exception) {
             throw ExceptionFactory.serverError(
-                    "Unable to reach Telegram Bot API.");
+                    "error.telegram.unreachable",
+                    exception);
         }
     }
 }

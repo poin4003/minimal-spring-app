@@ -11,84 +11,177 @@ public final class ExceptionFactory {
     }
 
     // --- Auth Errors (401) ---
-    public static MyException invalidToken(String message) {
-        return new MyException("INVALID_TOKEN", HttpStatus.UNAUTHORIZED.value(), message);
+    public static MyException invalidToken(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "INVALID_TOKEN",
+                HttpStatus.UNAUTHORIZED.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
-    public static MyException accessTokenExpired(String message) {
-        return new MyException("ACCESS_TOKEN_EXPIRED", HttpStatus.UNAUTHORIZED.value(), message);
+    public static MyException accessTokenExpired(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "ACCESS_TOKEN_EXPIRED",
+                HttpStatus.UNAUTHORIZED.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
     // --- Business Errors (400, 404) ---
-    public static MyException notFound(String message) {
-        return new MyException("RESOURCE_NOT_FOUND", HttpStatus.NOT_FOUND.value(), message);
+    public static MyException notFound(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "RESOURCE_NOT_FOUND",
+                HttpStatus.NOT_FOUND.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
-    public static MyException alreadyExists(String message) {
-        return new MyException("RESOURCE_ALREADY_EXISTS", HttpStatus.BAD_REQUEST.value(), message);
-    }
-
-    public static MyException alreadyExists(String field, Object rejectedValue, String message) {
+    public static MyException alreadyExists(String messageKey, Object... messageArguments) {
         return new MyException(
                 "RESOURCE_ALREADY_EXISTS",
                 HttpStatus.BAD_REQUEST.value(),
-                message,
+                messageKey,
+                List.of(messageArguments),
                 null,
-                List.of(new FieldErrorItem(field, "ALREADY_EXISTS", message, rejectedValue)));
+                List.of(),
+                null);
     }
 
-    public static MyException invalidParam(String message) {
-        return new MyException("INVALID_PARAM", HttpStatus.BAD_REQUEST.value(), message);
+    public static MyException alreadyExists(
+            String field,
+            Object rejectedValue,
+            String messageKey,
+            Object... messageArguments) {
+        FieldErrorDescriptor fieldError = new FieldErrorDescriptor(
+                field,
+                "ALREADY_EXISTS",
+                messageKey,
+                List.of(messageArguments),
+                rejectedValue);
+
+        return new MyException(
+                "RESOURCE_ALREADY_EXISTS",
+                HttpStatus.BAD_REQUEST.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(fieldError),
+                null);
     }
 
-    public static MyException validationError(String message, List<FieldErrorItem> fieldErrors) {
+    public static MyException invalidParam(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "INVALID_PARAM",
+                HttpStatus.BAD_REQUEST.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
+    }
+
+    public static MyException validationError(
+            String messageKey,
+            List<FieldErrorDescriptor> fieldErrors,
+            Object... messageArguments) {
         return new MyException(
                 "COMMON_VALIDATION_ERROR",
                 HttpStatus.BAD_REQUEST.value(),
-                message,
+                messageKey,
+                List.of(messageArguments),
                 null,
-                fieldErrors);
+                fieldErrors,
+                null);
     }
 
     // --- Security Error (401, 403)
-    public static MyException tokenInvalid(String message) {
-        return new MyException("TOKEN_INVALID", HttpStatus.UNAUTHORIZED.value(), message);
+    public static MyException tokenInvalid(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "TOKEN_INVALID",
+                HttpStatus.UNAUTHORIZED.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
     public static MyException invalidCredentials() {
         return new MyException(
                 "INVALID_CREDENTIALS",
                 HttpStatus.UNAUTHORIZED.value(),
-                "Invalid email or password.");
+                "error.auth.invalidCredentials",
+                List.of(),
+                null,
+                List.of(),
+                null);
     }
 
-    public static MyException permissionError(String message) {
-        return new MyException("PERMISSION_ERROR", HttpStatus.FORBIDDEN.value(), message);
+    public static MyException permissionError(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "PERMISSION_ERROR",
+                HttpStatus.FORBIDDEN.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
-    public static MyException rateLimitExceeded(String message) {
+    public static MyException rateLimitExceeded(String messageKey, Object... messageArguments) {
         return new MyException(
                 "RATE_LIMIT_EXCEEDED",
                 HttpStatus.TOO_MANY_REQUESTS.value(),
-                message);
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 
     // --- Infrastructure/System Errors (500) ---
-    public static MyException serverError(String message) {
-        return new MyException("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
-    }
-
-    public static MyException serverError(String message, Throwable cause) {
+    public static MyException serverError(String messageKey, Object... messageArguments) {
         return new MyException(
                 "INTERNAL_SERVER_ERROR",
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                message,
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
+    }
+
+    public static MyException serverError(
+            String messageKey,
+            Throwable cause,
+            Object... messageArguments) {
+        return new MyException(
+                "INTERNAL_SERVER_ERROR",
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                messageKey,
+                List.of(messageArguments),
                 null,
                 List.of(),
                 cause);
     }
 
-    public static MyException importSimError(String message) {
-        return new MyException("IMPORT_SIM_ERROR", HttpStatus.INTERNAL_SERVER_ERROR.value(), message);
+    public static MyException importSimError(String messageKey, Object... messageArguments) {
+        return new MyException(
+                "IMPORT_SIM_ERROR",
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                messageKey,
+                List.of(messageArguments),
+                null,
+                List.of(),
+                null);
     }
 }
