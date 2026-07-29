@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EmailTemplate {
-    SAMPLE("email/sample");
+    REGISTRATION_OTP("email/registration-otp");
 
     private final String path;
 }

@@ -138,12 +138,19 @@ app:
             cache-expiration: ${RATE_LIMIT_CACHE_EXPIRATION:1h}
             auth-login: { capacity: 10, period: 1m }
             auth-refresh: { capacity: 60, period: 1m }
+            registration-otp-ip:
+                capacity: ${REGISTRATION_OTP_IP_RATE_CAPACITY:10}
+                period: ${REGISTRATION_OTP_IP_RATE_PERIOD:10m}
+            registration-otp-email:
+                capacity: ${REGISTRATION_OTP_EMAIL_RATE_CAPACITY:5}
+                period: ${REGISTRATION_OTP_EMAIL_RATE_PERIOD:15m}
             media-direct-upload: { capacity: 30, period: 1m }
             media-upload-session: { capacity: 120, period: 1m }
             media-upload-chunk: { capacity: 300, period: 1m }
         api-public-paths:
             - /api/v1/auth/login
             - /api/v1/auth/refresh
+            - /api/v1/auth/register/**
             - '${app.media.public-path}/**'
         web-public-paths:
             - /login

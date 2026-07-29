@@ -33,6 +33,14 @@ public class RateLimitProperties {
     private final Rule authRefresh = new Rule(60, Duration.ofMinutes(1));
 
     @Valid
+    private final Rule registrationOtpIp =
+            new Rule(10, Duration.ofMinutes(10));
+
+    @Valid
+    private final Rule registrationOtpEmail =
+            new Rule(5, Duration.ofMinutes(15));
+
+    @Valid
     private final Rule mediaDirectUpload = new Rule(30, Duration.ofMinutes(1));
 
     @Valid
@@ -45,6 +53,8 @@ public class RateLimitProperties {
         return switch (policy) {
             case AUTH_LOGIN -> authLogin;
             case AUTH_REFRESH -> authRefresh;
+            case REGISTRATION_OTP_IP -> registrationOtpIp;
+            case REGISTRATION_OTP_EMAIL -> registrationOtpEmail;
             case MEDIA_DIRECT_UPLOAD -> mediaDirectUpload;
             case MEDIA_UPLOAD_SESSION -> mediaUploadSession;
             case MEDIA_UPLOAD_CHUNK -> mediaUploadChunk;

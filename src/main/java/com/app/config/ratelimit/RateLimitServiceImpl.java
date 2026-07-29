@@ -36,8 +36,39 @@ public class RateLimitServiceImpl implements RateLimitService {
             return 0;
         }
 
+        return consumeBucket(
+                policy,
+                resolveRequestSubject(policy, request));
+    }
+
+    @Override
+    public long consume(
+            RateLimitPolicy policy,
+            String explicitSubject) {
+        if (!properties.isEnabled()) {
+            return 0;
+        }
+
+        if (policy.getSubject() != RateLimitSubject.EXPLICIT) {
+            throw new IllegalArgumentException(
+                    "Policy does not accept an explicit rate-limit subject: "
+                            + policy);
+        }
+        if (explicitSubject == null || explicitSubject.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Explicit rate-limit subject must not be blank.");
+        }
+
+        return consumeBucket(
+                policy,
+                "explicit:" + explicitSubject);
+    }
+
+    private long consumeBucket(
+            RateLimitPolicy policy,
+            String subject) {
         RateLimitProperties.Rule rule = properties.resolve(policy);
-        String key = policy.name() + ":" + resolveSubject(policy, request);
+        String key = policy.name() + ":" + subject;
 
         Bucket bucket = buckets.get(
                 key,
@@ -59,12 +90,18 @@ public class RateLimitServiceImpl implements RateLimitService {
                         NANOS_PER_SECOND));
     }
 
-    private String resolveSubject(
+    private String resolveRequestSubject(
             RateLimitPolicy policy,
             HttpServletRequest request) {
         if (policy.getSubject() == RateLimitSubject.CLIENT_IP) {
             String remoteAddress = request.getRemoteAddr();
             return "ip:" + (remoteAddress == null ? UNKNOWN_CLIENT : remoteAddress);
+        }
+
+        if (policy.getSubject() == RateLimitSubject.EXPLICIT) {
+            throw new IllegalArgumentException(
+                    "Explicit rate-limit policy cannot be resolved from an HTTP request: "
+                            + policy);
         }
 
         Authentication authentication =

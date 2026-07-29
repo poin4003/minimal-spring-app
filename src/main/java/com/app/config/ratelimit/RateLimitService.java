@@ -5,4 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 public interface RateLimitService {
 
     long consume(RateLimitPolicy policy, HttpServletRequest request);
+
+    long consume(RateLimitPolicy policy, String explicitSubject);
 }
