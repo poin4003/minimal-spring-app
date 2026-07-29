@@ -41,6 +41,18 @@ public class RateLimitProperties {
             new Rule(5, Duration.ofMinutes(15));
 
     @Valid
+    private final Rule registrationVerifyIp =
+            new Rule(30, Duration.ofMinutes(10));
+
+    @Valid
+    private final Rule registrationVerifyEmail =
+            new Rule(10, Duration.ofMinutes(10));
+
+    @Valid
+    private final Rule registrationCompleteIp =
+            new Rule(30, Duration.ofMinutes(10));
+
+    @Valid
     private final Rule mediaDirectUpload = new Rule(30, Duration.ofMinutes(1));
 
     @Valid
@@ -55,6 +67,9 @@ public class RateLimitProperties {
             case AUTH_REFRESH -> authRefresh;
             case REGISTRATION_OTP_IP -> registrationOtpIp;
             case REGISTRATION_OTP_EMAIL -> registrationOtpEmail;
+            case REGISTRATION_VERIFY_IP -> registrationVerifyIp;
+            case REGISTRATION_VERIFY_EMAIL -> registrationVerifyEmail;
+            case REGISTRATION_COMPLETE_IP -> registrationCompleteIp;
             case MEDIA_DIRECT_UPLOAD -> mediaDirectUpload;
             case MEDIA_UPLOAD_SESSION -> mediaUploadSession;
             case MEDIA_UPLOAD_CHUNK -> mediaUploadChunk;

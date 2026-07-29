@@ -17,5 +17,9 @@ public interface AuthService {
 
     LoginResult refreshToken(@NotNull @Valid RefreshTokenPayload req);
 
+    LoginResult openSession(
+            @NotNull UUID userId,
+            String ipAddress);
+
     void logout(@NotNull UUID userId, UUID keyStoreId);
 }

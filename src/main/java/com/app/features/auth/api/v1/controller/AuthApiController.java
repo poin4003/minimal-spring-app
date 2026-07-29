@@ -12,11 +12,14 @@ import com.app.core.enums.AppLanguage;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.response.ApiResult;
 import com.app.core.utils.HttpUtils;
+import com.app.features.auth.schema.payload.CompleteRegistrationPayload;
 import com.app.features.auth.schema.payload.LoginPayload;
 import com.app.features.auth.schema.payload.RefreshTokenPayload;
 import com.app.features.auth.schema.payload.RequestRegistrationOtpPayload;
+import com.app.features.auth.schema.payload.VerifyRegistrationOtpPayload;
 import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.schema.result.RequestRegistrationOtpResult;
+import com.app.features.auth.schema.result.VerifyRegistrationOtpResult;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.service.RegistrationService;
 
@@ -68,5 +71,31 @@ public class AuthApiController {
         return ApiResult.ok(
                 result,
                 messageResolver.get("api.registration.otpSent"));
+    }
+
+    @RateLimited(RateLimitPolicy.REGISTRATION_VERIFY_IP)
+    @PostMapping("/register/verify-otp")
+    public ApiResult<VerifyRegistrationOtpResult> verifyRegistrationOtp(
+            @Valid @RequestBody VerifyRegistrationOtpPayload payload) {
+        VerifyRegistrationOtpResult result =
+                registrationSvc.verifyOtp(payload);
+
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.registration.otpVerified"));
+    }
+
+    @RateLimited(RateLimitPolicy.REGISTRATION_COMPLETE_IP)
+    @PostMapping("/register/complete")
+    public ApiResult<LoginResult> completeRegistration(
+            @Valid @RequestBody CompleteRegistrationPayload payload,
+            HttpServletRequest request) {
+        LoginResult result = registrationSvc.completeRegistration(
+                payload,
+                HttpUtils.getClientIp(request));
+
+        return ApiResult.ok(
+                result,
+                messageResolver.get("api.registration.completed"));
     }
 }

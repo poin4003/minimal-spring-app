@@ -117,6 +117,25 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
+    public LoginResult openSession(
+            UUID userId,
+            String ipAddress) {
+        UserBaseEntity user = userBaseRepo.findWithAuthoritiesById(userId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
+
+        if (user.getStatus() != UserStatusEnum.ACTIVE) {
+            throw ExceptionFactory.invalidCredentials();
+        }
+
+        user.setLoginTime(LocalDateTime.now());
+        user.setLoginIp(ipAddress);
+        return createSessionTokens(user);
+    }
+
+    @Override
+    @Transactional
     public void logout(UUID userId, UUID keyStoreId) {
         UserBaseEntity user = userBaseRepo.findById(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
@@ -191,14 +210,16 @@ public class AuthServiceImpl implements AuthService {
                 ? Set.of()
                 : user.getRoles().stream()
                         .map(role -> role.getKey())
-                        .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+                        .collect(java.util.stream.Collectors.toCollection(
+                                () -> new LinkedHashSet<>()));
 
         Set<String> permissionKeys = user.getRoles() == null
                 ? Set.of()
                 : user.getRoles().stream()
                         .flatMap(role -> role.getPermissions().stream())
                         .map(permission -> permission.getKey())
-                        .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+                        .collect(java.util.stream.Collectors.toCollection(
+                                () -> new LinkedHashSet<>()));
 
         return JwtAccessPayload.builder()
                 .userEmail(user.getEmail())

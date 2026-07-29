@@ -37,6 +37,7 @@
 - Account creation, initial user information creation, registration completion, and normal session issuance belong to one transactional completion flow.
 - Registration must not generate, email, or persist a temporary password.
 - Full name and avatar may be completed later through the normal authenticated profile flow.
+- Registration must not assign an implicit default role until that role is explicitly defined as a business rule and migration.
 - Password setup or password changes revoke existing sessions.
 - Registration email delivery uses the reusable email service directly and does not require an in-app notification.
 

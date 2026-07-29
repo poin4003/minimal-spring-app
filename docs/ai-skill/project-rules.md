@@ -28,6 +28,8 @@
 - Business logic should live in the service layer.
 - Database queries and criteria-based filtering should live in the repository/specification layer.
 - Request/response/filter DTOs should live under `schema`.
+- Feature enums must live under `features/<domain>/enums`, not under `schema` or `schema/model`.
+- Keep `schema/model` for typed internal data models that carry values between layers; do not use it as a catch-all for enums, entities, or constants.
 - Shared constants should live under `core/constant`.
 - New features should follow the `features/<domain>` structure instead of scattering code by technical layer across the whole project.
 - APIs should keep versioning in the path, preferably `api/v1`.
