@@ -55,6 +55,7 @@ public class LoginPageController {
                 .title(messageResolver.get("auth.login.title"))
                 .applicationTitle(appProperties.getUi().getApplicationTitle())
                 .loginPath(appProperties.getUi().getLoginPath())
+                .registrationPath(appProperties.getUi().getRegistrationPath())
                 .hasError(error != null)
                 .loggedOut(logout != null)
                 .build();

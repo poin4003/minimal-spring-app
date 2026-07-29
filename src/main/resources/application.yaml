@@ -163,6 +163,8 @@ app:
             - '${app.media.public-path}/**'
         web-public-paths:
             - /login
+            - '${app.ui.registration-path}'
+            - '${app.ui.registration-path}/**'
             - /logout
             - /error
             - /favicon.ico
@@ -181,6 +183,7 @@ app:
             - /admin/cronjobs/**
     ui:
         login-path: ${UI_LOGIN_PATH:/login}
+        registration-path: ${UI_REGISTRATION_PATH:/register}
         home-path: ${UI_HOME_PATH:/admin}
         logout-path: ${UI_LOGOUT_PATH:/logout}
         application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}

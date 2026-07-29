@@ -12,6 +12,7 @@ public class LoginPageView {
     private final String title;
     private final String applicationTitle;
     private final String loginPath;
+    private final String registrationPath;
     private final boolean hasError;
     private final boolean loggedOut;
 }

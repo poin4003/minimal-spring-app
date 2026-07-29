@@ -93,6 +93,16 @@
                                     Sign in
                                 </button>
                             </form>
+
+                            <p class="text-center text-secondary mt-4 mb-0">
+                                <span th:text="#{auth.login.noAccount}">
+                                    Need an account?
+                                </span>
+                                <a th:href="${page.registrationPath}"
+                                   th:text="#{auth.login.register}">
+                                    Create one
+                                </a>
+                            </p>
                         </div>
                     </div>
                 </div>

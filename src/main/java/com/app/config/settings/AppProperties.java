@@ -456,6 +456,8 @@ public class AppProperties {
 
         private List<String> webPublicPaths = List.of(
                 "/login",
+                "/register",
+                "/register/**",
                 "/logout",
                 "/error",
                 "/favicon.ico",
@@ -479,6 +481,9 @@ public class AppProperties {
     public static class Ui {
         @NotBlank
         private String loginPath = "/login";
+
+        @NotBlank
+        private String registrationPath = "/register";
 
         @NotBlank
         private String homePath = "/admin";
