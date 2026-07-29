@@ -18,12 +18,14 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
@@ -44,6 +46,9 @@ public class AppProperties {
     @Data
     public static class Auth {
         private final Cookie cookie = new Cookie();
+
+        @Valid
+        private final Registration registration = new Registration();
     }
 
     @Data
@@ -61,6 +66,45 @@ public class AppProperties {
         private String sameSite = "Lax";
 
         private boolean secure = false;
+    }
+
+    @Data
+    public static class Registration {
+        @Min(6)
+        @Max(8)
+        private int otpLength = 6;
+
+        @NotBlank
+        @Size(min = 32)
+        private String otpHashSecret;
+
+        @NotNull
+        private Duration otpTtl = Duration.ofMinutes(10);
+
+        @NotNull
+        private Duration resendCooldown = Duration.ofMinutes(1);
+
+        @Positive
+        private int maxAttempts = 5;
+
+        @NotNull
+        private Duration completionTokenTtl = Duration.ofMinutes(20);
+
+        @NotNull
+        private Duration cleanupRetention = Duration.ofDays(1);
+
+        @AssertTrue(message = "Registration durations must be positive.")
+        public boolean isDurationConfigurationValid() {
+            return isPositive(otpTtl)
+                    && isPositive(resendCooldown)
+                    && isPositive(completionTokenTtl)
+                    && isPositive(cleanupRetention)
+                    && resendCooldown.compareTo(otpTtl) < 0;
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
     }
 
     @Data

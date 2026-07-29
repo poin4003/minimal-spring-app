@@ -61,6 +61,32 @@ CREATE TABLE role (
 
 CREATE UNIQUE INDEX uk_role_role_key ON role(role_key);
 
+CREATE TABLE registration (
+    id UUID PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    code_hash VARCHAR(64),
+    language AppLanguageEnum DEFAULT 'EN' NOT NULL,
+    failed_attempts INTEGER DEFAULT 0 NOT NULL
+        CHECK (failed_attempts >= 0),
+    otp_expires_at TIMESTAMP WITH TIME ZONE,
+    resend_available_at TIMESTAMP WITH TIME ZONE,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    completion_token_hash VARCHAR(64),
+    completion_expires_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE UNIQUE INDEX uk_registration_email
+    ON registration(email);
+
+CREATE UNIQUE INDEX uk_registration_completion_token_hash
+    ON registration(completion_token_hash);
+
+CREATE INDEX idx_registration_otp_expires_at
+    ON registration(otp_expires_at);
+
 CREATE TABLE user_base (
     id UUID PRIMARY KEY,
     email VARCHAR(255) NOT NULL,

@@ -28,11 +28,15 @@
 - OTP state must be stored in the database because the project does not use Redis.
 - OTP codes require expiry, resend cooldown, attempt limits, single-use consumption, and scheduled cleanup.
 - OTP request and verification endpoints require rate limiting by both email and client IP.
-- A user record is created only after successful OTP verification.
-- Registration must not email or persist a plaintext temporary password.
-- After verification, the system creates the account with an unusable generated credential and issues a restricted onboarding session.
-- An onboarding session may access only profile completion, password setup, logout, and required supporting resources.
-- The user must set a permanent password before receiving normal application access.
+- OTP verification marks the registration workflow as verified but does not create a user record.
+- After verification, the system issues a short-lived opaque completion token; registration completion does not use JWT.
+- The raw completion token is returned only once, while the database stores only its hash and expiry.
+- Registration completion looks up and locks the workflow by the completion-token hash.
+- Completion tokens are single-use credentials and must be cleared when the account is created.
+- A user record is created only when a verified registration submits its permanent password.
+- Account creation, initial user information creation, registration completion, and normal session issuance belong to one transactional completion flow.
+- Registration must not generate, email, or persist a temporary password.
+- Full name and avatar may be completed later through the normal authenticated profile flow.
 - Password setup or password changes revoke existing sessions.
 - Registration email delivery uses the reusable email service directly and does not require an in-app notification.
 
@@ -243,7 +247,7 @@ Allowed transitions:
 ## Implementation Order
 1. [x] Profile and preference schema, service, and UI.
 2. [x] Backend and Thymeleaf internationalization.
-3. [ ] OTP registration and restricted credential onboarding.
+3. [ ] OTP registration and permanent credential completion.
 4. [x] Shared responsive admin shell and icon-based menu with JSON-driven local Bootstrap icons, desktop icon rail, and mobile offcanvas.
 5. [ ] Common post kernel, moderation, and media attachments.
 6. [ ] Standard posts and shorts.

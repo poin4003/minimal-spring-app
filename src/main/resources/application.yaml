@@ -16,6 +16,14 @@ app:
             path: ${AUTH_COOKIE_PATH:/}
             same-site: ${AUTH_COOKIE_SAME_SITE:Lax}
             secure: ${AUTH_COOKIE_SECURE:true}
+        registration:
+            otp-length: ${REGISTRATION_OTP_LENGTH:6}
+            otp-hash-secret: ${REGISTRATION_OTP_HASH_SECRET}
+            otp-ttl: ${REGISTRATION_OTP_TTL:10m}
+            resend-cooldown: ${REGISTRATION_RESEND_COOLDOWN:1m}
+            max-attempts: ${REGISTRATION_MAX_ATTEMPTS:5}
+            completion-token-ttl: ${REGISTRATION_COMPLETION_TOKEN_TTL:20m}
+            cleanup-retention: ${REGISTRATION_CLEANUP_RETENTION:1d}
     cache:
         key-store:
             maximum-size: ${KEY_STORE_CACHE_MAXIMUM_SIZE:100000}
