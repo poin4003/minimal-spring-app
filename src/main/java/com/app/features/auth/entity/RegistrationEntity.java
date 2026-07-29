@@ -20,6 +20,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 @Entity
 @Table(name = "registration", indexes = {
@@ -32,8 +33,8 @@ import lombok.EqualsAndHashCode;
                 columnList = "completion_token_hash",
                 unique = true),
         @Index(
-                name = "idx_registration_otp_expires_at",
-                columnList = "otp_expires_at")
+                name = "idx_registration_updated_at",
+                columnList = "updated_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -46,6 +47,7 @@ public class RegistrationEntity extends BaseAuditEntity {
     @Column(nullable = false, length = 255)
     private String email;
 
+    @ToString.Exclude
     @Column(name = "code_hash", length = 64)
     private String codeHash;
 
@@ -66,6 +68,7 @@ public class RegistrationEntity extends BaseAuditEntity {
     @Column(name = "verified_at")
     private Instant verifiedAt;
 
+    @ToString.Exclude
     @Column(name = "completion_token_hash", length = 64)
     private String completionTokenHash;
 

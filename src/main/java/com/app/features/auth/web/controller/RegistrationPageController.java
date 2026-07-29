@@ -2,6 +2,7 @@ package com.app.features.auth.web.controller;
 
 import java.util.Locale;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -55,6 +56,12 @@ public class RegistrationPageController {
     private final AuthCookieService authCookieSvc;
     private final ProfileService profileSvc;
     private final ProfilePreferenceCookieService profilePreferenceCookieSvc;
+
+    @ModelAttribute
+    void preventRegistrationCaching(
+            HttpServletResponse response) {
+        response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store");
+    }
 
     @GetMapping
     public String index(

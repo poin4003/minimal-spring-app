@@ -93,13 +93,15 @@ public class AppProperties {
         @NotNull
         private Duration cleanupRetention = Duration.ofDays(1);
 
-        @AssertTrue(message = "Registration durations must be positive.")
+        @AssertTrue(message = "Registration duration configuration is invalid.")
         public boolean isDurationConfigurationValid() {
             return isPositive(otpTtl)
                     && isPositive(resendCooldown)
                     && isPositive(completionTokenTtl)
                     && isPositive(cleanupRetention)
-                    && resendCooldown.compareTo(otpTtl) < 0;
+                    && resendCooldown.compareTo(otpTtl) < 0
+                    && cleanupRetention.compareTo(otpTtl) > 0
+                    && cleanupRetention.compareTo(completionTokenTtl) > 0;
         }
 
         private boolean isPositive(Duration value) {

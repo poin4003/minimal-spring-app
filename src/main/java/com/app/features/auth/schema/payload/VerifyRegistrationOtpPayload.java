@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class VerifyRegistrationOtpPayload {
@@ -14,6 +15,7 @@ public class VerifyRegistrationOtpPayload {
     @Size(max = 255)
     private String email;
 
+    @ToString.Exclude
     @NotBlank(message = "{validation.registration.otp.required}")
     @Pattern(
             regexp = "^\\d{6,8}$",

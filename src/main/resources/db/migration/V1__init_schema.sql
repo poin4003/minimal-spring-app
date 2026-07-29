@@ -84,8 +84,8 @@ CREATE UNIQUE INDEX uk_registration_email
 CREATE UNIQUE INDEX uk_registration_completion_token_hash
     ON registration(completion_token_hash);
 
-CREATE INDEX idx_registration_otp_expires_at
-    ON registration(otp_expires_at);
+CREATE INDEX idx_registration_updated_at
+    ON registration(updated_at);
 
 CREATE TABLE user_base (
     id UUID PRIMARY KEY,
