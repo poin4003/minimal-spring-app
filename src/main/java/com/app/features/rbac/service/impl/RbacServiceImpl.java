@@ -62,11 +62,12 @@ public class RbacServiceImpl implements RbacService {
     @Override
     @RevokeSessions(scope = SessionRevocationScope.USERS_BY_ROLE)
     public void deleteRole(UUID roleId) {
-        if (!roleRepo.existsById(roleId)) {
-            throw ExceptionFactory.notFound("error.rbac.roleNotFound", roleId);
-        }
+        RoleEntity role = roleRepo.findById(roleId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.rbac.roleNotFound",
+                        roleId));
 
-        roleRepo.deleteById(roleId);
+        roleRepo.delete(role);
     }
 
     @Override

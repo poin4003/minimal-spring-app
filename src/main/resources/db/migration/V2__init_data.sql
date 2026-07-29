@@ -13,12 +13,20 @@ INSERT INTO permission (id, name, permission_key) VALUES
     ('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01', 'Permission CRONJOB:VIEW', 'CRONJOB:VIEW'),
     ('c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02', 'Permission CRONJOB:UPDATE', 'CRONJOB:UPDATE'),
     ('d1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01', 'Permission MEDIA:VIEW', 'MEDIA:VIEW'),
-    ('d2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02', 'Permission MEDIA:MANAGE', 'MEDIA:MANAGE');
+    ('d2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02', 'Permission MEDIA:MANAGE', 'MEDIA:MANAGE'),
+    ('d3eebc99-9c0b-4ef8-bb6d-6bb9bd380d03', 'Permission MEDIA:VIEW:OWN', 'MEDIA:VIEW:OWN'),
+    ('d4eebc99-9c0b-4ef8-bb6d-6bb9bd380d04', 'Permission MEDIA:MANAGE:OWN', 'MEDIA:MANAGE:OWN');
 
 INSERT INTO role (id, name, role_key) VALUES (
     'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01',
     'Super Admin',
     'SUPER_ADMIN'
+);
+
+INSERT INTO role (id, name, role_key) VALUES (
+    'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b02',
+    'User',
+    'USER'
 );
 
 INSERT INTO user_base (id, email, password, status) VALUES (
@@ -57,7 +65,11 @@ INSERT INTO role_permissions (role_id, permission_id) VALUES
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01'),
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02'),
     ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02');
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380d03'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd4eebc99-9c0b-4ef8-bb6d-6bb9bd380d04'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b02', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380d03'),
+    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b02', 'd4eebc99-9c0b-4ef8-bb6d-6bb9bd380d04');
 
 INSERT INTO cronjob_config (id, job_type, expression, status) VALUES (
     'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c01',

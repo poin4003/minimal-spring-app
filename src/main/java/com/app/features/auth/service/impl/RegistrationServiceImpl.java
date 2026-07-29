@@ -1,6 +1,7 @@
 package com.app.features.auth.service.impl;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -13,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimitService;
 import com.app.config.settings.AppProperties;
+import com.app.core.constant.DefaultRoleConstants;
 import com.app.core.enums.AppLanguage;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.auth.entity.RegistrationEntity;
@@ -32,6 +34,8 @@ import com.app.features.auth.service.RegistrationEmailService;
 import com.app.features.auth.service.RegistrationService;
 import com.app.features.notification.entity.UserNotificationPreferenceEntity;
 import com.app.features.notification.repository.UserNotificationPreferenceRepository;
+import com.app.features.rbac.entity.RoleEntity;
+import com.app.features.rbac.repository.RoleRepository;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.enums.UserStatusEnum;
@@ -46,6 +50,7 @@ import lombok.RequiredArgsConstructor;
 public class RegistrationServiceImpl implements RegistrationService {
 
     private final RegistrationRepository registrationRepo;
+    private final RoleRepository roleRepo;
     private final UserBaseRepository userBaseRepo;
     private final UserInfoRepository userInfoRepo;
     private final UserNotificationPreferenceRepository
@@ -254,10 +259,18 @@ public class RegistrationServiceImpl implements RegistrationService {
                     "error.registration.emailAlreadyRegistered");
         }
 
+        RoleEntity defaultRole = roleRepo
+                .findByKey(DefaultRoleConstants.USER)
+                .orElseThrow(() -> ExceptionFactory.serverError(
+                        "error.registration.defaultRoleMissing"));
+
         UserBaseEntity user = new UserBaseEntity();
         user.setEmail(registration.getEmail());
         user.setPassword(passwordEncoder.encode(password));
         user.setStatus(UserStatusEnum.ACTIVE);
+        HashSet<RoleEntity> roles = new HashSet<>();
+        roles.add(defaultRole);
+        user.setRoles(roles);
         user = userBaseRepo.save(user);
 
         UserInfoEntity userInfo = new UserInfoEntity();

@@ -11,13 +11,8 @@ public final class PermissionConstants {
     // Media Management
     public static final String MEDIA_VIEW = "MEDIA:VIEW";
     public static final String MEDIA_MANAGE = "MEDIA:MANAGE";
-
-    // SIM Management
-    public static final String SIM_VIEW = "SIM:VIEW";
-    public static final String SIM_CREATE = "SIM:CREATE";
-    public static final String SIM_UPDATE = "SIM:UPDATE";
-    public static final String SIM_EXPORT = "SIM:EXPORT";
-    public static final String SIM_IMPORT = "SIM:IMPORT";
+    public static final String MEDIA_VIEW_OWN = "MEDIA:VIEW:OWN";
+    public static final String MEDIA_MANAGE_OWN = "MEDIA:MANAGE:OWN";
 
     // RBAC Management
     public static final String RBAC_MANAGE = "RBAC:MANAGE";
