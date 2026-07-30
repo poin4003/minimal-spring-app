@@ -1,9 +1,11 @@
 package com.app.features.auth.api.v1.controller;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import com.app.config.ratelimit.RateLimitPolicy;
@@ -30,6 +32,7 @@ import com.app.features.auth.service.PasswordResetService;
 import com.app.features.auth.service.RegistrationService;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -42,6 +45,16 @@ public class AuthApiController {
     private final PasswordResetService passwordResetSvc;
     private final RegistrationService registrationSvc;
     private final AppMessageResolver messageResolver;
+
+    @ModelAttribute
+    void preventAuthResponseCaching(
+            HttpServletResponse response) {
+        response.setHeader(
+                HttpHeaders.CACHE_CONTROL,
+                "no-store, no-cache, max-age=0");
+        response.setHeader(HttpHeaders.PRAGMA, "no-cache");
+        response.setDateHeader(HttpHeaders.EXPIRES, 0);
+    }
 
     @RateLimited(RateLimitPolicy.AUTH_LOGIN)
     @PostMapping("/login")

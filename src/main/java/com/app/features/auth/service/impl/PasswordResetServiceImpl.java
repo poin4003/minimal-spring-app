@@ -256,6 +256,16 @@ public class PasswordResetServiceImpl
     private void completePasswordResetState(
             String resetTokenHash,
             String password) {
+        UUID userId = passwordResetRepo
+                .findUserIdByResetTokenHash(resetTokenHash)
+                .orElseThrow(() -> ExceptionFactory.invalidToken(
+                        "error.passwordReset.tokenInvalid"));
+
+        UserBaseEntity user = userBaseRepo
+                .findOneById(userId)
+                .orElseThrow(() -> ExceptionFactory.invalidToken(
+                        "error.passwordReset.tokenInvalid"));
+
         PasswordResetEntity passwordReset = passwordResetRepo
                 .findByResetTokenHash(resetTokenHash)
                 .orElseThrow(() -> ExceptionFactory.invalidToken(
@@ -266,14 +276,13 @@ public class PasswordResetServiceImpl
                 || passwordReset.getVerifiedAt() == null
                 || passwordReset.getResetTokenExpiresAt() == null
                 || !passwordReset.getResetTokenExpiresAt().isAfter(now)
-                || passwordReset.getUser().getStatus()
-                        != UserStatusEnum.ACTIVE) {
+                || user.getStatus() != UserStatusEnum.ACTIVE) {
             throw ExceptionFactory.invalidToken(
                     "error.passwordReset.tokenInvalid");
         }
 
         accountCredentialSvc.updatePassword(
-                passwordReset.getUser().getId(),
+                userId,
                 password);
 
         passwordReset.setCompletedAt(now);
