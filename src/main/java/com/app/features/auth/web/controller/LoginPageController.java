@@ -45,6 +45,8 @@ public class LoginPageController {
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam(name = "error", required = false) String error,
             @RequestParam(name = "logout", required = false) String logout,
+            @RequestParam(name = "passwordReset", required = false)
+            String passwordReset,
             Model model) {
 
         if (currentUser != null) {
@@ -56,8 +58,11 @@ public class LoginPageController {
                 .applicationTitle(appProperties.getUi().getApplicationTitle())
                 .loginPath(appProperties.getUi().getLoginPath())
                 .registrationPath(appProperties.getUi().getRegistrationPath())
+                .forgotPasswordPath(
+                        appProperties.getUi().getForgotPasswordPath())
                 .hasError(error != null)
                 .loggedOut(logout != null)
+                .passwordReset(passwordReset != null)
                 .build();
 
         model.addAttribute(LoginPageView.ATTRIBUTE, page);

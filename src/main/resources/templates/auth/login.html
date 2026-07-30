@@ -54,6 +54,13 @@
                                 You have been signed out.
                             </div>
 
+                            <div class="alert alert-success"
+                                 th:if="${page.passwordReset}"
+                                 th:text="#{auth.login.passwordResetSuccess}"
+                                 role="alert">
+                                Password reset successfully.
+                            </div>
+
                             <form method="post" th:attr="action=${page.loginPath}" class="d-grid gap-3">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
@@ -85,6 +92,13 @@
                                         class="form-control"
                                         autocomplete="current-password"
                                         required>
+                                </div>
+
+                                <div class="text-end">
+                                    <a th:href="${page.forgotPasswordPath}"
+                                       th:text="#{auth.login.forgotPassword}">
+                                        Forgot password?
+                                    </a>
                                 </div>
 
                                 <button type="submit"
