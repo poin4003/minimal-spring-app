@@ -102,6 +102,34 @@ CREATE TABLE user_base (
 CREATE UNIQUE INDEX uk_user_base_email ON user_base(email);
 CREATE INDEX idx_user_base_created_at ON user_base(created_at);
 
+CREATE TABLE password_reset (
+    id UUID PRIMARY KEY,
+    user_id UUID NOT NULL,
+    code_hash VARCHAR(64),
+    failed_attempts INTEGER DEFAULT 0 NOT NULL
+        CHECK (failed_attempts >= 0),
+    otp_expires_at TIMESTAMP WITH TIME ZONE,
+    resend_available_at TIMESTAMP WITH TIME ZONE,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    reset_token_hash VARCHAR(64),
+    reset_token_expires_at TIMESTAMP WITH TIME ZONE,
+    completed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT fk_password_reset_user
+        FOREIGN KEY (user_id) REFERENCES user_base(id)
+        ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX uk_password_reset_user_id
+    ON password_reset(user_id);
+
+CREATE UNIQUE INDEX uk_password_reset_token_hash
+    ON password_reset(reset_token_hash);
+
+CREATE INDEX idx_password_reset_updated_at
+    ON password_reset(updated_at);
+
 CREATE TABLE user_info (
     id UUID PRIMARY KEY,
     full_name VARCHAR(150),

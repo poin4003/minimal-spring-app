@@ -28,7 +28,7 @@ import com.app.features.auth.schema.payload.VerifyRegistrationOtpPayload;
 import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.schema.result.RequestRegistrationOtpResult;
 import com.app.features.auth.schema.result.VerifyRegistrationOtpResult;
-import com.app.features.auth.security.RegistrationCredentialCodec;
+import com.app.features.auth.security.AuthCredentialCodec;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.service.RegistrationEmailService;
 import com.app.features.auth.service.RegistrationService;
@@ -55,7 +55,7 @@ public class RegistrationServiceImpl implements RegistrationService {
     private final UserInfoRepository userInfoRepo;
     private final UserNotificationPreferenceRepository
             notificationPreferenceRepo;
-    private final RegistrationCredentialCodec credentialCodec;
+    private final AuthCredentialCodec credentialCodec;
     private final RegistrationEmailService registrationEmailSvc;
     private final AuthService authSvc;
     private final RateLimitService rateLimitSvc;
@@ -70,7 +70,10 @@ public class RegistrationServiceImpl implements RegistrationService {
 
         enforceEmailRateLimit(email);
 
-        String rawCode = credentialCodec.generateOtp();
+        String rawCode = credentialCodec.generateOtp(
+                appProperties.getAuth()
+                        .getRegistration()
+                        .getOtpLength());
         String codeHash = credentialCodec.hash(rawCode);
         RegistrationOtpIssue issue = prepareOtpWithConcurrentInsertRetry(
                 email,
@@ -109,8 +112,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         String email = normalizeEmail(payload.getEmail());
         enforceVerificationEmailRateLimit(email);
 
-        String completionToken =
-                credentialCodec.generateCompletionToken();
+        String completionToken = credentialCodec.generateToken();
         String completionTokenHash =
                 credentialCodec.hash(completionToken);
 

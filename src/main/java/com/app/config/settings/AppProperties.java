@@ -45,10 +45,17 @@ public class AppProperties {
 
     @Data
     public static class Auth {
+        @NotBlank
+        @Size(min = 32)
+        private String credentialHashSecret;
+
         private final Cookie cookie = new Cookie();
 
         @Valid
         private final Registration registration = new Registration();
+
+        @Valid
+        private final PasswordReset passwordReset = new PasswordReset();
     }
 
     @Data
@@ -74,10 +81,6 @@ public class AppProperties {
         @Max(8)
         private int otpLength = 6;
 
-        @NotBlank
-        @Size(min = 32)
-        private String otpHashSecret;
-
         @NotNull
         private Duration otpTtl = Duration.ofMinutes(10);
 
@@ -102,6 +105,43 @@ public class AppProperties {
                     && resendCooldown.compareTo(otpTtl) < 0
                     && cleanupRetention.compareTo(otpTtl) > 0
                     && cleanupRetention.compareTo(completionTokenTtl) > 0;
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
+    }
+
+    @Data
+    public static class PasswordReset {
+        @Min(6)
+        @Max(8)
+        private int otpLength = 6;
+
+        @NotNull
+        private Duration otpTtl = Duration.ofMinutes(10);
+
+        @NotNull
+        private Duration resendCooldown = Duration.ofMinutes(1);
+
+        @Positive
+        private int maxAttempts = 5;
+
+        @NotNull
+        private Duration resetTokenTtl = Duration.ofMinutes(20);
+
+        @NotNull
+        private Duration cleanupRetention = Duration.ofDays(1);
+
+        @AssertTrue(message = "Password reset duration configuration is invalid.")
+        public boolean isDurationConfigurationValid() {
+            return isPositive(otpTtl)
+                    && isPositive(resendCooldown)
+                    && isPositive(resetTokenTtl)
+                    && isPositive(cleanupRetention)
+                    && resendCooldown.compareTo(otpTtl) < 0
+                    && cleanupRetention.compareTo(otpTtl) > 0
+                    && cleanupRetention.compareTo(resetTokenTtl) > 0;
         }
 
         private boolean isPositive(Duration value) {

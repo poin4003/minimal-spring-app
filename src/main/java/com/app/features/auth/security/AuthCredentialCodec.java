@@ -19,18 +19,14 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class RegistrationCredentialCodec {
+public class AuthCredentialCodec {
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
     private final AppProperties appProperties;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public String generateOtp() {
-        int length = appProperties.getAuth()
-                .getRegistration()
-                .getOtpLength();
-
+    public String generateOtp(int length) {
         StringBuilder code = new StringBuilder(length);
         for (int index = 0; index < length; index++) {
             code.append(secureRandom.nextInt(10));
@@ -38,7 +34,7 @@ public class RegistrationCredentialCodec {
         return code.toString();
     }
 
-    public String generateCompletionToken() {
+    public String generateToken() {
         byte[] tokenBytes = new byte[32];
         secureRandom.nextBytes(tokenBytes);
         return Base64.getUrlEncoder()
@@ -48,20 +44,19 @@ public class RegistrationCredentialCodec {
 
     public String hash(String credential) {
         try {
-            String secret = appProperties.getAuth()
-                    .getRegistration()
-                    .getOtpHashSecret();
-
             Mac mac = Mac.getInstance(HMAC_ALGORITHM);
             mac.init(new SecretKeySpec(
-                    secret.getBytes(StandardCharsets.UTF_8),
+                    appProperties.getAuth()
+                            .getCredentialHashSecret()
+                            .getBytes(StandardCharsets.UTF_8),
                     HMAC_ALGORITHM));
 
             return HexFormat.of().formatHex(
-                    mac.doFinal(credential.getBytes(StandardCharsets.UTF_8)));
+                    mac.doFinal(credential.getBytes(
+                            StandardCharsets.UTF_8)));
         } catch (GeneralSecurityException exception) {
             throw ExceptionFactory.serverError(
-                    "error.registration.credentialHashFailed",
+                    "error.auth.credentialHashFailed",
                     exception);
         }
     }
@@ -69,7 +64,8 @@ public class RegistrationCredentialCodec {
     public boolean matches(
             String rawCredential,
             String expectedHash) {
-        byte[] actual = HexFormat.of().parseHex(hash(rawCredential));
+        byte[] actual = HexFormat.of().parseHex(
+                hash(rawCredential));
         byte[] expected = HexFormat.of().parseHex(expectedHash);
         return MessageDigest.isEqual(actual, expected);
     }
