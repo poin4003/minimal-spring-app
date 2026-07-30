@@ -61,6 +61,18 @@ public class RateLimitProperties {
             new Rule(5, Duration.ofMinutes(15));
 
     @Valid
+    private final Rule passwordResetVerifyIp =
+            new Rule(30, Duration.ofMinutes(10));
+
+    @Valid
+    private final Rule passwordResetVerifyEmail =
+            new Rule(10, Duration.ofMinutes(10));
+
+    @Valid
+    private final Rule passwordResetCompleteIp =
+            new Rule(30, Duration.ofMinutes(10));
+
+    @Valid
     private final Rule mediaDirectUpload = new Rule(30, Duration.ofMinutes(1));
 
     @Valid
@@ -80,6 +92,9 @@ public class RateLimitProperties {
             case REGISTRATION_COMPLETE_IP -> registrationCompleteIp;
             case PASSWORD_RESET_OTP_IP -> passwordResetOtpIp;
             case PASSWORD_RESET_OTP_EMAIL -> passwordResetOtpEmail;
+            case PASSWORD_RESET_VERIFY_IP -> passwordResetVerifyIp;
+            case PASSWORD_RESET_VERIFY_EMAIL -> passwordResetVerifyEmail;
+            case PASSWORD_RESET_COMPLETE_IP -> passwordResetCompleteIp;
             case MEDIA_DIRECT_UPLOAD -> mediaDirectUpload;
             case MEDIA_UPLOAD_SESSION -> mediaUploadSession;
             case MEDIA_UPLOAD_CHUNK -> mediaUploadChunk;

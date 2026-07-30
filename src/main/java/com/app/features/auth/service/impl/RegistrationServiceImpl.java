@@ -138,7 +138,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         VerifyRegistrationOtpResult result =
                 new VerifyRegistrationOtpResult();
         result.setCompletionToken(completionToken);
-        result.setExpiresAt(decision.getCompletionExpiresAt());
+        result.setExpiresAt(decision.getTokenExpiresAt());
         return result;
     }
 

@@ -157,6 +157,15 @@ app:
             password-reset-otp-email:
                 capacity: ${PASSWORD_RESET_OTP_EMAIL_RATE_CAPACITY:5}
                 period: ${PASSWORD_RESET_OTP_EMAIL_RATE_PERIOD:15m}
+            password-reset-verify-ip:
+                capacity: ${PASSWORD_RESET_VERIFY_IP_RATE_CAPACITY:30}
+                period: ${PASSWORD_RESET_VERIFY_IP_RATE_PERIOD:10m}
+            password-reset-verify-email:
+                capacity: ${PASSWORD_RESET_VERIFY_EMAIL_RATE_CAPACITY:10}
+                period: ${PASSWORD_RESET_VERIFY_EMAIL_RATE_PERIOD:10m}
+            password-reset-complete-ip:
+                capacity: ${PASSWORD_RESET_COMPLETE_IP_RATE_CAPACITY:30}
+                period: ${PASSWORD_RESET_COMPLETE_IP_RATE_PERIOD:10m}
             registration-verify-ip:
                 capacity: ${REGISTRATION_VERIFY_IP_RATE_CAPACITY:30}
                 period: ${REGISTRATION_VERIFY_IP_RATE_PERIOD:10m}

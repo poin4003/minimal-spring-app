@@ -12,5 +12,5 @@ import lombok.RequiredArgsConstructor;
 public class OtpVerificationDecision {
 
     private final OtpVerificationStatus status;
-    private final Instant completionExpiresAt;
+    private final Instant tokenExpiresAt;
 }

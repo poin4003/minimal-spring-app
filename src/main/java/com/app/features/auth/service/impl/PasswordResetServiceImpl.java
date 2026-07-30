@@ -15,11 +15,17 @@ import com.app.config.settings.AppProperties;
 import com.app.core.enums.AppLanguage;
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.auth.entity.PasswordResetEntity;
+import com.app.features.auth.enums.OtpVerificationStatus;
 import com.app.features.auth.repository.PasswordResetRepository;
+import com.app.features.auth.schema.model.OtpVerificationDecision;
 import com.app.features.auth.schema.model.PasswordResetOtpIssue;
+import com.app.features.auth.schema.payload.CompletePasswordResetPayload;
 import com.app.features.auth.schema.payload.RequestPasswordResetOtpPayload;
+import com.app.features.auth.schema.payload.VerifyPasswordResetOtpPayload;
 import com.app.features.auth.schema.result.RequestPasswordResetOtpResult;
+import com.app.features.auth.schema.result.VerifyPasswordResetOtpResult;
 import com.app.features.auth.security.AuthCredentialCodec;
+import com.app.features.auth.service.AccountCredentialService;
 import com.app.features.auth.service.PasswordResetEmailService;
 import com.app.features.auth.service.PasswordResetService;
 import com.app.features.user.entity.UserBaseEntity;
@@ -41,6 +47,7 @@ public class PasswordResetServiceImpl
     private final UserBaseRepository userBaseRepo;
     private final UserInfoRepository userInfoRepo;
     private final AuthCredentialCodec credentialCodec;
+    private final AccountCredentialService accountCredentialSvc;
     private final PasswordResetEmailService passwordResetEmailSvc;
     private final RateLimitService rateLimitSvc;
     private final AppProperties appProperties;
@@ -73,6 +80,52 @@ public class PasswordResetServiceImpl
         }
 
         return result;
+    }
+
+    @Override
+    public VerifyPasswordResetOtpResult verifyOtp(
+            VerifyPasswordResetOtpPayload payload) {
+        String email = normalizeEmail(payload.getEmail());
+        enforceVerificationEmailRateLimit(email);
+
+        String resetToken = credentialCodec.generateToken();
+        String resetTokenHash = credentialCodec.hash(resetToken);
+
+        OtpVerificationDecision decision = verifyOtpState(
+                email,
+                payload.getCode(),
+                resetTokenHash);
+
+        if (decision.getStatus() == OtpVerificationStatus.INVALID) {
+            throw ExceptionFactory.invalidParam(
+                    "error.passwordReset.otpInvalid");
+        }
+        if (decision.getStatus() == OtpVerificationStatus.EXPIRED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.passwordReset.otpExpired");
+        }
+        if (decision.getStatus()
+                == OtpVerificationStatus.ATTEMPTS_EXHAUSTED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.passwordReset.otpAttemptsExceeded");
+        }
+
+        VerifyPasswordResetOtpResult result =
+                new VerifyPasswordResetOtpResult();
+        result.setResetToken(resetToken);
+        result.setExpiresAt(decision.getTokenExpiresAt());
+        return result;
+    }
+
+    @Override
+    public void completePasswordReset(
+            CompletePasswordResetPayload payload) {
+        String resetTokenHash =
+                credentialCodec.hash(payload.getResetToken());
+
+        completePasswordResetState(
+                resetTokenHash,
+                payload.getPassword());
     }
 
     @Transactional
@@ -133,6 +186,101 @@ public class PasswordResetServiceImpl
                 passwordReset.getResendAvailableAt()));
     }
 
+    @Transactional
+    private OtpVerificationDecision verifyOtpState(
+            String email,
+            String rawCode,
+            String resetTokenHash) {
+        PasswordResetEntity passwordReset = passwordResetRepo
+                .findByUser_Email(email)
+                .orElse(null);
+
+        if (passwordReset == null
+                || passwordReset.getCodeHash() == null
+                || passwordReset.getUser().getStatus()
+                        != UserStatusEnum.ACTIVE) {
+            return new OtpVerificationDecision(
+                    OtpVerificationStatus.INVALID,
+                    null);
+        }
+
+        Instant now = Instant.now();
+        if (passwordReset.getOtpExpiresAt() == null
+                || !passwordReset.getOtpExpiresAt().isAfter(now)) {
+            passwordReset.setCodeHash(null);
+            passwordReset.setOtpExpiresAt(null);
+            return new OtpVerificationDecision(
+                    OtpVerificationStatus.EXPIRED,
+                    null);
+        }
+
+        int maxAttempts = appProperties.getAuth()
+                .getPasswordReset()
+                .getMaxAttempts();
+        if (passwordReset.getFailedAttempts() >= maxAttempts) {
+            return new OtpVerificationDecision(
+                    OtpVerificationStatus.ATTEMPTS_EXHAUSTED,
+                    null);
+        }
+
+        if (!credentialCodec.matches(
+                rawCode,
+                passwordReset.getCodeHash())) {
+            passwordReset.setFailedAttempts(
+                    passwordReset.getFailedAttempts() + 1);
+            OtpVerificationStatus status =
+                    passwordReset.getFailedAttempts() >= maxAttempts
+                            ? OtpVerificationStatus.ATTEMPTS_EXHAUSTED
+                            : OtpVerificationStatus.INVALID;
+            return new OtpVerificationDecision(status, null);
+        }
+
+        Instant tokenExpiresAt = now.plus(
+                appProperties.getAuth()
+                        .getPasswordReset()
+                        .getResetTokenTtl());
+        passwordReset.setCodeHash(null);
+        passwordReset.setOtpExpiresAt(null);
+        passwordReset.setResendAvailableAt(null);
+        passwordReset.setFailedAttempts(0);
+        passwordReset.setVerifiedAt(now);
+        passwordReset.setResetTokenHash(resetTokenHash);
+        passwordReset.setResetTokenExpiresAt(tokenExpiresAt);
+
+        return new OtpVerificationDecision(
+                OtpVerificationStatus.VERIFIED,
+                tokenExpiresAt);
+    }
+
+    @Transactional
+    private void completePasswordResetState(
+            String resetTokenHash,
+            String password) {
+        PasswordResetEntity passwordReset = passwordResetRepo
+                .findByResetTokenHash(resetTokenHash)
+                .orElseThrow(() -> ExceptionFactory.invalidToken(
+                        "error.passwordReset.tokenInvalid"));
+
+        Instant now = Instant.now();
+        if (passwordReset.getCompletedAt() != null
+                || passwordReset.getVerifiedAt() == null
+                || passwordReset.getResetTokenExpiresAt() == null
+                || !passwordReset.getResetTokenExpiresAt().isAfter(now)
+                || passwordReset.getUser().getStatus()
+                        != UserStatusEnum.ACTIVE) {
+            throw ExceptionFactory.invalidToken(
+                    "error.passwordReset.tokenInvalid");
+        }
+
+        accountCredentialSvc.updatePassword(
+                passwordReset.getUser().getId(),
+                password);
+
+        passwordReset.setCompletedAt(now);
+        passwordReset.setResetTokenHash(null);
+        passwordReset.setResetTokenExpiresAt(null);
+    }
+
     private void deliverOtp(
             PasswordResetOtpIssue issue,
             String rawCode,
@@ -183,6 +331,17 @@ public class PasswordResetServiceImpl
     private void enforceEmailRateLimit(String email) {
         long retryAfterSeconds = rateLimitSvc.consume(
                 RateLimitPolicy.PASSWORD_RESET_OTP_EMAIL,
+                email);
+
+        if (retryAfterSeconds > 0) {
+            throw ExceptionFactory.rateLimitExceeded(
+                    "error.rateLimit.exceeded");
+        }
+    }
+
+    private void enforceVerificationEmailRateLimit(String email) {
+        long retryAfterSeconds = rateLimitSvc.consume(
+                RateLimitPolicy.PASSWORD_RESET_VERIFY_EMAIL,
                 email);
 
         if (retryAfterSeconds > 0) {
