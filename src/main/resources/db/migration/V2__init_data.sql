@@ -3,11 +3,6 @@
 
 INSERT INTO permission (id, name, permission_key) VALUES
     ('ecacccdf-f953-4166-a80c-9ddad96fb2c2', 'Permission RBAC:MANAGE', 'RBAC:MANAGE'),
-    ('2cb91645-eb69-4582-b389-c34ac3d5dd72', 'Permission SIM:IMPORT', 'SIM:IMPORT'),
-    ('dbfab2cd-a9b2-4836-8f21-9fea9efe2850', 'Permission SIM:EXPORT', 'SIM:EXPORT'),
-    ('ecb6e665-2822-47cf-996c-80b1f2a21c0c', 'Permission SIM:UPDATE', 'SIM:UPDATE'),
-    ('0b952be2-f68d-43de-9e1a-0e7663872bd3', 'Permission SIM:CREATE', 'SIM:CREATE'),
-    ('5427f69b-4762-408d-865d-191b3502df2f', 'Permission SIM:VIEW', 'SIM:VIEW'),
     ('f4d6e429-2359-4b47-9245-194948d3fa79', 'Permission USER:CREATE', 'USER:CREATE'),
     ('8871ca39-7ee7-4539-a081-e9eeedb66f31', 'Permission USER:VIEW', 'USER:VIEW'),
     ('c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01', 'Permission CRONJOB:VIEW', 'CRONJOB:VIEW'),

@@ -17,8 +17,8 @@ public class SwaggerConfig {
 
         return new OpenAPI()
 				.info(new Info()
-				.title("SIM Management API")
-					.description("API documentation for SIM management system")
+				.title("Management API")
+					.description("API documentation for management system")
 					.version("v1.0.0"))
 				.addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
 				.components(new Components()

@@ -359,21 +359,6 @@ CREATE UNIQUE INDEX uk_consumed_refresh_token_token_value
 CREATE INDEX idx_consumed_refresh_token_expiry_date
     ON consumed_refresh_token(expiry_date);
 
-CREATE TABLE sim (
-    id UUID PRIMARY KEY,
-    phone_number VARCHAR(255) NOT NULL,
-    status SimStatusEnum NOT NULL,
-    selling_price INTEGER,
-    dealer_price INTEGER,
-    import_price INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-);
-
-CREATE UNIQUE INDEX uk_sim_phone_number ON sim(phone_number);
-CREATE INDEX idx_sim_created_at ON sim(created_at);
-CREATE INDEX idx_sim_updated_at ON sim(updated_at);
-
 CREATE TABLE cronjob_config (
     id UUID PRIMARY KEY,
     job_type VARCHAR(255) NOT NULL,

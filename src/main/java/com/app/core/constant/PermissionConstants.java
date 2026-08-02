@@ -16,4 +16,9 @@ public final class PermissionConstants {
 
     // RBAC Management
     public static final String RBAC_MANAGE = "RBAC:MANAGE";
+
+    // Post Management
+    public static final String POST_CREATE = "POST:CREATE";
+    public static final String POST_VIEW_OWN = "POST:VIEW:OWN";
+    public static final String POST_MODERATE = "POST:MODERATE";
 }
