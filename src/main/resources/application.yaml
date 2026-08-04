@@ -133,8 +133,8 @@ app:
         telegram:
             enabled: ${NOTIFICATION_TELEGRAM_ENABLED:false}
             api-base-url: ${TELEGRAM_API_BASE_URL:https://api.telegram.org}
-            bot-token: '${TELEGRAM_BOT_TOKEN:}'
-            group-chat-id: '${TELEGRAM_GROUP_CHAT_ID:}'
+            bot-token: "${TELEGRAM_BOT_TOKEN:}"
+            group-chat-id: "${TELEGRAM_GROUP_CHAT_ID:}"
         sse:
             connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
             heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}
@@ -183,13 +183,13 @@ app:
             - /api/v1/auth/refresh
             - /api/v1/auth/register/**
             - /api/v1/auth/password-reset/**
-            - '${app.media.public-path}/**'
+            - "${app.media.public-path}/**"
         web-public-paths:
             - /login
-            - '${app.ui.registration-path}'
-            - '${app.ui.registration-path}/**'
-            - '${app.ui.forgot-password-path}'
-            - '${app.ui.forgot-password-path}/**'
+            - "${app.ui.registration-path}"
+            - "${app.ui.registration-path}/**"
+            - "${app.ui.forgot-password-path}"
+            - "${app.ui.forgot-password-path}/**"
             - /logout
             - /error
             - /favicon.ico
@@ -227,8 +227,8 @@ spring:
     mail:
         host: ${MAIL_HOST:localhost}
         port: ${MAIL_PORT:1025}
-        username: '${MAIL_USERNAME:}'
-        password: '${MAIL_PASSWORD:}'
+        username: "${MAIL_USERNAME:}"
+        password: "${MAIL_PASSWORD:}"
         properties:
             "[mail.smtp.auth]": ${MAIL_SMTP_AUTH:false}
             "[mail.smtp.starttls.enable]": ${MAIL_SMTP_STARTTLS:false}
@@ -240,7 +240,7 @@ spring:
         url: ${DATABASE_URL:jdbc:h2:file:./data/minimal_db}
         driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
         username: ${DATABASE_USERNAME:sa}
-        password: '${DATABASE_PASSWORD:}'
+        password: "${DATABASE_PASSWORD:}"
 
     h2:
         console:
@@ -251,9 +251,9 @@ spring:
         enabled: ${FLYWAY_ENABLED:true}
         table: FLYWAY_SCHEMA_HISTORY
         placeholders:
-            bootstrapAdminEmail: '${BOOTSTRAP_ADMIN_EMAIL:system@admin.com}'
-            bootstrapAdminPasswordHash: '${BOOTSTRAP_ADMIN_PASSWORD_HASH}'
-            bootstrapAdminName: '${BOOTSTRAP_ADMIN_NAME:System Administrator}'
+            bootstrapAdminEmail: "${BOOTSTRAP_ADMIN_EMAIL:system@admin.com}"
+            bootstrapAdminPasswordHash: "${BOOTSTRAP_ADMIN_PASSWORD_HASH}"
+            bootstrapAdminName: "${BOOTSTRAP_ADMIN_NAME:System Administrator}"
 
     thymeleaf:
         enabled: true

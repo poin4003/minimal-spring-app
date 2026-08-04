@@ -7,8 +7,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import com.app.core.db.BaseAuditEntity;
-import com.app.features.post.enums.PostModerationStatus;
 import com.app.features.post.enums.PostType;
+import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.user.entity.UserBaseEntity;
 
 import jakarta.persistence.Column;

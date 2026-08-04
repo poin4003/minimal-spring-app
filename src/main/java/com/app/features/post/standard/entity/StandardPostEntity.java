@@ -1,6 +1,8 @@
-package com.app.features.post.entity;
+package com.app.features.post.standard.entity;
 
 import java.util.UUID;
+
+import com.app.features.post.entity.PostEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
