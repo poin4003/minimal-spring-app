@@ -48,6 +48,7 @@ import com.app.features.ui.web.component.view.UiMetadataItemView;
 import com.app.features.ui.web.component.view.UiMetadataModalView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.UiShellFactory;
+import com.app.features.ui.web.support.UiDateTimeFormatter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -81,6 +82,7 @@ public class MediaPageController {
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
     private final AppMessageResolver messageResolver;
+    private final UiDateTimeFormatter dateTimeFormatter;
 
     @GetMapping
     @Secured(PermissionConstants.MEDIA_VIEW)
@@ -469,11 +471,11 @@ public class MediaPageController {
                                 false),
                         metadataItem(
                                 messageResolver.get("field.createdAt"),
-                                media.getCreatedAt(),
+                                dateTimeFormatter.format(media.getCreatedAt()),
                                 true),
                         metadataItem(
                                 messageResolver.get("field.updatedAt"),
-                                media.getUpdatedAt(),
+                                dateTimeFormatter.format(media.getUpdatedAt()),
                                 true)))
                 .build();
     }

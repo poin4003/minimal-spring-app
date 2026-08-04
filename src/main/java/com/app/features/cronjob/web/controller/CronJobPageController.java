@@ -48,6 +48,7 @@ import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
+import com.app.features.ui.web.support.UiDateTimeFormatter;
 import com.app.features.ui.web.support.UiShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -78,6 +79,7 @@ public class CronJobPageController {
     private final UiTableFactory uiTableFactory;
     private final UiModalFactory uiModalFactory;
     private final UiFormSubmitSupport uiFormSubmitSupport;
+    private final UiDateTimeFormatter dateTimeFormatter;
     private final ModelMapper mapper;
 
     @GetMapping
@@ -271,8 +273,14 @@ public class CronJobPageController {
                                         : cronJob.getCronExpression(),
                                 true),
                         item(messageResolver.get("field.status"), String.valueOf(cronJob.getStatus()), false),
-                        item(messageResolver.get("field.createdAt"), cronJob.getCreatedAt(), true),
-                        item(messageResolver.get("field.updatedAt"), cronJob.getUpdatedAt(), true)))
+                        item(
+                                messageResolver.get("field.createdAt"),
+                                dateTimeFormatter.format(cronJob.getCreatedAt()),
+                                true),
+                        item(
+                                messageResolver.get("field.updatedAt"),
+                                dateTimeFormatter.format(cronJob.getUpdatedAt()),
+                                true)))
                 .build();
     }
 

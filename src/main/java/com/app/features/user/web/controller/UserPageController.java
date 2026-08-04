@@ -45,6 +45,7 @@ import com.app.features.ui.web.enums.UiAssignmentMode;
 import com.app.features.ui.web.query.UiAssignmentPageQuery;
 import com.app.features.ui.web.support.UiFormSubmitResult;
 import com.app.features.ui.web.support.UiFormSubmitSupport;
+import com.app.features.ui.web.support.UiDateTimeFormatter;
 import com.app.features.ui.web.support.UiShellFactory;
 import com.app.features.user.schema.filter.UserFilter;
 import com.app.features.user.schema.payload.CreateUserPayload;
@@ -91,6 +92,7 @@ public class UserPageController {
     private final UiTableFactory uiTableFactory;
     private final UiModalFactory uiModalFactory;
     private final UiFormSubmitSupport uiFormSubmitSupport;
+    private final UiDateTimeFormatter dateTimeFormatter;
     private final ModelMapper mapper;
 
     @GetMapping
@@ -382,12 +384,12 @@ public class UserPageController {
                                 .build(),
                         UiMetadataItemView.builder()
                                 .label(messageResolver.get("field.createdAt"))
-                                .value(user.getCreatedAt())
+                                .value(dateTimeFormatter.format(user.getCreatedAt()))
                                 .monospace(true)
                                 .build(),
                         UiMetadataItemView.builder()
                                 .label(messageResolver.get("field.updatedAt"))
-                                .value(user.getUpdatedAt())
+                                .value(dateTimeFormatter.format(user.getUpdatedAt()))
                                 .monospace(true)
                                 .build()))
                 .build();
