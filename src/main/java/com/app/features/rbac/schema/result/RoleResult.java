@@ -1,5 +1,7 @@
 package com.app.features.rbac.schema.result;
 
+import java.time.LocalDateTime;
+
 import lombok.Data;
 
 @Data
@@ -11,7 +13,7 @@ public class RoleResult {
 
     private String key;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

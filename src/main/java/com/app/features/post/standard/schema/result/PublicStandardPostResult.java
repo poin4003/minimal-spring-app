@@ -1,5 +1,6 @@
 package com.app.features.post.standard.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,5 +23,5 @@ public class PublicStandardPostResult {
 
     private List<PostMediaResult> media = List.of();
 
-    private String publishedAt;
+    private LocalDateTime publishedAt;
 }

@@ -1,5 +1,6 @@
 package com.app.features.media.web.view;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.core.enums.RecordStatus;
@@ -32,7 +33,7 @@ public class MediaGalleryItemView {
     private final RecordStatus status;
     private final String createdByEmail;
     private final String fileSizeLabel;
-    private final String createdAt;
+    private final LocalDateTime createdAt;
     private final String previewPath;
     private final String previewPartialPath;
     private final String metadataPath;

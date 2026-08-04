@@ -1,5 +1,7 @@
 package com.app.features.cronjob.web.view;
 
+import java.time.LocalDateTime;
+
 import com.app.core.enums.RecordStatus;
 import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.enums.UiCellType;
@@ -27,5 +29,5 @@ public class CronJobTableRowView {
     private RecordStatus status;
 
     @UiColumn(label = "field.updatedAt", order = 40)
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.app.features.user.web.view;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.ui.web.annotation.UiColumn;
@@ -24,8 +25,8 @@ public class UserTableRowView {
     private UserStatusEnum status;
 
     @UiColumn(label = "field.createdAt", order = 30)
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @UiColumn(label = "field.updatedAt", order = 40)
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

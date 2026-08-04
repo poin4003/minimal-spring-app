@@ -1,5 +1,9 @@
 package com.app.features.user.web.view;
 
+import java.time.LocalDateTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.app.features.ui.web.annotation.UiField;
 import com.app.features.ui.web.enums.UiInputType;
 import com.app.features.user.enums.UserStatusEnum;
@@ -33,14 +37,16 @@ public class UserDetailModalForm {
             order = 30,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String loginTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime loginTime;
 
     @UiField(
             label = "field.logoutTime",
             order = 40,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String logoutTime;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime logoutTime;
 
     @UiField(
             label = "field.loginIp",
@@ -54,14 +60,16 @@ public class UserDetailModalForm {
             order = 60,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String createdAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime createdAt;
 
     @UiField(
             label = "field.updatedAt",
             order = 70,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String updatedAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime updatedAt;
 
     @UiField(
             label = "field.status",

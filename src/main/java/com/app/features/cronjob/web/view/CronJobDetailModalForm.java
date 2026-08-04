@@ -1,5 +1,9 @@
 package com.app.features.cronjob.web.view;
 
+import java.time.LocalDateTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.app.core.enums.RecordStatus;
 import com.app.features.cronjob.validation.ValidJobRunrCron;
 import com.app.features.ui.web.annotation.UiField;
@@ -56,14 +60,16 @@ public class CronJobDetailModalForm {
             order = 60,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String createdAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime createdAt;
 
     @UiField(
             label = "field.updatedAt",
             order = 70,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String updatedAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime updatedAt;
 
     @UiField(
             label = "field.cronExpression",

@@ -85,8 +85,8 @@
             <dd class="col-7 text-end" th:text="${item.fileSizeLabel}">1.2 MB</dd>
             <dt class="col-5" th:text="#{field.createdAt}">Created</dt>
             <dd class="col-7 text-end text-truncate"
-                th:title="${item.createdAt}"
-                th:text="${item.createdAt}">
+                th:title="${@uiDateTimeFormatter.format(item.createdAt)}"
+                th:text="${@uiDateTimeFormatter.format(item.createdAt)}">
                 2026-07-22
             </dd>
         </dl>

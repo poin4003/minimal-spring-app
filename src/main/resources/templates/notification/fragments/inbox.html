@@ -123,7 +123,7 @@
                                 Notification content
                             </span>
                             <time class="d-block small text-secondary"
-                                  th:text="${item.createdAt}">
+                                  th:text="${@uiDateTimeFormatter.format(item.createdAt)}">
                                 Created time
                             </time>
                         </span>

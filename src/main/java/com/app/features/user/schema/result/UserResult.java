@@ -1,5 +1,6 @@
 package com.app.features.user.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.user.enums.UserStatusEnum;
@@ -15,7 +16,7 @@ public class UserResult {
 
     private UserStatusEnum status;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

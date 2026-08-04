@@ -1,5 +1,6 @@
 package com.app.features.post.moderation.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,13 +28,13 @@ public class ModerationStandardPostDetailResult {
 
     private UserShortResult moderatorBy;
 
-    private String moderatedAt;
+    private LocalDateTime moderatedAt;
 
-    private String publishedAt;
+    private LocalDateTime publishedAt;
 
     private String rejectedReason;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

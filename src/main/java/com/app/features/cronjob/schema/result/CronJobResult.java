@@ -1,5 +1,6 @@
 package com.app.features.cronjob.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.core.enums.RecordStatus;
@@ -17,7 +18,7 @@ public class CronJobResult {
 
     private RecordStatus status;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

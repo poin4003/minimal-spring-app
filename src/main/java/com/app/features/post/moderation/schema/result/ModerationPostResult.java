@@ -1,5 +1,6 @@
 package com.app.features.post.moderation.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.post.enums.PostType;
@@ -19,5 +20,5 @@ public class ModerationPostResult {
 
     private PostModerationStatus moderationStatus;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 }

@@ -1,5 +1,9 @@
 package com.app.features.rbac.web.view;
 
+import java.time.LocalDateTime;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.app.features.ui.web.annotation.UiField;
 import com.app.features.ui.web.enums.UiInputType;
 
@@ -37,12 +41,14 @@ public class RoleDetailModalForm {
             order = 30,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String createdAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime createdAt;
 
     @UiField(
             label = "field.updatedAt",
             order = 40,
             type = UiInputType.TEXT,
             readOnly = true)
-    private String updatedAt;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime updatedAt;
 }

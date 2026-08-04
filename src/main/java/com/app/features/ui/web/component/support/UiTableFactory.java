@@ -1,6 +1,7 @@
 package com.app.features.ui.web.component.support;
 
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -20,6 +21,7 @@ import com.app.features.ui.web.component.view.UiTableDefinition;
 import com.app.features.ui.web.component.view.UiTableRowView;
 import com.app.features.ui.web.component.view.UiTableView;
 import com.app.features.ui.web.enums.UiCellType;
+import com.app.features.ui.web.support.UiDateTimeFormatter;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class UiTableFactory {
 
     private final AppMessageResolver messageResolver;
+    private final UiDateTimeFormatter dateTimeFormatter;
 
     public <T> UiTableView build(
             UiTableDefinition definition,
@@ -156,6 +159,10 @@ public class UiTableFactory {
     }
 
     private String formatSingleValue(Object rawValue) {
+        if (rawValue instanceof LocalDateTime dateTime) {
+            return dateTimeFormatter.format(dateTime);
+        }
+
         if (rawValue instanceof Enum<?> enumValue) {
             return enumValue.name();
         }

@@ -1,5 +1,6 @@
 package com.app.features.post.standard.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,11 +26,11 @@ public class OwnerStandardPostResult {
 
     private PostModerationStatus moderationStatus;
 
-    private String publishedAt;
+    private LocalDateTime publishedAt;
 
     private String rejectReason;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.app.features.notification.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.notification.enums.NotificationResourceType;
@@ -25,9 +26,9 @@ public class NotificationResult {
 
     private String content;
 
-    private String readAt;
+    private LocalDateTime readAt;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }

@@ -1,5 +1,6 @@
 package com.app.features.media.schema.result;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.media.enums.MediaVariantType;
@@ -23,7 +24,7 @@ public class MediaVariantResult {
 
     private Integer bitrate;
 
-    private String createdAt;
+    private LocalDateTime createdAt;
 
-    private String updatedAt;
+    private LocalDateTime updatedAt;
 }
