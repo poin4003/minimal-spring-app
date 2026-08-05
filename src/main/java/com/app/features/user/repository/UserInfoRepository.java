@@ -1,5 +1,7 @@
 package com.app.features.user.repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,4 +29,7 @@ public interface UserInfoRepository extends JpaRepository<UserInfoEntity, UUID> 
             """)
     Optional<AppLanguage> findLanguageByUserId(
             @Param("userId") UUID userId);
+
+    @EntityGraph(attributePaths = { UserInfoEntity_.AVATAR_MEDIA })
+    List<UserInfoEntity> findAllByUserIdIn(Collection<UUID> userIds);
 }
