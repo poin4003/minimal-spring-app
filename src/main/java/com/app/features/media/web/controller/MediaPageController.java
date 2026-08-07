@@ -307,10 +307,10 @@ public class MediaPageController {
                         ? getMediaListPath() + "/" + media.getId() + "/thumbnail"
                         : null)
                 .hoverPreviewUrl(canHoverPreview(media)
-                        ? buildHlsUrl(media.getPublicKey())
+                        ? media.getContentUrl()
                         : null)
                 .downloadPath(canDownload(media)
-                        ? buildOriginalUrl(media.getPublicKey())
+                        ? media.getOriginalUrl()
                         : null)
                 .retryPath(canRetry(media)
                         ? buildSelectionPath(request, RETRY_MEDIA_ID, media.getId())
@@ -355,12 +355,8 @@ public class MediaPageController {
         MediaPreviewType previewType = deliveryAvailable
                 ? resolvePreviewType(media)
                 : MediaPreviewType.UNAVAILABLE;
-        String originalUrl = deliveryAvailable
-                ? buildOriginalUrl(media.getPublicKey())
-                : null;
         String sourceUrl = switch (previewType) {
-            case VIDEO, AUDIO -> buildHlsUrl(media.getPublicKey());
-            case IMAGE -> originalUrl;
+            case IMAGE, VIDEO, AUDIO -> media.getContentUrl();
             case UNAVAILABLE -> null;
         };
 
@@ -376,7 +372,7 @@ public class MediaPageController {
                         formatFileSize(media.getFileSize())))
                 .previewType(previewType)
                 .sourceUrl(sourceUrl)
-                .originalUrl(originalUrl)
+                .originalUrl(media.getOriginalUrl())
                 .unavailableMessage(deliveryAvailable
                         ? null
                         : buildUnavailableMessage(media))
@@ -407,22 +403,6 @@ public class MediaPageController {
             return messageResolver.get("media.preview.failed");
         }
         return messageResolver.get("media.preview.pending");
-    }
-
-    private String buildOriginalUrl(String publicKey) {
-        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
-                .pathSegment(publicKey)
-                .build()
-                .encode()
-                .toUriString();
-    }
-
-    private String buildHlsUrl(String publicKey) {
-        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
-                .pathSegment(publicKey, "hls", "index.m3u8")
-                .build()
-                .encode()
-                .toUriString();
     }
 
     private boolean canRetry(MediaResult media) {

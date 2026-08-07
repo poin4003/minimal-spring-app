@@ -21,7 +21,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
@@ -51,10 +50,11 @@ import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.storage.schema.StoredMediaFile;
 import com.app.features.media.support.MediaProcessingPolicy;
+import com.app.features.media.support.MediaUrlResolver;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
-import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +67,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepo;
-    private final UserBaseRepository userBaseRepo;
+    private final UserService userSvc;
     private final MediaFileStorage mediaFileStorage;
     private final MediaVariantRepository mediaVariantRepo;
     private final MediaProcessingLeaseRepository mediaProcessingLeaseRepo;
@@ -75,6 +75,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileValidator mediaFileValidator;
     private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
+    private final MediaUrlResolver mediaUrlResolver;
     private final JobScheduler jobScheduler;
     private final ApplicationEventPublisher eventPublisher;
     private final ModelMapper mapper;
@@ -109,10 +110,7 @@ public class MediaServiceImpl implements MediaService {
         StoredMediaFile storedFile;
         UserBaseEntity creator;
         try {
-            creator = userBaseRepo.findById(createdById)
-                    .orElseThrow(() -> ExceptionFactory.notFound(
-                            "error.user.notFound",
-                            createdById));
+            creator = userSvc.requireUser(createdById);
             String detectedContentType = mediaFileValidator.validate(
                     stagedFile,
                     policy);
@@ -374,7 +372,7 @@ public class MediaServiceImpl implements MediaService {
                 .toList();
 
         result.setVariants(variants);
-        result.setThumbnailUrl(resolveThumbnailUrl(media));
+        populateUrls(result, media);
         return result;
     }
 
@@ -408,23 +406,16 @@ public class MediaServiceImpl implements MediaService {
 
     private MediaResult toMediaResult(MediaEntity media) {
         MediaResult result = mapper.map(media, MediaResult.class);
-        result.setThumbnailUrl(resolveThumbnailUrl(media));
+        populateUrls(result, media);
         return result;
     }
 
-    private String resolveThumbnailUrl(MediaEntity media) {
-        if (media.getThumbnailStorageKey() == null
-                || media.getThumbnailStorageKey().isBlank()
-                || media.getStatus() != RecordStatus.ACTIVE
-                || media.getProcessingStatus() != MediaProcessingStatus.READY) {
-            return null;
-        }
-
-        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
-                .pathSegment(media.getPublicKey(), "thumbnail")
-                .build()
-                .encode()
-                .toUriString();
+    private void populateUrls(
+            MediaResult result,
+            MediaEntity media) {
+        result.setContentUrl(mediaUrlResolver.resolveContentUrl(media));
+        result.setOriginalUrl(mediaUrlResolver.resolveOriginalUrl(media));
+        result.setThumbnailUrl(mediaUrlResolver.resolveThumbnailUrl(media));
     }
 
     private void requireReadyActiveMedia(

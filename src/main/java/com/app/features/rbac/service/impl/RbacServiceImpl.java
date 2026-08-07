@@ -28,7 +28,7 @@ import com.app.features.rbac.schema.result.PermissionResult;
 import com.app.features.rbac.schema.result.RoleResult;
 import com.app.features.rbac.service.RbacService;
 import com.app.features.user.entity.UserBaseEntity;
-import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,7 +38,7 @@ public class RbacServiceImpl implements RbacService {
 
     private final RoleRepository roleRepo;
     private final PermissionRepository permRepo;
-    private final UserBaseRepository userBaseRepo;
+    private final UserService userSvc;
     private final ModelMapper mapper;
 
     @Override
@@ -110,10 +110,7 @@ public class RbacServiceImpl implements RbacService {
     @Transactional
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public void assignRoleToUser(UUID userId, List<UUID> roleIds) {
-        UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        userId));
+        UserBaseEntity user = userSvc.requireUser(userId);
 
         List<RoleEntity> roles = roleRepo.findAllById(roleIds);
 
@@ -127,8 +124,6 @@ public class RbacServiceImpl implements RbacService {
         currentRoles.addAll(roles);
 
         user.setRoles(currentRoles);
-
-        userBaseRepo.save(user);
     }
 
     @Override
@@ -160,10 +155,7 @@ public class RbacServiceImpl implements RbacService {
     @Transactional
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public void removeRoleFromUser(UUID userId, List<UUID> roleIds) {
-        UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        userId));
+        UserBaseEntity user = userSvc.requireUser(userId);
 
         List<RoleEntity> roles = roleRepo.findAllById(roleIds);
 
@@ -173,8 +165,6 @@ public class RbacServiceImpl implements RbacService {
         currentRoles.removeAll(roles);
 
         user.setRoles(currentRoles);
-
-        userBaseRepo.save(user);
     }
 
     @Override

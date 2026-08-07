@@ -28,7 +28,7 @@ public class OwnerStandardPostResult {
 
     private LocalDateTime publishedAt;
 
-    private String rejectReason;
+    private String rejectionReason;
 
     private LocalDateTime createdAt;
 

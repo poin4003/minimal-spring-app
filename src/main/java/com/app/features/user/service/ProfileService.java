@@ -2,6 +2,7 @@ package com.app.features.user.service;
 
 import java.util.UUID;
 
+import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.schema.payload.UpdateProfilePayload;
 import com.app.features.user.schema.result.ProfileResult;
 
@@ -25,4 +26,6 @@ public interface ProfileService {
             @NotNull UUID avatarMediaId);
 
     void removeAvatar(@NotNull UUID userId);
+
+    UserInfoEntity requireProfile(UUID userId);
 }

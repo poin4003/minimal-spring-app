@@ -37,7 +37,7 @@ import com.app.features.media.storage.MediaFilenameSupport;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
-import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,7 +55,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     private final MediaUploadSessionRepository mediaUploadSessionRepo;
     private final MediaRepository mediaRepo;
-    private final UserBaseRepository userBaseRepo;
+    private final UserService userSvc;
     private final MediaService mediaSvc;
     private final MediaChunkStorage mediaChunkStorage;
     private final MediaFileStorage mediaFileStorage;
@@ -75,10 +75,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             throw ExceptionFactory.invalidParam("error.media.fileTooLarge");
         }
 
-        UserBaseEntity creator = userBaseRepo.findOneById(createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        createdById));
+        UserBaseEntity creator = userSvc.requireUser(createdById);
         AppProperties.ChunkUpload config = appProperties.getMedia().getChunkUpload();
         validateUploadQuota(createdById, payload.getFileSize(), config);
         long totalChunks = Math.ceilDiv(payload.getFileSize(), (long) config.getChunkSizeBytes());

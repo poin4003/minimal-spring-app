@@ -77,7 +77,8 @@ public class ProfileServiceImpl implements ProfileService {
         requireProfile(userId).setAvatarMedia(null);
     }
 
-    private UserInfoEntity requireProfile(UUID userId) {
+    @Override
+    public UserInfoEntity requireProfile(UUID userId) {
         return userInfoRepo.findOneByUserId(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "error.profile.notFound",
