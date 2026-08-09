@@ -16,7 +16,11 @@ public interface PostService {
 
     PostEntity requireOwnedPost(
             @NotNull PostEntity post,
-            @NotNull UUID ownedId);
+            @NotNull UUID ownerId);
+
+    PostEntity prepareOwnedPostForUpdate(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
 
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
 

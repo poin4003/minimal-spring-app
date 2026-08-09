@@ -35,10 +35,29 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PostEntity requireOwnedPost(PostEntity post, UUID ownedId) {
-        if (!post.getAuthor().getId().equals(ownedId)) {
+    public PostEntity requireOwnedPost(PostEntity post, UUID ownerId) {
+        if (!post.getAuthor().getId().equals(ownerId)) {
             throw ExceptionFactory.notFound("error.post.notFound", post.getId());
         }
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity prepareOwnedPostForUpdate(UUID postId, UUID ownerId) {
+        PostEntity post = postRepo.findForUpdateById(postId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.post.notFound",
+                        postId));
+
+        requireOwnedPost(post, ownerId);
+
+        post.setModerationStatus(PostModerationStatus.PENDING_REVIEW);
+        post.setPublishedAt(null);
+        post.setModeratedBy(null);
+        post.setModeratedAt(null);
+        post.setRejectionReason(null);
 
         return post;
     }

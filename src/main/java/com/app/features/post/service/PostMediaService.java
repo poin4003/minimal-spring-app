@@ -23,4 +23,7 @@ public interface PostMediaService {
 
     List<PostMediaEntity> createAttachments(
             PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia);
+
+    List<PostMediaEntity> replaceAttachments(
+            PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia);
 }

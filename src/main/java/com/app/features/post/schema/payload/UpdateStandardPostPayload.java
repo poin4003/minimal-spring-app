@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class CreateStandardPostPayload {
+public class UpdateStandardPostPayload {
 
     @Size(max = 10_000, message = "{validation.post.content.tooLong}")
     private String content;

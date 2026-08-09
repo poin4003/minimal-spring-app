@@ -20,6 +20,7 @@ import com.app.features.post.enums.PostMediaRole;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.schema.payload.CreateStandardPostPayload;
+import com.app.features.post.schema.payload.UpdateStandardPostPayload;
 import com.app.features.post.service.PostMediaService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
@@ -59,17 +60,9 @@ public class StandardPostServiceImpl implements StandardPostService {
             CreateStandardPostPayload payload) {
         UserBaseEntity author = userSvc.requireUser(authorId);
         UserInfoEntity authorInfo = profileSvc.requireProfile(authorId);
-
-        List<MediaEntity> media = mediaSvc.requireOwnedActiveMedia(payload.getMediaIds(), authorId);
-
-        Map<UUID, MediaEntity> mediaById = media.stream()
-                .collect(Collectors.toMap(
-                        item -> item.getId(),
-                        item -> item));
-
-        List<MediaEntity> orderedMedia = payload.getMediaIds().stream()
-                .map(mediaId -> mediaById.get(mediaId))
-                .toList();
+        List<MediaEntity> orderedMedia = requireOrderedMedia(
+                payload.getMediaIds(),
+                authorId);
 
         PostEntity post = postSvc.createPendingPost(author, PostType.STANDARD);
 
@@ -84,6 +77,31 @@ public class StandardPostServiceImpl implements StandardPostService {
         return standardPostMapper.toOwnerResult(
                 standardPost,
                 authorInfo,
+                attachments);
+    }
+
+    @Override
+    @Transactional
+    public OwnerStandardPostResult updateOwnedStandardPost(
+            UUID postId,
+            UUID ownerId,
+            UpdateStandardPostPayload payload) {
+        List<MediaEntity> orderedMedia = requireOrderedMedia(
+                payload.getMediaIds(),
+                ownerId);
+        PostEntity post = postSvc.prepareOwnedPostForUpdate(postId, ownerId);
+        StandardPostEntity standardPost = requireStandardPost(postId);
+
+        standardPost.setContent(payload.getContent());
+
+        List<PostMediaEntity> attachments = postMediaSvc.replaceAttachments(
+                post,
+                PostMediaRole.CONTENT,
+                orderedMedia);
+
+        return standardPostMapper.toOwnerResult(
+                standardPost,
+                profileSvc.requireProfile(ownerId),
                 attachments);
     }
 
@@ -218,5 +236,19 @@ public class StandardPostServiceImpl implements StandardPostService {
         }
 
         return profile;
+    }
+
+    private List<MediaEntity> requireOrderedMedia(
+            List<UUID> mediaIds,
+            UUID ownerId) {
+        List<MediaEntity> media = mediaSvc.requireOwnedActiveMedia(mediaIds, ownerId);
+        Map<UUID, MediaEntity> mediaById = media.stream()
+                .collect(Collectors.toMap(
+                        item -> item.getId(),
+                        item -> item));
+
+        return mediaIds.stream()
+                .map(mediaId -> mediaById.get(mediaId))
+                .toList();
     }
 }

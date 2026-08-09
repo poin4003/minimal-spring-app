@@ -6,6 +6,8 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.app.core.enums.RecordStatus;
 import com.app.core.exception.ExceptionFactory;
@@ -90,5 +92,17 @@ public class PostMediaServiceImpl implements PostMediaService {
                 .toList();
 
         return postMediaRepo.saveAll(attachments);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public List<PostMediaEntity> replaceAttachments(
+            PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia) {
+        List<PostMediaEntity> currentAttachments = findAttachments(post.getId(), role);
+
+        postMediaRepo.deleteAll(currentAttachments);
+        postMediaRepo.flush();
+
+        return createAttachments(post, role, orderedMedia);
     }
 }

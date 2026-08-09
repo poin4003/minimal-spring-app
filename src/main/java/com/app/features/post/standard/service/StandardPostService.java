@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.app.features.post.schema.payload.CreateStandardPostPayload;
+import com.app.features.post.schema.payload.UpdateStandardPostPayload;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.filter.PublicStandardPostFilterCriteria;
@@ -20,6 +21,11 @@ public interface StandardPostService {
     OwnerStandardPostResult createStandardPost(
             @NotNull UUID authorId,
             @NotNull @Valid CreateStandardPostPayload payload);
+
+    OwnerStandardPostResult updateOwnedStandardPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId,
+            @NotNull @Valid UpdateStandardPostPayload payload);
 
     PublicStandardPostResult getPublishedPost(@NotNull UUID postId);
 
