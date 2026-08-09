@@ -158,6 +158,18 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public PostEntity requirePendingPost(PostEntity post) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
+                || post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.moderationInvalid",
+                    post.getId());
+        }
+
+        return post;
+    }
+
+    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public PostEntity requirePendingPostForUpdate(UUID postId) {
         PostEntity post = postRepo.findForUpdateById(postId)
@@ -165,14 +177,7 @@ public class PostServiceImpl implements PostService {
                         "error.post.notFound",
                         postId));
 
-        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
-                || post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.moderationInvalid",
-                    postId);
-        }
-
-        return post;
+        return requirePendingPost(post);
     }
 
     @Override

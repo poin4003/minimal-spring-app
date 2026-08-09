@@ -55,6 +55,20 @@ public class StandardPostSpecification {
                     post.get(PostEntity_.author).get(UserBaseEntity_.id),
                     ownerId));
 
+            if (criteria.getLifecycleStatus() != null) {
+                predicates.add(cb.equal(
+                        post.get(PostEntity_.lifecycleStatus),
+                        criteria.getLifecycleStatus()));
+            } else if (criteria.getModerationStatus() != null) {
+                predicates.add(cb.equal(
+                        post.get(PostEntity_.lifecycleStatus),
+                        PostLifecycleStatus.ACTIVE));
+            } else {
+                predicates.add(cb.notEqual(
+                        post.get(PostEntity_.lifecycleStatus),
+                        PostLifecycleStatus.DELETED));
+            }
+
             if (criteria.getModerationStatus() != null) {
                 predicates.add(cb.equal(
                         post.get(PostEntity_.moderationStatus),

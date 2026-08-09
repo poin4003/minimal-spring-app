@@ -72,7 +72,7 @@ public class PostModerationServiceImpl implements PostModerationService {
     @Override
     public ModerationStandardPostDetailResult getStandardPostDetail(UUID postId) {
         StandardPostEntity standardPost = standardPostSvc.requireStandardPost(postId);
-        PostEntity post = standardPost.getPost();
+        PostEntity post = postSvc.requirePendingPost(standardPost.getPost());
         UserInfoEntity authorInfo = profileSvc.requireProfile(post.getAuthor().getId());
         List<PostMediaEntity> attachments = postMediaSvc.findAttachments(postId);
 

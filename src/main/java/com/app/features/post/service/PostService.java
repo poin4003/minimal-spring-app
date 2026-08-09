@@ -36,6 +36,8 @@ public interface PostService {
 
     PostEntity restoreDeletedPost(@NotNull PostEntity post);
 
+    PostEntity requirePendingPost(@NotNull PostEntity post);
+
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
 
     void deletePost(@NotNull PostEntity post);
