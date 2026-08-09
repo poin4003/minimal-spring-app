@@ -2,6 +2,53 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
+    <div th:fragment="feedPlayable(attachment)"
+         th:with="asset=${attachment.media}"
+         class="position-relative z-2"
+         data-feed-playback
+         data-media-preview
+         th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+         th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+         th:data-message-stream-failed="#{media.preview.streamFailed}">
+        <div th:switch="${asset.kind.name()}">
+            <div th:case="'VIDEO'"
+                 class="app-media-preview-player bg-black"
+                 data-media-preview-player>
+                <video class="video-js vjs-big-play-centered app-media-preview-video"
+                       controls
+                       muted
+                       playsinline
+                       preload="metadata"
+                       data-video-player
+                       data-auto-initialize
+                       data-feed-autoplay
+                       th:poster="${asset.thumbnailUrl}"
+                       th:attr="data-video-source=${asset.contentUrl}"></video>
+                <div class="alert alert-danger w-100 mt-3 mb-0"
+                     data-video-error
+                     hidden></div>
+            </div>
+
+            <div th:case="'AUDIO'"
+                 class="card rounded-0 border-start-0 border-end-0 p-3 app-media-preview-player"
+                 data-media-preview-player>
+                <p class="fw-semibold mb-3"
+                   th:text="${asset.originalName}">
+                    Audio
+                </p>
+                <audio class="video-js app-media-preview-audio w-100"
+                       controls
+                       preload="metadata"
+                       data-video-player
+                       data-auto-initialize
+                       th:attr="data-video-source=${asset.contentUrl}"></audio>
+                <div class="alert alert-danger w-100 mt-3 mb-0"
+                     data-video-error
+                     hidden></div>
+            </div>
+        </div>
+    </div>
+
     <div th:fragment="compact(media, detailPath, galleryPartialPath)"
          th:if="${not #lists.isEmpty(media)}"
          th:with="visibleCount=${#lists.size(media) > 4 ? 4 : #lists.size(media)}">

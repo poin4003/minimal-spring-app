@@ -47,10 +47,16 @@
         </div>
 
         <th:block th:unless="${detailMode}">
-            <div th:replace="~{post/standard/public/fragments/media
-                    :: compact(${card.post.media},
-                            ${card.detailPath},
-                            ${card.mediaGalleryPartialPath})}"></div>
+            <th:block th:if="${card.singlePlayableMedia != null}">
+                <div th:replace="~{post/standard/public/fragments/media
+                        :: feedPlayable(${card.singlePlayableMedia})}"></div>
+            </th:block>
+            <th:block th:unless="${card.singlePlayableMedia != null}">
+                <div th:replace="~{post/standard/public/fragments/media
+                        :: compact(${card.post.media},
+                                   ${card.detailPath},
+                                   ${card.mediaGalleryPartialPath})}"></div>
+            </th:block>
         </th:block>
 
         <a th:unless="${detailMode}"

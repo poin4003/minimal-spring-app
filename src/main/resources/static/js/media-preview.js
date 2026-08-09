@@ -3,8 +3,11 @@
 
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
+    const PLAYER_READY_EVENT = "app:media-player-ready";
+    const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const playerSessions = new Map();
     const progressTrackers = new Map();
+    let activePlaybackPlayer = null;
 
     function readProgress(storageKey) {
         try {
@@ -136,6 +139,7 @@
         const options = {
             controls: true,
             preload: "metadata",
+            muted: mediaElement.hasAttribute("data-feed-autoplay"),
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
@@ -163,6 +167,25 @@
         return options;
     }
 
+    function registerExclusivePlayback(player) {
+        player.on("play", function () {
+            const previousPlayer = activePlaybackPlayer;
+            activePlaybackPlayer = player;
+
+            if (previousPlayer
+                    && previousPlayer !== player
+                    && !previousPlayer.isDisposed()) {
+                previousPlayer.pause();
+            }
+        });
+
+        player.on("dispose", function () {
+            if (activePlaybackPlayer === player) {
+                activePlaybackPlayer = null;
+            }
+        });
+    }
+
     function initializePlayer(mediaElement) {
         if (playerSessions.has(mediaElement)) {
             return;
@@ -180,6 +203,7 @@
         }
 
         const player = window.videojs(mediaElement, createPlayerOptions(mediaElement));
+        registerExclusivePlayback(player);
         playerSessions.set(mediaElement, {
             player: player
         });
@@ -197,6 +221,13 @@
                 src: sourceUrl,
                 type: "application/x-mpegURL"
             });
+
+            document.dispatchEvent(new CustomEvent(PLAYER_READY_EVENT, {
+                detail: {
+                    mediaElement: mediaElement,
+                    player: player
+                }
+            }));
         });
 
         player.on("error", function () {
@@ -214,6 +245,12 @@
 
         const session = playerSessions.get(mediaElement);
         if (session?.player && !session.player.isDisposed()) {
+            document.dispatchEvent(new CustomEvent(PLAYER_DESTROYING_EVENT, {
+                detail: {
+                    mediaElement: mediaElement,
+                    player: session.player
+                }
+            }));
             session.player.dispose();
         }
         playerSessions.delete(mediaElement);

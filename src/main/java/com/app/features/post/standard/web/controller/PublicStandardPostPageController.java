@@ -20,6 +20,7 @@ import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
+import com.app.features.media.enums.MediaKind;
 import com.app.features.post.entity.PostEntity_;
 import com.app.features.post.schema.result.PostMediaResult;
 import com.app.features.post.standard.entity.StandardPostEntity_;
@@ -99,6 +100,9 @@ public class PublicStandardPostPageController {
                                 .mediaGalleryPartialPath(
                                         buildMediaGalleryPartialPath(
                                                 post.getId()))
+                                .singlePlayableMedia(
+                                        resolveSinglePlayableMedia(
+                                                post.getMedia()))
                                 .build())
                         .toList())
                 .pagination(pagination)
@@ -228,6 +232,19 @@ public class PublicStandardPostPageController {
                                         attachment.getMedia().getId()))
                         .build())
                 .toList();
+    }
+
+    private PostMediaResult resolveSinglePlayableMedia(
+            List<PostMediaResult> media) {
+        if (media.size() != 1) {
+            return null;
+        }
+
+        PostMediaResult attachment = media.getFirst();
+        MediaKind kind = attachment.getMedia().getKind();
+        return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO
+                ? attachment
+                : null;
     }
 
     private String getFeedPath() {
