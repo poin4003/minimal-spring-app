@@ -122,5 +122,9 @@
     document.addEventListener("DOMContentLoaded", () => initializeAll());
     document.addEventListener("htmx:afterSwap", (event) => {
         initializeAll(event.target);
+        const root = event.target.closest?.(ROOT_SELECTOR);
+        if (root) {
+            initialize(root);
+        }
     });
 })();

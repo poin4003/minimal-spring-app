@@ -13,6 +13,9 @@ public class StandardPostComposerPageView {
     public static final String ATTRIBUTE = "page";
 
     private final String title;
+    private final String heading;
+    private final String description;
+    private final String submitLabel;
     private final SocialShellView shell;
     private final UiBreadcrumbView breadcrumb;
     private final String actionPath;

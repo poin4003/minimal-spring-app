@@ -11,6 +11,7 @@ public class OwnerPostCardView {
 
     private final OwnerStandardPostResult post;
     private final String detailPath;
+    private final String editPath;
     private final String statusLabel;
     private final String statusBadgeClass;
 }

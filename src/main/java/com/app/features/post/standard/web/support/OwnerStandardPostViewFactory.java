@@ -26,6 +26,7 @@ public class OwnerStandardPostViewFactory {
         return OwnerPostCardView.builder()
                 .post(post)
                 .detailPath(buildDetailPath(post.getId()))
+                .editPath(buildEditPath(post.getId()))
                 .statusLabel(resolveStatusLabel(post.getModerationStatus()))
                 .statusBadgeClass(resolveStatusBadgeClass(
                         post.getModerationStatus()))
@@ -72,6 +73,15 @@ public class OwnerStandardPostViewFactory {
         return UriComponentsBuilder.fromPath(
                         appProperties.getUi().getMyPostsPath())
                 .pathSegment(postId.toString())
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildEditPath(UUID postId) {
+        return UriComponentsBuilder.fromPath(
+                        appProperties.getUi().getMyPostsPath())
+                .pathSegment(postId.toString(), "edit")
                 .build()
                 .encode()
                 .toUriString();
