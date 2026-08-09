@@ -67,10 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetailResult getUserDetailById(UUID userId) {
-        UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        userId));
+        UserBaseEntity user = requireUser(userId);
 
         // LAZY load List role
         UserDetailResult response = mapper.map(user, UserDetailResult.class);
@@ -86,16 +83,21 @@ public class UserServiceImpl implements UserService {
     @Override
     @RevokeSessions(scope = SessionRevocationScope.USER)
     public UserResult updateUserStatus(UUID userId, UserStatusEnum status) {
-        UserBaseEntity user = userBaseRepo.findById(userId)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        userId));
+        UserBaseEntity user = requireUser(userId);
 
         user.setStatus(status);
 
         user = userBaseRepo.save(user);
 
         return mapper.map(user, UserResult.class);
+    }
+
+    @Override
+    public UserBaseEntity requireUser(UUID userId) {
+        return userBaseRepo.findById(userId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.user.notFound",
+                        userId));
     }
 
     @Override

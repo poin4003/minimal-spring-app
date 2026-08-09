@@ -23,6 +23,7 @@ import com.app.features.media.entity.MediaUploadSessionEntity;
 import com.app.features.media.entity.MediaUploadSessionEntity_;
 import com.app.features.media.enums.MediaUploadStatus;
 import com.app.features.media.exception.InvalidMediaContentException;
+import com.app.features.media.mapper.MediaResultMapper;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaUploadSessionRepository;
 import com.app.features.media.schema.model.MediaUploadAssemblyContext;
@@ -37,7 +38,7 @@ import com.app.features.media.storage.MediaFilenameSupport;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
-import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,11 +56,12 @@ public class MediaUploadServiceImpl implements MediaUploadService {
 
     private final MediaUploadSessionRepository mediaUploadSessionRepo;
     private final MediaRepository mediaRepo;
-    private final UserBaseRepository userBaseRepo;
+    private final UserService userSvc;
     private final MediaService mediaSvc;
     private final MediaChunkStorage mediaChunkStorage;
     private final MediaFileStorage mediaFileStorage;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
+    private final MediaResultMapper mediaResultMapper;
     private final ModelMapper mapper;
     private final AppProperties appProperties;
     private final ReentrantReadWriteLock[] uploadLocks = createUploadLocks();
@@ -75,10 +77,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
             throw ExceptionFactory.invalidParam("error.media.fileTooLarge");
         }
 
-        UserBaseEntity creator = userBaseRepo.findOneById(createdById)
-                .orElseThrow(() -> ExceptionFactory.notFound(
-                        "error.user.notFound",
-                        createdById));
+        UserBaseEntity creator = userSvc.requireUser(createdById);
         AppProperties.ChunkUpload config = appProperties.getMedia().getChunkUpload();
         validateUploadQuota(createdById, payload.getFileSize(), config);
         long totalChunks = Math.ceilDiv(payload.getFileSize(), (long) config.getChunkSizeBytes());
@@ -422,7 +421,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 MediaUploadSessionResult.class);
         result.setUploadedChunks(uploadedChunks);
         if (session.getCompletedMedia() != null) {
-            result.setCompletedMedia(mapper.map(session.getCompletedMedia(), MediaResult.class));
+            result.setCompletedMedia(mediaResultMapper.toResult(
+                    session.getCompletedMedia()));
         }
         return result;
     }
@@ -431,7 +431,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         if (session.getCompletedMedia() == null) {
             throw ExceptionFactory.serverError("error.media.completedUploadMissingMedia");
         }
-        return mapper.map(session.getCompletedMedia(), MediaResult.class);
+        return mediaResultMapper.toResult(session.getCompletedMedia());
     }
 
     private void deleteUploadChunksSafely(UUID uploadId) {

@@ -22,14 +22,14 @@ public class UiShellFactory {
             UserPrincipal currentUser,
             String requestPath) {
         String notificationPath =
-                appProperties.getUi().getHomePath() + "/notifications";
+                appProperties.getUi().getNotificationPath();
 
         return UiShellView.builder()
                 .title(appProperties.getUi().getApplicationTitle())
                 .logoutPath(appProperties.getUi().getLogoutPath())
-                .profilePath(appProperties.getUi().getHomePath() + "/profile")
+                .profilePath(appProperties.getUi().getProfilePath())
                 .themeUpdatePath(
-                        appProperties.getUi().getHomePath() + "/profile/theme")
+                        appProperties.getUi().getProfilePath() + "/theme")
                 .currentUser(UiCurrentUserView.builder()
                         .email(currentUser.getEmail())
                         .authorities(currentUser.getAuthorities().stream()

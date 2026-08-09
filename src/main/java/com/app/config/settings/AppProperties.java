@@ -40,6 +40,8 @@ public class AppProperties {
     private final Jwt jwt = new Jwt();
     private final Media media = new Media();
     private final NotificationSettings notification = new NotificationSettings();
+    @Valid
+    private final PostSettings post = new PostSettings();
     private final Security security = new Security();
     private final Ui ui = new Ui();
 
@@ -489,6 +491,31 @@ public class AppProperties {
     }
 
     @Data
+    public static class PostSettings {
+        @Valid
+        private final PostMaintenance maintenance = new PostMaintenance();
+    }
+
+    @Data
+    public static class PostMaintenance {
+        @NotNull
+        private Duration deletedRetention = Duration.ofDays(3);
+
+        @NotNull
+        private Duration rejectedRetention = Duration.ofDays(3);
+
+        @AssertTrue(message = "Post retention values must be positive.")
+        public boolean isRetentionConfigurationValid() {
+            return isPositive(deletedRetention)
+                    && isPositive(rejectedRetention);
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
+    }
+
+    @Data
     public static class Security {
         private List<String> apiPublicPaths = List.of(
                 "/api/v1/auth/login",
@@ -498,6 +525,9 @@ public class AppProperties {
                 "/api/v1/public/media/**");
 
         private List<String> webPublicPaths = List.of(
+                "/",
+                "/posts",
+                "/posts/**",
                 "/login",
                 "/register",
                 "/register/**",
@@ -525,6 +555,18 @@ public class AppProperties {
     @Data
     public static class Ui {
         @NotBlank
+        private String socialPath = "/";
+
+        @NotBlank
+        private String feedPath = "/posts";
+
+        @NotBlank
+        private String myPostsPath = "/my/posts";
+
+        @NotBlank
+        private String landingPath = "/home";
+
+        @NotBlank
         private String loginPath = "/login";
 
         @NotBlank
@@ -535,6 +577,12 @@ public class AppProperties {
 
         @NotBlank
         private String homePath = "/admin";
+
+        @NotBlank
+        private String profilePath = "/profile";
+
+        @NotBlank
+        private String notificationPath = "/notifications";
 
         @NotBlank
         private String logoutPath = "/logout";

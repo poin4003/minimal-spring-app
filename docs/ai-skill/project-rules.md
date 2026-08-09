@@ -41,6 +41,13 @@
 - For flat DTOs or flat UI row views with matching field names, prefer mutable classes with `ModelMapper` over repetitive manual `builder()` mapping.
 - Reserve manual builders for composed page objects, modal/detail structures, or cases where field names or mapping logic differ.
 
+## Service Reuse Rule
+- Service methods are allowed to accept and return JPA entities when they are internal contracts intended for reuse by other services.
+- Prefer reusing an entity-based service method that already contains the required query, ownership check, state validation, or business rule instead of duplicating that logic in another service.
+- Do not create intermediate DTOs solely to move the same entity between internal services when the entity is the natural reusable domain object.
+- Entity-based service methods must not be exposed directly as API, Thymeleaf, or other external response contracts; controllers must still return payload, result, or view-model classes.
+- Callers must use entity-returning service methods inside an appropriate transaction and must not depend on uninitialized lazy relationships outside the transaction boundary.
+
 ## Dependency Field Naming Rule
 - Name injected repository fields with the domain name followed by `Repo`, such as `userBaseRepo`, `mediaRepo`, or `mediaVariantRepo`.
 - Name injected service fields with the domain name followed by `Svc`, such as `userBaseSvc`, `mediaSvc`, or `authCookieSvc`.
@@ -80,6 +87,9 @@
 - For server-rendered UI error handling, prefer dedicated page/view classes such as `ErrorPageView` and helper/factory classes such as `WebErrorPageFactory`.
 - Avoid loose `ModelAndView.addObject(...)` chains for web error pages; prefer structured page objects passed as one root model attribute.
 - When Thymeleaf pages need to surface backend business validation errors, prefer structured `fieldErrors` from `MyException` and a dedicated resolver/helper instead of mutating `BindingResult` from custom exceptions.
+- Do not create private helper methods whose only purpose is to return or throw an exception produced by `ExceptionFactory`, such as `postNotFound(...)`.
+- Call the appropriate `ExceptionFactory` method directly at the failure site, including inside `orElseThrow(...)` and business-state guards.
+- Exception alias methods that only hide an `ExceptionFactory` call, message key, or arguments are prohibited even when referenced from multiple places.
 
 ## Validation Rule
 - Prefer Jakarta Bean Validation annotations on payloads, forms, filters, configuration classes, and service method parameters.

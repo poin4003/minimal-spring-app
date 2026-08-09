@@ -36,7 +36,6 @@
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
     </properties>
 
     <dependencies>
@@ -227,6 +226,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
+                    <fork>true</fork>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

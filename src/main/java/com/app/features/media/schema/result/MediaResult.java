@@ -25,6 +25,10 @@ public class MediaResult {
 
     private long fileSize;
 
+    private String contentUrl;
+
+    private String originalUrl;
+
     private String thumbnailUrl;
 
     private MediaKind kind;

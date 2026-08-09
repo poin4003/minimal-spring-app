@@ -21,7 +21,6 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
@@ -35,6 +34,7 @@ import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.event.MediaDeletedEvent;
 import com.app.features.media.event.MediaUploadedEvent;
 import com.app.features.media.job.MediaProcessingJob;
+import com.app.features.media.mapper.MediaResultMapper;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaProcessingLeaseRepository;
 import com.app.features.media.repository.MediaVariantRepository;
@@ -44,7 +44,6 @@ import com.app.features.media.schema.model.MediaThumbnailResult;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
-import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.service.MediaThumbnailService;
 import com.app.features.media.storage.MediaFileStorage;
@@ -54,7 +53,7 @@ import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
-import com.app.features.user.repository.UserBaseRepository;
+import com.app.features.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +66,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaServiceImpl implements MediaService {
 
     private final MediaRepository mediaRepo;
-    private final UserBaseRepository userBaseRepo;
+    private final UserService userSvc;
     private final MediaFileStorage mediaFileStorage;
     private final MediaVariantRepository mediaVariantRepo;
     private final MediaProcessingLeaseRepository mediaProcessingLeaseRepo;
@@ -75,6 +74,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileValidator mediaFileValidator;
     private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
+    private final MediaResultMapper mediaResultMapper;
     private final JobScheduler jobScheduler;
     private final ApplicationEventPublisher eventPublisher;
     private final ModelMapper mapper;
@@ -109,10 +109,7 @@ public class MediaServiceImpl implements MediaService {
         StoredMediaFile storedFile;
         UserBaseEntity creator;
         try {
-            creator = userBaseRepo.findById(createdById)
-                    .orElseThrow(() -> ExceptionFactory.notFound(
-                            "error.user.notFound",
-                            createdById));
+            creator = userSvc.requireUser(createdById);
             String detectedContentType = mediaFileValidator.validate(
                     stagedFile,
                     policy);
@@ -153,7 +150,7 @@ public class MediaServiceImpl implements MediaService {
             registerProcessingJob(media.getId());
         }
 
-        return toMediaResult(media);
+        return mediaResultMapper.toResult(media);
     }
 
     @Transactional
@@ -183,7 +180,7 @@ public class MediaServiceImpl implements MediaService {
         Specification<MediaEntity> specification = MediaSpecification.withFilter(criteria);
         Page<MediaEntity> entityPage = mediaRepo.findAll(specification, pageable);
 
-        return entityPage.map(entity -> toMediaResult(entity));
+        return entityPage.map(entity -> mediaResultMapper.toResult(entity));
     }
 
     @Override
@@ -299,7 +296,7 @@ public class MediaServiceImpl implements MediaService {
                 targetMedia,
                 thumbnailMedia);
         targetMedia.setThumbnailStorageKey(thumbnail.getStorageKey());
-        return toMediaResult(targetMedia);
+        return mediaResultMapper.toResult(targetMedia);
     }
 
     @Override
@@ -362,20 +359,14 @@ public class MediaServiceImpl implements MediaService {
         media = mediaRepo.save(media);
         registerProcessingJob(media.getId());
 
-        return toMediaResult(media);
+        return mediaResultMapper.toResult(media);
     }
 
     private MediaDetailResult toMediaDetailResult(MediaEntity media) {
-        MediaDetailResult result = mapper.map(media, MediaDetailResult.class);
-        List<MediaVariantResult> variants = mediaVariantRepo
-                .findAllByMedia_IdOrderByVariantTypeAscHeightAsc(media.getId())
-                .stream()
-                .map(entity -> mapper.map(entity, MediaVariantResult.class))
-                .toList();
-
-        result.setVariants(variants);
-        result.setThumbnailUrl(resolveThumbnailUrl(media));
-        return result;
+        return mediaResultMapper.toDetailResult(
+                media,
+                mediaVariantRepo.findAllByMedia_IdOrderByVariantTypeAscHeightAsc(
+                        media.getId()));
     }
 
     @Override
@@ -404,27 +395,6 @@ public class MediaServiceImpl implements MediaService {
         }
 
         return media;
-    }
-
-    private MediaResult toMediaResult(MediaEntity media) {
-        MediaResult result = mapper.map(media, MediaResult.class);
-        result.setThumbnailUrl(resolveThumbnailUrl(media));
-        return result;
-    }
-
-    private String resolveThumbnailUrl(MediaEntity media) {
-        if (media.getThumbnailStorageKey() == null
-                || media.getThumbnailStorageKey().isBlank()
-                || media.getStatus() != RecordStatus.ACTIVE
-                || media.getProcessingStatus() != MediaProcessingStatus.READY) {
-            return null;
-        }
-
-        return UriComponentsBuilder.fromPath(appProperties.getMedia().getPublicPath())
-                .pathSegment(media.getPublicKey(), "thumbnail")
-                .build()
-                .encode()
-                .toUriString();
     }
 
     private void requireReadyActiveMedia(

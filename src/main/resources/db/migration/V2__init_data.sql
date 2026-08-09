@@ -48,23 +48,23 @@ INSERT INTO user_roles (user_id, role_id) VALUES (
     'b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01'
 );
 
-INSERT INTO role_permissions (role_id, permission_id) VALUES
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'ecacccdf-f953-4166-a80c-9ddad96fb2c2'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', '2cb91645-eb69-4582-b389-c34ac3d5dd72'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'dbfab2cd-a9b2-4836-8f21-9fea9efe2850'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'ecb6e665-2822-47cf-996c-80b1f2a21c0c'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', '0b952be2-f68d-43de-9e1a-0e7663872bd3'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', '5427f69b-4762-408d-865d-191b3502df2f'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'f4d6e429-2359-4b47-9245-194948d3fa79'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', '8871ca39-7ee7-4539-a081-e9eeedb66f31'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c1eebc99-9c0b-4ef8-bb6d-6bb9bd380c01'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'c2eebc99-9c0b-4ef8-bb6d-6bb9bd380c02'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd1eebc99-9c0b-4ef8-bb6d-6bb9bd380d01'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd2eebc99-9c0b-4ef8-bb6d-6bb9bd380d02'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380d03'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b01', 'd4eebc99-9c0b-4ef8-bb6d-6bb9bd380d04'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b02', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380d03'),
-    ('b0eebc99-9c0b-4ef8-bb6d-6bb9bd380b02', 'd4eebc99-9c0b-4ef8-bb6d-6bb9bd380d04');
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT role.id, permission.id
+FROM role
+CROSS JOIN permission
+WHERE role.role_key = 'SUPER_ADMIN';
+
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT role.id, permission.id
+FROM role
+CROSS JOIN permission
+WHERE role.role_key = 'USER'
+  AND permission.permission_key IN (
+      'USER:VIEW',
+      'MEDIA:VIEW',
+      'MEDIA:VIEW:OWN',
+      'MEDIA:MANAGE:OWN'
+  );
 
 INSERT INTO cronjob_config (id, job_type, expression, status) VALUES (
     'c0eebc99-9c0b-4ef8-bb6d-6bb9bd380c01',

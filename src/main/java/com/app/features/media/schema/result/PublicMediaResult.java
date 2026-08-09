@@ -19,5 +19,7 @@ public class PublicMediaResult {
 
     private String contentUrl;
 
+    private String originalUrl;
+
     private String thumbnailUrl;
 }

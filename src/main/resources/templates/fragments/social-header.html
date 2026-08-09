@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <header th:fragment="header(shell)"
+            class="social-header sticky-top border-bottom bg-body">
+        <nav class="navbar py-2">
+            <div class="container-fluid social-container gap-3">
+                <a class="navbar-brand d-flex align-items-center gap-2 fw-bold mb-0"
+                   th:href="${shell.socialPath}">
+                    <span class="social-brand-mark d-inline-grid place-items-center rounded-3 bg-primary text-white"
+                          aria-hidden="true">M</span>
+                    <span th:text="${shell.title}">Minimal Spring App</span>
+                </a>
+
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <th:block th:if="${shell.notificationWidget != null}">
+                        <div th:replace="~{notification/fragments/inbox
+                                :: trigger(${shell.notificationWidget})}"></div>
+                    </th:block>
+
+                    <a th:if="${shell.adminPath != null}"
+                       th:href="${shell.adminPath}"
+                       class="btn btn-outline-secondary app-header-action app-icon-button"
+                       th:attr="aria-label=#{social.openAdmin},
+                                title=#{social.openAdmin}">
+                        <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                    </a>
+
+                    <a th:if="${shell.currentUser != null}"
+                       th:href="${shell.myPostsPath}"
+                       class="btn btn-outline-secondary app-header-action app-icon-button"
+                       th:attr="aria-label=#{profile.personal.title},
+                                title=#{profile.personal.title}">
+                        <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    </a>
+
+                    <a th:if="${shell.currentUser != null}"
+                       th:href="${shell.profilePath}"
+                       class="btn btn-outline-secondary app-header-action app-icon-button"
+                       th:attr="aria-label=#{profile.title},
+                                title=#{profile.title}">
+                        <i class="bi bi-gear" aria-hidden="true"></i>
+                    </a>
+
+                    <div th:replace="~{fragments/app-tools
+                            :: themeToggle(${shell.themeUpdatePath})}"></div>
+
+                    <form th:if="${shell.currentUser != null}"
+                          method="post"
+                          th:action="${shell.logoutPath}"
+                          class="mb-0">
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+                        <button type="submit"
+                                class="btn btn-outline-secondary app-header-action app-icon-button"
+                                th:attr="aria-label=#{action.signOut},
+                                         title=#{action.signOut}">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </form>
+
+                    <div th:unless="${shell.currentUser != null}"
+                         class="d-flex align-items-center">
+                        <a class="btn btn-outline-primary"
+                           th:href="${shell.loginPath}"
+                           th:text="#{auth.login.title}">
+                            Sign in
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+</body>
+</html>

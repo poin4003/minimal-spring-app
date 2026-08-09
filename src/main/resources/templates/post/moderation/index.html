@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Post moderation</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/shell.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+</head>
+<body class="app-shell bg-body-tertiary">
+    <div th:replace="~{fragments/app-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <div id="post-moderation-page-content"
+                 class="d-grid gap-4">
+                <section class="card border-0 shadow-sm">
+                    <div class="card-body p-3 p-lg-4">
+                        <form method="get"
+                              th:action="${page.listPath}"
+                              th:object="${page.filter}"
+                              class="row g-3 align-items-end"
+                              th:attr="hx-get=${page.listPath},
+                                       hx-target='#post-moderation-queue',
+                                       hx-select='#post-moderation-queue',
+                                       hx-swap='outerHTML',
+                                       hx-push-url='true',
+                                       hx-disabled-elt='button'">
+                            <input type="hidden" name="page" value="0">
+                            <input type="hidden" name="size" th:value="${page.query.size}">
+                            <input type="hidden" name="sortBy" th:value="${page.query.sortBy}">
+                            <input type="hidden" name="sortDirection" th:value="${page.query.sortDirection}">
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="moderation-type"
+                                       class="form-label"
+                                       th:text="#{post.moderation.filter.type}">
+                                    Post type
+                                </label>
+                                <select id="moderation-type"
+                                        class="form-select"
+                                        th:field="*{type}">
+                                    <option value=""
+                                            th:text="#{post.moderation.filter.allTypes}">
+                                        All types
+                                    </option>
+                                    <option th:each="option : ${page.postTypes}"
+                                            th:value="${option.value}"
+                                            th:text="${option.label}">
+                                        Standard
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-3">
+                                <label for="moderation-author-id"
+                                       class="form-label"
+                                       th:text="#{post.moderation.filter.authorId}">
+                                    Author ID
+                                </label>
+                                <input id="moderation-author-id"
+                                       type="text"
+                                       class="form-control"
+                                       th:field="*{authorId}"
+                                       th:placeholder="#{post.moderation.filter.authorIdPlaceholder}">
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-2">
+                                <label for="moderation-created-from"
+                                       class="form-label"
+                                       th:text="#{post.moderation.filter.createdFrom}">
+                                    Submitted from
+                                </label>
+                                <input id="moderation-created-from"
+                                       type="datetime-local"
+                                       class="form-control"
+                                       th:field="*{createdFrom}">
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-2">
+                                <label for="moderation-created-to"
+                                       class="form-label"
+                                       th:text="#{post.moderation.filter.createdTo}">
+                                    Submitted to
+                                </label>
+                                <input id="moderation-created-to"
+                                       type="datetime-local"
+                                       class="form-control"
+                                       th:field="*{createdTo}">
+                            </div>
+
+                            <div class="col-12 col-xl-2 d-flex flex-wrap justify-content-xl-end gap-2">
+                                <a th:href="${page.listPath}"
+                                   class="btn btn-outline-secondary"
+                                   th:attr="hx-get=${page.listPath},
+                                            hx-target='#post-moderation-page-content',
+                                            hx-select='#post-moderation-page-content',
+                                            hx-swap='outerHTML',
+                                            hx-push-url='true'"
+                                   th:text="#{action.clear}">
+                                    Clear
+                                </a>
+                                <button type="submit"
+                                        class="btn btn-primary"
+                                        th:text="#{action.applyFilters}">
+                                    Apply filters
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <div th:replace="~{post/moderation/fragments/queue
+                        :: queue(${page.queue})}"></div>
+            </div>
+        </th:block>
+    </div>
+</body>
+</html>

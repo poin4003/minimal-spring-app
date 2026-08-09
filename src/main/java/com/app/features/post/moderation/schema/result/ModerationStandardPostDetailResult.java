@@ -26,13 +26,13 @@ public class ModerationStandardPostDetailResult {
 
     private PostModerationStatus moderationStatus;
 
-    private UserShortResult moderatorBy;
+    private UserShortResult moderatedBy;
 
     private LocalDateTime moderatedAt;
 
     private LocalDateTime publishedAt;
 
-    private String rejectedReason;
+    private String rejectionReason;
 
     private LocalDateTime createdAt;
 

@@ -3,8 +3,11 @@
 
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
+    const PLAYER_READY_EVENT = "app:media-player-ready";
+    const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const playerSessions = new Map();
     const progressTrackers = new Map();
+    let activePlaybackPlayer = null;
 
     function readProgress(storageKey) {
         try {
@@ -121,7 +124,8 @@
     function showPlaybackError(mediaElement, messageKey) {
         const previewElement = mediaElement.closest("[data-media-preview-player]");
         const errorElement = previewElement?.querySelector("[data-video-error]");
-        const modalElement = mediaElement.closest("[data-media-preview-modal]");
+        const modalElement = mediaElement.closest(
+                "[data-media-preview-modal], [data-media-preview]");
         if (!errorElement) {
             return;
         }
@@ -135,6 +139,7 @@
         const options = {
             controls: true,
             preload: "metadata",
+            muted: mediaElement.hasAttribute("data-feed-autoplay"),
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
@@ -162,6 +167,25 @@
         return options;
     }
 
+    function registerExclusivePlayback(player) {
+        player.on("play", function () {
+            const previousPlayer = activePlaybackPlayer;
+            activePlaybackPlayer = player;
+
+            if (previousPlayer
+                    && previousPlayer !== player
+                    && !previousPlayer.isDisposed()) {
+                previousPlayer.pause();
+            }
+        });
+
+        player.on("dispose", function () {
+            if (activePlaybackPlayer === player) {
+                activePlaybackPlayer = null;
+            }
+        });
+    }
+
     function initializePlayer(mediaElement) {
         if (playerSessions.has(mediaElement)) {
             return;
@@ -179,6 +203,7 @@
         }
 
         const player = window.videojs(mediaElement, createPlayerOptions(mediaElement));
+        registerExclusivePlayback(player);
         playerSessions.set(mediaElement, {
             player: player
         });
@@ -196,6 +221,13 @@
                 src: sourceUrl,
                 type: "application/x-mpegURL"
             });
+
+            document.dispatchEvent(new CustomEvent(PLAYER_READY_EVENT, {
+                detail: {
+                    mediaElement: mediaElement,
+                    player: player
+                }
+            }));
         });
 
         player.on("error", function () {
@@ -213,15 +245,111 @@
 
         const session = playerSessions.get(mediaElement);
         if (session?.player && !session.player.isDisposed()) {
+            document.dispatchEvent(new CustomEvent(PLAYER_DESTROYING_EVENT, {
+                detail: {
+                    mediaElement: mediaElement,
+                    player: session.player
+                }
+            }));
             session.player.dispose();
         }
         playerSessions.delete(mediaElement);
+    }
+
+    function initializeAutoPlayers(root) {
+        if (!(root instanceof Document || root instanceof Element)) {
+            return;
+        }
+
+        root.querySelectorAll("[data-video-player][data-auto-initialize]")
+            .forEach(function (mediaElement) {
+                initializePlayer(mediaElement);
+            });
+    }
+
+    function initializePlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            initializePlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                initializePlayer(mediaElement);
+            });
+    }
+
+    function scrollActiveThumbnail(root, behavior) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        const activeThumbnail = root.querySelector(
+                ".post-media-gallery-thumbnails .active"
+        );
+        activeThumbnail?.scrollIntoView({
+            behavior: behavior,
+            block: "nearest",
+            inline: "center"
+        });
+    }
+
+    function pausePlayer(mediaElement) {
+        const progressTracker = progressTrackers.get(mediaElement);
+        progressTracker?.save();
+
+        const session = playerSessions.get(mediaElement);
+        if (session?.player && !session.player.isDisposed()) {
+            session.player.pause();
+        }
+    }
+
+    function pausePlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            pausePlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                pausePlayer(mediaElement);
+            });
+    }
+
+    function destroyPlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            destroyPlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                destroyPlayer(mediaElement);
+            });
     }
 
     window.addEventListener("pagehide", function () {
         progressTrackers.forEach(function (progressTracker) {
             progressTracker.save();
         });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeAutoPlayers(document);
+    });
+
+    document.addEventListener("htmx:afterSwap", function (event) {
+        initializeAutoPlayers(event.detail.target);
+    });
+
+    document.addEventListener("htmx:beforeCleanupElement", function (event) {
+        destroyPlayers(event.detail.elt);
     });
 
     document.addEventListener("shown.bs.modal", function (event) {
@@ -231,9 +359,43 @@
             return;
         }
 
-        modalElement.querySelectorAll("[data-video-player]").forEach(function (mediaElement) {
-            initializePlayer(mediaElement);
-        });
+        if (modalElement.matches("[data-post-media-gallery-modal]")) {
+            initializePlayers(
+                modalElement.querySelector(".carousel-item.active")
+            );
+            scrollActiveThumbnail(modalElement, "auto");
+            return;
+        }
+
+        initializePlayers(modalElement);
+    });
+
+    document.addEventListener("slide.bs.carousel", function (event) {
+        const carouselElement = event.target;
+        if (!(carouselElement instanceof Element)
+                || carouselElement.closest(
+                    "[data-post-media-gallery-modal]"
+                ) == null) {
+            return;
+        }
+
+        pausePlayers(
+            carouselElement.querySelector(".carousel-item.active")
+        );
+    });
+
+    document.addEventListener("slid.bs.carousel", function (event) {
+        const carouselElement = event.target;
+        if (!(carouselElement instanceof Element)
+                || carouselElement.closest(
+                    "[data-post-media-gallery-modal]"
+                ) == null
+                || !(event.relatedTarget instanceof Element)) {
+            return;
+        }
+
+        initializePlayers(event.relatedTarget);
+        scrollActiveThumbnail(carouselElement, "smooth");
     });
 
     document.addEventListener("hidden.bs.modal", function (event) {

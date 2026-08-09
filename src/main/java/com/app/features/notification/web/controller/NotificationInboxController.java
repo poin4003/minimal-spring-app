@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("${app.ui.home-path:/admin}/notifications")
+@RequestMapping("${app.ui.notification-path:/notifications}")
 public class NotificationInboxController {
 
     private static final String NOTIFICATION_CHANGED_EVENT =
@@ -67,7 +67,7 @@ public class NotificationInboxController {
             return HtmxRequestSupport.redirectView(
                     request,
                     response,
-                    appProperties.getUi().getHomePath());
+                    appProperties.getUi().getSocialPath());
         }
 
         HtmxRequestSupport.trigger(response, NOTIFICATION_CHANGED_EVENT);
@@ -85,7 +85,7 @@ public class NotificationInboxController {
             return HtmxRequestSupport.redirectView(
                     request,
                     response,
-                    appProperties.getUi().getHomePath());
+                    appProperties.getUi().getSocialPath());
         }
 
         HtmxRequestSupport.trigger(response, NOTIFICATION_CHANGED_EVENT);

@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${app.ui.home-path:/admin}/notifications")
+@RequestMapping("${app.ui.notification-path:/notifications}")
 public class NotificationSseController {
 
     private final NotificationSseService notificationSseSvc;

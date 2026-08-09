@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <article th:fragment="card(card, detailMode)"
+             class="card border-0 shadow-sm overflow-hidden position-relative">
+        <div class="card-body p-3 p-md-4">
+            <header class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <span class="badge rounded-pill"
+                      th:classappend="${card.statusBadgeClass}"
+                      th:text="${card.statusLabel}">
+                    Status
+                </span>
+                <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 position-relative z-2">
+                    <time class="small text-secondary"
+                          th:datetime="${card.post.createdAt}"
+                          th:text="${@uiDateTimeFormatter.format(card.post.createdAt)}">
+                        Created time
+                    </time>
+                    <div class="btn-group btn-group-sm"
+                         role="group"
+                         th:aria-label="#{post.owner.actions}">
+                    <a th:if="${card.editable}"
+                       th:href="${card.editPath}"
+                       class="btn btn-sm btn-outline-primary position-relative z-2"
+                       th:title="#{post.owner.edit}"
+                       th:aria-label="#{post.owner.edit}">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                        <span class="visually-hidden"
+                              th:text="#{post.owner.edit}">Edit</span>
+                    </a>
+                    <a th:each="action : ${card.actions}"
+                       th:href="${action.modalPath}"
+                       class="btn btn-sm position-relative z-2"
+                       th:classappend="${action.buttonClass}"
+                       th:attr="hx-get=${action.modalPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true',
+                                title=${action.label},
+                                aria-label=${action.label}">
+                        <i th:class="${action.iconClass}"
+                           aria-hidden="true"></i>
+                        <span class="visually-hidden"
+                              th:text="${action.label}">
+                            Action
+                        </span>
+                    </a>
+                    </div>
+                </div>
+            </header>
+
+            <p th:if="${card.post.content != null and !card.post.content.isBlank()}"
+               class="mb-0 post-content"
+               th:classappend="${detailMode} ? '' : ' post-content-clamped'"
+               th:text="${card.post.content}">
+                Post content
+            </p>
+
+            <p th:unless="${card.post.content != null and !card.post.content.isBlank()}"
+               class="mb-0 text-secondary fst-italic"
+               th:text="#{post.owner.content.empty}">
+                This post has no text content.
+            </p>
+
+            <dl th:if="${detailMode}"
+                class="row g-2 small mb-0 mt-4">
+                <dt class="col-sm-4 col-lg-3"
+                    th:text="#{post.owner.createdAt}">Created</dt>
+                <dd class="col-sm-8 col-lg-9"
+                    th:text="${@uiDateTimeFormatter.format(card.post.createdAt)}">
+                    Created time
+                </dd>
+
+                <dt class="col-sm-4 col-lg-3"
+                    th:text="#{post.owner.updatedAt}">Updated</dt>
+                <dd class="col-sm-8 col-lg-9"
+                    th:text="${@uiDateTimeFormatter.format(card.post.updatedAt)}">
+                    Updated time
+                </dd>
+
+                <th:block th:if="${card.post.publishedAt != null}">
+                    <dt class="col-sm-4 col-lg-3"
+                        th:text="#{post.owner.publishedAt}">Published</dt>
+                    <dd class="col-sm-8 col-lg-9"
+                        th:text="${@uiDateTimeFormatter.format(card.post.publishedAt)}">
+                        Published time
+                    </dd>
+                </th:block>
+            </dl>
+
+            <div th:if="${detailMode
+                    and card.post.moderationStatus != null
+                    and card.post.moderationStatus.name() == 'REJECTED'}"
+                 class="alert alert-danger mb-0 mt-4">
+                <strong class="d-block mb-1"
+                        th:text="#{post.owner.rejectionReason}">
+                    Rejection reason
+                </strong>
+                <span th:text="${card.post.rejectionReason != null
+                        and !card.post.rejectionReason.isBlank()
+                        ? card.post.rejectionReason
+                        : #messages.msg('post.owner.rejectionReason.empty')}">
+                    No reason was provided.
+                </span>
+                <small class="d-block mt-2"
+                       th:text="#{post.owner.rejectedRetention}">
+                    Rejected posts are removed after 3 days.
+                </small>
+            </div>
+        </div>
+
+        <div th:if="${detailMode}"
+             class="px-3 px-md-4 pb-3 pb-md-4">
+            <div th:replace="~{post/standard/public/fragments/media
+                    :: detail(${card.post.media})}"></div>
+        </div>
+
+        <th:block th:unless="${detailMode}">
+            <div th:replace="~{post/standard/public/fragments/media
+                    :: compact(${card.post.media},
+                            ${card.detailPath},
+                            ${null})}"></div>
+        </th:block>
+
+        <a th:unless="${detailMode}"
+           th:href="${card.detailPath}"
+           class="stretched-link"
+           th:attr="aria-label=#{post.owner.viewDetail}">
+            <span class="visually-hidden"
+                  th:text="#{post.owner.viewDetail}">
+                View details
+            </span>
+        </a>
+    </article>
+</body>
+</html>

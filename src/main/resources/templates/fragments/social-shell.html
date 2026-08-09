@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="layout(shell, content)"
+         class="social-shell-layout min-vh-100"
+         th:attr="hx-ext=${shell.notificationWidget != null ? 'sse' : null},
+                  sse-connect=${shell.notificationWidget != null
+                          ? shell.notificationWidget.streamPath
+                          : null}">
+        <div th:replace="~{fragments/social-header
+                :: header(${shell})}"></div>
+
+        <main class="container-fluid social-container py-3 py-lg-4">
+            <div class="row g-3 g-lg-4 align-items-start">
+                <aside class="col-12 col-lg-3 col-xl-2 social-navigation-column">
+                    <div class="card border-0 shadow-sm social-navigation-card">
+                        <div class="card-body p-2 p-lg-3">
+                            <div th:replace="~{fragments/social-navigation
+                                    :: navigation(${shell.navigation})}"></div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="col-12 col-lg-9 col-xl-10 min-w-0">
+                    <th:block th:replace="${content}"></th:block>
+                </section>
+            </div>
+        </main>
+
+        <div th:replace="~{fragments/app-tools :: modalHost}"></div>
+        <div th:replace="~{fragments/app-tools :: loader}"></div>
+        <div th:replace="~{fragments/app-tools :: htmxError}"></div>
+    </div>
+</body>
+</html>

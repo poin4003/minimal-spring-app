@@ -48,10 +48,7 @@ public class NotificationSseServiceImpl implements NotificationSseService {
         });
 
         emitter.onCompletion(() -> remove(userId, connectionId));
-        emitter.onTimeout(() -> {
-            remove(userId, connectionId);
-            emitter.complete();
-        });
+        emitter.onTimeout(() -> remove(userId, connectionId));
         emitter.onError(error -> remove(userId, connectionId));
 
         send(
@@ -144,7 +141,6 @@ public class NotificationSseServiceImpl implements NotificationSseService {
             emitter.send(event);
         } catch (IOException | IllegalStateException exception) {
             remove(userId, connectionId);
-            emitter.complete();
         }
     }
 

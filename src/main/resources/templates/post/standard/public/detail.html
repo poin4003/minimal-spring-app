@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Post Detail</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/video.js/video-js.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/post-public.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/videojs-contrib-quality-levels.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/videojs-hls-quality-selector.min.js}"></script>
+    <script defer th:src="@{/js/media-preview.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+</head>
+<body class="bg-body-tertiary">
+    <div th:replace="~{fragments/social-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <div class="row justify-content-center">
+                <div class="col-12 col-xxl-10 d-grid gap-3">
+                    <div th:replace="~{fragments/components/breadcrumb
+                            :: breadcrumb(${page.breadcrumb})}"></div>
+
+                    <div th:replace="~{post/standard/public/fragments/card
+                            :: card(${page.card}, true)}"></div>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</body>
+</html>

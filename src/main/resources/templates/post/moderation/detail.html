@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Post review</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/video.js/video-js.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/shell.css}">
+    <link rel="stylesheet" th:href="@{/css/post-public.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/videojs-contrib-quality-levels.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/videojs-hls-quality-selector.min.js}"></script>
+    <script defer th:src="@{/js/media-preview.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+</head>
+<body class="app-shell bg-body-tertiary">
+    <div th:replace="~{fragments/app-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <div id="post-moderation-detail-workspace"
+                 class="d-grid gap-4"
+                 th:attr="hx-get=${page.queuePath},
+                          hx-trigger=${page.refreshEvent + ' from:body'},
+                          hx-target='#app-page-content',
+                          hx-select='#post-moderation-page-content',
+                          hx-swap='innerHTML',
+                          hx-push-url='true'">
+                <div th:replace="~{fragments/components/breadcrumb
+                        :: breadcrumb(${page.breadcrumb})}"></div>
+
+                <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <a th:href="${page.queuePath}"
+                       class="btn btn-outline-secondary"
+                       th:text="#{post.moderation.backToQueue}">
+                        Back to queue
+                    </a>
+                    <a th:href="${page.rejectModalPath}"
+                       class="btn btn-outline-danger"
+                       th:attr="hx-get=${page.rejectModalPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true'">
+                        <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
+                        <span th:text="#{action.reject}">Reject</span>
+                    </a>
+                    <a th:href="${page.publishModalPath}"
+                       class="btn btn-success"
+                       th:attr="hx-get=${page.publishModalPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true'">
+                        <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
+                        <span th:text="#{action.publish}">Publish</span>
+                    </a>
+                </div>
+
+                <article class="card border-0 shadow-sm overflow-hidden">
+                    <div class="card-body p-3 p-lg-4">
+                        <header class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                            <div class="d-flex align-items-center gap-3 min-w-0">
+                                <img th:if="${page.post.author.avatarUrl != null}"
+                                     th:src="${page.post.author.avatarUrl}"
+                                     th:alt="${page.post.author.fullName}"
+                                     class="rounded-circle border object-fit-cover post-author-avatar">
+                                <span th:unless="${page.post.author.avatarUrl != null}"
+                                      class="rounded-circle border bg-body-tertiary d-inline-flex align-items-center justify-content-center post-author-avatar">
+                                    <i class="bi bi-person" aria-hidden="true"></i>
+                                </span>
+                                <div class="min-w-0">
+                                    <strong class="d-block text-truncate"
+                                            th:text="${page.post.author.fullName != null
+                                                    and !page.post.author.fullName.isBlank()
+                                                    ? page.post.author.fullName
+                                                    : #messages.msg('post.public.unknownAuthor')}">
+                                        Author
+                                    </strong>
+                                    <code class="small"
+                                          th:text="${page.post.author.id}">
+                                        Author ID
+                                    </code>
+                                </div>
+                            </div>
+                            <span class="badge rounded-pill text-bg-warning"
+                                  th:text="${page.statusLabel}">
+                                Pending review
+                            </span>
+                        </header>
+
+                        <p th:if="${page.post.content != null and !page.post.content.isBlank()}"
+                           class="post-content mb-0"
+                           th:text="${page.post.content}">
+                            Post content
+                        </p>
+                        <p th:unless="${page.post.content != null and !page.post.content.isBlank()}"
+                           class="text-secondary fst-italic mb-0"
+                           th:text="#{post.moderation.detail.emptyContent}">
+                            This post has no text content.
+                        </p>
+
+                        <dl class="row g-2 small mb-0 mt-4">
+                            <dt class="col-sm-4 col-lg-3"
+                                th:text="#{post.moderation.detail.postId}">Post ID</dt>
+                            <dd class="col-sm-8 col-lg-9">
+                                <code th:text="${page.post.id}">Post ID</code>
+                            </dd>
+                            <dt class="col-sm-4 col-lg-3"
+                                th:text="#{post.moderation.detail.type}">Type</dt>
+                            <dd class="col-sm-8 col-lg-9"
+                                th:text="${page.post.type}">STANDARD</dd>
+                            <dt class="col-sm-4 col-lg-3"
+                                th:text="#{post.moderation.detail.createdAt}">Submitted</dt>
+                            <dd class="col-sm-8 col-lg-9"
+                                th:text="${@uiDateTimeFormatter.format(page.post.createdAt)}">
+                                Submitted time
+                            </dd>
+                            <dt class="col-sm-4 col-lg-3"
+                                th:text="#{post.moderation.detail.updatedAt}">Updated</dt>
+                            <dd class="col-sm-8 col-lg-9"
+                                th:text="${@uiDateTimeFormatter.format(page.post.updatedAt)}">
+                                Updated time
+                            </dd>
+                        </dl>
+                    </div>
+
+                    <div th:if="${not #lists.isEmpty(page.post.media)}"
+                         class="border-top p-3 p-lg-4">
+                        <h2 class="h5 mb-3"
+                            th:text="#{post.moderation.detail.media}">
+                            Attached media
+                        </h2>
+                        <div th:replace="~{post/standard/public/fragments/media
+                                :: detail(${page.post.media})}"></div>
+                    </div>
+                </article>
+            </div>
+
+            <div th:if="${page.publishModal != null}" hx-disable>
+                <div th:replace="~{fragments/components/confirm-modal
+                        :: modal(${page.publishModal})}"></div>
+            </div>
+            <div th:if="${page.rejectModal != null}" hx-disable>
+                <div th:replace="~{fragments/components/modal
+                        :: modal(${page.rejectModal})}"></div>
+            </div>
+
+            <script th:if="${page.openModalId != null}"
+                    th:inline="javascript">
+                document.addEventListener("DOMContentLoaded", function () {
+                    const modalElement = document.getElementById(
+                            /*[[${page.openModalId}]]*/ "");
+                    if (modalElement != null) {
+                        bootstrap.Modal
+                                .getOrCreateInstance(modalElement)
+                                .show();
+                    }
+                });
+            </script>
+        </th:block>
+    </div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+:root {
+    --social-content-max-width: 96rem;
+}
+
+.social-shell-layout {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.social-container {
+    max-width: var(--social-content-max-width);
+}
+
+.social-brand-mark {
+    width: 2rem;
+    height: 2rem;
+    font-size: 1rem;
+}
+
+.place-items-center {
+    place-items: center;
+}
+
+.social-navigation-card .nav-link {
+    color: var(--bs-body-color);
+    font-weight: 600;
+}
+
+.social-navigation-card .nav-link:not(.active):hover,
+.social-navigation-card .nav-link:not(.active):focus-visible {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.social-empty-icon {
+    width: 4rem;
+    height: 4rem;
+}
+
+.social-empty-copy {
+    max-width: 34rem;
+}
+
+@media (min-width: 992px) {
+    .social-navigation-card {
+        position: sticky;
+        top: 5.5rem;
+    }
+}

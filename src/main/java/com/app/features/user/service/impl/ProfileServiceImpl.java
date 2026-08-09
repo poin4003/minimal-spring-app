@@ -1,5 +1,6 @@
 package com.app.features.user.service.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -77,11 +78,22 @@ public class ProfileServiceImpl implements ProfileService {
         requireProfile(userId).setAvatarMedia(null);
     }
 
-    private UserInfoEntity requireProfile(UUID userId) {
+    @Override
+    public UserInfoEntity requireProfile(UUID userId) {
         return userInfoRepo.findOneByUserId(userId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "error.profile.notFound",
                         userId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UserInfoEntity> findProfiles(Collection<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return List.of();
+        }
+
+        return userInfoRepo.findAllByUserIdIn(userIds);
     }
 
     private ProfileResult toResult(UserInfoEntity profile) {

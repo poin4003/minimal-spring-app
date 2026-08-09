@@ -51,6 +51,25 @@
         </div>
     </div>
 
+    <div th:fragment="htmxError"
+         id="app-htmx-error"
+         class="alert alert-danger alert-dismissible position-fixed bottom-0 end-0 m-3 z-3"
+         role="alert"
+         hidden
+         th:attr="data-request-message=#{htmx.error.request},
+                  data-connection-message=#{htmx.error.connection}">
+        <div class="pe-3">
+            <span data-app-htmx-error-message
+                  th:text="#{htmx.error.request}">
+                The request could not be completed. Please try again.
+            </span>
+        </div>
+        <button type="button"
+                class="btn-close"
+                data-app-htmx-error-dismiss
+                th:attr="aria-label=#{action.close}"></button>
+    </div>
+
     <div th:fragment="modalHost" id="app-modal-host"></div>
 
     <th:block th:fragment="htmxScripts">

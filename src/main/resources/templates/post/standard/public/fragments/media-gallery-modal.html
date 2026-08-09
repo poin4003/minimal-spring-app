@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="modal(gallery)"
+         class="modal fade"
+         tabindex="-1"
+         aria-hidden="true"
+         data-media-preview-modal
+         data-post-media-gallery-modal
+         th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+         th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+         th:data-message-stream-failed="#{media.preview.streamFailed}"
+         th:id="${gallery.id}">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content bg-black text-white">
+                <div class="modal-header border-secondary">
+                    <h2 class="modal-title fs-5"
+                        th:text="${gallery.title}">
+                        Post media
+                    </h2>
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            th:aria-label="#{action.close}"></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    <div th:id="${gallery.id + '-carousel'}"
+                         class="carousel slide"
+                         data-bs-interval="false"
+                         data-bs-touch="true"
+                         data-bs-keyboard="true">
+                        <div class="carousel-inner">
+                            <div th:each="attachment, state : ${gallery.media}"
+                                 class="carousel-item"
+                                 th:classappend="${gallery.isActive(
+                                         attachment.media.id,
+                                         state.first)} ? ' active' : ''"
+                                 th:with="asset=${attachment.media}">
+                                <div class="post-media-gallery-stage d-flex align-items-center justify-content-center p-3 p-lg-4"
+                                     th:switch="${asset.kind.name()}">
+                                    <img th:case="'IMAGE'"
+                                         th:src="${asset.contentUrl}"
+                                         th:alt="${asset.originalName}"
+                                         class="img-fluid w-100 post-media-gallery-image">
+
+                                    <div th:case="'VIDEO'"
+                                         class="app-media-preview-player w-100"
+                                         data-media-preview-player>
+                                        <video class="video-js vjs-big-play-centered app-media-preview-video"
+                                               controls
+                                               playsinline
+                                               preload="metadata"
+                                               data-video-player
+                                               th:poster="${asset.thumbnailUrl}"
+                                               th:attr="data-video-source=${asset.contentUrl},
+                                                        data-media-progress-id=${asset.id}"></video>
+                                        <div class="alert alert-danger w-100 mt-3 mb-0"
+                                             data-video-error
+                                             hidden></div>
+                                    </div>
+
+                                    <div th:case="'AUDIO'"
+                                         class="app-media-preview-player card bg-body text-body border p-4 w-100"
+                                         data-media-preview-player>
+                                        <p class="fw-semibold mb-3"
+                                           th:text="${asset.originalName}">
+                                            Audio
+                                        </p>
+                                        <audio class="video-js app-media-preview-audio w-100"
+                                               controls
+                                               preload="metadata"
+                                               data-video-player
+                                               th:attr="data-video-source=${asset.contentUrl}"></audio>
+                                        <div class="alert alert-danger w-100 mt-3 mb-0"
+                                             data-video-error
+                                             hidden></div>
+                                    </div>
+
+                                    <a th:case="'DOCUMENT'"
+                                       th:href="${asset.originalUrl}"
+                                       class="card bg-body text-body border p-4 text-decoration-none"
+                                       target="_blank"
+                                       rel="noopener">
+                                        <i class="bi bi-file-earmark-text display-4 text-primary mb-3"
+                                           aria-hidden="true"></i>
+                                        <strong th:text="${asset.originalName}"></strong>
+                                        <span class="small text-secondary mt-2"
+                                              th:text="#{post.public.openDocument}"></span>
+                                    </a>
+
+                                    <a th:case="'FILE'"
+                                       th:href="${asset.originalUrl}"
+                                       class="card bg-body text-body border p-4 text-decoration-none"
+                                       download>
+                                        <i class="bi bi-download display-4 text-primary mb-3"
+                                           aria-hidden="true"></i>
+                                        <strong th:text="${asset.originalName}"></strong>
+                                        <span class="small text-secondary mt-2"
+                                              th:text="#{post.public.downloadFile}"></span>
+                                    </a>
+                                </div>
+
+                                <div class="carousel-caption position-static px-5 pb-4 text-white"
+                                     th:text="${asset.originalName}">
+                                    media.jpg
+                                </div>
+                            </div>
+                        </div>
+
+                        <div th:if="${#lists.size(gallery.media) > 1}"
+                             class="carousel-indicators post-media-gallery-thumbnails">
+                            <button th:each="attachment, state : ${gallery.media}"
+                                    type="button"
+                                    th:data-bs-target="${'#' + gallery.id + '-carousel'}"
+                                    th:data-bs-slide-to="${state.index}"
+                                    th:with="asset=${attachment.media},
+                                             active=${gallery.isActive(
+                                                     asset.id,
+                                                     state.first)}"
+                                    th:classappend="${active} ? 'active' : ''"
+                                    th:attr="aria-current=${active ? 'true' : null},
+                                             aria-label=${state.count + ' / ' + #lists.size(gallery.media)}">
+                                <img th:if="${asset.thumbnailUrl != null
+                                        or (asset.kind.name() == 'IMAGE'
+                                        and asset.contentUrl != null)}"
+                                     th:src="${asset.thumbnailUrl != null
+                                             ? asset.thumbnailUrl
+                                             : asset.contentUrl}"
+                                     alt=""
+                                     loading="lazy"
+                                     class="w-100 h-100 object-fit-cover">
+
+                                <span th:unless="${asset.thumbnailUrl != null
+                                        or (asset.kind.name() == 'IMAGE'
+                                        and asset.contentUrl != null)}"
+                                      class="d-flex align-items-center justify-content-center w-100 h-100 bg-body-tertiary text-secondary">
+                                    <i class="bi fs-5"
+                                       th:classappend="${asset.kind.name() == 'VIDEO'} ? ' bi-play-circle' :
+                                               (${asset.kind.name() == 'AUDIO'} ? ' bi-music-note-beamed' :
+                                               (${asset.kind.name() == 'DOCUMENT'} ? ' bi-file-earmark-text' :
+                                               ' bi-file-earmark'))"
+                                       aria-hidden="true"></i>
+                                </span>
+
+                                <span th:if="${asset.kind.name() == 'VIDEO'}"
+                                      class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                                    <i class="bi bi-play-circle-fill fs-4"
+                                       aria-hidden="true"></i>
+                                </span>
+                            </button>
+                        </div>
+
+                        <button th:if="${#lists.size(gallery.media) > 1}"
+                                class="carousel-control-prev post-media-gallery-control btn btn-dark rounded-circle border border-light"
+                                type="button"
+                                th:data-bs-target="${'#' + gallery.id + '-carousel'}"
+                                data-bs-slide="prev">
+                            <i class="bi bi-chevron-left text-white"
+                               aria-hidden="true"></i>
+                            <span class="visually-hidden"
+                                  th:text="#{action.previous}">Previous</span>
+                        </button>
+                        <button th:if="${#lists.size(gallery.media) > 1}"
+                                class="carousel-control-next post-media-gallery-control btn btn-dark rounded-circle border border-light"
+                                type="button"
+                                th:data-bs-target="${'#' + gallery.id + '-carousel'}"
+                                data-bs-slide="next">
+                            <i class="bi bi-chevron-right text-white"
+                               aria-hidden="true"></i>
+                            <span class="visually-hidden"
+                                  th:text="#{action.next}">Next</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

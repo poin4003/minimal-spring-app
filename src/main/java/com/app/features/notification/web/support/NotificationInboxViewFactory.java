@@ -95,6 +95,6 @@ public class NotificationInboxViewFactory {
     }
 
     private String getNotificationBasePath() {
-        return appProperties.getUi().getHomePath() + "/notifications";
+        return appProperties.getUi().getNotificationPath();
     }
 }

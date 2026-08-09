@@ -11,6 +11,7 @@
         <div class="modal-content">
             <form method="post"
                   th:action="${modal.actionPath}"
+                  data-app-modal-form="true"
                   th:attr="hx-post=${modal.actionPath},
                            hx-swap='none',
                            hx-disabled-elt='button[type=submit]'">

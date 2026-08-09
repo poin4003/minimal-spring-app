@@ -9,7 +9,6 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.NonNull;
 
 @Data
 public class CreateStandardPostPayload {
@@ -17,7 +16,7 @@ public class CreateStandardPostPayload {
     @Size(max = 10_000, message = "{validation.post.content.tooLong}")
     private String content;
 
-    @NonNull
+    @NotNull
     @Size(max = 20, message = "{validation.post.media.tooMany}")
     private List<@NotNull UUID> mediaIds = List.of();
 

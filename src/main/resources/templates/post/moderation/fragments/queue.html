@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="queue(queue)"
+             th:id="${queue.id}"
+             th:attr="hx-get=${queue.refreshPath},
+                      hx-trigger=${queue.refreshEvent + ' from:body'},
+                      hx-target='this',
+                      hx-swap='outerHTML'">
+        <div th:replace="~{fragments/components/table
+                :: table(${queue.table})}"></div>
+    </section>
+</body>
+</html>

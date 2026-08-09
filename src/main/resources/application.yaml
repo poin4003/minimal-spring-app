@@ -138,6 +138,10 @@ app:
         sse:
             connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
             heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}
+    post:
+        maintenance:
+            deleted-retention: ${POST_DELETED_RETENTION:3d}
+            rejected-retention: ${POST_REJECTED_RETENTION:3d}
     security:
         rate-limit:
             enabled: ${RATE_LIMIT_ENABLED:true}
@@ -185,6 +189,9 @@ app:
             - /api/v1/auth/password-reset/**
             - "${app.media.public-path}/**"
         web-public-paths:
+            - "${app.ui.social-path}"
+            - "${app.ui.feed-path}"
+            - "${app.ui.feed-path}/**"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -207,10 +214,16 @@ app:
             - /admin/rbac/**
             - /admin/cronjobs/**
     ui:
+        social-path: ${UI_SOCIAL_PATH:/}
+        feed-path: ${UI_FEED_PATH:/posts}
+        my-posts-path: ${UI_MY_POSTS_PATH:/my/posts}
+        landing-path: ${UI_LANDING_PATH:/home}
         login-path: ${UI_LOGIN_PATH:/login}
         registration-path: ${UI_REGISTRATION_PATH:/register}
         forgot-password-path: ${UI_FORGOT_PASSWORD_PATH:/forgot-password}
         home-path: ${UI_HOME_PATH:/admin}
+        profile-path: ${UI_PROFILE_PATH:/profile}
+        notification-path: ${UI_NOTIFICATION_PATH:/notifications}
         logout-path: ${UI_LOGOUT_PATH:/logout}
         application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}
 
