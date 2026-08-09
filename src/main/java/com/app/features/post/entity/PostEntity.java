@@ -38,7 +38,10 @@ import lombok.ToString;
                 columnList = "author_id, lifecycle_status, created_at"),
         @Index(
                 name = "idx_post_lifecycle_deleted_at",
-                columnList = "lifecycle_status, deleted_at")
+                columnList = "lifecycle_status, deleted_at"),
+        @Index(
+                name = "idx_post_lifecycle_moderation_moderated_at",
+                columnList = "lifecycle_status, moderation_status, moderated_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)

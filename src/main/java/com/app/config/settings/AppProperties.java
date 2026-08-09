@@ -40,6 +40,8 @@ public class AppProperties {
     private final Jwt jwt = new Jwt();
     private final Media media = new Media();
     private final NotificationSettings notification = new NotificationSettings();
+    @Valid
+    private final PostSettings post = new PostSettings();
     private final Security security = new Security();
     private final Ui ui = new Ui();
 
@@ -485,6 +487,31 @@ public class AppProperties {
             return !enabled
                     || (StringUtils.hasText(botToken)
                             && StringUtils.hasText(groupChatId));
+        }
+    }
+
+    @Data
+    public static class PostSettings {
+        @Valid
+        private final PostMaintenance maintenance = new PostMaintenance();
+    }
+
+    @Data
+    public static class PostMaintenance {
+        @NotNull
+        private Duration deletedRetention = Duration.ofDays(3);
+
+        @NotNull
+        private Duration rejectedRetention = Duration.ofDays(3);
+
+        @AssertTrue(message = "Post retention values must be positive.")
+        public boolean isRetentionConfigurationValid() {
+            return isPositive(deletedRetention)
+                    && isPositive(rejectedRetention);
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
         }
     }
 

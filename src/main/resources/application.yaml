@@ -138,6 +138,10 @@ app:
         sse:
             connection-timeout: ${NOTIFICATION_SSE_TIMEOUT:30m}
             heartbeat-interval: ${NOTIFICATION_SSE_HEARTBEAT:20s}
+    post:
+        maintenance:
+            deleted-retention: ${POST_DELETED_RETENTION:3d}
+            rejected-retention: ${POST_REJECTED_RETENTION:3d}
     security:
         rate-limit:
             enabled: ${RATE_LIMIT_ENABLED:true}
