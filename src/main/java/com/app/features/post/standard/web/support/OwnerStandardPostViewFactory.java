@@ -32,14 +32,14 @@ public class OwnerStandardPostViewFactory {
             boolean detailMode) {
         return OwnerPostCardView.builder()
                 .post(post)
-                .detailPath(buildDetailPath(post.getId()))
-                .editPath(buildEditPath(post.getId()))
+                .detailPath(buildDetailPath(post.getPost().getId()))
+                .editPath(buildEditPath(post.getPost().getId()))
                 .statusLabel(resolveStatusLabel(
-                        post.getLifecycleStatus(),
-                        post.getModerationStatus()))
+                        post.getState().getLifecycleStatus(),
+                        post.getState().getModerationStatus()))
                 .statusBadgeClass(resolveStatusBadgeClass(
-                        post.getLifecycleStatus(),
-                        post.getModerationStatus()))
+                        post.getState().getLifecycleStatus(),
+                        post.getState().getModerationStatus()))
                 .actions(buildActions(post, detailMode))
                 .editable(isEditable(post))
                 .build();
@@ -109,7 +109,7 @@ public class OwnerStandardPostViewFactory {
                 .description(messageResolver.get(
                         resolveActionDescriptionKey(action)))
                 .actionPath(buildActionPath(
-                        post.getId(),
+                        post.getPost().getId(),
                         action,
                         detailMode))
                 .confirmLabel(messageResolver.get(
@@ -158,7 +158,7 @@ public class OwnerStandardPostViewFactory {
                         .label(messageResolver.get(
                                 resolveActionLabelKey(action)))
                         .modalPath(buildActionConfirmPath(
-                                post.getId(),
+                                post.getPost().getId(),
                                 action,
                                 detailMode))
                         .iconClass(resolveActionIconClass(action))
@@ -170,13 +170,13 @@ public class OwnerStandardPostViewFactory {
     private List<OwnerPostActionType> buildActionTypes(
             OwnerStandardPostResult post) {
         List<OwnerPostActionType> actions = new ArrayList<>();
-        switch (post.getLifecycleStatus()) {
+        switch (post.getState().getLifecycleStatus()) {
             case DRAFT -> {
                 actions.add(OwnerPostActionType.SUBMIT);
                 actions.add(OwnerPostActionType.DELETE);
             }
             case ACTIVE -> {
-                if (post.getModerationStatus()
+                if (post.getState().getModerationStatus()
                         == PostModerationStatus.PUBLISHED) {
                     actions.add(OwnerPostActionType.ARCHIVE);
                 }
@@ -193,8 +193,10 @@ public class OwnerStandardPostViewFactory {
     }
 
     private boolean isEditable(OwnerStandardPostResult post) {
-        return post.getLifecycleStatus() != PostLifecycleStatus.ARCHIVED
-                && post.getLifecycleStatus() != PostLifecycleStatus.DELETED;
+        return post.getState().getLifecycleStatus()
+                != PostLifecycleStatus.ARCHIVED
+                && post.getState().getLifecycleStatus()
+                != PostLifecycleStatus.DELETED;
     }
 
     private String buildDetailPath(UUID postId) {

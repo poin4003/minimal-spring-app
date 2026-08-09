@@ -422,7 +422,7 @@ public class PostModerationPageController {
                 .breadcrumb(buildDetailBreadcrumb(queuePath))
                 .post(post)
                 .statusLabel(resolveStatusLabel(
-                        post.getModerationStatus()))
+                        post.getState().getModerationStatus()))
                 .queuePath(queuePath)
                 .refreshEvent(QUEUE_CHANGED_EVENT)
                 .publishModalPath(buildStatePath(

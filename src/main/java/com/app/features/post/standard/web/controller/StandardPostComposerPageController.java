@@ -176,7 +176,7 @@ public class StandardPostComposerPageController {
         return HtmxRequestSupport.redirectView(
                 request,
                 response,
-                getMyPostsPath() + "/" + post.getId());
+                getMyPostsPath() + "/" + post.getPost().getId());
     }
 
     @GetMapping("/{postId}/edit")
@@ -298,7 +298,7 @@ public class StandardPostComposerPageController {
         return HtmxRequestSupport.redirectView(
                 request,
                 response,
-                getDetailPath(post.getId()));
+                getDetailPath(post.getPost().getId()));
     }
 
     private StandardPostComposerPageView buildPage(

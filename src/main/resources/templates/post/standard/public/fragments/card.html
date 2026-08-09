@@ -6,26 +6,26 @@
              class="card border-0 shadow-sm overflow-hidden position-relative">
         <div class="card-body p-3 p-md-4">
             <header class="d-flex align-items-center gap-3 mb-3">
-                <img th:if="${card.post.author.avatarUrl != null}"
-                     th:src="${card.post.author.avatarUrl}"
-                     th:alt="${card.post.author.fullName}"
+                <img th:if="${card.post.post.author.avatarUrl != null}"
+                     th:src="${card.post.post.author.avatarUrl}"
+                     th:alt="${card.post.post.author.fullName}"
                      class="rounded-circle border object-fit-cover post-author-avatar">
-                <span th:unless="${card.post.author.avatarUrl != null}"
+                <span th:unless="${card.post.post.author.avatarUrl != null}"
                       class="rounded-circle border bg-body-tertiary d-inline-flex align-items-center justify-content-center post-author-avatar">
                     <i class="bi bi-person" aria-hidden="true"></i>
                 </span>
 
                 <div class="min-w-0">
                     <strong class="d-block text-truncate"
-                            th:text="${card.post.author.fullName != null
-                                    and !card.post.author.fullName.isBlank()
-                                    ? card.post.author.fullName
+                            th:text="${card.post.post.author.fullName != null
+                                    and !card.post.post.author.fullName.isBlank()
+                                    ? card.post.post.author.fullName
                                     : #messages.msg('post.public.unknownAuthor')}">
                         Author
                     </strong>
                     <time class="d-block small text-secondary"
-                          th:datetime="${card.post.publishedAt}"
-                          th:text="${@uiDateTimeFormatter.format(card.post.publishedAt)}">
+                          th:datetime="${card.post.post.publishedAt}"
+                          th:text="${@uiDateTimeFormatter.format(card.post.post.publishedAt)}">
                         Published time
                     </time>
                 </div>

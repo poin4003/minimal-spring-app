@@ -1,6 +1,5 @@
-package com.app.features.post.standard.schema.result;
+package com.app.features.post.shortpost.schema.result;
 
-import java.util.List;
 import com.app.features.post.schema.result.OwnerPostStateResult;
 import com.app.features.post.schema.result.PostMediaResult;
 import com.app.features.post.schema.result.PostSummaryResult;
@@ -8,13 +7,13 @@ import com.app.features.post.schema.result.PostSummaryResult;
 import lombok.Data;
 
 @Data
-public class OwnerStandardPostResult {
+public class OwnerShortPostResult {
 
     private PostSummaryResult post;
 
     private OwnerPostStateResult state;
 
-    private String content;
+    private String caption;
 
-    private List<PostMediaResult> media = List.of();
+    private PostMediaResult media;
 }

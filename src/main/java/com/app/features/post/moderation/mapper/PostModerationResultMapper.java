@@ -8,8 +8,10 @@ import org.springframework.stereotype.Component;
 import com.app.features.media.mapper.MediaResultMapper;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostMediaEntity;
+import com.app.features.post.mapper.PostResultMapper;
 import com.app.features.post.moderation.schema.result.ModerationPostMediaResult;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationPostStateResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.user.entity.UserInfoEntity;
@@ -25,6 +27,7 @@ public class PostModerationResultMapper {
     private final ModelMapper mapper;
     private final MediaResultMapper mediaResultMapper;
     private final UserPublicResultMapper userPublicResultMapper;
+    private final PostResultMapper postResultMapper;
 
     public ModerationPostResult toListResult(
             PostEntity post,
@@ -43,14 +46,20 @@ public class PostModerationResultMapper {
             UserInfoEntity authorInfo,
             List<PostMediaEntity> attachments) {
         PostEntity post = standardPost.getPost();
-        ModerationStandardPostDetailResult result = mapper.map(
-                post,
-                ModerationStandardPostDetailResult.class);
+        ModerationStandardPostDetailResult result =
+                new ModerationStandardPostDetailResult();
+        result.setPost(postResultMapper.toSummary(post, authorInfo));
+        result.setState(toState(post));
         result.setContent(standardPost.getContent());
-        result.setAuthor(userPublicResultMapper.toResult(
-                post.getAuthor(),
-                authorInfo));
         result.setMedia(toMediaResults(attachments));
+
+        return result;
+    }
+
+    private ModerationPostStateResult toState(PostEntity post) {
+        ModerationPostStateResult result = mapper.map(
+                post,
+                ModerationPostStateResult.class);
 
         if (post.getModeratedBy() != null) {
             result.setModeratedBy(mapper.map(

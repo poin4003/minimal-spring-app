@@ -13,8 +13,8 @@
                 </span>
                 <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 position-relative z-2">
                     <time class="small text-secondary"
-                          th:datetime="${card.post.createdAt}"
-                          th:text="${@uiDateTimeFormatter.format(card.post.createdAt)}">
+                          th:datetime="${card.post.state.createdAt}"
+                          th:text="${@uiDateTimeFormatter.format(card.post.state.createdAt)}">
                         Created time
                     </time>
                     <div class="btn-group btn-group-sm"
@@ -69,38 +69,38 @@
                 <dt class="col-sm-4 col-lg-3"
                     th:text="#{post.owner.createdAt}">Created</dt>
                 <dd class="col-sm-8 col-lg-9"
-                    th:text="${@uiDateTimeFormatter.format(card.post.createdAt)}">
+                    th:text="${@uiDateTimeFormatter.format(card.post.state.createdAt)}">
                     Created time
                 </dd>
 
                 <dt class="col-sm-4 col-lg-3"
                     th:text="#{post.owner.updatedAt}">Updated</dt>
                 <dd class="col-sm-8 col-lg-9"
-                    th:text="${@uiDateTimeFormatter.format(card.post.updatedAt)}">
+                    th:text="${@uiDateTimeFormatter.format(card.post.state.updatedAt)}">
                     Updated time
                 </dd>
 
-                <th:block th:if="${card.post.publishedAt != null}">
+                <th:block th:if="${card.post.post.publishedAt != null}">
                     <dt class="col-sm-4 col-lg-3"
                         th:text="#{post.owner.publishedAt}">Published</dt>
                     <dd class="col-sm-8 col-lg-9"
-                        th:text="${@uiDateTimeFormatter.format(card.post.publishedAt)}">
+                        th:text="${@uiDateTimeFormatter.format(card.post.post.publishedAt)}">
                         Published time
                     </dd>
                 </th:block>
             </dl>
 
             <div th:if="${detailMode
-                    and card.post.moderationStatus != null
-                    and card.post.moderationStatus.name() == 'REJECTED'}"
+                    and card.post.state.moderationStatus != null
+                    and card.post.state.moderationStatus.name() == 'REJECTED'}"
                  class="alert alert-danger mb-0 mt-4">
                 <strong class="d-block mb-1"
                         th:text="#{post.owner.rejectionReason}">
                     Rejection reason
                 </strong>
-                <span th:text="${card.post.rejectionReason != null
-                        and !card.post.rejectionReason.isBlank()
-                        ? card.post.rejectionReason
+                <span th:text="${card.post.state.rejectionReason != null
+                        and !card.post.state.rejectionReason.isBlank()
+                        ? card.post.state.rejectionReason
                         : #messages.msg('post.owner.rejectionReason.empty')}">
                     No reason was provided.
                 </span>

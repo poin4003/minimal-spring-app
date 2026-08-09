@@ -96,10 +96,11 @@ public class PublicStandardPostPageController {
                 .posts(postPage.getContent().stream()
                         .map(post -> PublicPostCardView.builder()
                                 .post(post)
-                                .detailPath(buildDetailPath(post.getId()))
+                                .detailPath(buildDetailPath(
+                                        post.getPost().getId()))
                                 .mediaGalleryPartialPath(
                                         buildMediaGalleryPartialPath(
-                                                post.getId()))
+                                                post.getPost().getId()))
                                 .singlePlayableMedia(
                                         resolveSinglePlayableMedia(
                                                 post.getMedia()))
@@ -138,9 +139,10 @@ public class PublicStandardPostPageController {
                         .breadcrumb(buildDetailBreadcrumb())
                         .card(PublicPostCardView.builder()
                                 .post(post)
-                                .detailPath(buildDetailPath(post.getId()))
+                                .detailPath(buildDetailPath(
+                                        post.getPost().getId()))
                                 .detailMedia(buildDetailMedia(
-                                        post.getId(),
+                                        post.getPost().getId(),
                                         post.getMedia()))
                                 .build())
                         .build();
