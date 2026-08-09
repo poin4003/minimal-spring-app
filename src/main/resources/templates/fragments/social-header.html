@@ -28,11 +28,19 @@
                     </a>
 
                     <a th:if="${shell.currentUser != null}"
+                       th:href="${shell.myPostsPath}"
+                       class="btn btn-outline-secondary app-header-action app-icon-button"
+                       th:attr="aria-label=#{profile.personal.title},
+                                title=#{profile.personal.title}">
+                        <i class="bi bi-person-circle" aria-hidden="true"></i>
+                    </a>
+
+                    <a th:if="${shell.currentUser != null}"
                        th:href="${shell.profilePath}"
                        class="btn btn-outline-secondary app-header-action app-icon-button"
                        th:attr="aria-label=#{profile.title},
                                 title=#{profile.title}">
-                        <i class="bi bi-person-circle" aria-hidden="true"></i>
+                        <i class="bi bi-gear" aria-hidden="true"></i>
                     </a>
 
                     <div th:replace="~{fragments/app-tools

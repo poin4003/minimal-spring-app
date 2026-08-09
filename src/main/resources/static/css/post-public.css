@@ -16,6 +16,12 @@
     -webkit-line-clamp: 6;
 }
 
+.personal-profile-avatar {
+    width: 7rem;
+    height: 7rem;
+    flex: 0 0 7rem;
+}
+
 .post-detail-image {
     max-height: 75vh;
     object-fit: contain;

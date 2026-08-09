@@ -36,6 +36,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.SocialShellFactory;
+import com.app.features.user.service.ProfileService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -64,6 +65,7 @@ public class OwnerStandardPostPageController {
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final StandardPostService standardPostSvc;
+    private final ProfileService profileSvc;
     private final OwnerStandardPostViewFactory ownerPostViewFactory;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
@@ -103,10 +105,14 @@ public class OwnerStandardPostPageController {
                         .pagination(pagination)
                         .build();
         OwnerPostListPageView page = OwnerPostListPageView.builder()
-                .title(messageResolver.get("post.owner.list.title"))
+                .title(messageResolver.get("profile.personal.title"))
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
+                .profile(profileSvc.getProfile(
+                        currentUser.getUserId()))
+                .editProfilePath(
+                        appProperties.getUi().getProfilePath())
                 .createPath(getMyPostsPath() + "/create")
                 .workspace(workspace)
                 .build();

@@ -16,6 +16,7 @@ public class SocialShellView {
     private final String loginPath;
     private final String registrationPath;
     private final String logoutPath;
+    private final String myPostsPath;
     private final String profilePath;
     private final String themeUpdatePath;
     private final String adminPath;

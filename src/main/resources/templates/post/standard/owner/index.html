@@ -20,13 +20,60 @@
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
                 <div class="col-12 col-xxl-9 d-grid gap-3">
-                    <div class="d-flex justify-content-end">
-                        <a th:href="${page.createPath}"
-                           class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                            <span th:text="#{post.composer.open}">Create post</span>
-                        </a>
-                    </div>
+                    <section class="card border-0 shadow-sm">
+                        <div class="card-body p-4 d-flex flex-column flex-md-row align-items-center gap-4">
+                            <img th:if="${page.profile.avatar != null
+                                    and page.profile.avatar.thumbnailUrl != null}"
+                                 th:src="${page.profile.avatar.thumbnailUrl}"
+                                 th:alt="#{profile.avatar.current}"
+                                 class="rounded-circle border object-fit-cover personal-profile-avatar">
+                            <span th:unless="${page.profile.avatar != null
+                                    and page.profile.avatar.thumbnailUrl != null}"
+                                  class="rounded-circle border bg-body-tertiary d-inline-flex align-items-center justify-content-center personal-profile-avatar">
+                                <i class="bi bi-person fs-1"
+                                   aria-hidden="true"></i>
+                            </span>
+
+                            <div class="flex-grow-1 min-w-0 text-center text-md-start">
+                                <h1 class="h3 mb-1 text-truncate"
+                                    th:text="${page.profile.fullName != null
+                                            and !page.profile.fullName.isBlank()
+                                            ? page.profile.fullName
+                                            : #messages.msg('profile.personal.noName')}">
+                                    No name
+                                </h1>
+                                <p class="text-secondary text-truncate mb-0"
+                                   th:text="${page.profile.email}">
+                                    user@example.com
+                                </p>
+                            </div>
+
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <a th:href="${page.editProfilePath}"
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil me-2"
+                                       aria-hidden="true"></i>
+                                    <span th:text="#{profile.edit}">
+                                        Edit profile
+                                    </span>
+                                </a>
+
+                                <a th:href="${page.createPath}"
+                                   class="btn btn-primary">
+                                    <i class="bi bi-plus-lg me-2"
+                                       aria-hidden="true"></i>
+                                    <span th:text="#{post.composer.open}">
+                                        Create post
+                                    </span>
+                                </a>
+                            </div>
+                        </div>
+                    </section>
+
+                    <h2 class="h4 mt-3 mb-0"
+                        th:text="#{post.owner.list.title}">
+                        My posts
+                    </h2>
 
                     <div th:replace="~{post/standard/owner/fragments/workspace
                             :: workspace(${page.workspace})}"></div>

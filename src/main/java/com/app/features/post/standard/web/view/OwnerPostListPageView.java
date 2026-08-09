@@ -1,6 +1,7 @@
 package com.app.features.post.standard.web.view;
 
 import com.app.features.ui.web.view.SocialShellView;
+import com.app.features.user.schema.result.ProfileResult;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -13,6 +14,8 @@ public class OwnerPostListPageView {
 
     private final String title;
     private final SocialShellView shell;
+    private final ProfileResult profile;
+    private final String editProfilePath;
     private final String createPath;
     private final OwnerPostWorkspaceView workspace;
 }

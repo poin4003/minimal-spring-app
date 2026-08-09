@@ -34,6 +34,7 @@ public class SocialShellFactory {
                 .loginPath(ui.getLoginPath())
                 .registrationPath(ui.getRegistrationPath())
                 .logoutPath(ui.getLogoutPath())
+                .myPostsPath(authenticated ? ui.getMyPostsPath() : null)
                 .profilePath(authenticated ? ui.getProfilePath() : null)
                 .themeUpdatePath(authenticated
                         ? ui.getProfilePath() + "/theme"
@@ -42,7 +43,7 @@ public class SocialShellFactory {
                         ? ui.getHomePath()
                         : null)
                 .currentUser(authenticated ? toCurrentUser(currentUser) : null)
-                .navigation(buildNavigation(authenticated, requestPath))
+                .navigation(buildNavigation(requestPath))
                 .notificationWidget(authenticated
                         ? buildNotificationWidget()
                         : null)
@@ -59,7 +60,6 @@ public class SocialShellFactory {
     }
 
     private List<SocialNavigationItemView> buildNavigation(
-            boolean authenticated,
             String requestPath) {
         String feedPath = appProperties.getUi().getFeedPath();
         SocialNavigationItemView feed = SocialNavigationItemView.builder()
@@ -68,21 +68,7 @@ public class SocialShellFactory {
                 .path(feedPath)
                 .active(matchesPath(feedPath, requestPath))
                 .build();
-
-        if (!authenticated) {
-            return List.of(feed);
-        }
-
-        String myPostsPath = appProperties.getUi().getMyPostsPath();
-        return List.of(
-                feed,
-                SocialNavigationItemView.builder()
-                        .label(messageResolver.get(
-                                "social.navigation.myPosts"))
-                        .icon("journal-text")
-                        .path(myPostsPath)
-                        .active(matchesPath(myPostsPath, requestPath))
-                        .build());
+        return List.of(feed);
     }
 
     private NotificationWidgetView buildNotificationWidget() {
