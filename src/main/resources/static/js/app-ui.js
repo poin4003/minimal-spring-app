@@ -52,6 +52,28 @@
         document.getElementById("app-loader")?.setAttribute("hidden", "");
     }
 
+    function hideHtmxError() {
+        document.getElementById("app-htmx-error")
+            ?.setAttribute("hidden", "");
+    }
+
+    function showHtmxError(messageType) {
+        const alert = document.getElementById("app-htmx-error");
+        if (alert == null) {
+            return;
+        }
+
+        const message = messageType === "connection"
+            ? alert.dataset.connectionMessage
+            : alert.dataset.requestMessage;
+        const messageElement = alert.querySelector(
+            "[data-app-htmx-error-message]");
+        if (messageElement != null) {
+            messageElement.textContent = message;
+        }
+        alert.removeAttribute("hidden");
+    }
+
     function isSidebarCollapsed() {
         return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true";
     }
@@ -125,13 +147,24 @@
     });
 
     document.addEventListener("htmx:beforeRequest", function (event) {
+        hideHtmxError();
         if (event.detail.elt.closest("[data-app-loader='manual']") == null) {
             showLoader();
         }
     });
     document.addEventListener("htmx:afterRequest", hideLoader);
-    document.addEventListener("htmx:sendError", hideLoader);
-    document.addEventListener("htmx:responseError", hideLoader);
+    document.addEventListener("htmx:sendError", function () {
+        hideLoader();
+        showHtmxError("connection");
+    });
+    document.addEventListener("htmx:timeout", function () {
+        hideLoader();
+        showHtmxError("connection");
+    });
+    document.addEventListener("htmx:responseError", function () {
+        hideLoader();
+        showHtmxError("request");
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
         updateThemeButtons(getTheme());
@@ -158,6 +191,11 @@
             });
 
         document.addEventListener("click", function (event) {
+            if (event.target.closest("[data-app-htmx-error-dismiss]") != null) {
+                hideHtmxError();
+                return;
+            }
+
             const sidebarToggle = event.target.closest(
                 "[data-app-sidebar-toggle]");
             if (sidebarToggle != null) {

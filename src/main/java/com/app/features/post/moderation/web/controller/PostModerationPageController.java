@@ -141,68 +141,87 @@ public class PostModerationPageController {
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             Model model) {
-        ModerationStandardPostDetailResult post =
-                postModerationSvc.getStandardPostDetail(postId);
-        String queuePath = buildStatePath(
-                getModerationPath(),
-                filter,
-                query);
-        ModerationPostDetailPageView page =
-                ModerationPostDetailPageView.builder()
-                        .title(messageResolver.get(
-                                "post.moderation.detail.title"))
-                        .shell(uiShellFactory.build(
-                                currentUser,
-                                request.getRequestURI()))
-                        .breadcrumb(buildDetailBreadcrumb(queuePath))
-                        .post(post)
-                        .statusLabel(resolveStatusLabel(
-                                post.getModerationStatus()))
-                        .queuePath(queuePath)
-                        .refreshEvent(QUEUE_CHANGED_EVENT)
-                        .publishModalPath(buildStatePath(
-                                buildPostPath(postId, "publish-confirm"),
-                                filter,
-                                query))
-                        .rejectModalPath(buildStatePath(
-                                buildPostPath(postId, "reject"),
-                                filter,
-                                query))
-                        .build();
-
-        model.addAttribute(ModerationPostDetailPageView.ATTRIBUTE, page);
+        model.addAttribute(
+                ModerationPostDetailPageView.ATTRIBUTE,
+                buildDetailPage(
+                        currentUser,
+                        request,
+                        postId,
+                        filter,
+                        query,
+                        null,
+                        null,
+                        null));
         return "post/moderation/detail";
     }
 
     @GetMapping("/{postId}/publish-confirm")
     public String publishConfirm(
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID postId,
+            HttpServletRequest request,
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             Model model) {
+        UiConfirmModalView publishModal = buildPublishModal(
+                postId,
+                filter,
+                query);
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(
+                    UiConfirmModalView.ATTRIBUTE,
+                    publishModal);
+            return "fragments/components/confirm-modal"
+                    + " :: modal (modal=${modal})";
+        }
+
         model.addAttribute(
-                UiConfirmModalView.ATTRIBUTE,
-                buildPublishModal(postId, filter, query));
-        return "fragments/components/confirm-modal :: modal (modal=${modal})";
+                ModerationPostDetailPageView.ATTRIBUTE,
+                buildDetailPage(
+                        currentUser,
+                        request,
+                        postId,
+                        filter,
+                        query,
+                        publishModal,
+                        null,
+                        publishModal.getId()));
+        return "post/moderation/detail";
     }
 
     @GetMapping("/{postId}/reject")
     public String rejectModal(
+            @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID postId,
+            HttpServletRequest request,
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             Model model) {
+        UiModalView rejectModal = buildRejectModal(
+                postId,
+                filter,
+                query,
+                new RejectPostModalForm(),
+                Map.of());
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            model.addAttribute(UiModalView.ATTRIBUTE, rejectModal);
+            return "fragments/components/modal :: modal (modal=${modal})";
+        }
+
         model.addAttribute(
-                UiModalView.ATTRIBUTE,
-                buildRejectModal(
+                ModerationPostDetailPageView.ATTRIBUTE,
+                buildDetailPage(
+                        currentUser,
+                        request,
                         postId,
                         filter,
                         query,
-                        new RejectPostModalForm(),
-                        Map.of()));
-        return "fragments/components/modal :: modal (modal=${modal})";
+                        null,
+                        rejectModal,
+                        rejectModal.getId()));
+        return "post/moderation/detail";
     }
 
     @PostMapping("/{postId}/publish")
@@ -257,10 +276,24 @@ public class PostModerationPageController {
             return "fragments/components/modal :: modal (modal=${modal})";
         }
 
-        return "redirect:" + buildStatePath(
-                buildPostPath(postId),
+        UiModalView rejectModal = buildRejectModal(
+                postId,
                 filter,
-                query);
+                query,
+                form,
+                submitResult.fieldErrors());
+        model.addAttribute(
+                ModerationPostDetailPageView.ATTRIBUTE,
+                buildDetailPage(
+                        currentUser,
+                        request,
+                        postId,
+                        filter,
+                        query,
+                        null,
+                        rejectModal,
+                        rejectModal.getId()));
+        return "post/moderation/detail";
     }
 
     private ModerationPostQueueView buildQueue(
@@ -335,6 +368,14 @@ public class PostModerationPageController {
                 buildPostPath(row.getId()),
                 filter,
                 query);
+        String publishModalPath = buildStatePath(
+                buildPostPath(row.getId(), "publish-confirm"),
+                filter,
+                query);
+        String rejectModalPath = buildStatePath(
+                buildPostPath(row.getId(), "reject"),
+                filter,
+                query);
 
         return List.of(
                 UiTableActionView.builder()
@@ -344,24 +385,58 @@ public class PostModerationPageController {
                         .build(),
                 UiTableActionView.builder()
                         .label(messageResolver.get("action.publish"))
-                        .path(detailPath)
-                        .partialPath(buildStatePath(
-                                buildPostPath(
-                                        row.getId(),
-                                        "publish-confirm"),
-                                filter,
-                                query))
+                        .path(publishModalPath)
+                        .partialPath(publishModalPath)
                         .buttonClass("btn-outline-success")
                         .build(),
                 UiTableActionView.builder()
                         .label(messageResolver.get("action.reject"))
-                        .path(detailPath)
-                        .partialPath(buildStatePath(
-                                buildPostPath(row.getId(), "reject"),
-                                filter,
-                                query))
+                        .path(rejectModalPath)
+                        .partialPath(rejectModalPath)
                         .buttonClass("btn-outline-danger")
                         .build());
+    }
+
+    private ModerationPostDetailPageView buildDetailPage(
+            UserPrincipal currentUser,
+            HttpServletRequest request,
+            UUID postId,
+            ModerationPostFilterCriteria filter,
+            UiPageQuery query,
+            UiConfirmModalView publishModal,
+            UiModalView rejectModal,
+            String openModalId) {
+        ModerationStandardPostDetailResult post =
+                postModerationSvc.getStandardPostDetail(postId);
+        String queuePath = buildStatePath(
+                getModerationPath(),
+                filter,
+                query);
+
+        return ModerationPostDetailPageView.builder()
+                .title(messageResolver.get(
+                        "post.moderation.detail.title"))
+                .shell(uiShellFactory.build(
+                        currentUser,
+                        request.getRequestURI()))
+                .breadcrumb(buildDetailBreadcrumb(queuePath))
+                .post(post)
+                .statusLabel(resolveStatusLabel(
+                        post.getModerationStatus()))
+                .queuePath(queuePath)
+                .refreshEvent(QUEUE_CHANGED_EVENT)
+                .publishModalPath(buildStatePath(
+                        buildPostPath(postId, "publish-confirm"),
+                        filter,
+                        query))
+                .rejectModalPath(buildStatePath(
+                        buildPostPath(postId, "reject"),
+                        filter,
+                        query))
+                .publishModal(publishModal)
+                .rejectModal(rejectModal)
+                .openModalId(openModalId)
+                .build();
     }
 
     private UiConfirmModalView buildPublishModal(
