@@ -6,6 +6,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
+import org.springdoc.core.converters.models.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +28,7 @@ import com.app.features.post.service.PostMediaService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.repository.StandardPostRepository;
+import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.schema.result.PublicStandardPostResult;
 import com.app.features.post.standard.service.StandardPostService;
@@ -200,5 +203,19 @@ public class StandardPostServiceImpl implements StandardPostService {
         result.setThumbnailUrl(mediaUrlResolver.resolveThumbnailUrl(media));
 
         return result;
+    }
+
+    @Override
+    public Page<PublicStandardPostResult> getPublishedPosts(UUID ownerId, OwnerStandardPostFilterCriteria criteria,
+            Pageable pageable) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getPublishedPosts'");
+    }
+
+    @Override
+    public Page<OwnerStandardPostResult> getOwnedPosts(UUID ownerId, OwnerStandardPostFilterCriteria criteria,
+            Pageable pageable) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getOwnedPosts'");
     }
 }
