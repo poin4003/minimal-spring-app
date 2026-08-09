@@ -499,6 +499,8 @@ public class AppProperties {
 
         private List<String> webPublicPaths = List.of(
                 "/",
+                "/posts",
+                "/posts/**",
                 "/login",
                 "/register",
                 "/register/**",
@@ -527,6 +529,9 @@ public class AppProperties {
     public static class Ui {
         @NotBlank
         private String socialPath = "/";
+
+        @NotBlank
+        private String feedPath = "/posts";
 
         @NotBlank
         private String landingPath = "/home";

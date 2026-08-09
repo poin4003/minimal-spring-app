@@ -121,7 +121,8 @@
     function showPlaybackError(mediaElement, messageKey) {
         const previewElement = mediaElement.closest("[data-media-preview-player]");
         const errorElement = previewElement?.querySelector("[data-video-error]");
-        const modalElement = mediaElement.closest("[data-media-preview-modal]");
+        const modalElement = mediaElement.closest(
+                "[data-media-preview-modal], [data-media-preview]");
         if (!errorElement) {
             return;
         }
@@ -218,10 +219,47 @@
         playerSessions.delete(mediaElement);
     }
 
+    function initializeAutoPlayers(root) {
+        if (!(root instanceof Document || root instanceof Element)) {
+            return;
+        }
+
+        root.querySelectorAll("[data-video-player][data-auto-initialize]")
+            .forEach(function (mediaElement) {
+                initializePlayer(mediaElement);
+            });
+    }
+
+    function destroyPlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            destroyPlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                destroyPlayer(mediaElement);
+            });
+    }
+
     window.addEventListener("pagehide", function () {
         progressTrackers.forEach(function (progressTracker) {
             progressTracker.save();
         });
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initializeAutoPlayers(document);
+    });
+
+    document.addEventListener("htmx:afterSwap", function (event) {
+        initializeAutoPlayers(event.detail.target);
+    });
+
+    document.addEventListener("htmx:beforeCleanupElement", function (event) {
+        destroyPlayers(event.detail.elt);
     });
 
     document.addEventListener("shown.bs.modal", function (event) {

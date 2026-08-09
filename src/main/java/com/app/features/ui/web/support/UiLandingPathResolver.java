@@ -17,7 +17,7 @@ public class UiLandingPathResolver {
     public String resolve(UserPrincipal currentUser) {
         return canAccessCms(currentUser)
                 ? appProperties.getUi().getHomePath()
-                : appProperties.getUi().getSocialPath();
+                : appProperties.getUi().getFeedPath();
     }
 
     public boolean canAccessCms(UserPrincipal currentUser) {

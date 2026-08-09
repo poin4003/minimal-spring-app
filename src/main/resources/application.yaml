@@ -186,6 +186,8 @@ app:
             - "${app.media.public-path}/**"
         web-public-paths:
             - "${app.ui.social-path}"
+            - "${app.ui.feed-path}"
+            - "${app.ui.feed-path}/**"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -209,6 +211,7 @@ app:
             - /admin/cronjobs/**
     ui:
         social-path: ${UI_SOCIAL_PATH:/}
+        feed-path: ${UI_FEED_PATH:/posts}
         landing-path: ${UI_LANDING_PATH:/home}
         login-path: ${UI_LOGIN_PATH:/login}
         registration-path: ${UI_REGISTRATION_PATH:/register}

@@ -60,12 +60,12 @@ public class SocialShellFactory {
 
     private List<SocialNavigationItemView> buildNavigation(
             String requestPath) {
-        String socialPath = appProperties.getUi().getSocialPath();
+        String feedPath = appProperties.getUi().getFeedPath();
         return List.of(SocialNavigationItemView.builder()
                 .label(messageResolver.get("social.navigation.feed"))
                 .icon("house-door")
-                .path(socialPath)
-                .active(matchesPath(socialPath, requestPath))
+                .path(feedPath)
+                .active(matchesPath(feedPath, requestPath))
                 .build());
     }
 
