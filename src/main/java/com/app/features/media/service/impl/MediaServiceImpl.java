@@ -52,6 +52,7 @@ import com.app.features.media.storage.schema.StoredMediaFile;
 import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
+import com.app.features.media.validation.schema.ValidatedMediaFile;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.service.UserService;
 
@@ -107,13 +108,16 @@ public class MediaServiceImpl implements MediaService {
             StagedMediaFile stagedFile,
             AllowedMediaType policy) {
         StoredMediaFile storedFile;
+        ValidatedMediaFile validatedFile;
         UserBaseEntity creator;
         try {
             creator = userSvc.requireUser(createdById);
-            String detectedContentType = mediaFileValidator.validate(
+            validatedFile = mediaFileValidator.validate(
                     stagedFile,
                     policy);
-            storedFile = mediaFileStorage.commit(stagedFile, detectedContentType);
+            storedFile = mediaFileStorage.commit(
+                    stagedFile,
+                    validatedFile.getContentType());
         } catch (RuntimeException ex) {
             mediaFileStorage.discard(stagedFile);
             throw ex;
@@ -128,6 +132,9 @@ public class MediaServiceImpl implements MediaService {
         media.setOriginalName(storedFile.getOriginalName());
         media.setContentType(storedFile.getContentType());
         media.setFileSize(storedFile.getFileSize());
+        media.setOriginalWidth(validatedFile.getOriginalWidth());
+        media.setOriginalHeight(validatedFile.getOriginalHeight());
+        media.setDurationMillis(validatedFile.getDurationMillis());
         media.setKind(policy.getKind());
         media.setProcessingStatus(mediaProcessingPolicy.requiresProcessing(
                 policy.getKind())

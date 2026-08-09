@@ -23,6 +23,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -70,6 +71,18 @@ public class MediaEntity extends BaseAuditEntity {
 
     @Column(name = "file_size", nullable = false)
     private long fileSize;
+
+    @Positive
+    @Column(name = "original_width")
+    private Integer originalWidth;
+
+    @Positive
+    @Column(name = "original_height")
+    private Integer originalHeight;
+
+    @Positive
+    @Column(name = "duration_millis")
+    private Long durationMillis;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

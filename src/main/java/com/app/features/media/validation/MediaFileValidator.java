@@ -21,6 +21,7 @@ import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.MyException;
 import com.app.features.media.exception.InvalidMediaContentException;
 import com.app.features.media.storage.schema.StagedMediaFile;
+import com.app.features.media.validation.schema.ValidatedMediaFile;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
 import com.github.kokorin.jaffree.ffprobe.Format;
@@ -38,22 +39,30 @@ public class MediaFileValidator {
 
     private final Tika tika = new Tika();
 
-    public String validate(StagedMediaFile stagedFile, AllowedMediaType policy) {
+    public ValidatedMediaFile validate(
+            StagedMediaFile stagedFile,
+            AllowedMediaType policy) {
         Path file = stagedFile.getTemporaryPath();
         String detectedContentType = mediaTypePolicyResolver.validateContentType(
                 policy,
                 detectContentType(file, stagedFile.getOriginalName()));
 
-        switch (policy.getKind()) {
-            case IMAGE -> validateImage(file);
-            case VIDEO -> validateAudioVideo(file, StreamType.VIDEO);
-            case AUDIO -> validateAudioVideo(file, StreamType.AUDIO);
-            case DOCUMENT, FILE -> {
-                // Extension, size, and Tika content type are sufficient here.
-            }
-        }
-
-        return detectedContentType;
+        return switch (policy.getKind()) {
+            case IMAGE -> validateImage(file, detectedContentType);
+            case VIDEO -> validateAudioVideo(
+                    file,
+                    detectedContentType,
+                    StreamType.VIDEO);
+            case AUDIO -> validateAudioVideo(
+                    file,
+                    detectedContentType,
+                    StreamType.AUDIO);
+            case DOCUMENT, FILE -> new ValidatedMediaFile(
+                    detectedContentType,
+                    null,
+                    null,
+                    null);
+        };
     }
 
     private String detectContentType(Path file, String originalName) {
@@ -65,7 +74,9 @@ public class MediaFileValidator {
         }
     }
 
-    private void validateImage(Path file) {
+    private ValidatedMediaFile validateImage(
+            Path file,
+            String contentType) {
         try (ImageInputStream input = ImageIO.createImageInputStream(file.toFile())) {
             if (input == null) {
                 throw new InvalidMediaContentException("error.media.imageFileInvalid");
@@ -80,9 +91,11 @@ public class MediaFileValidator {
             ImageReader reader = readers.next();
             try {
                 reader.setInput(input, true, true);
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
                 long pixels = Math.multiplyExact(
-                        (long) reader.getWidth(0),
-                        reader.getHeight(0));
+                        (long) width,
+                        height);
                 if (pixels > appProperties.getMedia().getMaxImagePixels()) {
                     throw new InvalidMediaContentException(
                             "error.media.imagePixelLimitExceeded");
@@ -93,6 +106,12 @@ public class MediaFileValidator {
                     throw new InvalidMediaContentException(
                             "error.media.imageContentInvalid");
                 }
+
+                return new ValidatedMediaFile(
+                        contentType,
+                        width,
+                        height,
+                        null);
             } finally {
                 reader.dispose();
             }
@@ -104,7 +123,10 @@ public class MediaFileValidator {
         }
     }
 
-    private void validateAudioVideo(Path file, StreamType requiredStreamType) {
+    private ValidatedMediaFile validateAudioVideo(
+            Path file,
+            String contentType,
+            StreamType requiredStreamType) {
         FFprobeResult result;
         try {
             result = mediaProbe.probe(file);
@@ -122,12 +144,32 @@ public class MediaFileValidator {
         boolean requiredStreamPresent = streams.stream()
                 .anyMatch(stream -> requiredStreamType.equals(stream.getCodecType()));
 
-        if (!requiredStreamPresent || resolveDuration(result, streams) <= 0) {
+        double duration = resolveDuration(result, streams);
+        if (!requiredStreamPresent || duration <= 0) {
             throw new InvalidMediaContentException(
                     requiredStreamType == StreamType.VIDEO
                             ? "error.media.videoContentInvalid"
                             : "error.media.audioContentInvalid");
         }
+
+        Stream videoStream = requiredStreamType == StreamType.VIDEO
+                ? streams.stream()
+                        .filter(stream -> StreamType.VIDEO.equals(stream.getCodecType()))
+                        .filter(stream -> stream.getWidth() != null
+                                && stream.getWidth() > 0
+                                && stream.getHeight() != null
+                                && stream.getHeight() > 0)
+                        .max((left, right) -> Integer.compare(
+                                left.getHeight(),
+                                right.getHeight()))
+                        .orElse(null)
+                : null;
+
+        return new ValidatedMediaFile(
+                contentType,
+                videoStream == null ? null : videoStream.getWidth(),
+                videoStream == null ? null : videoStream.getHeight(),
+                Math.max(1L, Math.round(duration * 1_000)));
     }
 
     private double resolveDuration(FFprobeResult result, List<Stream> streams) {
