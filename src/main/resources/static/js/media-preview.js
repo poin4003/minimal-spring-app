@@ -230,6 +230,59 @@
             });
     }
 
+    function initializePlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            initializePlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                initializePlayer(mediaElement);
+            });
+    }
+
+    function scrollActiveThumbnail(root, behavior) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        const activeThumbnail = root.querySelector(
+                ".post-media-gallery-thumbnails .active"
+        );
+        activeThumbnail?.scrollIntoView({
+            behavior: behavior,
+            block: "nearest",
+            inline: "center"
+        });
+    }
+
+    function pausePlayer(mediaElement) {
+        const progressTracker = progressTrackers.get(mediaElement);
+        progressTracker?.save();
+
+        const session = playerSessions.get(mediaElement);
+        if (session?.player && !session.player.isDisposed()) {
+            session.player.pause();
+        }
+    }
+
+    function pausePlayers(root) {
+        if (!(root instanceof Element)) {
+            return;
+        }
+
+        if (root.matches("[data-video-player]")) {
+            pausePlayer(root);
+        }
+        root.querySelectorAll("[data-video-player]")
+            .forEach(function (mediaElement) {
+                pausePlayer(mediaElement);
+            });
+    }
+
     function destroyPlayers(root) {
         if (!(root instanceof Element)) {
             return;
@@ -269,9 +322,43 @@
             return;
         }
 
-        modalElement.querySelectorAll("[data-video-player]").forEach(function (mediaElement) {
-            initializePlayer(mediaElement);
-        });
+        if (modalElement.matches("[data-post-media-gallery-modal]")) {
+            initializePlayers(
+                modalElement.querySelector(".carousel-item.active")
+            );
+            scrollActiveThumbnail(modalElement, "auto");
+            return;
+        }
+
+        initializePlayers(modalElement);
+    });
+
+    document.addEventListener("slide.bs.carousel", function (event) {
+        const carouselElement = event.target;
+        if (!(carouselElement instanceof Element)
+                || carouselElement.closest(
+                    "[data-post-media-gallery-modal]"
+                ) == null) {
+            return;
+        }
+
+        pausePlayers(
+            carouselElement.querySelector(".carousel-item.active")
+        );
+    });
+
+    document.addEventListener("slid.bs.carousel", function (event) {
+        const carouselElement = event.target;
+        if (!(carouselElement instanceof Element)
+                || carouselElement.closest(
+                    "[data-post-media-gallery-modal]"
+                ) == null
+                || !(event.relatedTarget instanceof Element)) {
+            return;
+        }
+
+        initializePlayers(event.relatedTarget);
+        scrollActiveThumbnail(carouselElement, "smooth");
     });
 
     document.addEventListener("hidden.bs.modal", function (event) {

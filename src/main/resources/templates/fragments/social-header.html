@@ -14,9 +14,10 @@
                 </a>
 
                 <div class="d-flex align-items-center gap-2 ms-auto">
-                    <div th:if="${shell.notificationWidget != null}"
-                         th:replace="~{notification/fragments/inbox
-                                 :: trigger(${shell.notificationWidget})}"></div>
+                    <th:block th:if="${shell.notificationWidget != null}">
+                        <div th:replace="~{notification/fragments/inbox
+                                :: trigger(${shell.notificationWidget})}"></div>
+                    </th:block>
 
                     <a th:if="${shell.adminPath != null}"
                        th:href="${shell.adminPath}"
@@ -53,16 +54,11 @@
                     </form>
 
                     <div th:unless="${shell.currentUser != null}"
-                         class="d-flex align-items-center gap-2">
+                         class="d-flex align-items-center">
                         <a class="btn btn-outline-primary"
                            th:href="${shell.loginPath}"
                            th:text="#{auth.login.title}">
                             Sign in
-                        </a>
-                        <a class="btn btn-primary d-none d-sm-inline-flex"
-                           th:href="${shell.registrationPath}"
-                           th:text="#{auth.login.register}">
-                            Create one
                         </a>
                     </div>
                 </div>

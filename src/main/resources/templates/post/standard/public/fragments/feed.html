@@ -17,9 +17,10 @@
             </div>
         </div>
 
-        <div th:each="card : ${feed.posts}"
-             th:replace="~{post/standard/public/fragments/card
-                     :: card(${card}, false)}"></div>
+        <th:block th:each="card : ${feed.posts}">
+            <div th:replace="~{post/standard/public/fragments/card
+                    :: card(${card}, false)}"></div>
+        </th:block>
 
         <div class="d-flex justify-content-center">
             <div th:replace="~{fragments/components/pagination

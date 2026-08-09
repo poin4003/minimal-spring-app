@@ -2,40 +2,51 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
-    <div th:fragment="compact(media, detailPath)"
+    <div th:fragment="compact(media, detailPath, galleryPartialPath)"
          th:if="${not #lists.isEmpty(media)}"
-         class="position-relative"
-         th:with="attachment=${media[0]}, asset=${attachment.media}">
+         th:with="visibleCount=${#lists.size(media) > 4 ? 4 : #lists.size(media)}">
         <a th:href="${detailPath}"
-           class="ratio ratio-16x9 d-block overflow-hidden rounded-bottom text-decoration-none bg-dark"
-           th:attr="aria-label=#{post.public.viewDetail}">
-            <img th:if="${asset.kind.name() == 'IMAGE' and asset.contentUrl != null}"
-                 th:src="${asset.contentUrl}"
-                 th:alt="${asset.originalName}"
-                 class="w-100 h-100 object-fit-cover">
+           class="post-media-collage position-relative z-2 text-decoration-none bg-dark"
+           th:data-media-count="${visibleCount}"
+           th:aria-label="#{post.public.mediaGallery}"
+           th:attr="hx-get=${galleryPartialPath},
+                    hx-target=${galleryPartialPath != null ? '#app-modal-host' : null},
+                    hx-swap=${galleryPartialPath != null ? 'innerHTML' : null},
+                    hx-disabled-elt=${galleryPartialPath != null ? 'this' : null},
+                    data-app-modal-request=${galleryPartialPath != null ? 'true' : null}">
+            <th:block th:each="attachment, state : ${media}">
+                <span th:if="${state.index < 4}"
+                      class="post-media-collage-item bg-body-tertiary"
+                      th:with="asset=${attachment.media}">
+                    <img th:if="${asset.kind.name() == 'IMAGE' and asset.contentUrl != null}"
+                         th:src="${asset.contentUrl}"
+                         th:alt="${asset.originalName}"
+                         class="w-100 h-100 object-fit-cover">
 
-            <img th:if="${asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null}"
-                 th:src="${asset.thumbnailUrl}"
-                 th:alt="${asset.originalName}"
-                 class="w-100 h-100 object-fit-cover">
+                    <img th:if="${asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null}"
+                         th:src="${asset.thumbnailUrl}"
+                         th:alt="${asset.originalName}"
+                         class="w-100 h-100 object-fit-cover">
 
-            <span th:unless="${(asset.kind.name() == 'IMAGE' and asset.contentUrl != null)
-                    or (asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null)}"
-                  class="d-flex align-items-center justify-content-center w-100 h-100 text-white">
-                <i class="bi fs-1"
-                   th:classappend="${asset.kind.name() == 'VIDEO'} ? ' bi-play-circle' :
-                           (${asset.kind.name() == 'AUDIO'} ? ' bi-music-note-beamed' :
-                           (${asset.kind.name() == 'DOCUMENT'} ? ' bi-file-earmark-text' :
-                           ' bi-file-earmark'))"
-                   aria-hidden="true"></i>
-            </span>
+                    <span th:unless="${(asset.kind.name() == 'IMAGE' and asset.contentUrl != null)
+                            or (asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null)}"
+                          class="d-flex align-items-center justify-content-center w-100 h-100 text-secondary">
+                        <i class="bi fs-1"
+                           th:classappend="${asset.kind.name() == 'VIDEO'} ? ' bi-play-circle' :
+                                   (${asset.kind.name() == 'AUDIO'} ? ' bi-music-note-beamed' :
+                                   (${asset.kind.name() == 'DOCUMENT'} ? ' bi-file-earmark-text' :
+                                   ' bi-file-earmark'))"
+                           aria-hidden="true"></i>
+                    </span>
+
+                    <span th:if="${state.index == 3 and #lists.size(media) > 4}"
+                          class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 text-white fs-2 fw-semibold"
+                          th:text="${'+' + (#lists.size(media) - 4)}">
+                        +2
+                    </span>
+                </span>
+            </th:block>
         </a>
-
-        <span th:if="${#lists.size(media) > 1}"
-              class="badge rounded-pill text-bg-dark position-absolute end-0 bottom-0 m-3"
-              th:text="${'+' + (#lists.size(media) - 1)}">
-            +2
-        </span>
     </div>
 
     <div th:fragment="detail(media)"
@@ -43,92 +54,167 @@
          class="row g-3">
         <div th:each="attachment : ${media}"
              class="col-12"
-             th:classappend="${#lists.size(media) > 1} ? ' col-xl-6' : ''"
-             th:with="asset=${attachment.media}">
-            <div th:switch="${asset.kind.name()}"
-                 class="h-100">
+             th:classappend="${#lists.size(media) > 1} ? ' col-xl-6' : ''">
+            <div th:replace="~{post/standard/public/fragments/media
+                    :: detailItem(${attachment}, ${null}, ${null})}"></div>
+        </div>
+    </div>
+
+    <div th:fragment="interactiveDetail(mediaItems, detailPath)"
+         th:if="${not #lists.isEmpty(mediaItems)}"
+         class="row g-3">
+        <div th:each="item : ${mediaItems}"
+             class="col-12"
+             th:classappend="${#lists.size(mediaItems) > 1} ? ' col-xl-6' : ''">
+            <div th:replace="~{post/standard/public/fragments/media
+                    :: detailItem(${item.attachment},
+                            ${item.galleryPartialPath},
+                            ${detailPath})}"></div>
+        </div>
+    </div>
+
+    <th:block th:fragment="detailItem(attachment, galleryPartialPath, detailPath)"
+              th:with="asset=${attachment.media},
+                       galleryEnabled=${galleryPartialPath != null
+                               and (asset.kind.name() == 'IMAGE'
+                               or asset.kind.name() == 'VIDEO'
+                               or asset.kind.name() == 'AUDIO')}">
+        <a th:if="${galleryEnabled}"
+           th:href="${detailPath}"
+           class="d-block h-100 text-decoration-none text-body"
+           th:aria-label="${asset.originalName}"
+           th:attr="hx-get=${galleryPartialPath}"
+           hx-target="#app-modal-host"
+           hx-swap="innerHTML"
+           hx-disabled-elt="this"
+           data-app-modal-request="true">
+            <th:block th:switch="${asset.kind.name()}">
                 <figure th:case="'IMAGE'" class="mb-0">
                     <img th:if="${asset.contentUrl != null}"
                          th:src="${asset.contentUrl}"
                          th:alt="${asset.originalName}"
                          class="img-fluid w-100 rounded border bg-black post-detail-image">
+                    <span th:unless="${asset.contentUrl != null}"
+                          class="ratio ratio-16x9 rounded border bg-body-tertiary">
+                        <span class="d-flex align-items-center justify-content-center">
+                            <i class="bi bi-image fs-1 text-secondary"
+                               aria-hidden="true"></i>
+                        </span>
+                    </span>
                 </figure>
 
-                <div th:case="'VIDEO'"
-                     class="app-media-preview-player"
-                     data-media-preview
-                     th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
-                     th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
-                     th:data-message-stream-failed="#{media.preview.streamFailed}">
-                    <video class="video-js vjs-big-play-centered app-media-preview-video"
-                           controls
-                           playsinline
-                           preload="metadata"
-                           data-video-player
-                           data-auto-initialize
-                           th:poster="${asset.thumbnailUrl}"
-                           th:attr="data-video-source=${asset.contentUrl},
-                                    data-media-progress-id=${asset.id}"></video>
-                    <div class="alert alert-danger w-100 mt-3 mb-0"
-                         data-video-error
-                         hidden></div>
-                </div>
+                <span th:case="'VIDEO'"
+                      class="ratio ratio-16x9 d-block overflow-hidden rounded border bg-black">
+                    <img th:if="${asset.thumbnailUrl != null}"
+                         th:src="${asset.thumbnailUrl}"
+                         th:alt="${asset.originalName}"
+                         class="w-100 h-100 object-fit-cover">
+                    <span th:unless="${asset.thumbnailUrl != null}"
+                          class="d-flex align-items-center justify-content-center text-white">
+                        <i class="bi bi-film fs-1" aria-hidden="true"></i>
+                    </span>
+                    <span class="d-flex align-items-center justify-content-center text-white">
+                        <i class="bi bi-play-circle-fill display-4"
+                           aria-hidden="true"></i>
+                    </span>
+                </span>
 
-                <div th:case="'AUDIO'"
-                     class="card border p-3 app-media-preview-player"
-                     data-media-preview
-                     th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
-                     th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
-                     th:data-message-stream-failed="#{media.preview.streamFailed}">
-                    <p class="fw-semibold mb-3"
-                       th:text="${asset.originalName}">
+                <span th:case="'AUDIO'"
+                      class="card h-100 p-4 d-flex flex-row align-items-center gap-3">
+                    <i class="bi bi-music-note-beamed fs-2 text-primary"
+                       aria-hidden="true"></i>
+                    <strong class="text-truncate"
+                            th:text="${asset.originalName}">
                         Audio
-                    </p>
-                    <audio class="video-js app-media-preview-audio w-100"
-                           controls
-                           preload="metadata"
-                           data-video-player
-                           data-auto-initialize
-                           th:attr="data-video-source=${asset.contentUrl}"></audio>
-                    <div class="alert alert-danger w-100 mt-3 mb-0"
-                         data-video-error
-                         hidden></div>
-                </div>
+                    </strong>
+                </span>
+            </th:block>
+        </a>
 
-                <a th:case="'DOCUMENT'"
-                   th:href="${asset.originalUrl}"
-                   class="card h-100 p-4 text-decoration-none text-body"
-                   target="_blank"
-                   rel="noopener">
-                    <span class="d-flex align-items-center gap-3">
-                        <i class="bi bi-file-earmark-text fs-2 text-primary"
-                           aria-hidden="true"></i>
-                        <span class="min-w-0">
-                            <strong class="d-block text-truncate"
-                                    th:text="${asset.originalName}"></strong>
-                            <span class="small text-secondary"
-                                  th:text="#{post.public.openDocument}"></span>
-                        </span>
-                    </span>
-                </a>
+        <div th:unless="${galleryEnabled}"
+             th:switch="${asset.kind.name()}"
+             class="h-100">
+            <figure th:case="'IMAGE'" class="mb-0">
+                <img th:if="${asset.contentUrl != null}"
+                     th:src="${asset.contentUrl}"
+                     th:alt="${asset.originalName}"
+                     class="img-fluid w-100 rounded border bg-black post-detail-image">
+            </figure>
 
-                <a th:case="'FILE'"
-                   th:href="${asset.originalUrl}"
-                   class="card h-100 p-4 text-decoration-none text-body"
-                   download>
-                    <span class="d-flex align-items-center gap-3">
-                        <i class="bi bi-download fs-2 text-primary"
-                           aria-hidden="true"></i>
-                        <span class="min-w-0">
-                            <strong class="d-block text-truncate"
-                                    th:text="${asset.originalName}"></strong>
-                            <span class="small text-secondary"
-                                  th:text="#{post.public.downloadFile}"></span>
-                        </span>
-                    </span>
-                </a>
+            <div th:case="'VIDEO'"
+                 class="app-media-preview-player"
+                 data-media-preview
+                 th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+                 th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+                 th:data-message-stream-failed="#{media.preview.streamFailed}">
+                <video class="video-js vjs-big-play-centered app-media-preview-video"
+                       controls
+                       playsinline
+                       preload="metadata"
+                       data-video-player
+                       data-auto-initialize
+                       th:poster="${asset.thumbnailUrl}"
+                       th:attr="data-video-source=${asset.contentUrl},
+                                data-media-progress-id=${asset.id}"></video>
+                <div class="alert alert-danger w-100 mt-3 mb-0"
+                     data-video-error
+                     hidden></div>
             </div>
+
+            <div th:case="'AUDIO'"
+                 class="card border p-3 app-media-preview-player"
+                 data-media-preview
+                 th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+                 th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+                 th:data-message-stream-failed="#{media.preview.streamFailed}">
+                <p class="fw-semibold mb-3"
+                   th:text="${asset.originalName}">
+                    Audio
+                </p>
+                <audio class="video-js app-media-preview-audio w-100"
+                       controls
+                       preload="metadata"
+                       data-video-player
+                       data-auto-initialize
+                       th:attr="data-video-source=${asset.contentUrl}"></audio>
+                <div class="alert alert-danger w-100 mt-3 mb-0"
+                     data-video-error
+                     hidden></div>
+            </div>
+
+            <a th:case="'DOCUMENT'"
+               th:href="${asset.originalUrl}"
+               class="card h-100 p-4 text-decoration-none text-body"
+               target="_blank"
+               rel="noopener">
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-file-earmark-text fs-2 text-primary"
+                       aria-hidden="true"></i>
+                    <span class="min-w-0">
+                        <strong class="d-block text-truncate"
+                                th:text="${asset.originalName}"></strong>
+                        <span class="small text-secondary"
+                              th:text="#{post.public.openDocument}"></span>
+                    </span>
+                </span>
+            </a>
+
+            <a th:case="'FILE'"
+               th:href="${asset.originalUrl}"
+               class="card h-100 p-4 text-decoration-none text-body"
+               download>
+                <span class="d-flex align-items-center gap-3">
+                    <i class="bi bi-download fs-2 text-primary"
+                       aria-hidden="true"></i>
+                    <span class="min-w-0">
+                        <strong class="d-block text-truncate"
+                                th:text="${asset.originalName}"></strong>
+                        <span class="small text-secondary"
+                              th:text="#{post.public.downloadFile}"></span>
+                    </span>
+                </span>
+            </a>
         </div>
-    </div>
+    </th:block>
 </body>
 </html>

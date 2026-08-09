@@ -14,12 +14,14 @@
             return;
         }
 
-        const inputHost = root.querySelector("[data-selected-media-inputs]");
+        const selectedMediaControl = root.querySelector(
+            "[data-selected-media-inputs]"
+        );
         const selected = Array.from(
-            inputHost?.querySelectorAll("input[name='mediaIds']") || []
-        ).map((input) => ({
-            id: input.value,
-            name: input.dataset.mediaName || input.value
+            selectedMediaControl?.selectedOptions || []
+        ).map((option) => ({
+            id: option.value,
+            name: option.dataset.mediaName || option.textContent || option.value
         }));
 
         root.postComposerState = {
@@ -30,95 +32,26 @@
     }
 
     function render(root, state) {
-        const inputHost = root.querySelector("[data-selected-media-inputs]");
-        const list = root.querySelector("[data-selected-media-list]");
-        const empty = root.querySelector("[data-selected-media-empty]");
-        const count = root.querySelector("[data-selected-media-count]");
+        const selectedMediaControl = root.querySelector(
+            "[data-selected-media-inputs]"
+        );
 
-        inputHost.replaceChildren();
-        list.replaceChildren();
-        count.textContent = `${state.selected.length}/${state.maxCount}`;
-        empty.hidden = state.selected.length > 0;
+        selectedMediaControl.replaceChildren();
 
-        state.selected.forEach((media, index) => {
-            inputHost.append(createHiddenInput(media));
-            list.append(createSelectedItem(root, media, index, state));
+        state.selected.forEach((media) => {
+            selectedMediaControl.append(createSelectedOption(media));
         });
 
         syncOptions(root, state);
     }
 
-    function createHiddenInput(media) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "mediaIds";
-        input.value = media.id;
-        input.dataset.mediaName = media.name;
-        return input;
-    }
-
-    function createSelectedItem(root, media, index, state) {
-        const item = document.createElement("div");
-        const name = document.createElement("span");
-        const actions = document.createElement("span");
-
-        item.className = "list-group-item d-flex align-items-center gap-3";
-        name.className = "flex-grow-1 text-truncate";
-        name.textContent = media.name;
-        name.title = media.name;
-        actions.className = "btn-group btn-group-sm";
-        actions.setAttribute("role", "group");
-
-        actions.append(
-            createActionButton(
-                root.dataset.messageMoveUp,
-                "up",
-                media.id,
-                "bi-arrow-up",
-                index === 0
-            ),
-            createActionButton(
-                root.dataset.messageMoveDown,
-                "down",
-                media.id,
-                "bi-arrow-down",
-                index === state.selected.length - 1
-            ),
-            createActionButton(
-                root.dataset.messageRemove,
-                "remove",
-                media.id,
-                "bi-x-lg",
-                false,
-                "btn-outline-danger"
-            )
-        );
-        item.append(name, actions);
-        return item;
-    }
-
-    function createActionButton(
-        label,
-        action,
-        mediaId,
-        iconClass,
-        disabled,
-        buttonClass = "btn-outline-secondary"
-    ) {
-        const button = document.createElement("button");
-        const icon = document.createElement("i");
-
-        button.type = "button";
-        button.className = `btn ${buttonClass}`;
-        button.dataset.selectedMediaAction = action;
-        button.dataset.mediaId = mediaId;
-        button.title = label;
-        button.setAttribute("aria-label", label);
-        button.disabled = disabled;
-        icon.className = `bi ${iconClass}`;
-        icon.setAttribute("aria-hidden", "true");
-        button.append(icon);
-        return button;
+    function createSelectedOption(media) {
+        const option = document.createElement("option");
+        option.value = media.id;
+        option.textContent = media.name;
+        option.dataset.mediaName = media.name;
+        option.selected = true;
+        return option;
     }
 
     function syncOptions(root, state) {
@@ -153,38 +86,6 @@
         render(root, state);
     }
 
-    function applySelectedAction(root, button) {
-        const state = root.postComposerState;
-        const index = state.selected.findIndex(
-            (media) => media.id === button.dataset.mediaId
-        );
-        if (index < 0) {
-            return;
-        }
-
-        switch (button.dataset.selectedMediaAction) {
-            case "up":
-                if (index > 0) {
-                    [state.selected[index - 1], state.selected[index]] =
-                        [state.selected[index], state.selected[index - 1]];
-                }
-                break;
-            case "down":
-                if (index < state.selected.length - 1) {
-                    [state.selected[index + 1], state.selected[index]] =
-                        [state.selected[index], state.selected[index + 1]];
-                }
-                break;
-            case "remove":
-                state.selected.splice(index, 1);
-                break;
-            default:
-                return;
-        }
-        hideError(root);
-        render(root, state);
-    }
-
     function showError(root, message) {
         const error = root.querySelector("[data-media-selection-error]");
         error.textContent = message;
@@ -203,14 +104,6 @@
             const root = option.closest(ROOT_SELECTOR);
             initialize(root);
             toggleOption(root, option);
-            return;
-        }
-
-        const action = event.target.closest("[data-selected-media-action]");
-        if (action) {
-            const root = action.closest(ROOT_SELECTOR);
-            initialize(root);
-            applySelectedAction(root, action);
         }
     });
 

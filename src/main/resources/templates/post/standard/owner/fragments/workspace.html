@@ -37,9 +37,10 @@
             </div>
         </div>
 
-        <div th:each="card : ${workspace.posts}"
-             th:replace="~{post/standard/owner/fragments/card
-                     :: card(${card}, false)}"></div>
+        <th:block th:each="card : ${workspace.posts}">
+            <div th:replace="~{post/standard/owner/fragments/card
+                    :: card(${card}, false)}"></div>
+        </th:block>
 
         <div class="d-flex justify-content-center">
             <div th:replace="~{fragments/components/pagination

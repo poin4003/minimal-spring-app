@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
@@ -20,10 +21,13 @@ import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
+import com.app.features.post.schema.result.PostMediaResult;
 import com.app.features.post.standard.entity.StandardPostEntity_;
 import com.app.features.post.standard.schema.filter.PublicStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.PublicStandardPostResult;
 import com.app.features.post.standard.service.StandardPostService;
+import com.app.features.post.standard.web.view.PostDetailMediaItemView;
+import com.app.features.post.standard.web.view.PostMediaGalleryModalView;
 import com.app.features.post.standard.web.view.PublicPostCardView;
 import com.app.features.post.standard.web.view.PublicPostDetailPageView;
 import com.app.features.post.standard.web.view.PublicPostFeedView;
@@ -92,6 +96,9 @@ public class PublicStandardPostPageController {
                         .map(post -> PublicPostCardView.builder()
                                 .post(post)
                                 .detailPath(buildDetailPath(post.getId()))
+                                .mediaGalleryPartialPath(
+                                        buildMediaGalleryPartialPath(
+                                                post.getId()))
                                 .build())
                         .toList())
                 .pagination(pagination)
@@ -128,11 +135,42 @@ public class PublicStandardPostPageController {
                         .card(PublicPostCardView.builder()
                                 .post(post)
                                 .detailPath(buildDetailPath(post.getId()))
+                                .detailMedia(buildDetailMedia(
+                                        post.getId(),
+                                        post.getMedia()))
                                 .build())
                         .build();
 
         model.addAttribute(PublicPostDetailPageView.ATTRIBUTE, page);
         return "post/standard/public/detail";
+    }
+
+    @GetMapping("/{postId}/media-gallery")
+    public String mediaGallery(
+            @PathVariable UUID postId,
+            @RequestParam(required = false) UUID mediaId,
+            Model model) {
+        PublicStandardPostResult post =
+                standardPostSvc.getPublishedPost(postId);
+        UUID activeMediaId = post.getMedia().stream()
+                .map(attachment -> attachment.getMedia().getId())
+                .filter(id -> id.equals(mediaId))
+                .findFirst()
+                .orElse(null);
+        PostMediaGalleryModalView gallery =
+                PostMediaGalleryModalView.builder()
+                        .id("post-media-gallery-modal-" + postId)
+                        .title(messageResolver.get(
+                                "post.public.mediaGallery"))
+                        .media(post.getMedia())
+                        .activeMediaId(activeMediaId)
+                        .build();
+
+        model.addAttribute(
+                PostMediaGalleryModalView.ATTRIBUTE,
+                gallery);
+        return "post/standard/public/fragments/media-gallery-modal"
+                + " :: modal (gallery=${gallery})";
     }
 
     private UiBreadcrumbView buildDetailBreadcrumb() {
@@ -157,6 +195,39 @@ public class PublicStandardPostPageController {
                 .build()
                 .encode()
                 .toUriString();
+    }
+
+    private String buildMediaGalleryPartialPath(UUID postId) {
+        return UriComponentsBuilder.fromPath(getFeedPath())
+                .pathSegment(postId.toString(), "media-gallery")
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String buildMediaGalleryPartialPath(
+            UUID postId,
+            UUID mediaId) {
+        return UriComponentsBuilder.fromPath(
+                        buildMediaGalleryPartialPath(postId))
+                .queryParam("mediaId", mediaId)
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private List<PostDetailMediaItemView> buildDetailMedia(
+            UUID postId,
+            List<PostMediaResult> media) {
+        return media.stream()
+                .map(attachment -> PostDetailMediaItemView.builder()
+                        .attachment(attachment)
+                        .galleryPartialPath(
+                                buildMediaGalleryPartialPath(
+                                        postId,
+                                        attachment.getMedia().getId()))
+                        .build())
+                .toList();
     }
 
     private String getFeedPath() {
