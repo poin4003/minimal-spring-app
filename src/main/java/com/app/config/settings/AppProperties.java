@@ -534,6 +534,9 @@ public class AppProperties {
         private String feedPath = "/posts";
 
         @NotBlank
+        private String myPostsPath = "/my/posts";
+
+        @NotBlank
         private String landingPath = "/home";
 
         @NotBlank

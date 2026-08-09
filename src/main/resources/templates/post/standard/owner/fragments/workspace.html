@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="workspace(workspace)"
+             th:id="${workspace.id}"
+             class="d-grid gap-4">
+        <nav th:aria-label="#{post.owner.filter.label}">
+            <ul class="nav nav-pills gap-2">
+                <li th:each="statusFilter : ${workspace.statusFilters}"
+                    class="nav-item">
+                    <a th:href="${statusFilter.path}"
+                       th:text="${statusFilter.label}"
+                       class="nav-link rounded-pill"
+                       th:classappend="${statusFilter.active} ? ' active' : ''"
+                       th:attr="aria-current=${statusFilter.active ? 'page' : null},
+                                hx-get=${statusFilter.path},
+                                hx-target=${'#' + workspace.id},
+                                hx-select=${'#' + workspace.id},
+                                hx-swap='outerHTML',
+                                hx-push-url='true'">
+                        All
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div th:if="${#lists.isEmpty(workspace.posts)}"
+             class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-journal-x d-block fs-1 text-secondary mb-3"
+                   aria-hidden="true"></i>
+                <p class="text-secondary mb-0"
+                   th:text="#{post.owner.list.empty}">
+                    No posts match this status.
+                </p>
+            </div>
+        </div>
+
+        <div th:each="card : ${workspace.posts}"
+             th:replace="~{post/standard/owner/fragments/card
+                     :: card(${card}, false)}"></div>
+
+        <div class="d-flex justify-content-center">
+            <div th:replace="~{fragments/components/pagination
+                    :: pagination(${workspace.pagination})}"></div>
+        </div>
+    </section>
+</body>
+</html>

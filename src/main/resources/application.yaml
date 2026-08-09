@@ -212,6 +212,7 @@ app:
     ui:
         social-path: ${UI_SOCIAL_PATH:/}
         feed-path: ${UI_FEED_PATH:/posts}
+        my-posts-path: ${UI_MY_POSTS_PATH:/my/posts}
         landing-path: ${UI_LANDING_PATH:/home}
         login-path: ${UI_LOGIN_PATH:/login}
         registration-path: ${UI_REGISTRATION_PATH:/register}

@@ -42,7 +42,7 @@ public class SocialShellFactory {
                         ? ui.getHomePath()
                         : null)
                 .currentUser(authenticated ? toCurrentUser(currentUser) : null)
-                .navigation(buildNavigation(requestPath))
+                .navigation(buildNavigation(authenticated, requestPath))
                 .notificationWidget(authenticated
                         ? buildNotificationWidget()
                         : null)
@@ -59,14 +59,30 @@ public class SocialShellFactory {
     }
 
     private List<SocialNavigationItemView> buildNavigation(
+            boolean authenticated,
             String requestPath) {
         String feedPath = appProperties.getUi().getFeedPath();
-        return List.of(SocialNavigationItemView.builder()
+        SocialNavigationItemView feed = SocialNavigationItemView.builder()
                 .label(messageResolver.get("social.navigation.feed"))
                 .icon("house-door")
                 .path(feedPath)
                 .active(matchesPath(feedPath, requestPath))
-                .build());
+                .build();
+
+        if (!authenticated) {
+            return List.of(feed);
+        }
+
+        String myPostsPath = appProperties.getUi().getMyPostsPath();
+        return List.of(
+                feed,
+                SocialNavigationItemView.builder()
+                        .label(messageResolver.get(
+                                "social.navigation.myPosts"))
+                        .icon("journal-text")
+                        .path(myPostsPath)
+                        .active(matchesPath(myPostsPath, requestPath))
+                        .build());
     }
 
     private NotificationWidgetView buildNotificationWidget() {
