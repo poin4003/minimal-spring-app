@@ -498,6 +498,7 @@ public class AppProperties {
                 "/api/v1/public/media/**");
 
         private List<String> webPublicPaths = List.of(
+                "/",
                 "/login",
                 "/register",
                 "/register/**",
@@ -525,6 +526,12 @@ public class AppProperties {
     @Data
     public static class Ui {
         @NotBlank
+        private String socialPath = "/";
+
+        @NotBlank
+        private String landingPath = "/home";
+
+        @NotBlank
         private String loginPath = "/login";
 
         @NotBlank
@@ -535,6 +542,12 @@ public class AppProperties {
 
         @NotBlank
         private String homePath = "/admin";
+
+        @NotBlank
+        private String profilePath = "/profile";
+
+        @NotBlank
+        private String notificationPath = "/notifications";
 
         @NotBlank
         private String logoutPath = "/logout";

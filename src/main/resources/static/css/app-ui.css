@@ -1,5 +1,46 @@
 @import url("../vendor/bootstrap-icons/font/bootstrap-icons.min.css");
 
+.min-w-0 {
+    min-width: 0;
+}
+
+.app-header-action {
+    border-radius: 0.75rem;
+}
+
+.app-notification-dropdown {
+    width: min(22rem, calc(100vw - 1rem));
+}
+
+.app-notification-list {
+    max-height: min(32rem, 70vh);
+    overflow-y: auto;
+}
+
+.app-notification-item {
+    color: var(--bs-body-color);
+}
+
+.app-notification-item:hover,
+.app-notification-item:focus-visible {
+    background-color: var(--bs-tertiary-bg);
+}
+
+.app-notification-type-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 2.25rem;
+}
+
+.app-notification-copy {
+    min-width: 0;
+}
+
+.app-notification-unread-indicator {
+    margin-top: 0.35rem;
+    font-size: 0.45rem;
+}
+
 .app-loader {
     position: fixed;
     inset: 0;

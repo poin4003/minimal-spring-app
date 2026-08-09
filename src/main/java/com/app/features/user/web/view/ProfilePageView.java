@@ -1,6 +1,6 @@
 package com.app.features.user.web.view;
 
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.view.SocialShellView;
 import com.app.features.user.schema.result.ProfileResult;
 
 import lombok.Builder;
@@ -16,6 +16,6 @@ public class ProfilePageView {
     private final String updatePath;
     private final String avatarSelectionPath;
     private final String removeAvatarPath;
-    private final UiShellView shell;
+    private final SocialShellView shell;
     private final ProfileResult profile;
 }

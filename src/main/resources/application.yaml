@@ -185,6 +185,7 @@ app:
             - /api/v1/auth/password-reset/**
             - "${app.media.public-path}/**"
         web-public-paths:
+            - "${app.ui.social-path}"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -207,10 +208,14 @@ app:
             - /admin/rbac/**
             - /admin/cronjobs/**
     ui:
+        social-path: ${UI_SOCIAL_PATH:/}
+        landing-path: ${UI_LANDING_PATH:/home}
         login-path: ${UI_LOGIN_PATH:/login}
         registration-path: ${UI_REGISTRATION_PATH:/register}
         forgot-password-path: ${UI_FORGOT_PASSWORD_PATH:/forgot-password}
         home-path: ${UI_HOME_PATH:/admin}
+        profile-path: ${UI_PROFILE_PATH:/profile}
+        notification-path: ${UI_NOTIFICATION_PATH:/notifications}
         logout-path: ${UI_LOGOUT_PATH:/logout}
         application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}
 

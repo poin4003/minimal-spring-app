@@ -15,7 +15,7 @@ import com.app.config.security.web.HtmxRequestSupport;
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
-import com.app.features.ui.web.support.UiShellFactory;
+import com.app.features.ui.web.support.SocialShellFactory;
 import com.app.features.user.schema.payload.UpdateProfilePayload;
 import com.app.features.user.schema.result.ProfileResult;
 import com.app.features.user.service.ProfileService;
@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("${app.ui.home-path:/admin}/profile")
+@RequestMapping("${app.ui.profile-path:/profile}")
 public class ProfilePageController {
 
     private static final String EMPTY_HTMX_VIEW =
@@ -38,7 +38,7 @@ public class ProfilePageController {
 
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
-    private final UiShellFactory uiShellFactory;
+    private final SocialShellFactory socialShellFactory;
     private final ProfileService profileSvc;
     private final ProfilePreferenceCookieService profilePreferenceCookieSvc;
     private final ModelMapper mapper;
@@ -130,7 +130,7 @@ public class ProfilePageController {
                 .updatePath(getProfilePath())
                 .avatarSelectionPath(getProfilePath() + "/avatar")
                 .removeAvatarPath(getProfilePath() + "/avatar/remove")
-                .shell(uiShellFactory.build(
+                .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
                 .profile(profile)
@@ -138,6 +138,6 @@ public class ProfilePageController {
     }
 
     private String getProfilePath() {
-        return appProperties.getUi().getHomePath() + "/profile";
+        return appProperties.getUi().getProfilePath();
     }
 }

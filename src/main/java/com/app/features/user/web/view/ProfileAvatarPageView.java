@@ -3,7 +3,7 @@ package com.app.features.user.web.view;
 import com.app.features.media.schema.filter.MediaFilterCriteria;
 import com.app.features.ui.web.component.view.UiAssignmentPanelView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
-import com.app.features.ui.web.view.UiShellView;
+import com.app.features.ui.web.view.SocialShellView;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +18,7 @@ public class ProfileAvatarPageView {
     private final String listPath;
     private final String backPath;
     private final String uploadPartialPath;
-    private final UiShellView shell;
+    private final SocialShellView shell;
     private final UiBreadcrumbView breadcrumb;
     private final MediaFilterCriteria filter;
     private final UiAssignmentPanelView assignmentPanel;

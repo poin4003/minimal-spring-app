@@ -20,6 +20,7 @@ import com.app.features.auth.schema.result.LoginResult;
 import com.app.features.auth.service.AuthService;
 import com.app.features.auth.web.support.AuthCookieService;
 import com.app.features.auth.web.view.LoginPageView;
+import com.app.features.ui.web.support.UiLandingPathResolver;
 import com.app.features.user.schema.result.ProfileResult;
 import com.app.features.user.service.ProfileService;
 import com.app.features.user.web.support.ProfilePreferenceCookieService;
@@ -39,6 +40,7 @@ public class LoginPageController {
     private final AuthCookieService authCookieSvc;
     private final ProfileService profileSvc;
     private final ProfilePreferenceCookieService profilePreferenceCookieSvc;
+    private final UiLandingPathResolver landingPathResolver;
 
     @GetMapping("${app.ui.login-path:/login}")
     public String loginPage(
@@ -50,7 +52,7 @@ public class LoginPageController {
             Model model) {
 
         if (currentUser != null) {
-            return "redirect:" + appProperties.getUi().getHomePath();
+            return "redirect:" + landingPathResolver.resolve(currentUser);
         }
 
         LoginPageView page = LoginPageView.builder()
@@ -86,7 +88,7 @@ public class LoginPageController {
                     response,
                     profile);
 
-            return "redirect:" + appProperties.getUi().getHomePath();
+            return "redirect:" + appProperties.getUi().getLandingPath();
         } catch (RuntimeException ex) {
             authCookieSvc.clearAuthenticationCookies(response);
             return "redirect:" + appProperties.getUi().getLoginPath() + "?error";

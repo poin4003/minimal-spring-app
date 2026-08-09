@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.shell.title}">Minimal Spring App</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body class="bg-body-tertiary">
+    <div th:replace="~{fragments/social-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <section class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5 text-center">
+                    <span class="d-inline-grid place-items-center rounded-circle bg-primary-subtle text-primary-emphasis fs-3 mb-3 social-empty-icon">
+                        <i class="bi bi-house-heart" aria-hidden="true"></i>
+                    </span>
+                    <h1 class="h3 mb-3" th:text="#{social.home.title}">
+                        Your feed
+                    </h1>
+                    <p class="text-secondary mb-0 mx-auto social-empty-copy"
+                       th:text="#{social.home.description}">
+                        Published posts will appear here.
+                    </p>
+                </div>
+            </section>
+        </th:block>
+    </div>
+</body>
+</html>

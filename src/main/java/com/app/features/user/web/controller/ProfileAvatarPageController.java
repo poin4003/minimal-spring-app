@@ -37,7 +37,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiPaginationView;
-import com.app.features.ui.web.support.UiShellFactory;
+import com.app.features.ui.web.support.SocialShellFactory;
 import com.app.features.user.service.ProfileService;
 import com.app.features.user.web.view.ProfileAvatarPageView;
 
@@ -48,7 +48,7 @@ import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("${app.ui.home-path:/admin}/profile/avatar")
+@RequestMapping("${app.ui.profile-path:/profile}/avatar")
 public class ProfileAvatarPageController {
 
     private static final String AVATAR_PANEL_ID =
@@ -64,7 +64,7 @@ public class ProfileAvatarPageController {
 
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
-    private final UiShellFactory uiShellFactory;
+    private final SocialShellFactory socialShellFactory;
     private final ProfileService profileSvc;
     private final MediaService mediaSvc;
     private final MediaUploadComponentFactory mediaUploadComponentFactory;
@@ -141,7 +141,7 @@ public class ProfileAvatarPageController {
                 .listPath(getAvatarPath())
                 .backPath(getProfilePath())
                 .uploadPartialPath(getAvatarPath() + "/upload-modal")
-                .shell(uiShellFactory.build(
+                .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
                 .breadcrumb(UiBreadcrumbView.builder()
@@ -196,7 +196,7 @@ public class ProfileAvatarPageController {
     }
 
     private String getProfilePath() {
-        return appProperties.getUi().getHomePath() + "/profile";
+        return appProperties.getUi().getProfilePath();
     }
 
     private String formatFileSize(long bytes) {
