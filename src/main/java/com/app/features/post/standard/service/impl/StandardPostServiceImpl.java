@@ -17,6 +17,7 @@ import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.service.MediaService;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostMediaEntity;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.enums.PostMediaRole;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
@@ -107,6 +108,43 @@ public class StandardPostServiceImpl implements StandardPostService {
 
     @Override
     @Transactional
+    public OwnerStandardPostResult archiveOwnedPost(UUID postId, UUID ownerId) {
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        StandardPostEntity standardPost = requireStandardPost(postId);
+
+        postSvc.archivePost(post);
+
+        return toOwnerResult(standardPost, ownerId);
+    }
+
+    @Override
+    @Transactional
+    public OwnerStandardPostResult restoreArchivedOwnedPost(
+            UUID postId,
+            UUID ownerId) {
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        StandardPostEntity standardPost = requireStandardPost(postId);
+
+        postSvc.restoreArchivedPost(post);
+
+        return toOwnerResult(standardPost, ownerId);
+    }
+
+    @Override
+    @Transactional
+    public OwnerStandardPostResult restoreDeletedOwnedPost(
+            UUID postId,
+            UUID ownerId) {
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        StandardPostEntity standardPost = requireStandardPost(postId);
+
+        postSvc.restoreDeletedPost(post);
+
+        return toOwnerResult(standardPost, ownerId);
+    }
+
+    @Override
+    @Transactional
     public OwnerStandardPostResult updateOwnedStandardPost(
             UUID postId,
             UUID ownerId,
@@ -136,7 +174,8 @@ public class StandardPostServiceImpl implements StandardPostService {
 
         PostEntity post = standardPost.getPost();
 
-        if (post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
+                || post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
             throw ExceptionFactory.notFound("error.post.notFound", postId);
         }
 
@@ -161,9 +200,10 @@ public class StandardPostServiceImpl implements StandardPostService {
     @Override
     @Transactional
     public void deleteOwnedPost(UUID postId, UUID ownerId) {
-        StandardPostEntity standardPost = requireOwnedStandardPost(postId, ownerId);
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        requireStandardPost(postId);
 
-        postSvc.deletePost(standardPost.getPost());
+        postSvc.markPostDeleted(post);
     }
 
     @Override
@@ -178,6 +218,17 @@ public class StandardPostServiceImpl implements StandardPostService {
         postSvc.requireOwnedPost(standardPost.getPost(), ownerId);
 
         return standardPost;
+    }
+
+    private OwnerStandardPostResult toOwnerResult(
+            StandardPostEntity standardPost,
+            UUID ownerId) {
+        UUID postId = standardPost.getPostId();
+
+        return standardPostMapper.toOwnerResult(
+                standardPost,
+                profileSvc.requireProfile(ownerId),
+                postMediaSvc.findAttachments(postId, PostMediaRole.CONTENT));
     }
 
     @Override

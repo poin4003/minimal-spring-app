@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostEntity_;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.entity.StandardPostEntity_;
@@ -26,6 +27,9 @@ public class StandardPostSpecification {
             List<Predicate> predicates = new ArrayList<>();
             Join<StandardPostEntity, PostEntity> post = root.join(StandardPostEntity_.post);
 
+            predicates.add(cb.equal(
+                    post.get(PostEntity_.lifecycleStatus),
+                    PostLifecycleStatus.ACTIVE));
             predicates.add(cb.equal(
                     post.get(PostEntity_.moderationStatus),
                     PostModerationStatus.PUBLISHED));

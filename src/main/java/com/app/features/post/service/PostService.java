@@ -28,6 +28,14 @@ public interface PostService {
 
     PostEntity submitForReview(@NotNull PostEntity post);
 
+    PostEntity archivePost(@NotNull PostEntity post);
+
+    PostEntity restoreArchivedPost(@NotNull PostEntity post);
+
+    PostEntity markPostDeleted(@NotNull PostEntity post);
+
+    PostEntity restoreDeletedPost(@NotNull PostEntity post);
+
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
 
     void deletePost(@NotNull PostEntity post);

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.domain.Specification;
 import com.app.core.db.BaseAuditEntity_;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostEntity_;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.user.entity.UserBaseEntity_;
@@ -21,6 +22,9 @@ public class PostModerationSpecification {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            predicates.add(cb.equal(
+                    root.get(PostEntity_.lifecycleStatus),
+                    PostLifecycleStatus.ACTIVE));
             predicates.add(cb.equal(
                     root.get(PostEntity_.moderationStatus),
                     PostModerationStatus.PENDING_REVIEW));

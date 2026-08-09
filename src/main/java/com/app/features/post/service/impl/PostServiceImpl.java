@@ -1,5 +1,6 @@
 package com.app.features.post.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -50,7 +51,75 @@ public class PostServiceImpl implements PostService {
     public PostEntity prepareOwnedPostForUpdate(UUID postId, UUID ownerId) {
         PostEntity post = requireOwnedPostForUpdate(postId, ownerId);
 
+        if (post.getLifecycleStatus() == PostLifecycleStatus.ARCHIVED
+                || post.getLifecycleStatus() == PostLifecycleStatus.DELETED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
         post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
+        clearModeration(post);
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity archivePost(PostEntity post) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
+                || post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
+        post.setLifecycleStatus(PostLifecycleStatus.ARCHIVED);
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity restoreArchivedPost(PostEntity post) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.ARCHIVED
+                || post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
+        post.setLifecycleStatus(PostLifecycleStatus.ACTIVE);
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity markPostDeleted(PostEntity post) {
+        if (post.getLifecycleStatus() == PostLifecycleStatus.DELETED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
+        post.setLifecycleStatus(PostLifecycleStatus.DELETED);
+        post.setDeletedAt(LocalDateTime.now());
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity restoreDeletedPost(PostEntity post) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.DELETED) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
+        post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
+        post.setDeletedAt(null);
         clearModeration(post);
 
         return post;
