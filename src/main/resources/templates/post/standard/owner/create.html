@@ -4,32 +4,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${page.title}">My Posts</title>
+    <title th:text="${page.title}">Create Post</title>
     <link rel="icon" href="/favicon.ico" type="image/x-icon">
     <script th:src="@{/js/app-ui.js}"></script>
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
     <link rel="stylesheet" th:href="@{/css/social-shell.css}">
-    <link rel="stylesheet" th:href="@{/css/post-public.css}">
     <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script type="module" th:src="@{/js/media-upload.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+    <script defer th:src="@{/js/post-composer.js}"></script>
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
-                <div class="col-12 col-xxl-9 d-grid gap-3">
-                    <div class="d-flex justify-content-end">
-                        <a th:href="${page.createPath}"
-                           class="btn btn-primary">
-                            <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                            <span th:text="#{post.composer.open}">Create post</span>
-                        </a>
-                    </div>
+                <div class="col-12 col-xxl-10 d-grid gap-3">
+                    <div th:replace="~{fragments/components/breadcrumb
+                            :: breadcrumb(${page.breadcrumb})}"></div>
 
-                    <div th:replace="~{post/standard/owner/fragments/workspace
-                            :: workspace(${page.workspace})}"></div>
+                    <div th:replace="~{post/standard/owner/fragments/composer
+                            :: composer(${page})}"></div>
                 </div>
             </div>
         </th:block>

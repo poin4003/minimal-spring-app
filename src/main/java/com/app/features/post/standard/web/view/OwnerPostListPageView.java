@@ -13,5 +13,6 @@ public class OwnerPostListPageView {
 
     private final String title;
     private final SocialShellView shell;
+    private final String createPath;
     private final OwnerPostWorkspaceView workspace;
 }

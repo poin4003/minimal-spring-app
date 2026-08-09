@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="picker(picker)"
+         th:id="${picker.id}"
+         class="d-grid gap-3"
+         th:attr="hx-get=${picker.refreshPath},
+                  hx-trigger='media:uploaded from:body delay:200ms, sse:media',
+                  hx-target=${'#' + picker.id},
+                  hx-select=${'#' + picker.id},
+                  hx-swap='outerHTML'">
+        <div class="row g-2">
+            <div class="col-12 col-md">
+                <label class="visually-hidden"
+                       for="post-media-name"
+                       th:text="#{post.composer.mediaSearch}">
+                    Search media
+                </label>
+                <input id="post-media-name"
+                       class="form-control"
+                       type="search"
+                       name="originalName"
+                       data-post-media-search
+                       maxlength="255"
+                       th:value="${picker.originalName}"
+                       th:placeholder="#{post.composer.mediaSearchPlaceholder}">
+            </div>
+            <div class="col-12 col-md-auto d-flex gap-2">
+                <a th:href="${picker.searchPath}"
+                   class="btn btn-outline-secondary"
+                   th:attr="hx-get=${picker.searchPath},
+                            hx-target=${'#' + picker.id},
+                            hx-select=${'#' + picker.id},
+                            hx-swap='outerHTML'"
+                   th:text="#{action.clear}">
+                    Clear
+                </a>
+                <button type="button"
+                        class="btn btn-outline-primary"
+                        data-post-media-search-submit
+                        th:attr="hx-get=${picker.searchPath},
+                                 hx-include='#post-media-name',
+                                 hx-target=${'#' + picker.id},
+                                 hx-select=${'#' + picker.id},
+                                 hx-swap='outerHTML',
+                                 hx-disabled-elt='this'"
+                        th:text="#{action.search}">
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(picker.items)}"
+             class="border rounded p-5 text-center text-secondary">
+            <i class="bi bi-images d-block fs-2 mb-2" aria-hidden="true"></i>
+            <span th:text="#{post.composer.mediaEmpty}">
+                No ready media found.
+            </span>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(picker.items)}"
+             class="row g-3">
+            <div th:each="item : ${picker.items}"
+                 class="col-6 col-md-4 col-xl-3">
+                <button type="button"
+                        class="card h-100 w-100 overflow-hidden text-start p-0"
+                        data-post-media-option
+                        th:data-media-id="${item.id}"
+                        th:data-media-name="${item.originalName}"
+                        th:aria-label="#{post.composer.mediaSelect(${item.originalName})}"
+                        aria-pressed="false">
+                    <span class="ratio ratio-4x3 bg-body-tertiary border-bottom">
+                        <img th:if="${item.hasPreview()}"
+                             th:src="${item.previewUrl}"
+                             th:alt="${item.originalName}"
+                             class="w-100 h-100 object-fit-cover"
+                             loading="lazy"
+                             decoding="async">
+                        <span th:unless="${item.hasPreview()}"
+                              class="d-flex align-items-center justify-content-center">
+                            <i class="bi fs-1 text-secondary"
+                               th:classappend="${' ' + item.iconClass}"
+                               aria-hidden="true"></i>
+                        </span>
+                        <span class="position-absolute top-0 end-0 m-2 badge rounded-pill text-bg-primary d-none"
+                              data-media-selected-indicator>
+                            <i class="bi bi-check-lg" aria-hidden="true"></i>
+                        </span>
+                    </span>
+                    <span class="card-body w-100 p-3">
+                        <strong class="d-block text-truncate"
+                                th:title="${item.originalName}"
+                                th:text="${item.originalName}">
+                            media.jpg
+                        </strong>
+                        <span class="small text-secondary"
+                              th:text="${item.kind}">
+                            IMAGE
+                        </span>
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <div th:replace="~{fragments/components/pagination
+                    :: pagination(${picker.pagination})}"></div>
+        </div>
+    </div>
+</body>
+</html>

@@ -107,6 +107,7 @@ public class OwnerStandardPostPageController {
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
+                .createPath(getMyPostsPath() + "/create")
                 .workspace(workspace)
                 .build();
 

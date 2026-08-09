@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="composer(page)"
+             id="post-composer"
+             class="card border-0 shadow-sm"
+             data-post-composer
+             th:data-max-media-count="${page.maxMediaCount}"
+             th:data-message-limit="#{post.composer.media.limit(${page.maxMediaCount})}"
+             th:data-message-move-up="#{post.composer.media.moveUp}"
+             th:data-message-move-down="#{post.composer.media.moveDown}"
+             th:data-message-remove="#{action.remove}">
+        <form th:object="${form}"
+              method="post"
+              th:action="${page.actionPath}"
+              th:attr="hx-post=${page.actionPath},
+                       hx-target='#post-composer',
+                       hx-swap='outerHTML',
+                       hx-disabled-elt='button[type=submit]'">
+            <div class="card-body p-3 p-md-4 d-grid gap-4">
+                <div>
+                    <h1 class="h4 mb-1" th:text="#{post.composer.title}">
+                        Create post
+                    </h1>
+                    <p class="text-secondary mb-0"
+                       th:text="#{post.composer.description}">
+                        Share text and media for moderation.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="post-content"
+                           class="form-label"
+                           th:text="#{post.composer.content}">
+                        Content
+                    </label>
+                    <textarea id="post-content"
+                              class="form-control"
+                              th:classappend="${#fields.hasErrors('content')}
+                                      ? ' is-invalid' : ''"
+                              th:field="*{content}"
+                              rows="7"
+                              maxlength="10000"
+                              th:placeholder="#{post.composer.contentPlaceholder}"></textarea>
+                    <div class="invalid-feedback"
+                         th:if="${#fields.hasErrors('content')}"
+                         th:errors="*{content}">
+                        Invalid content
+                    </div>
+                    <div class="form-text"
+                         th:text="#{post.composer.contentHint}">
+                        Up to 10,000 characters.
+                    </div>
+                </div>
+
+                <div th:if="${#fields.hasErrors('contentAvailable')}"
+                     class="alert alert-danger mb-0"
+                     th:errors="*{contentAvailable}">
+                    Add text or at least one media item.
+                </div>
+
+                <section class="border rounded p-3 p-md-4 d-grid gap-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <h2 class="h5 mb-1"
+                                th:text="#{post.composer.selectedMedia}">
+                                Selected media
+                            </h2>
+                            <p class="small text-secondary mb-0"
+                               th:text="#{post.composer.selectedMediaHint}">
+                                Selection order is preserved in the post.
+                            </p>
+                        </div>
+                        <span class="badge text-bg-secondary rounded-pill"
+                              data-selected-media-count>0</span>
+                    </div>
+
+                    <div data-selected-media-inputs>
+                        <input th:each="mediaId : *{mediaIds}"
+                               type="hidden"
+                               name="mediaIds"
+                               th:value="${mediaId}"
+                               th:data-media-name="${mediaId}">
+                    </div>
+
+                    <p class="text-secondary mb-0"
+                       data-selected-media-empty
+                       th:text="#{post.composer.selectedMediaEmpty}">
+                        No media selected.
+                    </p>
+                    <div class="list-group"
+                         data-selected-media-list></div>
+                    <div class="alert alert-warning mb-0"
+                         data-media-selection-error
+                         hidden></div>
+                    <div class="text-danger small"
+                         th:if="${#fields.hasErrors('mediaIds')}"
+                         th:errors="*{mediaIds}">
+                        Invalid media selection
+                    </div>
+                </section>
+
+                <section class="d-grid gap-3">
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <div>
+                            <h2 class="h5 mb-1"
+                                th:text="#{post.composer.mediaLibrary}">
+                                Your media
+                            </h2>
+                            <p class="small text-secondary mb-0"
+                               th:text="#{post.composer.mediaLibraryHint}">
+                                Only active, ready media can be attached.
+                            </p>
+                        </div>
+
+                        <a th:href="${page.actionPath}"
+                           class="btn btn-outline-primary"
+                           th:attr="hx-get=${page.uploadPartialPath},
+                                    hx-target='#app-modal-host',
+                                    hx-swap='innerHTML',
+                                    hx-disabled-elt='this',
+                                    data-app-modal-request='true'">
+                            <i class="bi bi-cloud-arrow-up me-2"
+                               aria-hidden="true"></i>
+                            <span th:text="#{post.composer.uploadMedia}">
+                                Upload media
+                            </span>
+                        </a>
+                    </div>
+
+                    <div th:replace="~{post/standard/owner/fragments/media-picker
+                            :: picker(${page.mediaPicker})}"></div>
+                </section>
+            </div>
+
+            <div class="card-footer bg-body d-flex flex-wrap justify-content-end gap-2 p-3 p-md-4">
+                <a th:href="${page.backPath}"
+                   class="btn btn-outline-secondary"
+                   th:text="#{action.cancel}">
+                    Cancel
+                </a>
+                <button type="submit"
+                        class="btn btn-primary">
+                    <i class="bi bi-send me-2" aria-hidden="true"></i>
+                    <span th:text="#{post.composer.submit}">
+                        Submit for review
+                    </span>
+                </button>
+            </div>
+        </form>
+    </section>
+</body>
+</html>
