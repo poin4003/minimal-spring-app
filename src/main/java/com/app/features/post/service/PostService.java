@@ -10,7 +10,7 @@ import jakarta.validation.constraints.NotNull;
 
 public interface PostService {
 
-    PostEntity createPendingPost(
+    PostEntity createDraftPost(
             @NotNull UserBaseEntity author,
             @NotNull PostType type);
 
@@ -21,6 +21,12 @@ public interface PostService {
     PostEntity prepareOwnedPostForUpdate(
             @NotNull UUID postId,
             @NotNull UUID ownerId);
+
+    PostEntity requireOwnedPostForUpdate(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    PostEntity submitForReview(@NotNull PostEntity post);
 
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
 

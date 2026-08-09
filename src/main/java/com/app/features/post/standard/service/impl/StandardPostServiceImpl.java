@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
@@ -64,7 +65,7 @@ public class StandardPostServiceImpl implements StandardPostService {
                 payload.getMediaIds(),
                 authorId);
 
-        PostEntity post = postSvc.createPendingPost(author, PostType.STANDARD);
+        PostEntity post = postSvc.createDraftPost(author, PostType.STANDARD);
 
         StandardPostEntity standardPost = new StandardPostEntity();
         standardPost.setPost(post);
@@ -77,6 +78,30 @@ public class StandardPostServiceImpl implements StandardPostService {
         return standardPostMapper.toOwnerResult(
                 standardPost,
                 authorInfo,
+                attachments);
+    }
+
+    @Override
+    @Transactional
+    public OwnerStandardPostResult submitOwnedPostForReview(
+            UUID postId,
+            UUID ownerId) {
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        StandardPostEntity standardPost = requireStandardPost(postId);
+        List<PostMediaEntity> attachments = postMediaSvc.requirePublishableMedia(post);
+
+        if (!StringUtils.hasText(standardPost.getContent())
+                && attachments.isEmpty()) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.contentRequired",
+                    postId);
+        }
+
+        postSvc.submitForReview(post);
+
+        return standardPostMapper.toOwnerResult(
+                standardPost,
+                profileSvc.requireProfile(ownerId),
                 attachments);
     }
 

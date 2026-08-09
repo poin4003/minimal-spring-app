@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.post.entity.PostEntity;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.repository.PostRepository;
@@ -25,11 +26,12 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepo;
 
     @Override
-    public PostEntity createPendingPost(UserBaseEntity author, PostType type) {
+    public PostEntity createDraftPost(UserBaseEntity author, PostType type) {
         PostEntity post = new PostEntity();
         post.setAuthor(author);
         post.setType(type);
-        post.setModerationStatus(PostModerationStatus.PENDING_REVIEW);
+        post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
+        post.setModerationStatus(null);
 
         return postRepo.save(post);
     }
@@ -46,6 +48,17 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public PostEntity prepareOwnedPostForUpdate(UUID postId, UUID ownerId) {
+        PostEntity post = requireOwnedPostForUpdate(postId, ownerId);
+
+        post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
+        clearModeration(post);
+
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity requireOwnedPostForUpdate(UUID postId, UUID ownerId) {
         PostEntity post = postRepo.findForUpdateById(postId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "error.post.notFound",
@@ -53,6 +66,19 @@ public class PostServiceImpl implements PostService {
 
         requireOwnedPost(post, ownerId);
 
+        return post;
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity submitForReview(PostEntity post) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.DRAFT) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.lifecycleInvalid",
+                    post.getId());
+        }
+
+        post.setLifecycleStatus(PostLifecycleStatus.ACTIVE);
         post.setModerationStatus(PostModerationStatus.PENDING_REVIEW);
         post.setPublishedAt(null);
         post.setModeratedBy(null);
@@ -70,7 +96,8 @@ public class PostServiceImpl implements PostService {
                         "error.post.notFound",
                         postId));
 
-        if (post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
+        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
+                || post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
             throw ExceptionFactory.invalidParam(
                     "error.post.moderationInvalid",
                     postId);
@@ -82,5 +109,13 @@ public class PostServiceImpl implements PostService {
     @Override
     public void deletePost(PostEntity post) {
         postRepo.delete(post);
+    }
+
+    private void clearModeration(PostEntity post) {
+        post.setModerationStatus(null);
+        post.setPublishedAt(null);
+        post.setModeratedBy(null);
+        post.setModeratedAt(null);
+        post.setRejectionReason(null);
     }
 }

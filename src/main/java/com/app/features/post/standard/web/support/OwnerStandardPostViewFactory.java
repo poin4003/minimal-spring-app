@@ -8,6 +8,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.web.view.OwnerPostCardView;
@@ -27,8 +28,11 @@ public class OwnerStandardPostViewFactory {
                 .post(post)
                 .detailPath(buildDetailPath(post.getId()))
                 .editPath(buildEditPath(post.getId()))
-                .statusLabel(resolveStatusLabel(post.getModerationStatus()))
+                .statusLabel(resolveStatusLabel(
+                        post.getLifecycleStatus(),
+                        post.getModerationStatus()))
                 .statusBadgeClass(resolveStatusBadgeClass(
+                        post.getLifecycleStatus(),
                         post.getModerationStatus()))
                 .build();
     }
@@ -54,7 +58,7 @@ public class OwnerStandardPostViewFactory {
         return OwnerPostStatusFilterView.builder()
                 .label(status == null
                         ? messageResolver.get("post.owner.filter.all")
-                        : resolveStatusLabel(status))
+                        : resolveModerationStatusLabel(status))
                 .path(buildFilterPath(status))
                 .active(status == currentStatus)
                 .build();
@@ -87,7 +91,21 @@ public class OwnerStandardPostViewFactory {
                 .toUriString();
     }
 
-    private String resolveStatusLabel(PostModerationStatus status) {
+    private String resolveStatusLabel(
+            PostLifecycleStatus lifecycleStatus,
+            PostModerationStatus moderationStatus) {
+        return switch (lifecycleStatus) {
+            case DRAFT -> messageResolver.get(
+                    "post.lifecycleStatus.draft");
+            case ARCHIVED -> messageResolver.get(
+                    "post.lifecycleStatus.archived");
+            case DELETED -> messageResolver.get(
+                    "post.lifecycleStatus.deleted");
+            case ACTIVE -> resolveModerationStatusLabel(moderationStatus);
+        };
+    }
+
+    private String resolveModerationStatusLabel(PostModerationStatus status) {
         return switch (status) {
             case PENDING_REVIEW -> messageResolver.get(
                     "post.moderationStatus.pendingReview");
@@ -98,11 +116,18 @@ public class OwnerStandardPostViewFactory {
         };
     }
 
-    private String resolveStatusBadgeClass(PostModerationStatus status) {
-        return switch (status) {
-            case PENDING_REVIEW -> "text-bg-warning";
-            case PUBLISHED -> "text-bg-success";
-            case REJECTED -> "text-bg-danger";
+    private String resolveStatusBadgeClass(
+            PostLifecycleStatus lifecycleStatus,
+            PostModerationStatus moderationStatus) {
+        return switch (lifecycleStatus) {
+            case DRAFT -> "text-bg-secondary";
+            case ARCHIVED -> "text-bg-dark";
+            case DELETED -> "text-bg-danger";
+            case ACTIVE -> switch (moderationStatus) {
+                case PENDING_REVIEW -> "text-bg-warning";
+                case PUBLISHED -> "text-bg-success";
+                case REJECTED -> "text-bg-danger";
+            };
         };
     }
 }

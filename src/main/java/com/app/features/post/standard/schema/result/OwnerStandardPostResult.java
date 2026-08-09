@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.app.features.post.enums.PostType;
+import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.schema.result.PostMediaResult;
 import com.app.features.user.schema.result.UserPublicResult;
@@ -17,6 +18,8 @@ public class OwnerStandardPostResult {
     private UUID id;
 
     private PostType type;
+
+    private PostLifecycleStatus lifecycleStatus;
 
     private UserPublicResult author;
 

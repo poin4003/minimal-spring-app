@@ -27,6 +27,10 @@ public interface StandardPostService {
             @NotNull UUID ownerId,
             @NotNull @Valid UpdateStandardPostPayload payload);
 
+    OwnerStandardPostResult submitOwnedPostForReview(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
     PublicStandardPostResult getPublishedPost(@NotNull UUID postId);
 
     OwnerStandardPostResult getOwnerPost(
