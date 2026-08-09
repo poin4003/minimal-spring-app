@@ -26,7 +26,7 @@
         <lombok.version>1.18.34</lombok.version>
         <modelmapper.version>3.2.0</modelmapper.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <springdoc.version>2.7.0</springdoc.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <easyexcel.version>3.3.4</easyexcel.version>
         <h2.version>2.2.224</h2.version>
         <jobrunr.version>7.2.1</jobrunr.version>

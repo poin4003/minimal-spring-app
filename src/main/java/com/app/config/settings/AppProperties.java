@@ -522,6 +522,7 @@ public class AppProperties {
                 "/api/v1/auth/refresh",
                 "/api/v1/auth/register/**",
                 "/api/v1/auth/password-reset/**",
+                "/api/v1/public/callback",
                 "/api/v1/public/media/**");
 
         private List<String> webPublicPaths = List.of(
@@ -537,6 +538,7 @@ public class AppProperties {
                 "/error",
                 "/favicon.ico",
                 "/vendor/**",
+                "/swagger-ui.html",
                 "/swagger-ui/**",
                 "/v3/api-docs/**",
                 "/h2-console/**",
