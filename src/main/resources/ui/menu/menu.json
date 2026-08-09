@@ -37,6 +37,12 @@
     "path": "/admin/media"
   },
   {
+    "id": "post-moderation",
+    "messageKey": "menu.postModeration",
+    "icon": "journal-check",
+    "path": "/admin/posts/moderation"
+  },
+  {
     "id": "cronjobs",
     "messageKey": "menu.cronjobs",
     "icon": "clock-history",

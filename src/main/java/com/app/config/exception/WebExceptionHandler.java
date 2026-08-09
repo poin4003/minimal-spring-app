@@ -32,7 +32,8 @@ import lombok.extern.slf4j.Slf4j;
         "com.app.features.user.web.controller",
         "com.app.features.rbac.web.controller",
         "com.app.features.cronjob.web.controller",
-        "com.app.features.media.web.controller"
+        "com.app.features.media.web.controller",
+        "com.app.features.post"
 })
 public class WebExceptionHandler {
 
