@@ -2,32 +2,43 @@ package com.app.features.post.standard.service;
 
 import java.util.UUID;
 
-import org.springdoc.core.converters.models.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.app.features.post.schema.payload.CreateStandardPostPayload;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
+import com.app.features.post.standard.schema.filter.PublicStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.schema.result.PublicStandardPostResult;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public interface StandardPostService {
 
-    OwnerStandardPostResult createStandardPost(UUID authorId, @Valid CreateStandardPostPayload payload);
+    OwnerStandardPostResult createStandardPost(
+            @NotNull UUID authorId,
+            @NotNull @Valid CreateStandardPostPayload payload);
 
-    PublicStandardPostResult getPublishedPost(UUID postId);
+    PublicStandardPostResult getPublishedPost(@NotNull UUID postId);
 
-    OwnerStandardPostResult getOwnerPost(UUID postId, UUID ownerId);
+    OwnerStandardPostResult getOwnerPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
 
-    StandardPostEntity requireStandardPost(UUID postId);
+    StandardPostEntity requireStandardPost(@NotNull UUID postId);
 
-    void deleteOwnedPost(UUID postId, UUID ownerId);
+    void deleteOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
 
     Page<PublicStandardPostResult> getPublishedPosts(
-            UUID ownerId, OwnerStandardPostFilterCriteria criteria, Pageable pageable);
+            @NotNull PublicStandardPostFilterCriteria criteria,
+            @NotNull Pageable pageable);
 
     Page<OwnerStandardPostResult> getOwnedPosts(
-            UUID ownerId, OwnerStandardPostFilterCriteria criteria, Pageable pageable);
+            @NotNull UUID ownerId,
+            @NotNull OwnerStandardPostFilterCriteria criteria,
+            @NotNull Pageable pageable);
 }

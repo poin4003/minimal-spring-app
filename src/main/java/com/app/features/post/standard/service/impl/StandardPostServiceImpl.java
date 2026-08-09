@@ -5,45 +5,42 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.modelmapper.ModelMapper;
-import org.springdoc.core.converters.models.Pageable;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
-import com.app.features.media.schema.result.PublicMediaResult;
 import com.app.features.media.service.MediaService;
-import com.app.features.media.support.MediaUrlResolver;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostMediaEntity;
 import com.app.features.post.enums.PostMediaRole;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.schema.payload.CreateStandardPostPayload;
-import com.app.features.post.schema.result.PostMediaResult;
 import com.app.features.post.service.PostMediaService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
+import com.app.features.post.standard.mapper.StandardPostResultMapper;
 import com.app.features.post.standard.repository.StandardPostRepository;
+import com.app.features.post.standard.repository.spec.StandardPostSpecification;
 import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
+import com.app.features.post.standard.schema.filter.PublicStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.schema.result.PublicStandardPostResult;
 import com.app.features.post.standard.service.StandardPostService;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.entity.UserInfoEntity;
-import com.app.features.user.schema.result.UserPublicResult;
 import com.app.features.user.service.ProfileService;
 import com.app.features.user.service.UserService;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @Validated
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class StandardPostServiceImpl implements StandardPostService {
 
@@ -53,14 +50,13 @@ public class StandardPostServiceImpl implements StandardPostService {
     private final StandardPostRepository standardPostRepo;
     private final MediaService mediaSvc;
     private final PostMediaService postMediaSvc;
-    private final MediaUrlResolver mediaUrlResolver;
-    private final ModelMapper mapper;
+    private final StandardPostResultMapper standardPostMapper;
 
     @Override
     @Transactional
     public OwnerStandardPostResult createStandardPost(
-            @NotNull UUID authorId, 
-            @NotNull @Valid CreateStandardPostPayload payload) {
+            UUID authorId,
+            CreateStandardPostPayload payload) {
         UserBaseEntity author = userSvc.requireUser(authorId);
         UserInfoEntity authorInfo = profileSvc.requireProfile(authorId);
 
@@ -85,7 +81,10 @@ public class StandardPostServiceImpl implements StandardPostService {
         List<PostMediaEntity> attachments = postMediaSvc.createAttachments(
                 post, PostMediaRole.CONTENT, orderedMedia);
 
-        return toOwnerResult(standardPost, authorInfo, attachments);
+        return standardPostMapper.toOwnerResult(
+                standardPost,
+                authorInfo,
+                attachments);
     }
 
     @Override
@@ -100,7 +99,7 @@ public class StandardPostServiceImpl implements StandardPostService {
 
         UserInfoEntity authorInfo = profileSvc.requireProfile(post.getAuthor().getId());
 
-        return toPublicResult(
+        return standardPostMapper.toPublicResult(
                 standardPost,
                 authorInfo,
                 postMediaSvc.findAttachments(postId, PostMediaRole.CONTENT));
@@ -110,7 +109,7 @@ public class StandardPostServiceImpl implements StandardPostService {
     public OwnerStandardPostResult getOwnerPost(UUID postId, UUID ownerId) {
         StandardPostEntity standardPost = requireOwnedStandardPost(postId, ownerId);
 
-        return toOwnerResult(
+        return standardPostMapper.toOwnerResult(
                 standardPost,
                 profileSvc.requireProfile(ownerId),
                 postMediaSvc.findAttachments(postId, PostMediaRole.CONTENT));
@@ -138,84 +137,86 @@ public class StandardPostServiceImpl implements StandardPostService {
         return standardPost;
     }
 
-    private OwnerStandardPostResult toOwnerResult(
-            StandardPostEntity standardPost,
-            UserInfoEntity authorInfo,
-            List<PostMediaEntity> attachments) {
+    @Override
+    public Page<PublicStandardPostResult> getPublishedPosts(
+            PublicStandardPostFilterCriteria criteria,
+            Pageable pageable) {
+        Page<StandardPostEntity> entityPage = standardPostRepo.findAll(
+                StandardPostSpecification.published(criteria),
+                pageable);
 
-        PostEntity post = standardPost.getPost();
+        Map<UUID, UserInfoEntity> profilesByAuthorId = loadProfilesByAuthorId(
+                entityPage.getContent());
+        Map<UUID, List<PostMediaEntity>> attachmentsByPostId = loadAttachmentsByPostId(
+                entityPage.getContent());
 
-        OwnerStandardPostResult result = mapper.map(post, OwnerStandardPostResult.class);
-
-        result.setContent(standardPost.getContent());
-        result.setAuthor(toAuthorResult(post.getAuthor(), authorInfo));
-        result.setMedia(toPostMediaResult(attachments));
-
-        return result;
+        return entityPage.map(standardPost -> {
+            PostEntity post = standardPost.getPost();
+            return standardPostMapper.toPublicResult(
+                    standardPost,
+                    requireLoadedProfile(profilesByAuthorId, post.getAuthor().getId()),
+                    attachmentsByPostId.getOrDefault(post.getId(), List.of()));
+        });
     }
 
-    private PublicStandardPostResult toPublicResult(
-            StandardPostEntity standardPost,
-            UserInfoEntity authorInfo,
-            List<PostMediaEntity> attachments) {
-        PostEntity post = standardPost.getPost();
+    @Override
+    public Page<OwnerStandardPostResult> getOwnedPosts(
+            UUID ownerId,
+            OwnerStandardPostFilterCriteria criteria,
+            Pageable pageable) {
+        Page<StandardPostEntity> entityPage = standardPostRepo.findAll(
+                StandardPostSpecification.ownedBy(ownerId, criteria),
+                pageable);
 
-        PublicStandardPostResult result = mapper.map(post, PublicStandardPostResult.class);
+        Map<UUID, UserInfoEntity> profilesByAuthorId = loadProfilesByAuthorId(
+                entityPage.getContent());
+        Map<UUID, List<PostMediaEntity>> attachmentsByPostId = loadAttachmentsByPostId(
+                entityPage.getContent());
 
-        result.setContent(standardPost.getContent());
-        result.setAuthor(toAuthorResult(post.getAuthor(), authorInfo));
-        result.setMedia(toPostMediaResult(attachments));
-
-        return result;
+        return entityPage.map(standardPost -> {
+            PostEntity post = standardPost.getPost();
+            return standardPostMapper.toOwnerResult(
+                    standardPost,
+                    requireLoadedProfile(profilesByAuthorId, post.getAuthor().getId()),
+                    attachmentsByPostId.getOrDefault(post.getId(), List.of()));
+        });
     }
 
-    private UserPublicResult toAuthorResult(
-            UserBaseEntity author,
-            UserInfoEntity authorInfo) {
-        UserPublicResult result = mapper.map(authorInfo, UserPublicResult.class);
+    private Map<UUID, UserInfoEntity> loadProfilesByAuthorId(
+            List<StandardPostEntity> standardPosts) {
+        List<UUID> authorIds = standardPosts.stream()
+                .map(standardPost -> standardPost.getPost().getAuthor().getId())
+                .distinct()
+                .toList();
 
-        result.setId(author.getId());
+        return profileSvc.findProfiles(authorIds).stream()
+                .collect(Collectors.toMap(
+                        profile -> profile.getUserId(),
+                        profile -> profile));
+    }
 
-        if (authorInfo.getAvatarMedia() != null) {
-            result.setAvatarUrl(mediaUrlResolver.resolvePreviewUrl(authorInfo.getAvatarMedia()));
+    private Map<UUID, List<PostMediaEntity>> loadAttachmentsByPostId(
+            List<StandardPostEntity> standardPosts) {
+        List<UUID> postIds = standardPosts.stream()
+                .map(standardPost -> standardPost.getPostId())
+                .toList();
+
+        return postMediaSvc.findAttachments(postIds, PostMediaRole.CONTENT).stream()
+                .collect(Collectors.groupingBy(
+                        attachment -> attachment.getPost().getId()));
+    }
+
+    private UserInfoEntity requireLoadedProfile(
+            Map<UUID, UserInfoEntity> profilesByAuthorId,
+            UUID authorId) {
+        UserInfoEntity profile = profilesByAuthorId.get(authorId);
+
+        if (profile == null) {
+            throw ExceptionFactory.notFound(
+                    "error.profile.notFound",
+                    authorId);
         }
 
-        return result;
-    }
-
-    private List<PostMediaResult> toPostMediaResult(List<PostMediaEntity> attachments) {
-        return attachments.stream()
-                .map(attachment -> {
-                    PostMediaResult result = mapper.map(attachment, PostMediaResult.class);
-
-                    result.setMedia(toPublicMediaResult(attachment.getMedia()));
-
-                    return result;
-                })
-                .toList();
-    }
-
-    private PublicMediaResult toPublicMediaResult(MediaEntity media) {
-        PublicMediaResult result = mapper.map(media, PublicMediaResult.class);
-
-        result.setContentUrl(mediaUrlResolver.resolveContentUrl(media));
-        result.setOriginalUrl(mediaUrlResolver.resolveOriginalUrl(media));
-        result.setThumbnailUrl(mediaUrlResolver.resolveThumbnailUrl(media));
-
-        return result;
-    }
-
-    @Override
-    public Page<PublicStandardPostResult> getPublishedPosts(UUID ownerId, OwnerStandardPostFilterCriteria criteria,
-            Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getPublishedPosts'");
-    }
-
-    @Override
-    public Page<OwnerStandardPostResult> getOwnedPosts(UUID ownerId, OwnerStandardPostFilterCriteria criteria,
-            Pageable pageable) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getOwnedPosts'");
+        return profile;
     }
 }

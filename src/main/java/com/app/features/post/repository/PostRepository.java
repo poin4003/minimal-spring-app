@@ -23,5 +23,8 @@ public interface PostRepository extends JpaRepository<PostEntity, UUID>, JpaSpec
     Page<PostEntity> findAll(Specification<PostEntity> specification, Pageable pageable);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @EntityGraph(attributePaths = {
+            PostEntity_.AUTHOR,
+            PostEntity_.MODERATED_BY })
     Optional<PostEntity> findForUpdateById(UUID postId);
 }

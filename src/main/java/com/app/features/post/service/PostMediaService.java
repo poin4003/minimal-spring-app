@@ -1,5 +1,6 @@
 package com.app.features.post.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,6 +14,12 @@ public interface PostMediaService {
     List<PostMediaEntity> findAttachments(UUID postId);
  
     List<PostMediaEntity> findAttachments(UUID postId, PostMediaRole role);
+
+    List<PostMediaEntity> findAttachments(
+            Collection<UUID> postIds,
+            PostMediaRole role);
+
+    List<PostMediaEntity> requirePublishableMedia(PostEntity post);
 
     List<PostMediaEntity> createAttachments(
             PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia);

@@ -98,7 +98,6 @@ public class RbacServiceImpl implements RbacService {
                     "error.rbac.roleKeyAlreadyExists");
         }
 
-        mapper.getConfiguration().setSkipNullEnabled(true);
         mapper.map(payload, role);
 
         role = roleRepo.save(role);

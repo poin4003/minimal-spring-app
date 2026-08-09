@@ -23,6 +23,7 @@ import com.app.features.media.entity.MediaUploadSessionEntity;
 import com.app.features.media.entity.MediaUploadSessionEntity_;
 import com.app.features.media.enums.MediaUploadStatus;
 import com.app.features.media.exception.InvalidMediaContentException;
+import com.app.features.media.mapper.MediaResultMapper;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaUploadSessionRepository;
 import com.app.features.media.schema.model.MediaUploadAssemblyContext;
@@ -60,6 +61,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
     private final MediaChunkStorage mediaChunkStorage;
     private final MediaFileStorage mediaFileStorage;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
+    private final MediaResultMapper mediaResultMapper;
     private final ModelMapper mapper;
     private final AppProperties appProperties;
     private final ReentrantReadWriteLock[] uploadLocks = createUploadLocks();
@@ -419,7 +421,8 @@ public class MediaUploadServiceImpl implements MediaUploadService {
                 MediaUploadSessionResult.class);
         result.setUploadedChunks(uploadedChunks);
         if (session.getCompletedMedia() != null) {
-            result.setCompletedMedia(mapper.map(session.getCompletedMedia(), MediaResult.class));
+            result.setCompletedMedia(mediaResultMapper.toResult(
+                    session.getCompletedMedia()));
         }
         return result;
     }
@@ -428,7 +431,7 @@ public class MediaUploadServiceImpl implements MediaUploadService {
         if (session.getCompletedMedia() == null) {
             throw ExceptionFactory.serverError("error.media.completedUploadMissingMedia");
         }
-        return mapper.map(session.getCompletedMedia(), MediaResult.class);
+        return mediaResultMapper.toResult(session.getCompletedMedia());
     }
 
     private void deleteUploadChunksSafely(UUID uploadId) {

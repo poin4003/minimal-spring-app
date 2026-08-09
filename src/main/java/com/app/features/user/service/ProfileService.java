@@ -1,5 +1,7 @@
 package com.app.features.user.service;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 import com.app.features.user.entity.UserInfoEntity;
@@ -27,5 +29,8 @@ public interface ProfileService {
 
     void removeAvatar(@NotNull UUID userId);
 
-    UserInfoEntity requireProfile(UUID userId);
+    UserInfoEntity requireProfile(@NotNull UUID userId);
+
+    List<UserInfoEntity> findProfiles(
+            @NotNull Collection<@NotNull UUID> userIds);
 }

@@ -3,6 +3,9 @@ package com.app.features.post.service.impl;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import com.app.core.exception.ExceptionFactory;
 import com.app.features.post.entity.PostEntity;
@@ -15,6 +18,7 @@ import com.app.features.user.entity.UserBaseEntity;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
@@ -37,10 +41,27 @@ public class PostServiceImpl implements PostService {
         }
 
         return post;
-    } 
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostEntity requirePendingPostForUpdate(UUID postId) {
+        PostEntity post = postRepo.findForUpdateById(postId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.post.notFound",
+                        postId));
+
+        if (post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.moderationInvalid",
+                    postId);
+        }
+
+        return post;
+    }
 
     @Override
     public void deletePost(PostEntity post) {
         postRepo.delete(post);
-    } 
+    }
 }

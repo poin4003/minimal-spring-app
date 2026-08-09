@@ -1,12 +1,16 @@
 package com.app.features.post.service.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
 
+import com.app.core.enums.RecordStatus;
+import com.app.core.exception.ExceptionFactory;
 import com.app.features.media.entity.MediaEntity;
+import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.entity.PostMediaEntity;
 import com.app.features.post.enums.PostMediaRole;
@@ -36,6 +40,38 @@ public class PostMediaServiceImpl implements PostMediaService {
                 .findAllByPost_IdAndRoleOrderByPositionAsc(
                         postId,
                         role);
+    }
+
+    @Override
+    public List<PostMediaEntity> findAttachments(
+            Collection<UUID> postIds,
+            PostMediaRole role) {
+        if (postIds.isEmpty()) {
+            return List.of();
+        }
+
+        return postMediaRepo.findAllByPost_IdInAndRoleOrderByPost_IdAscPositionAsc(
+                postIds,
+                role);
+    }
+
+    @Override
+    public List<PostMediaEntity> requirePublishableMedia(PostEntity post) {
+        List<PostMediaEntity> attachments = findAttachments(post.getId());
+
+        boolean hasUnavailableMedia = attachments.stream()
+                .map(attachment -> attachment.getMedia())
+                .anyMatch(media -> !media.getCreatedBy().getId().equals(post.getAuthor().getId())
+                        || media.getStatus() != RecordStatus.ACTIVE
+                        || media.getProcessingStatus() != MediaProcessingStatus.READY);
+
+        if (hasUnavailableMedia) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.mediaNotReady",
+                    post.getId());
+        }
+
+        return attachments;
     }
 
     @Override

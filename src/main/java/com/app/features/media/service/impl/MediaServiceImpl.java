@@ -34,6 +34,7 @@ import com.app.features.media.enums.MediaProcessingStatus;
 import com.app.features.media.event.MediaDeletedEvent;
 import com.app.features.media.event.MediaUploadedEvent;
 import com.app.features.media.job.MediaProcessingJob;
+import com.app.features.media.mapper.MediaResultMapper;
 import com.app.features.media.repository.MediaRepository;
 import com.app.features.media.repository.MediaProcessingLeaseRepository;
 import com.app.features.media.repository.MediaVariantRepository;
@@ -43,14 +44,12 @@ import com.app.features.media.schema.model.MediaThumbnailResult;
 import com.app.features.media.schema.payload.CreateMediaPayload;
 import com.app.features.media.schema.result.MediaDetailResult;
 import com.app.features.media.schema.result.MediaResult;
-import com.app.features.media.schema.result.MediaVariantResult;
 import com.app.features.media.service.MediaService;
 import com.app.features.media.service.MediaThumbnailService;
 import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.schema.StagedMediaFile;
 import com.app.features.media.storage.schema.StoredMediaFile;
 import com.app.features.media.support.MediaProcessingPolicy;
-import com.app.features.media.support.MediaUrlResolver;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.user.entity.UserBaseEntity;
@@ -75,7 +74,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileValidator mediaFileValidator;
     private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
-    private final MediaUrlResolver mediaUrlResolver;
+    private final MediaResultMapper mediaResultMapper;
     private final JobScheduler jobScheduler;
     private final ApplicationEventPublisher eventPublisher;
     private final ModelMapper mapper;
@@ -151,7 +150,7 @@ public class MediaServiceImpl implements MediaService {
             registerProcessingJob(media.getId());
         }
 
-        return toMediaResult(media);
+        return mediaResultMapper.toResult(media);
     }
 
     @Transactional
@@ -181,7 +180,7 @@ public class MediaServiceImpl implements MediaService {
         Specification<MediaEntity> specification = MediaSpecification.withFilter(criteria);
         Page<MediaEntity> entityPage = mediaRepo.findAll(specification, pageable);
 
-        return entityPage.map(entity -> toMediaResult(entity));
+        return entityPage.map(entity -> mediaResultMapper.toResult(entity));
     }
 
     @Override
@@ -297,7 +296,7 @@ public class MediaServiceImpl implements MediaService {
                 targetMedia,
                 thumbnailMedia);
         targetMedia.setThumbnailStorageKey(thumbnail.getStorageKey());
-        return toMediaResult(targetMedia);
+        return mediaResultMapper.toResult(targetMedia);
     }
 
     @Override
@@ -360,20 +359,14 @@ public class MediaServiceImpl implements MediaService {
         media = mediaRepo.save(media);
         registerProcessingJob(media.getId());
 
-        return toMediaResult(media);
+        return mediaResultMapper.toResult(media);
     }
 
     private MediaDetailResult toMediaDetailResult(MediaEntity media) {
-        MediaDetailResult result = mapper.map(media, MediaDetailResult.class);
-        List<MediaVariantResult> variants = mediaVariantRepo
-                .findAllByMedia_IdOrderByVariantTypeAscHeightAsc(media.getId())
-                .stream()
-                .map(entity -> mapper.map(entity, MediaVariantResult.class))
-                .toList();
-
-        result.setVariants(variants);
-        populateUrls(result, media);
-        return result;
+        return mediaResultMapper.toDetailResult(
+                media,
+                mediaVariantRepo.findAllByMedia_IdOrderByVariantTypeAscHeightAsc(
+                        media.getId()));
     }
 
     @Override
@@ -402,20 +395,6 @@ public class MediaServiceImpl implements MediaService {
         }
 
         return media;
-    }
-
-    private MediaResult toMediaResult(MediaEntity media) {
-        MediaResult result = mapper.map(media, MediaResult.class);
-        populateUrls(result, media);
-        return result;
-    }
-
-    private void populateUrls(
-            MediaResult result,
-            MediaEntity media) {
-        result.setContentUrl(mediaUrlResolver.resolveContentUrl(media));
-        result.setOriginalUrl(mediaUrlResolver.resolveOriginalUrl(media));
-        result.setThumbnailUrl(mediaUrlResolver.resolveThumbnailUrl(media));
     }
 
     private void requireReadyActiveMedia(

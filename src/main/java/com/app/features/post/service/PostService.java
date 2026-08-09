@@ -6,11 +6,19 @@ import com.app.features.post.entity.PostEntity;
 import com.app.features.post.enums.PostType;
 import com.app.features.user.entity.UserBaseEntity;
 
+import jakarta.validation.constraints.NotNull;
+
 public interface PostService {
 
-    PostEntity createPendingPost(UserBaseEntity author, PostType type);
+    PostEntity createPendingPost(
+            @NotNull UserBaseEntity author,
+            @NotNull PostType type);
 
-    PostEntity requireOwnedPost(PostEntity post, UUID ownedId);
+    PostEntity requireOwnedPost(
+            @NotNull PostEntity post,
+            @NotNull UUID ownedId);
 
-    void deletePost(PostEntity post);
+    PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
+
+    void deletePost(@NotNull PostEntity post);
 }
