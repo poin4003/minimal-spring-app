@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 
@@ -19,6 +20,8 @@ public interface PostModerationService {
     Page<ModerationPostResult> getPendingPosts(
             @NotNull ModerationPostFilterCriteria criteria,
             @NotNull Pageable pageable);
+
+    ModerationPostDetailResult getPostDetail(@NotNull UUID postId);
 
     ModerationStandardPostDetailResult getStandardPostDetail(
             @NotNull UUID postId);

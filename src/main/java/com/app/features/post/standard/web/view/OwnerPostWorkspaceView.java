@@ -2,6 +2,7 @@ package com.app.features.post.standard.web.view;
 
 import java.util.List;
 
+import com.app.features.post.web.view.OwnerPostStatusFilterView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 
 import lombok.Builder;

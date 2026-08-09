@@ -5,7 +5,8 @@ import com.app.features.post.schema.result.PostSummaryResult;
 import lombok.Data;
 
 @Data
-public class ModerationShortPostDetailResult {
+public class ModerationShortPostDetailResult
+        implements ModerationPostDetailResult {
 
     private PostSummaryResult post;
 

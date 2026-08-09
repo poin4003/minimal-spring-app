@@ -1,4 +1,4 @@
-package com.app.features.post.standard.web.view;
+package com.app.features.post.web.composer.view;
 
 import java.util.List;
 

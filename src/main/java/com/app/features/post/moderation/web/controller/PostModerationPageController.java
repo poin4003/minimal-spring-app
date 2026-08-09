@@ -33,9 +33,12 @@ import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
 import com.app.features.post.moderation.web.view.ModerationPostDetailPageView;
+import com.app.features.post.moderation.web.view.ModerationPostDetailView;
 import com.app.features.post.moderation.web.view.ModerationPostListPageView;
 import com.app.features.post.moderation.web.view.ModerationPostQueueView;
 import com.app.features.post.moderation.web.view.ModerationPostTableRowView;
@@ -406,8 +409,8 @@ public class PostModerationPageController {
             UiConfirmModalView publishModal,
             UiModalView rejectModal,
             String openModalId) {
-        ModerationStandardPostDetailResult post =
-                postModerationSvc.getStandardPostDetail(postId);
+        ModerationPostDetailView post = toDetailView(
+                postModerationSvc.getPostDetail(postId));
         String queuePath = buildStatePath(
                 getModerationPath(),
                 filter,
@@ -436,6 +439,27 @@ public class PostModerationPageController {
                 .publishModal(publishModal)
                 .rejectModal(rejectModal)
                 .openModalId(openModalId)
+                .build();
+    }
+
+    private ModerationPostDetailView toDetailView(
+            ModerationPostDetailResult post) {
+        if (post instanceof ModerationStandardPostDetailResult standardPost) {
+            return ModerationPostDetailView.builder()
+                    .post(standardPost.getPost())
+                    .state(standardPost.getState())
+                    .content(standardPost.getContent())
+                    .media(standardPost.getMedia())
+                    .build();
+        }
+
+        ModerationShortPostDetailResult shortPost =
+                (ModerationShortPostDetailResult) post;
+        return ModerationPostDetailView.builder()
+                .post(shortPost.getPost())
+                .state(shortPost.getState())
+                .content(shortPost.getCaption())
+                .media(List.of(shortPost.getMedia()))
                 .build();
     }
 

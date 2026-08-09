@@ -76,6 +76,21 @@
                         My posts
                     </h2>
 
+                    <nav class="nav nav-pills gap-2"
+                         th:aria-label="#{post.owner.contentTypes}">
+                        <a class="nav-link active"
+                           aria-current="page"
+                           th:href="${page.shell.myPostsPath}"
+                           th:text="#{post.owner.type.standard}">
+                            Posts
+                        </a>
+                        <a class="nav-link"
+                           th:href="${page.shortsPath}"
+                           th:text="#{post.owner.type.short}">
+                            Shorts
+                        </a>
+                    </nav>
+
                     <div th:replace="~{post/standard/owner/fragments/workspace
                             :: workspace(${page.workspace})}"></div>
                 </div>

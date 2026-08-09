@@ -29,7 +29,7 @@ import com.app.features.post.standard.entity.StandardPostEntity_;
 import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.service.StandardPostService;
-import com.app.features.post.standard.web.enums.OwnerPostActionType;
+import com.app.features.post.web.enums.OwnerPostActionType;
 import com.app.features.post.standard.web.support.OwnerStandardPostViewFactory;
 import com.app.features.post.standard.web.view.OwnerPostDetailPageView;
 import com.app.features.post.standard.web.view.OwnerPostListPageView;
@@ -106,6 +106,7 @@ public class OwnerStandardPostPageController {
                         currentUser.getUserId()))
                 .editProfilePath(
                         appProperties.getUi().getProfilePath())
+                .shortsPath(appProperties.getUi().getMyShortsPath())
                 .createPath(getMyPostsPath() + "/create")
                 .workspace(workspace)
                 .build();

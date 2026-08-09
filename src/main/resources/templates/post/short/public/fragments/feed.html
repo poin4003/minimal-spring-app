@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="feed(feed)"
+             th:id="${feed.id}"
+             class="d-grid gap-4">
+        <div th:if="${#lists.isEmpty(feed.shorts)}"
+             class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
+                   aria-hidden="true"></i>
+                <p class="text-secondary mb-0"
+                   th:text="#{short.public.feed.empty}">
+                    No published shorts yet.
+                </p>
+            </div>
+        </div>
+
+        <th:block th:each="card : ${feed.shorts}">
+            <div th:replace="~{post/short/public/fragments/card
+                    :: card(${card}, false)}"></div>
+        </th:block>
+
+        <div class="d-flex justify-content-center">
+            <div th:replace="~{fragments/components/pagination
+                    :: pagination(${feed.pagination})}"></div>
+        </div>
+    </section>
+</body>
+</html>

@@ -13,11 +13,11 @@
         <div class="row g-2">
             <div class="col-12 col-md">
                 <label class="visually-hidden"
-                       for="post-media-name"
+                       th:for="${picker.id + '-name'}"
                        th:text="#{post.composer.mediaSearch}">
                     Search media
                 </label>
-                <input id="post-media-name"
+                <input th:id="${picker.id + '-name'}"
                        class="form-control"
                        type="search"
                        name="originalName"
@@ -40,7 +40,7 @@
                         class="btn btn-outline-primary"
                         data-post-media-search-submit
                         th:attr="hx-get=${picker.searchPath},
-                                 hx-include='#post-media-name',
+                                 hx-include=${'#' + picker.id + '-name'},
                                  hx-target=${'#' + picker.id},
                                  hx-select=${'#' + picker.id},
                                  hx-swap='outerHTML',

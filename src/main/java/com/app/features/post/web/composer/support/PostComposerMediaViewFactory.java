@@ -1,10 +1,10 @@
-package com.app.features.post.standard.web.support;
+package com.app.features.post.web.composer.support;
 
 import org.springframework.stereotype.Component;
 
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.schema.result.MediaResult;
-import com.app.features.post.standard.web.view.PostComposerMediaItemView;
+import com.app.features.post.web.composer.view.PostComposerMediaItemView;
 
 @Component
 public class PostComposerMediaViewFactory {

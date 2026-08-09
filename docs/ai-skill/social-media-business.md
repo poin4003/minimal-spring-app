@@ -255,8 +255,8 @@ Allowed transitions:
 2. [x] Backend and Thymeleaf internationalization.
 3. [ ] OTP registration and permanent credential completion.
 4. [x] Shared responsive admin shell and icon-based menu with JSON-driven local Bootstrap icons, desktop icon rail, and mobile offcanvas.
-5. [ ] Common post kernel, moderation, and media attachments.
-6. [ ] Standard posts and shorts.
+5. [x] Common post kernel, moderation, and media attachments.
+6. [x] Standard posts and shorts.
 7. [ ] Movies, seasons, and episodes.
 8. [ ] Products, categories, typed attributes, and flexible filters.
 9. [ ] Wikis and blogs with sanitized Markdown.

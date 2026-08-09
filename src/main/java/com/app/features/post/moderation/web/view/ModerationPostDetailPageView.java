@@ -1,6 +1,5 @@
 package com.app.features.post.moderation.web.view;
 
-import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiConfirmModalView;
 import com.app.features.ui.web.component.view.UiModalView;
@@ -18,7 +17,7 @@ public class ModerationPostDetailPageView {
     private final String title;
     private final UiShellView shell;
     private final UiBreadcrumbView breadcrumb;
-    private final ModerationStandardPostDetailResult post;
+    private final ModerationPostDetailView post;
     private final String statusLabel;
     private final String queuePath;
     private final String refreshEvent;

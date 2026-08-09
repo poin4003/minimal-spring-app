@@ -1,4 +1,4 @@
-package com.app.features.post.standard.web.view;
+package com.app.features.post.web.view;
 
 import lombok.Builder;
 import lombok.Getter;

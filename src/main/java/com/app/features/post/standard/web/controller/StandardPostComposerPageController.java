@@ -37,10 +37,10 @@ import com.app.features.post.schema.payload.CreateStandardPostPayload;
 import com.app.features.post.schema.payload.UpdateStandardPostPayload;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
 import com.app.features.post.standard.service.StandardPostService;
-import com.app.features.post.standard.web.support.PostComposerMediaViewFactory;
-import com.app.features.post.standard.web.view.PostComposerMediaPickerView;
 import com.app.features.post.standard.web.view.StandardPostComposerModeView;
 import com.app.features.post.standard.web.view.StandardPostComposerPageView;
+import com.app.features.post.web.composer.support.PostComposerMediaViewFactory;
+import com.app.features.post.web.composer.view.PostComposerMediaPickerView;
 import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
@@ -128,7 +128,7 @@ public class StandardPostComposerPageController {
                                 request,
                                 mediaQuery,
                                 MEDIA_PAGE_DEFAULTS)));
-        return "post/standard/owner/fragments/media-picker"
+        return "post/fragments/media-picker"
                 + " :: picker (picker=${picker})";
     }
 
@@ -243,7 +243,7 @@ public class StandardPostComposerPageController {
                                 request,
                                 mediaQuery,
                                 MEDIA_PAGE_DEFAULTS)));
-        return "post/standard/owner/fragments/media-picker"
+        return "post/fragments/media-picker"
                 + " :: picker (picker=${picker})";
     }
 

@@ -16,6 +16,7 @@ public class OwnerPostListPageView {
     private final SocialShellView shell;
     private final ProfileResult profile;
     private final String editProfilePath;
+    private final String shortsPath;
     private final String createPath;
     private final OwnerPostWorkspaceView workspace;
 }

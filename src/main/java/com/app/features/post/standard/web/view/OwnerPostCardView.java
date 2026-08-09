@@ -3,6 +3,7 @@ package com.app.features.post.standard.web.view;
 import java.util.List;
 
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
+import com.app.features.post.web.view.OwnerPostActionView;
 
 import lombok.Builder;
 import lombok.Getter;

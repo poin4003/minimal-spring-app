@@ -600,7 +600,13 @@ public class AppProperties {
         private String feedPath = "/posts";
 
         @NotBlank
+        private String shortsPath = "/shorts";
+
+        @NotBlank
         private String myPostsPath = "/my/posts";
+
+        @NotBlank
+        private String myShortsPath = "/my/shorts";
 
         @NotBlank
         private String landingPath = "/home";

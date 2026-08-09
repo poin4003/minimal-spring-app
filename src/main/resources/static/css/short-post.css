@@ -1,0 +1,48 @@
+.short-card {
+    width: 100%;
+    max-width: 32rem;
+    margin-inline: auto;
+}
+
+.short-video-stage {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    max-height: min(78vh, 52rem);
+}
+
+.short-video-player.video-js {
+    width: 100%;
+    height: 100%;
+}
+
+.short-video-player .vjs-tech {
+    object-fit: contain;
+}
+
+.short-author-avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 2.75rem;
+}
+
+.short-owner-cover {
+    --bs-aspect-ratio: 140%;
+}
+
+.short-owner-play-icon {
+    width: 3rem;
+    height: 3rem;
+}
+
+@media (max-width: 575.98px) {
+    .short-card {
+        margin-inline: calc(var(--bs-gutter-x, 1.5rem) * -0.5);
+        width: calc(100% + var(--bs-gutter-x, 1.5rem));
+        max-width: none;
+        border-radius: 0;
+    }
+
+    .short-video-stage {
+        max-height: 76vh;
+    }
+}

@@ -23,6 +23,7 @@ import com.app.features.post.moderation.repository.spec.PostModerationSpecificat
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
@@ -84,6 +85,23 @@ public class PostModerationServiceImpl implements PostModerationService {
                 standardPost,
                 authorInfo,
                 attachments);
+    }
+
+    @Override
+    public ModerationPostDetailResult getPostDetail(UUID postId) {
+        PostEntity post = postSvc.requirePendingPost(
+                postRepo.findById(postId)
+                        .orElseThrow(() -> ExceptionFactory.notFound(
+                                "error.post.notFound",
+                                postId)));
+
+        return switch (post.getType()) {
+            case STANDARD -> getStandardPostDetail(postId);
+            case SHORT -> getShortPostDetail(postId);
+            default -> throw ExceptionFactory.invalidParam(
+                    "error.post.typeUnsupported",
+                    post.getType());
+        };
     }
 
     @Override

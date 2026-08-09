@@ -74,6 +74,11 @@
         hideError(root);
         if (index >= 0) {
             state.selected.splice(index, 1);
+        } else if (state.maxCount === 1) {
+            state.selected = [{
+                id: mediaId,
+                name: option.dataset.mediaName || mediaId
+            }];
         } else if (state.selected.length >= state.maxCount) {
             showError(root, root.dataset.messageLimit);
             return;

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <article th:fragment="card(card, detailMode)"
+             class="card border-0 shadow-sm overflow-hidden h-100 short-owner-card">
+        <div class="card-body p-3 p-md-4 d-grid gap-3">
+            <header class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <span class="badge rounded-pill"
+                      th:classappend="${card.statusBadgeClass}"
+                      th:text="${card.statusLabel}">
+                    Status
+                </span>
+
+                <div class="btn-group btn-group-sm"
+                     role="group"
+                     th:aria-label="#{post.owner.actions}">
+                    <a th:if="${card.editable}"
+                       th:href="${card.editPath}"
+                       class="btn btn-outline-primary"
+                       th:title="#{post.owner.edit}"
+                       th:aria-label="#{post.owner.edit}">
+                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                        <span class="visually-hidden"
+                              th:text="#{post.owner.edit}">Edit</span>
+                    </a>
+                    <a th:each="action : ${card.actions}"
+                       th:href="${action.modalPath}"
+                       class="btn"
+                       th:classappend="${action.buttonClass}"
+                       th:attr="hx-get=${action.modalPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true',
+                                title=${action.label},
+                                aria-label=${action.label}">
+                        <i th:class="${action.iconClass}" aria-hidden="true"></i>
+                        <span class="visually-hidden"
+                              th:text="${action.label}">Action</span>
+                    </a>
+                </div>
+            </header>
+
+            <div th:if="${detailMode}"
+                 class="short-video-stage bg-black"
+                 data-media-preview
+                 th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+                 th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+                 th:data-message-stream-failed="#{media.preview.streamFailed}">
+                <div class="app-media-preview-player h-100"
+                     data-media-preview-player>
+                    <video class="video-js vjs-big-play-centered short-video-player"
+                           controls
+                           playsinline
+                           preload="metadata"
+                           data-video-player
+                           data-auto-initialize
+                           th:poster="${card.post.media.media.thumbnailUrl}"
+                           th:attr="data-video-source=${card.post.media.media.contentUrl},
+                                    data-media-progress-id=${card.post.media.media.id}"></video>
+                    <div class="alert alert-danger m-3"
+                         data-video-error
+                         hidden></div>
+                </div>
+            </div>
+
+            <a th:unless="${detailMode}"
+               th:href="${card.detailPath}"
+               class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none">
+                <img th:if="${card.post.media.media.thumbnailUrl != null}"
+                     th:src="${card.post.media.media.thumbnailUrl}"
+                     th:alt="${card.post.media.media.originalName}"
+                     class="w-100 h-100 object-fit-cover">
+                <span th:unless="${card.post.media.media.thumbnailUrl != null}"
+                      class="d-flex align-items-center justify-content-center text-white-50">
+                    <i class="bi bi-play-btn fs-1" aria-hidden="true"></i>
+                </span>
+                <span class="position-absolute top-50 start-50 translate-middle d-inline-flex align-items-center justify-content-center rounded-circle bg-dark bg-opacity-75 text-white short-owner-play-icon">
+                    <i class="bi bi-play-fill fs-3" aria-hidden="true"></i>
+                </span>
+            </a>
+
+            <a th:unless="${detailMode}"
+               th:href="${card.detailPath}"
+               class="text-body text-decoration-none">
+                <p th:if="${card.post.caption != null and !card.post.caption.isBlank()}"
+                   class="post-content post-content-clamped mb-2"
+                   th:text="${card.post.caption}">
+                    Caption
+                </p>
+                <p th:unless="${card.post.caption != null and !card.post.caption.isBlank()}"
+                   class="text-secondary fst-italic mb-2"
+                   th:text="#{short.owner.caption.empty}">
+                    This short has no caption.
+                </p>
+                <time class="small text-secondary"
+                      th:datetime="${card.post.state.createdAt}"
+                      th:text="${@uiDateTimeFormatter.format(card.post.state.createdAt)}">
+                    Created time
+                </time>
+            </a>
+
+            <div th:if="${detailMode}">
+                <p th:if="${card.post.caption != null and !card.post.caption.isBlank()}"
+                   class="post-content mb-4"
+                   th:text="${card.post.caption}">
+                    Caption
+                </p>
+                <p th:unless="${card.post.caption != null and !card.post.caption.isBlank()}"
+                   class="text-secondary fst-italic mb-4"
+                   th:text="#{short.owner.caption.empty}">
+                    This short has no caption.
+                </p>
+
+                <dl class="row g-2 small mb-0">
+                    <dt class="col-sm-4" th:text="#{post.owner.createdAt}">Created</dt>
+                    <dd class="col-sm-8"
+                        th:text="${@uiDateTimeFormatter.format(card.post.state.createdAt)}">
+                        Created time
+                    </dd>
+                    <dt class="col-sm-4" th:text="#{post.owner.updatedAt}">Updated</dt>
+                    <dd class="col-sm-8"
+                        th:text="${@uiDateTimeFormatter.format(card.post.state.updatedAt)}">
+                        Updated time
+                    </dd>
+                    <th:block th:if="${card.post.post.publishedAt != null}">
+                        <dt class="col-sm-4" th:text="#{post.owner.publishedAt}">Published</dt>
+                        <dd class="col-sm-8"
+                            th:text="${@uiDateTimeFormatter.format(card.post.post.publishedAt)}">
+                            Published time
+                        </dd>
+                    </th:block>
+                </dl>
+            </div>
+
+            <div th:if="${detailMode
+                    and card.post.state.moderationStatus != null
+                    and card.post.state.moderationStatus.name() == 'REJECTED'}"
+                 class="alert alert-danger mb-0">
+                <strong class="d-block mb-1"
+                        th:text="#{post.owner.rejectionReason}">
+                    Rejection reason
+                </strong>
+                <span th:text="${card.post.state.rejectionReason != null
+                        and !card.post.state.rejectionReason.isBlank()
+                        ? card.post.state.rejectionReason
+                        : #messages.msg('post.owner.rejectionReason.empty')}">
+                    No reason was provided.
+                </span>
+                <small class="d-block mt-2"
+                       th:text="#{post.owner.rejectedRetention}">
+                    Rejected posts are removed after 3 days.
+                </small>
+            </div>
+        </div>
+    </article>
+</body>
+</html>

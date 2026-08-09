@@ -1,4 +1,4 @@
-package com.app.features.post.standard.web.enums;
+package com.app.features.post.web.enums;
 
 import java.util.Arrays;
 import java.util.Map;

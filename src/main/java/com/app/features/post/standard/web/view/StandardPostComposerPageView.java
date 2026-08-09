@@ -2,6 +2,7 @@ package com.app.features.post.standard.web.view;
 
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.view.SocialShellView;
+import com.app.features.post.web.composer.view.PostComposerMediaPickerView;
 
 import lombok.Builder;
 import lombok.Getter;
