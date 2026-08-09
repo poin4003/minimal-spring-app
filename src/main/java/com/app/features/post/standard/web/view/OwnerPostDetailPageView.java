@@ -1,6 +1,7 @@
 package com.app.features.post.standard.web.view;
 
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
+import com.app.features.ui.web.component.view.UiConfirmModalView;
 import com.app.features.ui.web.view.SocialShellView;
 
 import lombok.Builder;
@@ -16,4 +17,6 @@ public class OwnerPostDetailPageView {
     private final SocialShellView shell;
     private final UiBreadcrumbView breadcrumb;
     private final OwnerPostCardView card;
+    private final UiConfirmModalView actionModal;
+    private final String openModalId;
 }

@@ -11,13 +11,17 @@
                       th:text="${card.statusLabel}">
                     Status
                 </span>
-                <div class="d-flex align-items-center gap-2">
+                <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 position-relative z-2">
                     <time class="small text-secondary"
                           th:datetime="${card.post.createdAt}"
                           th:text="${@uiDateTimeFormatter.format(card.post.createdAt)}">
                         Created time
                     </time>
-                    <a th:href="${card.editPath}"
+                    <div class="btn-group btn-group-sm"
+                         role="group"
+                         th:aria-label="#{post.owner.actions}">
+                    <a th:if="${card.editable}"
+                       th:href="${card.editPath}"
                        class="btn btn-sm btn-outline-primary position-relative z-2"
                        th:title="#{post.owner.edit}"
                        th:aria-label="#{post.owner.edit}">
@@ -25,6 +29,25 @@
                         <span class="visually-hidden"
                               th:text="#{post.owner.edit}">Edit</span>
                     </a>
+                    <a th:each="action : ${card.actions}"
+                       th:href="${action.modalPath}"
+                       class="btn btn-sm position-relative z-2"
+                       th:classappend="${action.buttonClass}"
+                       th:attr="hx-get=${action.modalPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true',
+                                title=${action.label},
+                                aria-label=${action.label}">
+                        <i th:class="${action.iconClass}"
+                           aria-hidden="true"></i>
+                        <span class="visually-hidden"
+                              th:text="${action.label}">
+                            Action
+                        </span>
+                    </a>
+                    </div>
                 </div>
             </header>
 
@@ -68,6 +91,7 @@
             </dl>
 
             <div th:if="${detailMode
+                    and card.post.moderationStatus != null
                     and card.post.moderationStatus.name() == 'REJECTED'}"
                  class="alert alert-danger mb-0 mt-4">
                 <strong class="d-block mb-1"
@@ -80,6 +104,10 @@
                         : #messages.msg('post.owner.rejectionReason.empty')}">
                     No reason was provided.
                 </span>
+                <small class="d-block mt-2"
+                       th:text="#{post.owner.rejectedRetention}">
+                    Rejected posts are removed after 3 days.
+                </small>
             </div>
         </div>
 

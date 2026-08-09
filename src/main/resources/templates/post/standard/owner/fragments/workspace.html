@@ -4,9 +4,13 @@
 <body>
     <section th:fragment="workspace(workspace)"
              th:id="${workspace.id}"
-             class="d-grid gap-4">
+             class="d-grid gap-4"
+             th:attr="hx-get=${workspace.refreshPath},
+                      hx-trigger=${workspace.refreshEvent + ' from:body'},
+                      hx-target='this',
+                      hx-swap='outerHTML'">
         <nav th:aria-label="#{post.owner.filter.label}">
-            <ul class="nav nav-pills gap-2">
+            <ul class="nav nav-pills flex-nowrap gap-2 overflow-x-auto pb-1">
                 <li th:each="statusFilter : ${workspace.statusFilters}"
                     class="nav-item">
                     <a th:href="${statusFilter.path}"

@@ -18,6 +18,7 @@
     <script defer th:src="@{/vendor/video.js/videojs-contrib-quality-levels.min.js}"></script>
     <script defer th:src="@{/vendor/video.js/videojs-hls-quality-selector.min.js}"></script>
     <script defer th:src="@{/js/media-preview.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
@@ -32,6 +33,22 @@
                             :: card(${page.card}, true)}"></div>
                 </div>
             </div>
+
+            <div th:if="${page.actionModal != null}" hx-disable>
+                <div th:replace="~{fragments/components/confirm-modal
+                        :: modal(${page.actionModal})}"></div>
+            </div>
+
+            <script th:if="${page.openModalId != null}"
+                    th:inline="javascript">
+                document.addEventListener("DOMContentLoaded", function () {
+                    const modalElement = document.getElementById(
+                            /*[[${page.openModalId}]]*/ "owner-post-action-modal");
+                    if (modalElement) {
+                        bootstrap.Modal.getOrCreateInstance(modalElement).show();
+                    }
+                });
+            </script>
         </th:block>
     </div>
 </body>
