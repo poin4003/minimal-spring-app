@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 
 import jakarta.validation.Valid;
@@ -20,6 +21,9 @@ public interface PostModerationService {
             @NotNull Pageable pageable);
 
     ModerationStandardPostDetailResult getStandardPostDetail(
+            @NotNull UUID postId);
+
+    ModerationShortPostDetailResult getShortPostDetail(
             @NotNull UUID postId);
 
     void publishPost(

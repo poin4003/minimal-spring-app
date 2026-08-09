@@ -57,5 +57,9 @@ public interface MediaService {
 
     int recoverPendingMedia();
 
+    MediaEntity requireOwnedActiveMedia(
+            UUID mediaId,
+            UUID createdById);
+
     List<MediaEntity> requireOwnedActiveMedia(Collection<UUID> mediaIds, UUID createdById);
 }

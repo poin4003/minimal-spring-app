@@ -122,7 +122,10 @@ Allowed transitions:
 
 ## Shorts
 - Shorts contain concise content and restricted media.
-- Allowed media count, kind, duration, and aspect-ratio policies are configurable.
+- Allowed media count, kind, duration, aspect ratio, and minimum short-edge resolution are configurable.
+- Prefer 9:16 media, while allowing the configured portrait-to-square aspect-ratio range.
+- Media processing must preserve the original aspect ratio. Never stretch width and height independently to force a fixed canvas.
+- HLS video renditions are defined by their short edge so the same profile supports both portrait and landscape sources without upscaling.
 - Shorts reuse the common moderation and attachment workflow but enforce their limits through the short-post handler.
 
 ## Movies

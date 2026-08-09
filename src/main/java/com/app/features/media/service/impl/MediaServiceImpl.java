@@ -377,6 +377,15 @@ public class MediaServiceImpl implements MediaService {
     }
 
     @Override
+    public MediaEntity requireOwnedActiveMedia(
+            UUID mediaId,
+            UUID createdById) {
+        return requireOwnedActiveMedia(
+                List.of(mediaId),
+                createdById).getFirst();
+    }
+
+    @Override
     public List<MediaEntity> requireOwnedActiveMedia(
             Collection<UUID> mediaIds,
             UUID createdById) {

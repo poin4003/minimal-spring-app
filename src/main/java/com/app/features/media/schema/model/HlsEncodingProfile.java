@@ -20,18 +20,28 @@ public class HlsEncodingProfile {
             HlsRendition rendition,
             int sourceWidth,
             int sourceHeight) {
-        int scaledWidth = (int) Math.round(
-                (double) sourceWidth * rendition.getHeight() / sourceHeight);
-        int evenWidth = scaledWidth % 2 == 0
-                ? scaledWidth
-                : scaledWidth + 1;
+        int sourceShortEdge = Math.min(sourceWidth, sourceHeight);
+        int targetShortEdge = Math.min(
+                rendition.getShortEdge(),
+                sourceShortEdge);
+        double scale = (double) targetShortEdge / sourceShortEdge;
+        int scaledWidth = toEvenDimension(sourceWidth * scale);
+        int scaledHeight = toEvenDimension(sourceHeight * scale);
 
         return new HlsEncodingProfile(
                 rendition.getKey(),
-                Math.max(2, evenWidth),
-                rendition.getHeight(),
+                scaledWidth,
+                scaledHeight,
                 rendition.getVideoBitrate(),
                 rendition.getAudioBitrate());
+    }
+
+    private static int toEvenDimension(double dimension) {
+        int rounded = (int) Math.round(dimension);
+        int even = rounded % 2 == 0
+                ? rounded
+                : rounded + 1;
+        return Math.max(2, even);
     }
 
     public static HlsEncodingProfile audio(int audioBitrate) {

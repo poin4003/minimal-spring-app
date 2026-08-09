@@ -369,7 +369,7 @@ public class AppProperties {
         private String key;
 
         @Positive
-        private int height;
+        private int shortEdge;
 
         @Positive
         private int videoBitrate;
@@ -494,6 +494,43 @@ public class AppProperties {
     public static class PostSettings {
         @Valid
         private final PostMaintenance maintenance = new PostMaintenance();
+
+        @Valid
+        private final ShortPostSettings shortPost = new ShortPostSettings();
+    }
+
+    @Data
+    public static class ShortPostSettings {
+        @NotEmpty
+        private Set<MediaKind> allowedMediaKinds = Set.of(MediaKind.VIDEO);
+
+        @NotNull
+        private Duration maxDuration = Duration.ofMinutes(3);
+
+        @DecimalMin(value = "0.01")
+        private double minAspectRatio = 0.5;
+
+        @DecimalMin(value = "0.01")
+        private double maxAspectRatio = 1.0;
+
+        @Positive
+        private int minShortEdge = 720;
+
+        @AssertTrue(message = "Short post policy configuration is invalid.")
+        public boolean isPolicyConfigurationValid() {
+            return allowedMediaKinds != null
+                    && !allowedMediaKinds.isEmpty()
+                    && isPositive(maxDuration)
+                    && Double.isFinite(minAspectRatio)
+                    && Double.isFinite(maxAspectRatio)
+                    && minAspectRatio > 0
+                    && minAspectRatio <= maxAspectRatio
+                    && minShortEdge > 0;
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
     }
 
     @Data

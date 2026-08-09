@@ -241,16 +241,19 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         "error.media.videoDimensionsUndetermined"));
         int sourceWidth = videoStream.getWidth();
         int sourceHeight = videoStream.getHeight();
+        int sourceShortEdge = Math.min(sourceWidth, sourceHeight);
 
         List<HlsRendition> configuredProfiles = appProperties.getMedia()
                 .getHls()
                 .getRenditions()
                 .stream()
-                .sorted((left, right) -> Integer.compare(left.getHeight(), right.getHeight()))
+                .sorted((left, right) -> Integer.compare(
+                        left.getShortEdge(),
+                        right.getShortEdge()))
                 .toList();
 
         List<HlsRendition> selectedProfiles = configuredProfiles.stream()
-                .filter(profile -> profile.getHeight() <= sourceHeight)
+                .filter(profile -> profile.getShortEdge() <= sourceShortEdge)
                 .toList();
         List<HlsRendition> effectiveProfiles = selectedProfiles.isEmpty()
                 ? List.of(configuredProfiles.getFirst())
@@ -333,6 +336,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 renditionVariant.setStorageKey(
                         hlsDirectoryKey + "/" + profile.getKey() + "/index.m3u8");
                 renditionVariant.setContentType(HLS_CONTENT_TYPE);
+                renditionVariant.setWidth(profile.getWidth());
                 renditionVariant.setHeight(profile.getHeight());
                 renditionVariant.setBitrate(profile.getTotalBitrate());
                 variants.add(renditionVariant);

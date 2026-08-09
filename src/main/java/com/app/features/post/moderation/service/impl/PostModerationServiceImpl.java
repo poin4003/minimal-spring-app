@@ -23,11 +23,14 @@ import com.app.features.post.moderation.repository.spec.PostModerationSpecificat
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
 import com.app.features.post.moderation.schema.result.ModerationPostResult;
+import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
 import com.app.features.post.repository.PostRepository;
 import com.app.features.post.service.PostMediaService;
 import com.app.features.post.service.PostService;
+import com.app.features.post.shortpost.entity.ShortPostEntity;
+import com.app.features.post.shortpost.service.ShortPostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.service.StandardPostService;
 import com.app.features.user.entity.UserBaseEntity;
@@ -49,6 +52,7 @@ public class PostModerationServiceImpl implements PostModerationService {
     private final PostService postSvc;
     private final PostMediaService postMediaSvc;
     private final StandardPostService standardPostSvc;
+    private final ShortPostService shortPostSvc;
     private final PostRepository postRepo;
     private final PostModerationResultMapper postModerationMapper;
 
@@ -80,6 +84,19 @@ public class PostModerationServiceImpl implements PostModerationService {
                 standardPost,
                 authorInfo,
                 attachments);
+    }
+
+    @Override
+    public ModerationShortPostDetailResult getShortPostDetail(UUID postId) {
+        ShortPostEntity shortPost = shortPostSvc.requireShortPost(postId);
+        PostEntity post = postSvc.requirePendingPost(shortPost.getPost());
+        UserInfoEntity authorInfo = profileSvc.requireProfile(
+                post.getAuthor().getId());
+
+        return postModerationMapper.toShortDetailResult(
+                shortPost,
+                authorInfo,
+                shortPostSvc.requireContentAttachment(postId));
     }
 
     @Override
