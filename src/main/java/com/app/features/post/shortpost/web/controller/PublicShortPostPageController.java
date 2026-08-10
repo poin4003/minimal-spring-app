@@ -28,12 +28,9 @@ import com.app.features.post.shortpost.web.view.PublicShortCardView;
 import com.app.features.post.shortpost.web.view.PublicShortDetailPageView;
 import com.app.features.post.shortpost.web.view.PublicShortFeedView;
 import com.app.features.post.shortpost.web.view.PublicShortListPageView;
-import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
-import com.app.features.ui.web.component.view.UiHtmxNavigationView;
-import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,7 +47,7 @@ public class PublicShortPostPageController {
     private static final UiPageDefaults SHORT_PAGE_DEFAULTS =
             UiPageDefaults.builder()
                     .page(0)
-                    .size(8)
+                    .size(10)
                     .sortBy(ShortPostEntity_.POST
                             + "."
                             + PostEntity_.PUBLISHED_AT)
@@ -61,7 +58,6 @@ public class PublicShortPostPageController {
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final ShortPostService shortPostSvc;
-    private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
     @GetMapping
@@ -72,26 +68,6 @@ public class PublicShortPostPageController {
             PublicShortPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
             Model model) {
-        Page<PublicShortPostResult> shortPage =
-                shortPostSvc.getPublishedPosts(
-                        filter,
-                        query.toPageable(SHORT_PAGE_DEFAULTS));
-        UiPaginationView pagination = uiPaginationFactory.build(
-                shortPage,
-                uiPaginationPathBuilder.build(
-                        getShortsPath(),
-                        request,
-                        query,
-                        SHORT_PAGE_DEFAULTS),
-                UiHtmxNavigationView.forComponent(
-                        PUBLIC_SHORT_FEED_ID));
-        PublicShortFeedView feed = PublicShortFeedView.builder()
-                .id(PUBLIC_SHORT_FEED_ID)
-                .shorts(shortPage.getContent().stream()
-                        .map(this::toCard)
-                        .toList())
-                .pagination(pagination)
-                .build();
         PublicShortListPageView page = PublicShortListPageView.builder()
                 .title(messageResolver.get("short.public.feed.title"))
                 .shell(socialShellFactory.build(
@@ -100,11 +76,25 @@ public class PublicShortPostPageController {
                 .createPath(currentUser == null
                         ? null
                         : getMyShortsPath() + "/create")
-                .feed(feed)
+                .feed(buildFeed(request, filter, query))
                 .build();
 
         model.addAttribute(PublicShortListPageView.ATTRIBUTE, page);
         return "post/short/public/index";
+    }
+
+    @GetMapping("/feed")
+    public String feed(
+            HttpServletRequest request,
+            @Valid @ModelAttribute("filter")
+            PublicShortPostFilterCriteria filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        model.addAttribute(
+                PublicShortFeedView.ATTRIBUTE,
+                buildFeed(request, filter, query));
+        return "post/short/public/fragments/feed"
+                + " :: items (feed=${feed})";
     }
 
     @GetMapping("/{postId}")
@@ -130,6 +120,33 @@ public class PublicShortPostPageController {
         return PublicShortCardView.builder()
                 .post(post)
                 .detailPath(buildDetailPath(post.getPost().getId()))
+                .build();
+    }
+
+    private PublicShortFeedView buildFeed(
+            HttpServletRequest request,
+            PublicShortPostFilterCriteria filter,
+            UiPageQuery query) {
+        query.setSize(SHORT_PAGE_DEFAULTS.getSize());
+        Page<PublicShortPostResult> shortPage =
+                shortPostSvc.getPublishedPosts(
+                        filter,
+                        query.toPageable(SHORT_PAGE_DEFAULTS));
+        String nextPagePath = shortPage.hasNext()
+                ? uiPaginationPathBuilder.build(
+                        getShortsPath() + "/feed",
+                        request,
+                        query,
+                        SHORT_PAGE_DEFAULTS)
+                        .apply(shortPage.getNumber() + 1)
+                : null;
+
+        return PublicShortFeedView.builder()
+                .id(PUBLIC_SHORT_FEED_ID)
+                .shorts(shortPage.getContent().stream()
+                        .map(post -> toCard(post))
+                        .toList())
+                .nextPagePath(nextPagePath)
                 .build();
     }
 

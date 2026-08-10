@@ -9,6 +9,20 @@
     const progressTrackers = new Map();
     let activePlaybackPlayer = null;
 
+    const lazyPlayerObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) {
+                return;
+            }
+
+            lazyPlayerObserver.unobserve(entry.target);
+            initializePlayer(entry.target);
+        });
+    }, {
+        rootMargin: "75% 0px",
+        threshold: 0.01
+    });
+
     function readProgress(storageKey) {
         try {
             const savedTime = Number.parseFloat(localStorage.getItem(storageKey));
@@ -236,6 +250,7 @@
     }
 
     function destroyPlayer(mediaElement) {
+        lazyPlayerObserver.unobserve(mediaElement);
         const progressTracker = progressTrackers.get(mediaElement);
         if (progressTracker) {
             progressTracker.save();
@@ -265,6 +280,24 @@
             .forEach(function (mediaElement) {
                 initializePlayer(mediaElement);
             });
+    }
+
+    function initializeLazyPlayers(root) {
+        if (!(root instanceof Document || root instanceof Element)) {
+            return;
+        }
+
+        if (root instanceof Element
+                && root.matches(
+                    "[data-video-player][data-lazy-initialize]"
+                )) {
+            lazyPlayerObserver.observe(root);
+        }
+        root.querySelectorAll(
+            "[data-video-player][data-lazy-initialize]"
+        ).forEach(function (mediaElement) {
+            lazyPlayerObserver.observe(mediaElement);
+        });
     }
 
     function initializePlayers(root) {
@@ -342,10 +375,17 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         initializeAutoPlayers(document);
+        initializeLazyPlayers(document);
     });
 
     document.addEventListener("htmx:afterSwap", function (event) {
         initializeAutoPlayers(event.detail.target);
+        initializeLazyPlayers(event.detail.target);
+    });
+
+    document.addEventListener("htmx:load", function (event) {
+        initializeAutoPlayers(event.detail.elt);
+        initializeLazyPlayers(event.detail.elt);
     });
 
     document.addEventListener("htmx:beforeCleanupElement", function (event) {

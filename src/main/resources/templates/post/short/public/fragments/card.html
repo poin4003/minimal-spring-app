@@ -4,6 +4,9 @@
 <body>
     <article th:fragment="card(card, detailMode)"
              class="card border-0 shadow-sm overflow-hidden short-card"
+             th:classappend="${detailMode}
+                     ? ' short-card-detail'
+                     : ' short-card-feed'"
              data-feed-playback>
         <div class="short-video-stage bg-black"
              data-media-preview
@@ -17,10 +20,11 @@
                        playsinline
                        preload="metadata"
                        data-video-player
-                       data-auto-initialize
                        th:poster="${card.post.media.media.thumbnailUrl}"
                        th:attr="data-video-source=${card.post.media.media.contentUrl},
                                 data-media-progress-id=${card.post.media.media.id},
+                                data-auto-initialize=${detailMode ? 'true' : null},
+                                data-lazy-initialize=${detailMode ? null : 'true'},
                                 muted=${detailMode ? null : 'muted'},
                                 data-feed-autoplay=${detailMode ? null : 'true'}"></video>
                 <div class="alert alert-danger m-3"

@@ -4,9 +4,9 @@
 <body>
     <section th:fragment="feed(feed)"
              th:id="${feed.id}"
-             class="d-grid gap-4">
+             class="short-feed">
         <div th:if="${#lists.isEmpty(feed.shorts)}"
-             class="card border-0 shadow-sm">
+             class="card border-0 shadow-sm short-feed-empty">
             <div class="card-body p-5 text-center">
                 <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
                    aria-hidden="true"></i>
@@ -17,15 +17,40 @@
             </div>
         </div>
 
-        <th:block th:each="card : ${feed.shorts}">
+        <th:block th:replace="~{post/short/public/fragments/feed
+                :: items(${feed})}"></th:block>
+    </section>
+
+    <th:block th:fragment="items(feed)">
+        <div th:each="card, iteration : ${feed.shorts}"
+             class="short-feed-item"
+             data-app-loader="manual"
+             th:attr="hx-get=${iteration.last ? feed.nextPagePath : null},
+                      hx-trigger=${iteration.last and feed.nextPagePath != null
+                              ? 'intersect once root:#' + feed.id + ' threshold:0.6'
+                              : null},
+                      hx-target=${iteration.last and feed.nextPagePath != null
+                              ? 'this'
+                              : null},
+                      hx-swap=${iteration.last and feed.nextPagePath != null
+                              ? 'afterend'
+                              : null},
+                      hx-indicator=${iteration.last and feed.nextPagePath != null
+                              ? 'find .short-feed-loader'
+                              : null}">
             <div th:replace="~{post/short/public/fragments/card
                     :: card(${card}, false)}"></div>
-        </th:block>
 
-        <div class="d-flex justify-content-center">
-            <div th:replace="~{fragments/components/pagination
-                    :: pagination(${feed.pagination})}"></div>
+            <div th:if="${iteration.last and feed.nextPagePath != null}"
+                 class="short-feed-loader htmx-indicator"
+                 role="status">
+                <span class="spinner-border spinner-border-sm"
+                      aria-hidden="true"></span>
+                <span class="visually-hidden" th:text="#{common.loading}">
+                    Loading
+                </span>
+            </div>
         </div>
-    </section>
+    </th:block>
 </body>
 </html>

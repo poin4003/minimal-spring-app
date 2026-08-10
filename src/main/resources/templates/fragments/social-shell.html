@@ -14,7 +14,7 @@
         <main class="container-fluid social-container py-3 py-lg-4">
             <div class="row g-3 g-lg-4 align-items-start">
                 <aside class="col-12 col-lg-3 col-xl-2 social-navigation-column">
-                    <div class="card border-0 shadow-sm social-navigation-card">
+                    <div class="card shadow-sm social-navigation-card">
                         <div class="card-body p-2 p-lg-3">
                             <div th:replace="~{fragments/social-navigation
                                     :: navigation(${shell.navigation})}"></div>
@@ -22,7 +22,7 @@
                     </div>
                 </aside>
 
-                <section class="col-12 col-lg-9 col-xl-10 min-w-0">
+                <section class="col-12 col-lg-9 col-xl-10 min-w-0 social-content-column">
                     <th:block th:replace="${content}"></th:block>
                 </section>
             </div>

@@ -1,9 +1,20 @@
 :root {
     --social-content-max-width: 96rem;
+    --social-content-half-width: 48rem;
+    --social-header-height: 4.25rem;
+    --social-mobile-navigation-height: 4.75rem;
 }
 
 .social-shell-layout {
     background-color: var(--bs-tertiary-bg);
+}
+
+.social-header .navbar {
+    min-height: var(--social-header-height);
+}
+
+.social-header {
+    z-index: 1040;
 }
 
 .social-container {
@@ -23,6 +34,14 @@
 .social-navigation-card .nav-link {
     color: var(--bs-body-color);
     font-weight: 600;
+    padding: 0.875rem 1rem;
+    border-radius: var(--bs-border-radius-lg);
+}
+
+.social-navigation-card .nav-link .bi {
+    width: 1.25rem;
+    font-size: 1.125rem;
+    text-align: center;
 }
 
 .social-navigation-card .nav-link:not(.active):hover,
@@ -40,8 +59,78 @@
 }
 
 @media (min-width: 992px) {
+    .social-navigation-column {
+        position: fixed;
+        z-index: 1020;
+        top: calc(var(--social-header-height) + 1.5rem);
+        left: max(
+            1rem,
+            calc(
+                50vw
+                - var(--social-content-half-width)
+                + 1rem
+            )
+        );
+        width: min(25vw, 24rem);
+    }
+
     .social-navigation-card {
-        position: sticky;
-        top: 5.5rem;
+        position: static;
+        height: auto;
+        max-height: calc(100dvh - var(--social-header-height) - 3rem);
+        overflow-y: auto;
+        border-color: var(--bs-border-color);
+        border-radius: var(--bs-border-radius-xl);
+    }
+
+    .social-content-column {
+        margin-left: 25%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .social-navigation-column {
+        width: min(16.666667vw, 16rem);
+    }
+
+    .social-content-column {
+        margin-left: 16.666667%;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .social-shell-layout {
+        padding-bottom: var(--social-mobile-navigation-height);
+    }
+
+    .social-navigation-column {
+        position: fixed;
+        z-index: 1030;
+        inset-inline: 0;
+        bottom: 0;
+        width: 100%;
+        padding: 0;
+    }
+
+    .social-content-column {
+        margin-left: 0;
+    }
+
+    .social-navigation-card {
+        min-height: var(--social-mobile-navigation-height);
+        border-radius: 0;
+        box-shadow: none !important;
+    }
+
+    .social-navigation-card .card-body {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        background-color: var(--bs-body-bg);
+        border-top: var(--bs-border-width) solid var(--bs-border-color);
+    }
+
+    .social-navigation-card .nav {
+        width: 100%;
     }
 }
