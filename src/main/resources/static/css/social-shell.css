@@ -132,5 +132,24 @@
 
     .social-navigation-card .nav {
         width: 100%;
+        justify-content: space-evenly;
+        gap: 0.5rem !important;
+        overflow: visible !important;
+    }
+
+    .social-navigation-card .nav-link {
+        flex: 1 1 0;
+        justify-content: center;
+        max-width: 4rem;
+        padding: 0.75rem;
+    }
+
+    .social-navigation-card .nav-link .bi {
+        width: auto;
+        font-size: 1.35rem;
+    }
+
+    .social-navigation-label {
+        display: none;
     }
 }

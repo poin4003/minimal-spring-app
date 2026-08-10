@@ -9,11 +9,14 @@
            th:href="${item.path}"
            class="nav-link d-flex align-items-center gap-2 text-nowrap"
            th:classappend="${item.active} ? ' active' : ''"
-           th:attr="aria-current=${item.active ? 'page' : null}">
+           th:attr="aria-current=${item.active ? 'page' : null},
+                    aria-label=${item.label},
+                    title=${item.label}">
             <i class="bi"
                th:classappend="${' bi-' + item.icon}"
                aria-hidden="true"></i>
-            <span th:text="${item.label}">Feed</span>
+            <span class="social-navigation-label"
+                  th:text="${item.label}">Feed</span>
         </a>
     </nav>
 </body>
