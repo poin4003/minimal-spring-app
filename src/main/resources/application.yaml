@@ -238,6 +238,7 @@ app:
         notification-path: ${UI_NOTIFICATION_PATH:/notifications}
         logout-path: ${UI_LOGOUT_PATH:/logout}
         application-title: ${UI_APPLICATION_TITLE:Minimal Spring App}
+        social-title: ${UI_SOCIAL_TITLE:Vibe}
 
 # Spring config
 spring:

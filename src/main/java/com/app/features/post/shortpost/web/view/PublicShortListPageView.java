@@ -14,5 +14,5 @@ public class PublicShortListPageView {
     private final String title;
     private final SocialShellView shell;
     private final String createPath;
-    private final PublicShortFeedView feed;
+    private final PublicShortGalleryView gallery;
 }

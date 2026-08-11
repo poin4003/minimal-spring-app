@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="metadata(card, compact)"
+         class="short-media-overlay"
+         th:classappend="${compact} ? ' short-media-overlay-compact' : ''">
+        <div class="d-flex align-items-center gap-2">
+            <img th:if="${card.post.post.author.avatarUrl != null}"
+                 th:src="${card.post.post.author.avatarUrl}"
+                 th:alt="${card.post.post.author.fullName}"
+                 class="rounded-circle border object-fit-cover short-overlay-avatar">
+            <span th:unless="${card.post.post.author.avatarUrl != null}"
+                  class="rounded-circle border bg-dark bg-opacity-50 d-inline-flex align-items-center justify-content-center short-overlay-avatar">
+                <i class="bi bi-person" aria-hidden="true"></i>
+            </span>
+
+            <span class="min-w-0">
+                <strong class="d-block text-truncate"
+                        th:text="${card.post.post.author.fullName != null
+                                and !card.post.post.author.fullName.isBlank()
+                                ? card.post.post.author.fullName
+                                : #messages.msg('post.public.unknownAuthor')}">
+                    Author
+                </strong>
+                <time class="d-block small text-white-50"
+                      th:datetime="${card.post.post.publishedAt}"
+                      th:text="${@uiDateTimeFormatter.format(card.post.post.publishedAt)}">
+                    Published time
+                </time>
+            </span>
+        </div>
+
+        <p th:if="${card.post.caption != null and !card.post.caption.isBlank()}"
+           class="mt-2 mb-0 text-white"
+           th:classappend="${compact} ? ' small text-truncate' : ''"
+           th:text="${card.post.caption}">
+            Caption
+        </p>
+    </div>
+</body>
+</html>

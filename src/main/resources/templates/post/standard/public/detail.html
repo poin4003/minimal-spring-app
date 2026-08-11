@@ -20,14 +20,16 @@
     <script defer th:src="@{/js/media-preview.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
-<body class="bg-body-tertiary">
+<body class="bg-body-tertiary social-edge-to-edge-mobile standard-post-page">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
                 <div class="col-12 col-xxl-10 d-grid gap-3">
-                    <div th:replace="~{fragments/components/breadcrumb
-                            :: breadcrumb(${page.breadcrumb})}"></div>
+                    <div class="px-3 px-md-0">
+                        <div th:replace="~{fragments/components/breadcrumb
+                                :: breadcrumb(${page.breadcrumb})}"></div>
+                    </div>
 
                     <div th:replace="~{post/standard/public/fragments/card
                             :: card(${page.card}, true)}"></div>

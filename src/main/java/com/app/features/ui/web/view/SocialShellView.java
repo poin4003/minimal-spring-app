@@ -11,7 +11,7 @@ import lombok.Getter;
 @Builder
 public class SocialShellView {
 
-    private final String title;
+    private final String socialTitle;
     private final String socialPath;
     private final String loginPath;
     private final String registrationPath;

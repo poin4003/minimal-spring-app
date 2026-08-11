@@ -634,5 +634,8 @@ public class AppProperties {
 
         @NotBlank
         private String applicationTitle = "Minimal Spring App";
+
+        @NotBlank
+        private String socialTitle = "Vibe";
     }
 }

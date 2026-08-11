@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="gallery(gallery)"
+             th:id="${gallery.id}"
+             class="d-grid gap-4">
+        <div th:if="${#lists.isEmpty(gallery.shorts)}"
+             class="card border-0 shadow-sm">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
+                   aria-hidden="true"></i>
+                <p class="text-secondary mb-0"
+                   th:text="#{short.public.feed.empty}">
+                    No published shorts yet.
+                </p>
+            </div>
+        </div>
+
+        <div th:unless="${#lists.isEmpty(gallery.shorts)}"
+             class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 g-lg-4 short-gallery-grid">
+            <div class="col" th:each="card : ${gallery.shorts}">
+                <div th:replace="~{post/short/public/fragments/gallery-card
+                        :: card(${card})}"></div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <div th:replace="~{fragments/components/pagination
+                    :: pagination(${gallery.pagination})}"></div>
+        </div>
+    </section>
+</body>
+</html>

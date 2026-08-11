@@ -4,28 +4,17 @@
 <body>
     <section th:fragment="feed(feed)"
              th:id="${feed.id}"
-             class="short-feed">
-        <div th:if="${#lists.isEmpty(feed.shorts)}"
-             class="card border-0 shadow-sm short-feed-empty">
-            <div class="card-body p-5 text-center">
-                <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
-                   aria-hidden="true"></i>
-                <p class="text-secondary mb-0"
-                   th:text="#{short.public.feed.empty}">
-                    No published shorts yet.
-                </p>
-            </div>
-        </div>
-
-        <th:block th:replace="~{post/short/public/fragments/feed
+             class="short-detail-feed"
+             data-short-detail-feed>
+        <th:block th:replace="~{post/short/public/fragments/detail-feed
                 :: items(${feed})}"></th:block>
     </section>
 
     <th:block th:fragment="items(feed)">
         <div th:each="card, iteration : ${feed.shorts}"
-             class="short-feed-item"
-             data-app-loader="manual"
-             th:attr="hx-get=${iteration.last ? feed.nextPagePath : null},
+             class="short-detail-feed-item"
+             th:attr="data-short-active=${card.post.post.id.equals(feed.activePostId)},
+                      hx-get=${iteration.last ? feed.nextPagePath : null},
                       hx-trigger=${iteration.last and feed.nextPagePath != null
                               ? 'intersect once root:#' + feed.id + ' threshold:0.6'
                               : null},
@@ -36,13 +25,13 @@
                               ? 'afterend'
                               : null},
                       hx-indicator=${iteration.last and feed.nextPagePath != null
-                              ? 'find .short-feed-loader'
+                              ? 'find .short-detail-feed-loader'
                               : null}">
-            <div th:replace="~{post/short/public/fragments/card
-                    :: card(${card}, false)}"></div>
+            <div th:replace="~{post/short/public/fragments/player
+                    :: player(${card})}"></div>
 
             <div th:if="${iteration.last and feed.nextPagePath != null}"
-                 class="short-feed-loader htmx-indicator"
+                 class="short-detail-feed-loader htmx-indicator"
                  role="status">
                 <span class="spinner-border spinner-border-sm"
                       aria-hidden="true"></span>

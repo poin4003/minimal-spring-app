@@ -4,16 +4,19 @@
 <body>
     <header th:fragment="header(shell)"
             class="social-header sticky-top border-bottom bg-body">
-        <nav class="navbar py-2">
-            <div class="container-fluid social-container gap-3">
+        <nav class="navbar py-1 py-lg-2">
+            <div class="container-fluid social-container flex-nowrap gap-2">
                 <a class="navbar-brand d-flex align-items-center gap-2 fw-bold mb-0"
                    th:href="${shell.socialPath}">
-                    <span class="social-brand-mark d-inline-grid place-items-center rounded-3 bg-primary text-white"
-                          aria-hidden="true">M</span>
-                    <span th:text="${shell.title}">Minimal Spring App</span>
+                    <img th:src="@{/favicon.ico}"
+                         class="social-brand-logo rounded-3 flex-shrink-0"
+                         width="32"
+                         height="32"
+                         alt="">
+                    <span th:text="${shell.socialTitle}">Vibe</span>
                 </a>
 
-                <div class="d-flex align-items-center gap-2 ms-auto">
+                <div class="social-header-actions d-flex align-items-center gap-1 ms-auto">
                     <th:block th:if="${shell.notificationWidget != null}">
                         <div th:replace="~{notification/fragments/inbox
                                 :: trigger(${shell.notificationWidget})}"></div>

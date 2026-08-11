@@ -16,26 +16,25 @@
     <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
-    <script defer th:src="@{/vendor/video.js/videojs-contrib-quality-levels.min.js}"></script>
-    <script defer th:src="@{/vendor/video.js/videojs-hls-quality-selector.min.js}"></script>
-    <script defer th:src="@{/js/media-preview.js}"></script>
-    <script defer th:src="@{/js/post-feed-playback.js}"></script>
+    <script defer th:src="@{/js/media-gallery.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
-<body class="bg-body-tertiary">
+<body class="bg-body-tertiary social-edge-to-edge-mobile short-public-page">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="short-feed-page">
-                <a th:if="${page.createPath != null}"
-                   th:href="${page.createPath}"
-                   class="btn btn-primary short-create-action">
-                    <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
-                    <span th:text="#{short.public.create}">Create short</span>
-                </a>
+            <div class="d-grid gap-4">
+                <div th:if="${page.createPath != null}"
+                     class="d-flex justify-content-end px-3 px-md-0">
+                    <a th:href="${page.createPath}"
+                       class="btn btn-primary">
+                        <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
+                        <span th:text="#{short.public.create}">Create short</span>
+                    </a>
+                </div>
 
-                <div th:replace="~{post/short/public/fragments/feed
-                        :: feed(${page.feed})}"></div>
+                <div th:replace="~{post/short/public/fragments/gallery
+                        :: gallery(${page.gallery})}"></div>
             </div>
         </th:block>
     </div>

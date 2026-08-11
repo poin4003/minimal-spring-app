@@ -29,7 +29,7 @@ public class SocialShellFactory {
         boolean authenticated = currentUser != null;
 
         return SocialShellView.builder()
-                .title(ui.getApplicationTitle())
+                .socialTitle(ui.getSocialTitle())
                 .socialPath(ui.getSocialPath())
                 .loginPath(ui.getLoginPath())
                 .registrationPath(ui.getRegistrationPath())

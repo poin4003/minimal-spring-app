@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <a th:fragment="card(card)"
+       th:href="${card.detailPath}"
+       class="card h-100 border-0 bg-transparent text-body text-decoration-none short-gallery-card"
+       data-media-gallery-card>
+        <div class="ratio rounded overflow-hidden bg-black position-relative short-gallery-cover">
+            <img th:if="${card.post.media.media.thumbnailUrl != null}"
+                 th:src="${card.post.media.media.thumbnailUrl}"
+                 th:alt="${card.post.caption}"
+                 class="position-absolute top-0 start-0 w-100 h-100 object-fit-cover"
+                 loading="lazy"
+                 decoding="async">
+
+            <span th:unless="${card.post.media.media.thumbnailUrl != null}"
+                  class="position-absolute top-50 start-50 translate-middle text-white fs-2"
+                  aria-hidden="true">
+                <i class="bi bi-play-circle-fill"></i>
+            </span>
+
+            <div class="app-media-hover-preview d-none"
+                 th:attr="data-media-hover-preview=${card.post.media.media.contentUrl}"
+                 aria-hidden="true"></div>
+
+            <div th:replace="~{post/short/public/fragments/metadata
+                    :: metadata(${card}, true)}"></div>
+        </div>
+    </a>
+</body>
+</html>

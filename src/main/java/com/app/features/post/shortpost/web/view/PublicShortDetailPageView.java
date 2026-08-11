@@ -15,5 +15,5 @@ public class PublicShortDetailPageView {
     private final String title;
     private final SocialShellView shell;
     private final UiBreadcrumbView breadcrumb;
-    private final PublicShortCardView card;
+    private final PublicShortDetailFeedView feed;
 }
