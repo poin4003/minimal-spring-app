@@ -23,11 +23,11 @@
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
+            <div class="app-page-stack">
                 <div th:if="${page.createPath != null}"
-                     class="d-flex justify-content-end px-3 px-md-0">
+                     class="app-page-toolbar px-3 px-md-0">
                     <a th:href="${page.createPath}"
-                       class="btn btn-primary">
+                       class="btn btn-sm btn-primary">
                         <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
                         <span th:text="#{short.public.create}">Create short</span>
                     </a>

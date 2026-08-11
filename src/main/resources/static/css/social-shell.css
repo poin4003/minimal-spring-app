@@ -1,52 +1,110 @@
 :root {
     --social-content-max-width: 96rem;
-    --social-content-half-width: 48rem;
-    --social-header-height: 4.25rem;
+    --social-header-height: 4rem;
     --social-mobile-navigation-height: 3.5rem;
 }
 
 .social-shell-layout {
-    background-color: var(--bs-tertiary-bg);
-}
-
-.social-header .navbar {
-    min-height: var(--social-header-height);
+    min-height: 100dvh;
+    background-color: var(--app-surface-canvas);
 }
 
 .social-header {
     z-index: 1040;
+    min-height: var(--social-header-height);
+    background-color: var(--app-surface-panel);
+}
+
+.social-header .navbar,
+.social-header .social-container {
+    min-height: inherit;
 }
 
 .social-container {
+    width: 100%;
     max-width: var(--social-content-max-width);
 }
 
+.social-workspace {
+    min-height: calc(100dvh - var(--social-header-height));
+}
+
 .social-brand-logo {
-    width: 2rem;
-    height: 2rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: var(--app-radius-control);
     object-fit: contain;
+}
+
+.social-header .navbar-brand {
+    color: var(--bs-body-color);
+    font-size: 1rem;
+}
+
+.social-header .navbar-brand:hover,
+.social-header .navbar-brand:focus-visible {
+    color: var(--bs-primary-text-emphasis);
+}
+
+.social-navigation-column {
+    background-color: var(--app-surface-panel);
+}
+
+.social-navigation-panel,
+.social-navigation-body {
+    min-height: 0;
+}
+
+.social-navigation-body {
+    padding: 1rem;
+}
+
+.social-navigation {
+    gap: 0.125rem;
+}
+
+.social-navigation .nav-link {
+    position: relative;
+    color: var(--bs-body-color);
+    padding: 0.5rem 0.625rem;
+    border-radius: var(--bs-border-radius-sm);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition:
+        color var(--app-transition-fast),
+        background-color var(--app-transition-fast);
+}
+
+.social-navigation .nav-link .bi {
+    width: 1rem;
+    flex: 0 0 1rem;
+    font-size: 1rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.social-navigation .nav-link:not(.active):hover,
+.social-navigation .nav-link:not(.active):focus-visible {
+    color: var(--bs-primary-text-emphasis);
+    background-color: var(--app-surface-hover);
+}
+
+.social-navigation .nav-link.active {
+    color: var(--bs-primary-text-emphasis);
+    background-color: var(--app-primary-active-bg);
+    box-shadow: inset 0.1875rem 0 var(--bs-primary);
+}
+
+.social-content-column {
+    min-width: 0;
+    max-width: 100%;
+    min-height: calc(100dvh - var(--social-header-height));
+    padding: 1rem;
+    background-color: var(--app-surface-canvas);
 }
 
 .place-items-center {
     place-items: center;
-}
-
-.social-navigation-card .nav-link {
-    color: var(--bs-body-color);
-    font-weight: 600;
-    padding: 0.875rem 1rem;
-    border-radius: var(--bs-border-radius-lg);
-}
-
-.social-navigation-card .nav-link .bi {
-    width: 1.25rem;
-    font-size: 1.125rem;
-    text-align: center;
-}
-
-.social-navigation-card .nav-link:not(.active):hover,
-.social-navigation-card .nav-link:not(.active):focus-visible {
-    background-color: var(--bs-tertiary-bg);
 }
 
 .social-empty-icon {
@@ -60,41 +118,21 @@
 
 @media (min-width: 992px) {
     .social-navigation-column {
-        position: fixed;
-        z-index: 1020;
-        top: calc(var(--social-header-height) + 1.5rem);
-        left: max(
-            1rem,
-            calc(
-                50vw
-                - var(--social-content-half-width)
-                + 1rem
-            )
-        );
-        width: min(25vw, 24rem);
+        position: sticky;
+        top: var(--social-header-height);
+        align-self: start;
+        height: calc(100dvh - var(--social-header-height));
+        overflow: hidden;
+        border-right: var(--app-border) !important;
     }
 
-    .social-navigation-card {
-        position: static;
-        height: auto;
-        max-height: calc(100dvh - var(--social-header-height) - 3rem);
+    .social-navigation-panel {
+        height: 100%;
         overflow-y: auto;
-        border-color: var(--bs-border-color);
-        border-radius: var(--bs-border-radius-xl);
     }
 
     .social-content-column {
-        margin-left: 25%;
-    }
-}
-
-@media (min-width: 1200px) {
-    .social-navigation-column {
-        width: min(16.666667vw, 16rem);
-    }
-
-    .social-content-column {
-        margin-left: 16.666667%;
+        padding: 1.5rem;
     }
 }
 
@@ -114,16 +152,17 @@
     .social-header .navbar-brand {
         min-width: 0;
         margin-right: 0;
-        font-size: 1.05rem;
+        font-size: 0.9375rem;
     }
 
     .social-header .social-brand-logo {
-        width: 1.75rem;
-        height: 1.75rem;
+        width: 1.625rem;
+        height: 1.625rem;
     }
 
     .social-header-actions {
         flex-shrink: 0;
+        gap: 0.375rem !important;
     }
 
     .social-header .app-header-action {
@@ -145,48 +184,86 @@
         bottom: 0;
         width: 100%;
         padding: 0;
+        border-right: 0 !important;
     }
 
     .social-content-column {
-        margin-left: 0;
+        min-height: calc(
+            100dvh
+            - var(--social-header-height)
+            - var(--social-mobile-navigation-height)
+        );
     }
 
-    .social-navigation-card {
+    .social-navigation-panel {
         min-height: var(--social-mobile-navigation-height);
-        border-radius: 0;
-        box-shadow: none !important;
+        background-color: var(--app-surface-panel);
+        border-top: var(--app-border);
     }
 
-    .social-navigation-card .card-body {
+    .social-navigation-body {
         display: flex;
         align-items: center;
+        min-height: inherit;
         padding: 0.25rem 0.5rem;
-        background-color: var(--bs-body-bg);
-        border-top: var(--bs-border-width) solid var(--bs-border-color);
     }
 
-    .social-navigation-card .nav {
+    .social-navigation {
         width: 100%;
         justify-content: space-evenly;
-        gap: 0.25rem !important;
+        gap: 0.25rem;
         overflow: visible !important;
     }
 
-    .social-navigation-card .nav-link {
+    .social-navigation .nav-link {
         flex: 0 1 3rem;
         justify-content: center;
         width: 3rem;
         max-width: 3rem;
         min-height: 2.75rem;
         padding: 0.5rem;
+        border-radius: var(--app-radius-control);
     }
 
-    .social-navigation-card .nav-link .bi {
+    .social-navigation .nav-link .bi {
         width: auto;
         font-size: 1.15rem;
     }
 
+    .social-navigation .nav-link.active {
+        box-shadow: inset 0 -0.1875rem var(--bs-primary);
+    }
+
     .social-navigation-label {
         display: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .social-header-actions {
+        gap: 0.25rem !important;
+    }
+
+    .social-header .app-header-action {
+        width: 2rem;
+        min-width: 2rem;
+        min-height: 2rem;
+        padding: 0.25rem;
+    }
+
+    .post-owner-page .social-header-personal-action {
+        display: none;
+    }
+
+    .social-header .navbar-brand span {
+        max-width: 7rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .social-content-column {
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
     }
 }

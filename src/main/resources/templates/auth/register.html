@@ -10,33 +10,36 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
 </head>
-<body class="bg-body-tertiary">
-    <div class="position-fixed top-0 end-0 m-3 z-3">
+<body class="app-auth-page">
+    <div class="app-auth-tools">
         <div th:replace="~{fragments/app-tools :: themeToggle(null)}"></div>
     </div>
 
-    <main class="min-vh-100 d-flex align-items-center py-5">
-        <div class="container">
-            <div class="row justify-content-center align-items-center g-4">
-                <div class="col-lg-6">
-                    <div class="pe-lg-5">
-                        <p class="text-uppercase text-secondary fw-semibold small mb-3"
-                           th:text="${page.applicationTitle}">
-                            Minimal Spring App
-                        </p>
-                        <h1 class="display-5 fw-bold mb-3"
-                            th:text="#{auth.registration.hero(${page.applicationTitle})}">
-                            Join Minimal Spring App
-                        </h1>
+    <main class="container-fluid px-0">
+        <div class="row g-0 app-auth-layout">
+            <section class="col-lg-5 app-auth-intro">
+                <div class="app-auth-intro-content">
+                    <div class="app-auth-brand">
+                        <img src="/favicon.ico"
+                             alt=""
+                             class="app-auth-brand-mark">
+                        <span th:text="${page.applicationTitle}">
+                            Vibe
+                        </span>
                     </div>
+                    <h1 class="app-auth-hero-title"
+                        th:text="#{auth.registration.hero(${page.applicationTitle})}">
+                        Join Vibe
+                    </h1>
                 </div>
+            </section>
 
-                <div class="col-lg-5">
+            <section class="col-lg-7 app-auth-form-column">
                     <section id="registration-workspace"
                              th:fragment="registrationWorkspace"
-                             class="card shadow-sm border-0">
-                        <div class="card-body p-4 p-md-5">
-                            <h2 class="h3 mb-2"
+                             class="app-surface-panel app-auth-panel">
+                        <div class="app-auth-panel-body">
+                            <h2 class="app-page-title"
                                 th:text="${page.heading}">
                                 Create your account
                             </h2>
@@ -85,7 +88,7 @@
                                 </div>
 
                                 <button type="submit"
-                                        class="btn btn-primary btn-lg"
+                                        class="btn btn-primary"
                                         th:text="#{auth.registration.requestOtp.submit}">
                                     Send verification code
                                 </button>
@@ -131,7 +134,7 @@
                                 </div>
 
                                 <button type="submit"
-                                        class="btn btn-primary btn-lg"
+                                        class="btn btn-primary"
                                         th:text="#{auth.registration.verifyOtp.submit}">
                                     Verify email
                                 </button>
@@ -176,7 +179,7 @@
                                 </div>
 
                                 <button type="submit"
-                                        class="btn btn-primary btn-lg"
+                                        class="btn btn-primary"
                                         th:text="#{auth.registration.complete.submit}">
                                     Create account
                                 </button>
@@ -193,8 +196,7 @@
                             </p>
                         </div>
                     </section>
-                </div>
-            </div>
+            </section>
         </div>
     </main>
 

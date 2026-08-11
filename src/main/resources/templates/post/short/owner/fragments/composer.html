@@ -4,7 +4,7 @@
 <body>
     <section th:fragment="composer(page)"
              id="post-composer"
-             class="card border-0 shadow-sm"
+             class="app-surface-panel app-component"
              data-post-composer
              th:data-max-media-count="${page.maxMediaCount}"
              th:data-message-limit="#{post.composer.media.limit(${page.maxMediaCount})}">
@@ -15,16 +15,17 @@
                        hx-target='#post-composer',
                        hx-swap='outerHTML',
                        hx-disabled-elt='button[type=submit]'">
-            <div class="card-body p-3 p-md-4 d-grid gap-4">
-                <div>
-                    <h1 class="h4 mb-1" th:text="${page.heading}">
+            <header class="app-section-header">
+                    <h1 class="app-page-title" th:text="${page.heading}">
                         Create short
                     </h1>
-                    <p class="text-secondary mb-0"
+                    <p class="app-page-description"
                        th:text="${page.description}">
                         Choose a video and save a draft.
                     </p>
-                </div>
+            </header>
+
+            <div class="app-section-body d-grid gap-4">
 
                 <div>
                     <label for="short-caption"
@@ -91,7 +92,7 @@
                         </div>
 
                         <a th:href="${page.actionPath}"
-                           class="btn btn-outline-primary"
+                           class="btn btn-sm btn-outline-primary"
                            th:attr="hx-get=${page.uploadPartialPath},
                                     hx-target='#app-modal-host',
                                     hx-swap='innerHTML',
@@ -109,13 +110,13 @@
                 </section>
             </div>
 
-            <div class="card-footer bg-body d-flex flex-wrap justify-content-end gap-2 p-3 p-md-4">
+            <div class="app-component-footer flex-wrap">
                 <a th:href="${page.backPath}"
-                   class="btn btn-outline-secondary"
+                   class="btn btn-sm btn-outline-secondary"
                    th:text="#{action.cancel}">
                     Cancel
                 </a>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="btn btn-sm btn-primary">
                     <i class="bi bi-floppy me-2" aria-hidden="true"></i>
                     <span th:text="${page.submitLabel}">Save draft</span>
                 </button>

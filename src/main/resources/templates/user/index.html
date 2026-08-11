@@ -17,14 +17,14 @@
     <div th:replace="~{fragments/app-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
+            <div class="app-page-stack">
                             <div th:if="${page.createUserModal != null}"
-                                 class="d-flex justify-content-end">
+                                 class="app-page-toolbar">
                                 <div th:replace="~{fragments/components/modal :: modal(${page.createUserModal})}"></div>
                             </div>
 
                             <div th:if="${page.errorMessage != null}"
-                                 class="alert alert-danger mb-0"
+                                 class="alert app-error-alert mb-0"
                                  th:text="${page.errorMessage}">
                                 Please correct the form and try again.
                             </div>

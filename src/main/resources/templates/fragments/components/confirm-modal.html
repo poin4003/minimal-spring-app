@@ -7,8 +7,8 @@
      th:id="${modal.id}"
      tabindex="-1"
      aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-modal-content">
             <form method="post"
                   th:action="${modal.actionPath}"
                   data-app-modal-form="true"
@@ -20,7 +20,7 @@
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}">
 
-                <div class="modal-header">
+                <div class="modal-header app-section-header">
                     <h2 class="modal-title fs-5" th:text="${modal.title}">Confirm action</h2>
                     <button type="button"
                             class="btn-close"
@@ -28,7 +28,7 @@
                             th:attr="aria-label=#{action.close}"></button>
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body app-section-body">
                     <p class="mb-0" th:text="${modal.description}">Are you sure?</p>
                 </div>
 

@@ -3,7 +3,7 @@
       th:lang="${#locale.language}">
 <body>
     <header th:fragment="header(shell)"
-            class="app-header d-flex align-items-center justify-content-between gap-3 px-3 px-md-4 py-3 border-bottom">
+            class="app-header d-flex align-items-center justify-content-between gap-3 px-3 px-md-4 border-bottom">
         <div class="d-flex align-items-center gap-3 min-w-0">
             <button type="button"
                     class="btn btn-outline-secondary app-header-action app-icon-button d-lg-none"
@@ -26,17 +26,30 @@
                    aria-hidden="true"></i>
             </button>
 
-            <div th:if="${shell.currentUser != null}" class="min-w-0">
-                <p class="text-secondary small mb-1"
-                   th:text="#{shell.signedInAs}">
-                    Signed in as
-                </p>
-                <div class="fw-semibold text-truncate"
-                     th:text="${shell.currentUser.email}"></div>
+            <div class="app-header-brand d-flex align-items-center gap-2 min-w-0">
+                <img th:src="@{/favicon.ico}"
+                     class="app-header-brand-mark"
+                     width="28"
+                     height="28"
+                     alt="">
+                <span class="fw-semibold text-truncate"
+                      th:text="${shell.title}">
+                    Vibe
+                </span>
             </div>
         </div>
 
         <div class="d-flex align-items-center gap-2 ms-auto">
+            <div th:if="${shell.currentUser != null}"
+                 class="app-header-user d-none d-xl-block text-end min-w-0 me-2">
+                <div class="small text-secondary"
+                     th:text="#{shell.signedInAs}">
+                    Signed in as
+                </div>
+                <div class="small fw-semibold text-truncate"
+                     th:text="${shell.currentUser.email}"></div>
+            </div>
+
             <div th:replace="~{notification/fragments/inbox :: trigger(${shell.notificationWidget})}"></div>
             <a th:href="${shell.profilePath}"
                class="btn btn-outline-secondary app-header-action app-icon-button"

@@ -3,6 +3,7 @@
       th:lang="${#locale.language}">
 <body>
 <nav th:fragment="breadcrumb(breadcrumb)"
+     class="app-breadcrumb"
      th:attr="aria-label=#{breadcrumb.label}">
     <ol class="breadcrumb mb-0">
         <li th:each="item : ${breadcrumb.items}"

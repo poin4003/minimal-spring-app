@@ -4,10 +4,10 @@
 <body>
     <section th:fragment="gallery(gallery)"
              th:id="${gallery.id}"
-             class="d-grid gap-4">
+             class="app-page-stack">
         <div th:if="${#lists.isEmpty(gallery.shorts)}"
-             class="card border-0 shadow-sm">
-            <div class="card-body p-5 text-center">
+             class="app-surface-panel app-empty-state">
+            <div>
                 <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
                    aria-hidden="true"></i>
                 <p class="text-secondary mb-0"

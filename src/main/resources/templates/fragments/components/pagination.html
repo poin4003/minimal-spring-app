@@ -5,18 +5,21 @@
 <nav th:fragment="pagination(pagination)"
      th:if="${pagination != null and pagination.totalPages > 1}"
      th:attr="aria-label=#{pagination.label}">
-    <ul class="pagination mb-0">
+    <ul class="pagination pagination-sm mb-0 app-pagination">
         <li class="page-item" th:classappend="${!pagination.hasPrevious} ? ' disabled' : ''">
             <a class="page-link"
                th:href="${pagination.hasPrevious ? pagination.previousPath : '#'}"
-               th:attr="hx-get=${pagination.htmxNavigation != null and pagination.hasPrevious ? pagination.previousPath : null},
+               th:attr="aria-label=#{action.previous},
+                        hx-get=${pagination.htmxNavigation != null and pagination.hasPrevious ? pagination.previousPath : null},
                         hx-target=${pagination.htmxNavigation != null ? pagination.htmxNavigation.target : null},
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
-                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}"
-               th:text="#{action.previous}">
-                Previous
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
+                        aria-disabled=${!pagination.hasPrevious},
+                        tabindex=${!pagination.hasPrevious ? '-1' : null}">
+                <i class="bi bi-chevron-left d-sm-none" aria-hidden="true"></i>
+                <span class="d-none d-sm-inline" th:text="#{action.previous}">Previous</span>
             </a>
         </li>
 
@@ -33,7 +36,8 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
-                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}">
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
+                        aria-current=${item.active ? 'page' : null}">
                 1
             </a>
         </li>
@@ -41,14 +45,17 @@
         <li class="page-item" th:classappend="${!pagination.hasNext} ? ' disabled' : ''">
             <a class="page-link"
                th:href="${pagination.hasNext ? pagination.nextPath : '#'}"
-               th:attr="hx-get=${pagination.htmxNavigation != null and pagination.hasNext ? pagination.nextPath : null},
+               th:attr="aria-label=#{action.next},
+                        hx-get=${pagination.htmxNavigation != null and pagination.hasNext ? pagination.nextPath : null},
                         hx-target=${pagination.htmxNavigation != null ? pagination.htmxNavigation.target : null},
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
-                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null}"
-               th:text="#{action.next}">
-                Next
+                        hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
+                        aria-disabled=${!pagination.hasNext},
+                        tabindex=${!pagination.hasNext ? '-1' : null}">
+                <span class="d-none d-sm-inline" th:text="#{action.next}">Next</span>
+                <i class="bi bi-chevron-right d-sm-none" aria-hidden="true"></i>
             </a>
         </li>
     </ul>

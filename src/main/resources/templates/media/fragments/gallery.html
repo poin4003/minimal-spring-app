@@ -3,16 +3,16 @@
 <body>
 <section th:fragment="gallery(gallery)"
          id="media-library-gallery"
-         class="card shadow-sm border-0"
+         class="app-surface-panel app-component"
          data-app-loader="manual"
          aria-live="polite"
          th:attr="hx-get=${gallery.refreshPath},
                   hx-trigger='media:uploaded from:body delay:200ms, sse:media',
                   hx-swap='outerHTML',
                   hx-sync='this:replace'">
-    <div class="card-body p-4 border-bottom">
+    <div class="app-section-header">
         <div class="d-flex align-items-center gap-2 mb-2">
-            <h2 class="h5 mb-0" th:text="${gallery.title}">Media Gallery</h2>
+            <h2 class="app-section-title" th:text="${gallery.title}">Media Gallery</h2>
             <span class="spinner-border spinner-border-sm text-primary htmx-indicator"
                   role="status"
                   th:aria-label="#{media.gallery.refreshing}"></span>
@@ -22,7 +22,7 @@
         </p>
     </div>
 
-    <div class="card-body p-4">
+    <div class="app-section-body">
         <div th:if="${!#lists.isEmpty(gallery.items)}" class="row g-4">
             <div th:each="item : ${gallery.items}"
                  class="col-12 col-sm-6 col-xl-4 col-xxl-3">
@@ -31,14 +31,14 @@
         </div>
 
         <div th:if="${#lists.isEmpty(gallery.items)}"
-             class="text-center text-secondary py-5"
+             class="app-empty-state"
              th:text="${gallery.emptyMessage}">
             No media found.
         </div>
     </div>
 
     <div th:if="${gallery.pagination != null and gallery.pagination.totalPages > 1}"
-         class="card-footer d-flex justify-content-end p-3">
+         class="app-component-footer">
         <div th:replace="~{fragments/components/pagination :: pagination(${gallery.pagination})}"></div>
     </div>
 </section>

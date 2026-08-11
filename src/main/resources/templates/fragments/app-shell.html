@@ -6,6 +6,8 @@
          class="app-shell-layout"
          hx-ext="sse"
          th:attr="sse-connect=${shell.notificationWidget.streamPath}">
+        <div th:replace="~{fragments/app-header :: header(${shell})}"></div>
+
         <aside id="app-sidebar"
                class="offcanvas-lg offcanvas-start app-sidebar-panel border-end"
                tabindex="-1"
@@ -14,7 +16,7 @@
                 <h2 id="app-sidebar-title"
                     class="h5 mb-0"
                     th:text="${shell.title}">
-                    Minimal Spring App
+                    Vibe
                 </h2>
                 <button type="button"
                         class="btn-close"
@@ -24,22 +26,7 @@
             </div>
 
             <div class="offcanvas-body d-flex flex-column p-0">
-                <div class="app-sidebar-brand p-3">
-                    <p class="app-menu-caption mb-2"
-                       th:text="#{shell.menu}">
-                        Menu
-                    </p>
-                    <h1 class="app-sidebar-copy h3 mb-2"
-                        th:text="${shell.title}">
-                        Minimal Spring App
-                    </h1>
-                    <p class="app-sidebar-copy text-secondary mb-0"
-                       th:text="#{shell.internalControlPanel}">
-                        Internal control panel
-                    </p>
-                </div>
-
-                <nav class="app-sidebar-navigation overflow-y-auto px-3 pb-4"
+                <nav class="app-sidebar-navigation overflow-y-auto px-3 py-3"
                      th:attr="aria-label=#{shell.mainNavigation}">
                     <div th:replace="~{fragments/menu
                             :: tree(${shell.menuTree})}"></div>
@@ -48,9 +35,7 @@
         </aside>
 
         <section class="app-content-panel">
-            <div th:replace="~{fragments/app-header :: header(${shell})}"></div>
-
-            <main id="app-page-content" class="px-0 py-3 p-sm-4 p-lg-5">
+            <main id="app-page-content" class="app-page-main px-0 py-3 p-sm-4 p-xl-5">
                 <th:block th:replace="${content}"></th:block>
             </main>
         </section>

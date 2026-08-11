@@ -22,6 +22,33 @@
     flex: 0 0 7rem;
 }
 
+.post-owner-content,
+.post-owner-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.post-owner-profile,
+.post-owner-card,
+.post-owner-status-navigation {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.post-owner-status-navigation {
+    overflow: hidden;
+}
+
+.post-owner-status-navigation .social-status-tabs {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+}
+
 .post-detail-image {
     max-height: 75vh;
     object-fit: contain;
@@ -125,13 +152,38 @@
     border-color: var(--bs-primary) !important;
 }
 
+.social-content-tabs,
+.social-status-tabs {
+    border-bottom: var(--app-border-subtle);
+}
+
+.social-content-tabs .nav-link,
+.social-status-tabs .nav-link {
+    padding: 0.5rem 0.125rem;
+    color: var(--bs-secondary-color);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.social-content-tabs .nav-link:hover,
+.social-content-tabs .nav-link:focus-visible,
+.social-status-tabs .nav-link:hover,
+.social-status-tabs .nav-link:focus-visible {
+    color: var(--bs-primary-text-emphasis);
+}
+
+.social-content-tabs .nav-link.active,
+.social-status-tabs .nav-link.active {
+    color: var(--bs-primary-text-emphasis);
+}
+
 @media (max-width: 767.98px) {
-    .social-edge-to-edge-mobile .social-container {
+    .social-edge-to-edge-mobile main.social-container {
         --bs-gutter-x: 0;
         padding-top: 0.5rem !important;
     }
 
-    .social-edge-to-edge-mobile .social-container > .row,
+    .social-edge-to-edge-mobile main.social-container > .row,
     .social-edge-to-edge-mobile .social-content-column > .row {
         --bs-gutter-x: 0;
         margin-inline: 0;
@@ -168,5 +220,86 @@
 
     .standard-post-page .post-detail-media .rounded {
         border-radius: 0 !important;
+    }
+
+    .post-owner-page main.social-container {
+        padding-top: 0 !important;
+    }
+
+    .post-owner-page .post-owner-content {
+        gap: 0.875rem;
+        padding-inline: 0;
+    }
+
+    .post-owner-page .post-owner-profile,
+    .post-owner-page .post-owner-card,
+    .post-owner-page .post-owner-workspace > .app-empty-state {
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
+        box-shadow: none !important;
+    }
+
+    .post-owner-page .post-owner-profile .app-section-body {
+        gap: 0.875rem !important;
+        padding: 1rem 0.75rem;
+    }
+
+    .post-owner-page .personal-profile-avatar {
+        width: 6rem;
+        height: 6rem;
+        flex-basis: 6rem;
+    }
+
+    .post-owner-page .post-owner-actions {
+        width: 100%;
+    }
+
+    .post-owner-page .post-owner-actions .btn {
+        flex: 1 1 0;
+        min-width: 0;
+        justify-content: center;
+    }
+
+    .post-owner-page .post-owner-actions .btn span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .post-owner-page .post-owner-heading,
+    .post-owner-page .post-owner-type-tabs,
+    .post-owner-page .post-owner-status-navigation {
+        padding-inline: 0.75rem;
+    }
+
+    .post-owner-page .post-owner-heading {
+        font-size: 1.25rem;
+    }
+
+    .post-owner-page .post-owner-workspace {
+        gap: 0.875rem;
+    }
+
+    .post-owner-page .post-owner-short-grid {
+        --bs-gutter-x: 0;
+        --bs-gutter-y: 0.875rem;
+        margin-inline: 0;
+    }
+
+    .post-owner-page .post-owner-short-grid > [class*="col-"] {
+        padding-inline: 0;
+    }
+
+    .post-owner-page .standard-post-owner-card > .card-body,
+    .post-owner-page .short-owner-card > .card-body {
+        padding-inline: 0.75rem !important;
+    }
+
+    .post-owner-page .post-media-collage,
+    .post-owner-page .post-detail-media,
+    .post-owner-page .short-owner-cover {
+        width: 100%;
+        max-width: 100%;
     }
 }

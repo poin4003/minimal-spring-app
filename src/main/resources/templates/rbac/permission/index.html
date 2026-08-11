@@ -15,7 +15,7 @@
     <div th:replace="~{fragments/app-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
+            <div class="app-page-stack">
                             <div th:replace="~{fragments/components/table :: table(${page.permissionTable})}"></div>
             </div>
         </th:block>

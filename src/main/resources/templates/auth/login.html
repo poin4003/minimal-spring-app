@@ -10,34 +10,37 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
 </head>
-<body class="bg-body-tertiary">
-    <div class="position-fixed top-0 end-0 m-3 z-3">
+<body class="app-auth-page">
+    <div class="app-auth-tools">
         <div th:replace="~{fragments/app-tools :: themeToggle(null)}"></div>
     </div>
 
-    <main class="min-vh-100 d-flex align-items-center py-5">
-        <div class="container">
-            <div class="row justify-content-center align-items-center g-4">
-                <div class="col-lg-6">
-                    <div class="pe-lg-5">
-                        <p class="text-uppercase text-secondary fw-semibold small mb-3"
-                           th:text="${page.applicationTitle}">
-                            Minimal Spring App
-                        </p>
-                        <h1 class="display-5 fw-bold mb-3"
-                            th:text="#{auth.login.hero(${page.applicationTitle})}">
-                            Sign in to the Minimal Spring App
-                        </h1>
+    <main class="container-fluid px-0">
+        <div class="row g-0 app-auth-layout">
+            <section class="col-lg-5 app-auth-intro">
+                <div class="app-auth-intro-content">
+                    <div class="app-auth-brand">
+                        <img src="/favicon.ico"
+                             alt=""
+                             class="app-auth-brand-mark">
+                        <span th:text="${page.applicationTitle}">
+                            Vibe
+                        </span>
                     </div>
+                    <h1 class="app-auth-hero-title"
+                        th:text="#{auth.login.hero(${page.applicationTitle})}">
+                        Sign in to Vibe
+                    </h1>
                 </div>
+            </section>
 
-                <div class="col-lg-5">
-                    <div class="card shadow-sm border-0">
-                        <div class="card-body p-4 p-md-5">
-                            <h2 class="h3 mb-2" th:text="${page.title}">Sign in</h2>
+            <section class="col-lg-7 app-auth-form-column">
+                <div class="app-surface-panel app-auth-panel">
+                    <div class="app-auth-panel-body">
+                            <h2 class="app-page-title" th:text="${page.title}">Sign in</h2>
                             <p class="text-secondary mb-4"
                                th:text="#{auth.login.description(${page.applicationTitle})}">
-                                Use your system account to access the Minimal Spring App.
+                                Use your system account to access Vibe.
                             </p>
 
                             <div class="alert alert-danger"
@@ -102,7 +105,7 @@
                                 </div>
 
                                 <button type="submit"
-                                        class="btn btn-primary btn-lg"
+                                        class="btn btn-primary"
                                         th:text="#{auth.login.submit}">
                                     Sign in
                                 </button>
@@ -114,13 +117,12 @@
                                 </span>
                                 <a th:href="${page.registrationPath}"
                                    th:text="#{auth.login.register}">
-                                    Create one
+                                   Create one
                                 </a>
                             </p>
-                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
     <div th:replace="~{fragments/app-tools :: loader}"></div>

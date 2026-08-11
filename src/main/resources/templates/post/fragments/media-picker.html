@@ -52,7 +52,7 @@
         </div>
 
         <div th:if="${#lists.isEmpty(picker.items)}"
-             class="border rounded p-5 text-center text-secondary">
+             class="app-surface-panel app-empty-state">
             <i class="bi bi-images d-block fs-2 mb-2" aria-hidden="true"></i>
             <span th:text="#{post.composer.mediaEmpty}">
                 No ready media found.
@@ -64,7 +64,7 @@
             <div th:each="item : ${picker.items}"
                  class="col-6 col-md-4 col-xl-3">
                 <button type="button"
-                        class="card h-100 w-100 overflow-hidden text-start p-0"
+                        class="card app-surface-panel h-100 w-100 overflow-hidden text-start p-0"
                         data-post-media-option
                         th:data-media-id="${item.id}"
                         th:data-media-name="${item.originalName}"

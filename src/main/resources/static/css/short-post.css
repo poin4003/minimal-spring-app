@@ -15,7 +15,7 @@
 
 .short-detail-feed {
     position: relative;
-    height: calc(100dvh - var(--social-header-height) - 5rem);
+    height: calc(100dvh - var(--social-header-height) - 3.375rem);
     min-height: 32rem;
     overflow-y: auto;
     overscroll-behavior-y: contain;
@@ -73,7 +73,7 @@
     color: var(--bs-white);
     background: linear-gradient(
         transparent,
-        rgba(0, 0, 0, 0.88)
+        var(--app-media-overlay-strong-bg)
     );
     pointer-events: none;
 }
@@ -120,7 +120,7 @@
     z-index: 3;
     padding: 0.5rem 0.75rem;
     color: var(--bs-light);
-    background: rgba(0, 0, 0, 0.6);
+    background: var(--app-media-overlay-bg);
     border-radius: var(--bs-border-radius-pill);
     transform: translateX(50%);
 }
@@ -161,7 +161,7 @@
             100dvh
             - var(--social-header-height)
             - var(--social-mobile-navigation-height)
-            - 2.5rem
+            - 3.5rem
         );
     }
 }

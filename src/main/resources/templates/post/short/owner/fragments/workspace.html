@@ -4,18 +4,19 @@
 <body>
     <section th:fragment="workspace(workspace)"
              th:id="${workspace.id}"
-             class="d-grid gap-4"
+             class="app-page-stack post-owner-workspace"
              th:attr="hx-get=${workspace.refreshPath},
                       hx-trigger=${workspace.refreshEvent + ' from:body'},
                       hx-target='this',
                       hx-swap='outerHTML'">
-        <nav th:aria-label="#{post.owner.filter.label}">
-            <ul class="nav nav-pills flex-nowrap gap-2 overflow-x-auto pb-1">
+        <nav class="post-owner-status-navigation"
+             th:aria-label="#{post.owner.filter.label}">
+            <ul class="nav nav-underline flex-nowrap gap-3 overflow-x-auto social-status-tabs">
                 <li th:each="statusFilter : ${workspace.statusFilters}"
                     class="nav-item">
                     <a th:href="${statusFilter.path}"
                        th:text="${statusFilter.label}"
-                       class="nav-link rounded-pill"
+                       class="nav-link text-nowrap"
                        th:classappend="${statusFilter.active} ? ' active' : ''"
                        th:attr="aria-current=${statusFilter.active ? 'page' : null},
                                 hx-get=${statusFilter.path},
@@ -30,8 +31,8 @@
         </nav>
 
         <div th:if="${#lists.isEmpty(workspace.shorts)}"
-             class="card border-0 shadow-sm">
-            <div class="card-body p-5 text-center">
+             class="app-surface-panel app-empty-state">
+            <div>
                 <i class="bi bi-play-btn d-block fs-1 text-secondary mb-3"
                    aria-hidden="true"></i>
                 <p class="text-secondary mb-0"
@@ -42,7 +43,7 @@
         </div>
 
         <div th:unless="${#lists.isEmpty(workspace.shorts)}"
-             class="row g-4">
+             class="row g-4 post-owner-short-grid">
             <div th:each="card : ${workspace.shorts}"
                  class="col-12 col-md-6 col-xl-4">
                 <div th:replace="~{post/short/owner/fragments/card

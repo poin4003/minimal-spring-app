@@ -3,7 +3,7 @@
       th:lang="${#locale.language}">
 <body>
     <nav th:fragment="navigation(items)"
-         class="nav nav-pills flex-nowrap flex-lg-column gap-2 overflow-x-auto"
+         class="nav flex-nowrap flex-lg-column overflow-x-auto social-navigation"
          th:attr="aria-label=#{shell.mainNavigation}">
         <a th:each="item : ${items}"
            th:href="${item.path}"

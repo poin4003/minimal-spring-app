@@ -15,18 +15,18 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
 </head>
-<body class="bg-body-tertiary">
-    <div class="position-fixed top-0 end-0 m-3 z-3">
+<body class="app-error-page">
+    <div class="app-error-tools">
         <div th:replace="~{fragments/app-tools :: themeToggle(null)}"></div>
     </div>
 
-    <main class="min-vh-100 d-flex align-items-center py-5">
-        <div class="container">
+    <main class="app-error-layout">
+        <div class="container px-0">
             <div class="row justify-content-center">
                 <div class="col-lg-6">
-                    <div class="card shadow-sm border-0 text-center">
-                        <div class="card-body p-5">
-                            <div class="display-4 fw-bold text-danger mb-3" th:text="${viewStatus}">403</div>
+                    <div class="app-surface-panel app-error-panel mx-auto">
+                        <div>
+                            <div class="app-error-code text-danger" th:text="${viewStatus}">403</div>
                             <h1 class="h3 mb-3" th:text="${viewTitle}">Forbidden</h1>
                             <p class="text-secondary mb-4" th:text="${viewMessage}">
                                 You do not have permission to access this page.
@@ -34,14 +34,14 @@
 
                             <div class="d-flex justify-content-center">
                                 <button type="button"
-                                        class="btn btn-outline-secondary"
+                                        class="btn btn-sm btn-outline-secondary"
                                         onclick="window.history.back()"
                                         th:text="#{action.back}">
                                     Back
                                 </button>
                             </div>
 
-                            <div class="mt-4 small text-secondary">
+                            <div class="mt-4 small text-secondary app-error-path">
                                 <span th:if="${viewPath != null and !#strings.isEmpty(viewPath)}">
                                     <span th:text="#{common.path}">Path</span>:
                                     <code th:text="${viewPath}">/admin</code>

@@ -633,7 +633,7 @@ public class AppProperties {
         private String logoutPath = "/logout";
 
         @NotBlank
-        private String applicationTitle = "Minimal Spring App";
+        private String applicationTitle = "Vibe";
 
         @NotBlank
         private String socialTitle = "Vibe";

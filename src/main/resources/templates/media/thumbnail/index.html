@@ -19,14 +19,14 @@
     <div th:replace="~{fragments/app-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
+            <div class="app-page-stack">
                             <div th:replace="~{fragments/components/breadcrumb
                                     :: breadcrumb(${page.breadcrumb})}"></div>
 
-                            <section class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-3">
+                            <section class="app-page-heading">
                                 <div>
-                                    <h2 class="h3 mb-2" th:text="${page.title}">Select Thumbnail</h2>
-                                    <div class="small text-secondary d-flex flex-wrap gap-3">
+                                    <h2 class="app-page-title" th:text="${page.title}">Select Thumbnail</h2>
+                                    <div class="app-metadata-strip">
                                         <span th:each="item : ${page.metadataItems}">
                                             <span th:text="${item.label + ': '}">Label: </span>
                                             <code th:if="${item.monospace}" th:text="${item.value}">value</code>
@@ -35,8 +35,8 @@
                                     </div>
                                 </div>
 
-                                <div class="d-flex flex-wrap gap-2">
-                                    <a class="btn btn-primary"
+                                <div class="app-action-group">
+                                    <a class="btn btn-sm btn-primary"
                                        th:href="${page.uploadFallbackPath}"
                                        th:attr="hx-get=${page.uploadPartialPath},
                                                 hx-target='#app-modal-host',
@@ -48,16 +48,16 @@
                                         </span>
                                     </a>
                                     <a th:href="${page.backPath}"
-                                       class="btn btn-outline-secondary"
+                                       class="btn btn-sm btn-outline-secondary"
                                        th:text="#{action.back}">
                                         Back
                                     </a>
                                 </div>
                             </section>
 
-                            <div id="media-thumbnail-workspace" class="d-grid gap-4">
-                            <section class="card shadow-sm border-0">
-                                <div class="card-body p-4">
+                            <div id="media-thumbnail-workspace" class="app-page-stack">
+                            <section class="app-filter-panel app-component">
+                                <div class="app-section-body">
                                     <form method="get"
                                           th:action="${page.listPath}"
                                           th:attr="hx-get=${page.listPath},

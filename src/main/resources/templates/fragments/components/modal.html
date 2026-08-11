@@ -13,9 +13,9 @@
     </button>
 
     <div class="modal fade" th:id="${modal.id}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered"
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"
              th:classappend="${modal.dialogClass != null ? ' ' + modal.dialogClass : ''}">
-            <div class="modal-content">
+            <div class="modal-content app-modal-content">
                 <form th:attr="action=${modal.actionPath},
                                method=${modal.method},
                                hx-post=${#strings.equalsIgnoreCase(modal.method, 'post') ? modal.actionPath : null},
@@ -28,7 +28,7 @@
                            th:name="${_csrf.parameterName}"
                            th:value="${_csrf.token}">
 
-                    <div class="modal-header">
+                    <div class="modal-header app-section-header">
                         <div>
                             <h2 class="modal-title fs-5 mb-1" th:text="${modal.title}">Modal title</h2>
                             <p th:if="${modal.description != null}"
@@ -43,7 +43,7 @@
                                 th:attr="aria-label=#{action.close}"></button>
                     </div>
 
-                    <div class="modal-body">
+                    <div class="modal-body app-section-body">
                         <div th:each="field : ${modal.fields}">
                             <input th:if="${field.type.name() == 'HIDDEN'}"
                                    type="hidden"

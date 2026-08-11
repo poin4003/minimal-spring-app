@@ -7,9 +7,9 @@
      th:id="${modal.id}"
      tabindex="-1"
      aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-modal-content">
+            <div class="modal-header app-section-header">
                 <h2 class="modal-title fs-5" th:text="${modal.title}">Metadata</h2>
                 <button type="button"
                         class="btn-close"
@@ -17,11 +17,12 @@
                         th:attr="aria-label=#{action.close}"></button>
             </div>
 
-            <div class="modal-body">
-                <dl class="row mb-0" th:if="${!#lists.isEmpty(modal.items)}">
+            <div class="modal-body app-section-body">
+                <dl class="row mb-0 app-metadata-list"
+                    th:if="${!#lists.isEmpty(modal.items)}">
                     <th:block th:each="item : ${modal.items}">
                         <dt class="col-sm-4" th:text="${item.label}">Label</dt>
-                        <dd class="col-sm-8 mb-3">
+                        <dd class="col-sm-8 mb-0">
                             <code th:if="${item.monospace}" th:text="${item.value}">value</code>
                             <span th:unless="${item.monospace}" th:text="${item.value}">value</span>
                         </dd>

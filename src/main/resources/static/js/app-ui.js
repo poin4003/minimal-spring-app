@@ -203,13 +203,6 @@
                     root.dataset.appSidebar !== "collapsed");
                 return;
             }
-
-            const menuGroup = event.target.closest(".app-menu-toggle");
-            if (menuGroup != null
-                    && desktopViewport.matches
-                    && root.dataset.appSidebar === "collapsed") {
-                applySidebarState(false);
-            }
         }, true);
 
         desktopViewport.addEventListener("change", function () {

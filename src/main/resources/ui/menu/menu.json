@@ -31,21 +31,35 @@
     ]
   },
   {
-    "id": "media-library",
-    "messageKey": "menu.mediaLibrary",
-    "icon": "images",
-    "path": "/admin/media"
+    "id": "content-management",
+    "messageKey": "menu.contentManagement",
+    "icon": "collection",
+    "children": [
+      {
+        "id": "media-library",
+        "messageKey": "menu.mediaLibrary",
+        "icon": "images",
+        "path": "/admin/media"
+      },
+      {
+        "id": "post-moderation",
+        "messageKey": "menu.postModeration",
+        "icon": "journal-check",
+        "path": "/admin/posts/moderation"
+      }
+    ]
   },
   {
-    "id": "post-moderation",
-    "messageKey": "menu.postModeration",
-    "icon": "journal-check",
-    "path": "/admin/posts/moderation"
-  },
-  {
-    "id": "cronjobs",
-    "messageKey": "menu.cronjobs",
-    "icon": "clock-history",
-    "path": "/admin/cronjobs"
+    "id": "operations",
+    "messageKey": "menu.operations",
+    "icon": "gear",
+    "children": [
+      {
+        "id": "cronjobs",
+        "messageKey": "menu.cronjobs",
+        "icon": "clock-history",
+        "path": "/admin/cronjobs"
+      }
+    ]
   }
 ]

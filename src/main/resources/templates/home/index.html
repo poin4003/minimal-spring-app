@@ -16,10 +16,10 @@
     <div th:replace="~{fragments/app-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
-                            <section class="row g-4">
+            <div class="app-page-stack">
+                            <section class="row g-3">
                                 <div class="col-md-4">
-                                    <article class="card h-100 shadow-sm border-0">
+                                    <article class="card app-summary-card">
                                         <div class="card-body">
                                             <h3 class="h5" th:text="#{home.users.title}">
                                                 Users
@@ -33,7 +33,7 @@
                                 </div>
 
                                 <div class="col-md-4">
-                                    <article class="card h-100 shadow-sm border-0">
+                                    <article class="card app-summary-card">
                                         <div class="card-body">
                                             <h3 class="h5" th:text="#{home.rbac.title}">
                                                 RBAC
@@ -47,7 +47,7 @@
                                 </div>
 
                                 <div class="col-md-4">
-                                    <article class="card h-100 shadow-sm border-0">
+                                    <article class="card app-summary-card">
                                         <div class="card-body">
                                             <h3 class="h5" th:text="#{home.cronjobs.title}">
                                                 Cronjobs
@@ -61,13 +61,15 @@
                                 </div>
                             </section>
 
-                            <section class="card shadow-sm border-0">
-                                <div class="card-body p-4">
-                                    <h3 class="h5 mb-3" th:text="#{home.authorities}">
+                            <section class="app-surface-panel app-component">
+                                <div class="app-section-header">
+                                    <h3 class="app-section-title" th:text="#{home.authorities}">
                                         Authorities
                                     </h3>
+                                </div>
+                                <div class="app-section-body">
                                     <div class="d-flex flex-wrap gap-2">
-                                        <span class="badge text-bg-primary"
+                                        <span class="badge text-bg-secondary"
                                               th:each="authority : ${page.shell.currentUser.authorities}"
                                               th:text="${authority}">
                                             ROLE_ADMIN

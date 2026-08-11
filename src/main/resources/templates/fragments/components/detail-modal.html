@@ -7,9 +7,9 @@
      th:id="${modal.id}"
      tabindex="-1"
      aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-modal-content">
+            <div class="modal-header app-section-header">
                 <div>
                     <h2 class="modal-title fs-5 mb-1" th:text="${modal.title}">Detail</h2>
                     <p th:if="${modal.description != null}"
@@ -24,11 +24,12 @@
                         th:attr="aria-label=#{action.close}"></button>
             </div>
 
-            <div class="modal-body d-grid gap-3">
+            <div class="modal-body app-section-body d-grid gap-3">
                 <div>
                     <h3 class="h6 mb-3" th:text="${modal.listTitle}">Items</h3>
 
-                    <div class="list-group" th:if="${!#lists.isEmpty(modal.items)}">
+                    <div class="list-group list-group-flush border rounded"
+                         th:if="${!#lists.isEmpty(modal.items)}">
                         <div th:each="item : ${modal.items}" class="list-group-item">
                             <div class="fw-semibold" th:text="${item.title}">TITLE</div>
                             <div th:if="${item.description != null}"

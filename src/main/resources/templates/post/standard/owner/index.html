@@ -15,14 +15,14 @@
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
-<body class="bg-body-tertiary">
+<body class="bg-body-tertiary social-edge-to-edge-mobile post-owner-page standard-post-owner-page">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
-                <div class="col-12 col-xxl-9 d-grid gap-3">
-                    <section class="card border-0 shadow-sm">
-                        <div class="card-body p-4 d-flex flex-column flex-md-row align-items-center gap-4">
+                <div class="col-12 col-xxl-9 app-page-stack post-owner-content">
+                    <section class="app-surface-panel post-owner-profile">
+                        <div class="app-section-body d-flex flex-column flex-md-row align-items-center gap-4">
                             <img th:if="${page.profile.avatar != null
                                     and page.profile.avatar.thumbnailUrl != null}"
                                  th:src="${page.profile.avatar.thumbnailUrl}"
@@ -49,9 +49,9 @@
                                 </p>
                             </div>
 
-                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                            <div class="app-action-group justify-content-center post-owner-actions">
                                 <a th:href="${page.editProfilePath}"
-                                   class="btn btn-outline-secondary">
+                                   class="btn btn-sm btn-outline-secondary">
                                     <i class="bi bi-pencil me-2"
                                        aria-hidden="true"></i>
                                     <span th:text="#{profile.edit}">
@@ -60,7 +60,7 @@
                                 </a>
 
                                 <a th:href="${page.createPath}"
-                                   class="btn btn-primary">
+                                   class="btn btn-sm btn-primary">
                                     <i class="bi bi-plus-lg me-2"
                                        aria-hidden="true"></i>
                                     <span th:text="#{post.composer.open}">
@@ -71,12 +71,12 @@
                         </div>
                     </section>
 
-                    <h2 class="h4 mt-3 mb-0"
+                    <h2 class="app-page-title post-owner-heading"
                         th:text="#{post.owner.list.title}">
                         My posts
                     </h2>
 
-                    <nav class="nav nav-pills gap-2"
+                    <nav class="nav nav-underline gap-3 social-content-tabs post-owner-type-tabs"
                          th:aria-label="#{post.owner.contentTypes}">
                         <a class="nav-link active"
                            aria-current="page"

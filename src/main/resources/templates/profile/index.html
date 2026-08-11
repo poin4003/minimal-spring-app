@@ -13,14 +13,14 @@
     <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
 </head>
-<body class="bg-body-tertiary">
+<body class="bg-body-tertiary profile-page">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="row g-4">
-                                <div class="col-12 col-xl-4">
-                                    <section class="card h-100 shadow-sm border-0">
-                                        <div class="card-body p-4 d-grid gap-4">
+            <div class="row g-3 app-profile-layout">
+                                <div class="col-12 col-lg-4 app-profile-summary-column">
+                                    <section class="app-surface-panel h-100 app-profile-summary">
+                                        <div class="app-section-body d-grid gap-4">
                                             <div class="text-center">
                                                 <a th:href="${page.avatarSelectionPath}"
                                                    class="position-relative d-inline-block rounded-circle"
@@ -30,24 +30,23 @@
                                                             and page.profile.avatar.thumbnailUrl != null}"
                                                          th:src="${page.profile.avatar.thumbnailUrl}"
                                                          th:alt="#{profile.avatar.current}"
-                                                         class="rounded-circle border object-fit-cover"
+                                                         class="rounded-circle border object-fit-cover app-profile-avatar"
                                                          width="160"
                                                          height="160">
                                                     <span th:unless="${page.profile.avatar != null
                                                             and page.profile.avatar.thumbnailUrl != null}"
-                                                          class="d-inline-flex align-items-center justify-content-center rounded-circle border bg-body-tertiary"
-                                                          style="width: 160px; height: 160px;">
+                                                          class="d-inline-flex align-items-center justify-content-center rounded-circle border bg-body-tertiary app-profile-avatar">
                                                         <i class="bi bi-person fs-1"
                                                            aria-hidden="true"></i>
                                                     </span>
-                                                    <span class="position-absolute bottom-0 end-0 d-inline-flex align-items-center justify-content-center rounded-circle border border-3 border-secondary bg-primary text-white p-2">
+                                                    <span class="position-absolute bottom-0 end-0 d-inline-flex align-items-center justify-content-center rounded-circle border border-3 border-secondary bg-primary text-white app-profile-avatar-action">
                                                         <i class="bi bi-camera"
                                                            aria-hidden="true"></i>
                                                     </span>
                                                 </a>
                                             </div>
 
-                                            <div class="d-flex justify-content-center">
+                                            <div class="d-flex justify-content-center app-profile-remove">
                                                 <form th:if="${page.profile.avatar != null}"
                                                       method="post"
                                                       class="mb-0"
@@ -59,7 +58,7 @@
                                                            th:name="${_csrf.parameterName}"
                                                            th:value="${_csrf.token}">
                                                     <button type="submit"
-                                                            class="btn btn-outline-danger d-inline-flex align-items-center gap-2">
+                                                            class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-2">
                                                         <i class="bi bi-trash"
                                                            aria-hidden="true"></i>
                                                         <span th:text="#{profile.avatar.remove}">
@@ -72,10 +71,16 @@
                                     </section>
                                 </div>
 
-                                <div class="col-12 col-xl-8">
+                                <div class="col-12 col-lg-8 app-profile-settings-column">
                                     <section id="profile-settings"
-                                             class="card shadow-sm border-0">
-                                        <div class="card-body p-4">
+                                             class="app-surface-panel app-component app-profile-settings">
+                                        <header class="app-section-header">
+                                            <h1 class="app-section-title"
+                                                th:text="${page.title}">
+                                                Profile Settings
+                                            </h1>
+                                        </header>
+                                        <div class="app-section-body">
                                             <form method="post"
                                                   th:action="${page.updatePath}"
                                                   th:object="${profileForm}"
@@ -84,7 +89,7 @@
                                                            hx-select='#profile-settings',
                                                            hx-swap='outerHTML',
                                                            hx-disabled-elt='button[type=submit]'"
-                                                  class="d-grid gap-4">
+                                                  class="d-grid gap-4 app-profile-form">
                                                 <input type="hidden"
                                                        th:name="${_csrf.parameterName}"
                                                        th:value="${_csrf.token}">
@@ -158,9 +163,9 @@
                                                     </label>
                                                 </div>
 
-                                                <div class="d-flex justify-content-end">
+                                                <div class="d-flex justify-content-end app-profile-submit">
                                                     <button type="submit"
-                                                            class="btn btn-primary"
+                                                            class="btn btn-sm btn-primary"
                                                             th:text="#{profile.save}">
                                                         Save Changes
                                                     </button>

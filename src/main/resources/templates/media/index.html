@@ -25,15 +25,17 @@
     <div th:replace="~{fragments/app-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <div class="d-grid gap-4">
+            <div class="app-page-stack">
                             <div th:replace="~{media/fragments/upload :: upload(${page.uploadComponent})}"></div>
 
-                            <div id="media-library-workspace" class="d-grid gap-4">
-                            <section class="card shadow-sm border-0">
-                                <div class="card-body p-4">
-                                    <h2 class="h5 mb-3" th:text="#{media.filter.title}">
+                            <div id="media-library-workspace" class="app-page-stack">
+                            <section class="app-filter-panel app-component">
+                                <div class="app-section-header">
+                                    <h2 class="app-section-title" th:text="#{media.filter.title}">
                                         Filter Media
                                     </h2>
+                                </div>
+                                <div class="app-section-body">
 
                                     <form method="get"
                                           th:attr="action=${page.listPath},
@@ -152,7 +154,7 @@
                                             </select>
                                         </div>
 
-                                        <div class="col-12 d-flex flex-wrap justify-content-end gap-2">
+                                        <div class="col-12 app-page-toolbar">
                                             <a class="btn btn-outline-secondary"
                                                th:href="${page.listPath}"
                                                th:attr="hx-get=${page.listPath},
