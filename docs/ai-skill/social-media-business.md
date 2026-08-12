@@ -101,7 +101,7 @@ Allowed transitions:
 ## Post Content
 - Every content item has one `PostEntity` root containing ownership, type, moderation status, publication time, and common audit state.
 - Type-specific data belongs to dedicated relational detail tables rather than nullable columns on one large post table.
-- Supported post types are `STANDARD`, `SHORT`, `MOVIE`, `PRODUCT`, `WIKI`, and `BLOG`.
+- Supported post types are `STANDARD`, `SHORT`, `VIDEO`, `PRODUCT`, `WIKI`, and `BLOG`.
 - Common media attachments use an ordered relation that can distinguish roles such as cover, content, gallery, trailer, and episode media.
 - Maximum text length, media count, duration, aspect ratio, and type-specific limits must be configurable.
 - Editing and resubmitting published posts are outside the initial scope.

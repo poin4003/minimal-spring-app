@@ -108,7 +108,7 @@ Tạo enums trong `features/post/enums`.
 public enum PostType {
     STANDARD,
     SHORT,
-    MOVIE,
+    VIDEO,
     PRODUCT,
     WIKI,
     BLOG
