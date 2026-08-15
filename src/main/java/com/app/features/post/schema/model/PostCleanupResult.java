@@ -7,7 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PostCleanupResult {
 
+    private final int deletedSeriesCount;
+
     private final int deletedCount;
 
     private final int rejectedCount;
+
+    private final int synchronizedSeriesCount;
 }

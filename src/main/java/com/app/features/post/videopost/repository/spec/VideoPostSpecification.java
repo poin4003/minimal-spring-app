@@ -12,6 +12,7 @@ import com.app.features.post.videopost.entity.VideoPostEntity_;
 import com.app.features.post.videopost.entity.VideoSeriesEntity_;
 import com.app.features.post.videopost.entity.VideoSeriesItemEntity;
 import com.app.features.post.videopost.entity.VideoSeriesItemEntity_;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 import com.app.features.post.videopost.schema.filter.OwnerVideoPostFilterCriteria;
 import com.app.features.post.videopost.schema.filter.PublicVideoPostFilterCriteria;
 
@@ -40,12 +41,18 @@ public final class VideoPostSpecification {
     public static Specification<VideoPostEntity> ownedBy(
             UUID ownerId,
             OwnerVideoPostFilterCriteria criteria) {
-        return PostDetailSpecification.ownedBy(
+        Specification<VideoPostEntity> specification =
+                PostDetailSpecification.ownedBy(
                 VideoPostEntity_.post,
                 ownerId,
                 criteria.getLifecycleStatus(),
                 criteria.getModerationStatus())
                 .and(titleContains(criteria.getTitle()));
+
+        if (criteria.getSeriesId() != null) {
+            return specification.and(inSeries(criteria.getSeriesId()));
+        }
+        return specification.and(notInAnySeries());
     }
 
     private static Specification<VideoPostEntity> titleContains(
@@ -93,11 +100,16 @@ public final class VideoPostSpecification {
                 item.get(VideoSeriesItemEntity_.videoPost)
                         .get(VideoPostEntity_.postId),
                 videoPost.get(VideoPostEntity_.postId));
+        var activeSeries = cb.equal(
+                item.get(VideoSeriesItemEntity_.series)
+                        .get(VideoSeriesEntity_.lifecycleStatus),
+                VideoSeriesLifecycleStatus.ACTIVE);
         if (anySeries) {
-            return subquery.where(sameVideo);
+            return subquery.where(sameVideo, activeSeries);
         }
         return subquery.where(
                 sameVideo,
+                activeSeries,
                 cb.equal(
                         item.get(VideoSeriesItemEntity_.series)
                                 .get(VideoSeriesEntity_.id),

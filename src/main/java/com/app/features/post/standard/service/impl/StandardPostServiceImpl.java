@@ -1,5 +1,6 @@
 package com.app.features.post.standard.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,6 +23,7 @@ import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.schema.payload.CreateStandardPostPayload;
 import com.app.features.post.schema.payload.UpdateStandardPostPayload;
+import com.app.features.post.service.PostLifecycleService;
 import com.app.features.post.service.PostMediaService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
@@ -49,6 +51,7 @@ public class StandardPostServiceImpl implements StandardPostService {
     private final UserService userSvc;
     private final ProfileService profileSvc;
     private final PostService postSvc;
+    private final PostLifecycleService postLifecycleSvc;
     private final StandardPostRepository standardPostRepo;
     private final MediaService mediaSvc;
     private final PostMediaService postMediaSvc;
@@ -98,6 +101,38 @@ public class StandardPostServiceImpl implements StandardPostService {
         }
 
         postSvc.submitForReview(post);
+    }
+
+    @Override
+    @Transactional
+    public void archiveOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.archive(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void restoreArchivedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreArchived(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
+    }
+
+    @Override
+    @Transactional
+    public void deleteOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.softDelete(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void restoreDeletedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreDeleted(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
     }
 
     @Override
@@ -168,15 +203,14 @@ public class StandardPostServiceImpl implements StandardPostService {
         return standardPost;
     }
 
-    private OwnerStandardPostResult toOwnerResult(
-            StandardPostEntity standardPost,
+    private PostEntity requireOwnedPostForLifecycle(
+            UUID postId,
             UUID ownerId) {
-        UUID postId = standardPost.getPostId();
-
-        return standardPostMapper.toOwnerResult(
-                standardPost,
-                profileSvc.requireProfile(ownerId),
-                postMediaSvc.findAttachments(postId, PostMediaRole.CONTENT));
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        if (post.getType() != PostType.STANDARD) {
+            throw ExceptionFactory.notFound("error.post.notFound", postId);
+        }
+        return post;
     }
 
     @Override

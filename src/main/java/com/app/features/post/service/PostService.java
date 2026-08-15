@@ -28,26 +28,6 @@ public interface PostService {
 
     void submitForReview(@NotNull PostEntity post);
 
-    void archiveOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId,
-            @NotNull PostType expectedType);
-
-    void restoreArchivedOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId,
-            @NotNull PostType expectedType);
-
-    void deleteOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId,
-            @NotNull PostType expectedType);
-
-    void restoreDeletedOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId,
-            @NotNull PostType expectedType);
-
     PostEntity requirePendingPost(@NotNull PostEntity post);
 
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);

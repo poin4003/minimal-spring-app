@@ -31,6 +31,22 @@ public interface StandardPostService {
             @NotNull UUID postId,
             @NotNull UUID ownerId);
 
+    void archiveOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreArchivedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void deleteOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreDeletedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
     PublicStandardPostResult getPublishedPost(@NotNull UUID postId);
 
     OwnerStandardPostResult getOwnerPost(

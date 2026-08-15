@@ -40,6 +40,22 @@ public interface VideoPostService {
             @NotNull UUID postId,
             @NotNull UUID ownerId);
 
+    void archiveOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreArchivedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void deleteOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreDeletedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
     PublicVideoPostResult getPublishedPost(@NotNull UUID postId);
 
     OwnerVideoPostResult getOwnerPost(

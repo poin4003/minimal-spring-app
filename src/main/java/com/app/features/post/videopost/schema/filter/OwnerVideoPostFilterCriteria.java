@@ -1,5 +1,7 @@
 package com.app.features.post.videopost.schema.filter;
 
+import java.util.UUID;
+
 import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 
@@ -13,4 +15,6 @@ public class OwnerVideoPostFilterCriteria {
     private PostModerationStatus moderationStatus;
 
     private String title;
+
+    private UUID seriesId;
 }

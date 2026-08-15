@@ -1,5 +1,6 @@
 package com.app.features.post.videopost.repository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -10,9 +11,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.app.features.post.videopost.entity.VideoSeriesEntity;
 import com.app.features.post.videopost.entity.VideoSeriesEntity_;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 
 import jakarta.persistence.LockModeType;
 
@@ -41,4 +46,31 @@ public interface VideoSeriesRepository
             VideoSeriesEntity_.COVER_MEDIA
     })
     Optional<VideoSeriesEntity> findForUpdateById(UUID seriesId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            DELETE FROM VideoSeriesEntity series
+            WHERE series.lifecycleStatus = :lifecycleStatus
+              AND series.deletedAt < :cutoff
+            """)
+    int deleteExpiredDeletedSeries(
+            @Param("lifecycleStatus")
+            VideoSeriesLifecycleStatus lifecycleStatus,
+            @Param("cutoff") LocalDateTime cutoff);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+            UPDATE video_series
+            SET video_count = (
+                SELECT COUNT(*)
+                FROM video_series_item item
+                WHERE item.series_id = video_series.id
+            )
+            WHERE video_count <> (
+                SELECT COUNT(*)
+                FROM video_series_item item
+                WHERE item.series_id = video_series.id
+            )
+            """, nativeQuery = true)
+    int synchronizeVideoCounts();
 }

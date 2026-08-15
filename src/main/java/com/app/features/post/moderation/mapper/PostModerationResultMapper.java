@@ -14,8 +14,10 @@ import com.app.features.post.moderation.schema.result.ModerationPostResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationPostStateResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationVideoPostDetailResult;
 import com.app.features.post.shortpost.entity.ShortPostEntity;
 import com.app.features.post.standard.entity.StandardPostEntity;
+import com.app.features.post.videopost.entity.VideoPostEntity;
 import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.mapper.UserPublicResultMapper;
 import com.app.features.user.schema.result.UserShortResult;
@@ -69,6 +71,21 @@ public class PostModerationResultMapper {
         result.setState(toState(post));
         result.setCaption(shortPost.getCaption());
         result.setMedia(toMediaResult(attachment));
+        return result;
+    }
+
+    public ModerationVideoPostDetailResult toVideoDetailResult(
+            VideoPostEntity videoPost,
+            UserInfoEntity authorInfo,
+            PostMediaEntity content) {
+        PostEntity post = videoPost.getPost();
+        ModerationVideoPostDetailResult result =
+                new ModerationVideoPostDetailResult();
+        result.setPost(postResultMapper.toSummary(post, authorInfo));
+        result.setState(toState(post));
+        result.setTitle(videoPost.getTitle());
+        result.setDescription(videoPost.getDescription());
+        result.setContent(toMediaResult(content));
         return result;
     }
 

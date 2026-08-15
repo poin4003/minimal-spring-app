@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import com.app.features.post.videopost.entity.VideoSeriesEntity;
+import com.app.features.post.videopost.enums.VideoSeriesCascadeMode;
 import com.app.features.post.videopost.schema.filter.VideoSeriesFilterCriteria;
 import com.app.features.post.videopost.schema.payload.CreateVideoSeriesPayload;
 import com.app.features.post.videopost.schema.payload.UpdateVideoSeriesPayload;
@@ -25,13 +26,25 @@ public interface VideoSeriesService {
             @NotNull UUID ownerId,
             @NotNull @Valid UpdateVideoSeriesPayload payload);
 
+    void archiveOwnedSeries(
+            @NotNull UUID seriesId,
+            @NotNull UUID ownerId,
+            @NotNull VideoSeriesCascadeMode cascadeMode);
+
+    void restoreArchivedOwnedSeries(
+            @NotNull UUID seriesId,
+            @NotNull UUID ownerId,
+            @NotNull VideoSeriesCascadeMode cascadeMode);
+
     void deleteOwnedSeries(
             @NotNull UUID seriesId,
-            @NotNull UUID ownerId);
+            @NotNull UUID ownerId,
+            @NotNull VideoSeriesCascadeMode cascadeMode);
 
-    void deleteOwnedSeriesWithVideos(
+    void restoreDeletedOwnedSeries(
             @NotNull UUID seriesId,
-            @NotNull UUID ownerId);
+            @NotNull UUID ownerId,
+            @NotNull VideoSeriesCascadeMode cascadeMode);
 
     VideoSeriesResult getPublishedSeries(@NotNull UUID seriesId);
 

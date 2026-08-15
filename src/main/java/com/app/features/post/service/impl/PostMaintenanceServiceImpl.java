@@ -11,6 +11,8 @@ import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.repository.PostRepository;
 import com.app.features.post.schema.model.PostCleanupResult;
 import com.app.features.post.service.PostMaintenanceService;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
+import com.app.features.post.videopost.repository.VideoSeriesRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class PostMaintenanceServiceImpl implements PostMaintenanceService {
 
     private final PostRepository postRepo;
+    private final VideoSeriesRepository videoSeriesRepo;
     private final AppProperties appProperties;
 
     @Override
@@ -27,6 +30,10 @@ public class PostMaintenanceServiceImpl implements PostMaintenanceService {
         AppProperties.PostMaintenance maintenance = appProperties.getPost()
                 .getMaintenance();
         LocalDateTime now = LocalDateTime.now();
+        int deletedSeriesCount = videoSeriesRepo
+                .deleteExpiredDeletedSeries(
+                        VideoSeriesLifecycleStatus.DELETED,
+                        now.minus(maintenance.getDeletedRetention()));
         int deletedCount = postRepo.deleteExpiredDeletedPosts(
                 PostLifecycleStatus.DELETED,
                 now.minus(maintenance.getDeletedRetention()));
@@ -34,7 +41,13 @@ public class PostMaintenanceServiceImpl implements PostMaintenanceService {
                 PostLifecycleStatus.ACTIVE,
                 PostModerationStatus.REJECTED,
                 now.minus(maintenance.getRejectedRetention()));
+        int synchronizedSeriesCount = videoSeriesRepo
+                .synchronizeVideoCounts();
 
-        return new PostCleanupResult(deletedCount, rejectedCount);
+        return new PostCleanupResult(
+                deletedSeriesCount,
+                deletedCount,
+                rejectedCount,
+                synchronizedSeriesCount);
     }
 }

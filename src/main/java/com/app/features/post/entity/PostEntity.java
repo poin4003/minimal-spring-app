@@ -90,6 +90,9 @@ public class PostEntity extends BaseAuditEntity {
     @Column(name = "rejection_reason", length = 1000)
     private String rejectionReason;
 
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 }

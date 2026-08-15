@@ -96,6 +96,12 @@
                             </span>
                         </header>
 
+                        <h1 th:if="${page.post.title != null and !page.post.title.isBlank()}"
+                            class="h4 mb-3"
+                            th:text="${page.post.title}">
+                            Video title
+                        </h1>
+
                         <p th:if="${page.post.content != null and !page.post.content.isBlank()}"
                            class="post-content mb-0"
                            th:text="${page.post.content}">

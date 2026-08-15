@@ -36,6 +36,7 @@ import com.app.features.post.moderation.schema.result.ModerationPostResult;
 import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationVideoPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
 import com.app.features.post.moderation.web.view.ModerationPostDetailPageView;
 import com.app.features.post.moderation.web.view.ModerationPostDetailView;
@@ -453,13 +454,23 @@ public class PostModerationPageController {
                     .build();
         }
 
-        ModerationShortPostDetailResult shortPost =
-                (ModerationShortPostDetailResult) post;
+        if (post instanceof ModerationShortPostDetailResult shortPost) {
+            return ModerationPostDetailView.builder()
+                    .post(shortPost.getPost())
+                    .state(shortPost.getState())
+                    .content(shortPost.getCaption())
+                    .media(List.of(shortPost.getMedia()))
+                    .build();
+        }
+
+        ModerationVideoPostDetailResult videoPost =
+                (ModerationVideoPostDetailResult) post;
         return ModerationPostDetailView.builder()
-                .post(shortPost.getPost())
-                .state(shortPost.getState())
-                .content(shortPost.getCaption())
-                .media(List.of(shortPost.getMedia()))
+                .post(videoPost.getPost())
+                .state(videoPost.getState())
+                .title(videoPost.getTitle())
+                .content(videoPost.getDescription())
+                .media(List.of(videoPost.getContent()))
                 .build();
     }
 

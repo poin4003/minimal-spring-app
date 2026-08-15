@@ -91,7 +91,56 @@ public interface VideoSeriesItemRepository
     @Modifying(flushAutomatically = true)
     @Query("""
             UPDATE PostEntity post
+            SET post.lifecycleStatus = :archivedStatus,
+                post.archivedAt = :archivedAt,
+                post.updatedAt = :archivedAt
+            WHERE post.author.id = :ownerId
+              AND post.id IN (
+                  SELECT item.videoPost.postId
+                  FROM VideoSeriesItemEntity item
+                  WHERE item.series.id = :seriesId
+              )
+              AND post.lifecycleStatus = :activeStatus
+              AND post.moderationStatus = :publishedStatus
+            """)
+    int archiveVideoPostsBySeriesId(
+            @Param("seriesId") UUID seriesId,
+            @Param("ownerId") UUID ownerId,
+            @Param("activeStatus") PostLifecycleStatus activeStatus,
+            @Param("archivedStatus") PostLifecycleStatus archivedStatus,
+            @Param("publishedStatus") PostModerationStatus publishedStatus,
+            @Param("archivedAt") LocalDateTime archivedAt);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE PostEntity post
+            SET post.lifecycleStatus = :activeStatus,
+                post.archivedAt = NULL,
+                post.updatedAt = :restoredAt
+            WHERE post.author.id = :ownerId
+              AND post.id IN (
+                  SELECT item.videoPost.postId
+                  FROM VideoSeriesItemEntity item
+                  WHERE item.series.id = :seriesId
+              )
+              AND post.lifecycleStatus = :archivedStatus
+              AND post.archivedAt = :archivedAt
+              AND post.moderationStatus = :publishedStatus
+            """)
+    int restoreArchivedVideoPostsBySeriesId(
+            @Param("seriesId") UUID seriesId,
+            @Param("ownerId") UUID ownerId,
+            @Param("archivedStatus") PostLifecycleStatus archivedStatus,
+            @Param("activeStatus") PostLifecycleStatus activeStatus,
+            @Param("publishedStatus") PostModerationStatus publishedStatus,
+            @Param("archivedAt") LocalDateTime archivedAt,
+            @Param("restoredAt") LocalDateTime restoredAt);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE PostEntity post
             SET post.lifecycleStatus = :lifecycleStatus,
+                post.archivedAt = NULL,
                 post.deletedAt = :deletedAt,
                 post.updatedAt = :deletedAt
             WHERE post.author.id = :ownerId
@@ -107,6 +156,35 @@ public interface VideoSeriesItemRepository
             @Param("ownerId") UUID ownerId,
             @Param("lifecycleStatus") PostLifecycleStatus lifecycleStatus,
             @Param("deletedAt") LocalDateTime deletedAt);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE PostEntity post
+            SET post.lifecycleStatus = :draftStatus,
+                post.moderationStatus = NULL,
+                post.publishedAt = NULL,
+                post.moderatedBy = NULL,
+                post.moderatedAt = NULL,
+                post.rejectionReason = NULL,
+                post.archivedAt = NULL,
+                post.deletedAt = NULL,
+                post.updatedAt = :restoredAt
+            WHERE post.author.id = :ownerId
+              AND post.id IN (
+                  SELECT item.videoPost.postId
+                  FROM VideoSeriesItemEntity item
+                  WHERE item.series.id = :seriesId
+              )
+              AND post.lifecycleStatus = :deletedStatus
+              AND post.deletedAt = :deletedAt
+            """)
+    int restoreDeletedVideoPostsBySeriesId(
+            @Param("seriesId") UUID seriesId,
+            @Param("ownerId") UUID ownerId,
+            @Param("deletedStatus") PostLifecycleStatus deletedStatus,
+            @Param("draftStatus") PostLifecycleStatus draftStatus,
+            @Param("deletedAt") LocalDateTime deletedAt,
+            @Param("restoredAt") LocalDateTime restoredAt);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @EntityGraph(attributePaths = VideoSeriesItemEntity_.VIDEO_POST)

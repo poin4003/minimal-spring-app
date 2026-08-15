@@ -17,6 +17,8 @@ import com.app.features.media.service.MediaService;
 import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.videopost.entity.VideoSeriesEntity;
+import com.app.features.post.videopost.enums.VideoSeriesCascadeMode;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 import com.app.features.post.videopost.mapper.VideoSeriesResultMapper;
 import com.app.features.post.videopost.repository.VideoSeriesItemRepository;
 import com.app.features.post.videopost.repository.VideoSeriesRepository;
@@ -61,6 +63,7 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
         series.setTitle(payload.getTitle());
         series.setDescription(payload.getDescription());
         series.setVideoCount(0);
+        series.setLifecycleStatus(VideoSeriesLifecycleStatus.ACTIVE);
         series = videoSeriesRepo.save(series);
 
         return toResult(series);
@@ -87,35 +90,119 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
 
     @Override
     @Transactional
-    public void deleteOwnedSeries(
+    public void archiveOwnedSeries(
             UUID seriesId,
-            UUID ownerId) {
-        videoSeriesRepo.delete(requireOwnedSeriesForUpdate(
+            UUID ownerId,
+            VideoSeriesCascadeMode cascadeMode) {
+        VideoSeriesEntity series = requireOwnedSeriesForLifecycle(
                 seriesId,
-                ownerId));
+                ownerId);
+        requireLifecycleStatus(
+                series,
+                VideoSeriesLifecycleStatus.ACTIVE);
+
+        LocalDateTime archivedAt = LocalDateTime.now();
+        if (cascadeMode.includesVideos()) {
+            requireVideosExclusiveToSeries(seriesId);
+            videoSeriesItemRepo.archiveVideoPostsBySeriesId(
+                    seriesId,
+                    ownerId,
+                    PostLifecycleStatus.ACTIVE,
+                    PostLifecycleStatus.ARCHIVED,
+                    PostModerationStatus.PUBLISHED,
+                    archivedAt);
+        }
+
+        series.setLifecycleStatus(VideoSeriesLifecycleStatus.ARCHIVED);
+        series.setArchivedAt(archivedAt);
     }
 
     @Override
     @Transactional
-    public void deleteOwnedSeriesWithVideos(
+    public void restoreArchivedOwnedSeries(
             UUID seriesId,
-            UUID ownerId) {
-        VideoSeriesEntity series = requireOwnedSeriesForUpdate(
+            UUID ownerId,
+            VideoSeriesCascadeMode cascadeMode) {
+        VideoSeriesEntity series = requireOwnedSeriesForLifecycle(
                 seriesId,
                 ownerId);
+        requireLifecycleStatus(
+                series,
+                VideoSeriesLifecycleStatus.ARCHIVED);
 
-        if (videoSeriesItemRepo.countVideoLinksOutsideSeries(seriesId) > 0) {
+        LocalDateTime archivedAt = series.getArchivedAt();
+        if (cascadeMode.includesVideos()) {
+            videoSeriesItemRepo.restoreArchivedVideoPostsBySeriesId(
+                    seriesId,
+                    ownerId,
+                    PostLifecycleStatus.ARCHIVED,
+                    PostLifecycleStatus.ACTIVE,
+                    PostModerationStatus.PUBLISHED,
+                    archivedAt,
+                    LocalDateTime.now());
+        }
+
+        series.setLifecycleStatus(VideoSeriesLifecycleStatus.ACTIVE);
+        series.setArchivedAt(null);
+    }
+
+    @Override
+    @Transactional
+    public void deleteOwnedSeries(
+            UUID seriesId,
+            UUID ownerId,
+            VideoSeriesCascadeMode cascadeMode) {
+        VideoSeriesEntity series = requireOwnedSeriesForLifecycle(
+                seriesId,
+                ownerId);
+        if (series.getLifecycleStatus()
+                == VideoSeriesLifecycleStatus.DELETED) {
             throw ExceptionFactory.invalidParam(
-                    "error.videoSeries.containsSharedVideos",
+                    "error.videoSeries.lifecycleInvalid",
                     seriesId);
         }
 
-        videoSeriesItemRepo.softDeleteVideoPostsBySeriesId(
+        LocalDateTime deletedAt = LocalDateTime.now();
+        if (cascadeMode.includesVideos()) {
+            requireVideosExclusiveToSeries(seriesId);
+            videoSeriesItemRepo.softDeleteVideoPostsBySeriesId(
+                    seriesId,
+                    ownerId,
+                    PostLifecycleStatus.DELETED,
+                    deletedAt);
+        }
+
+        series.setLifecycleStatus(VideoSeriesLifecycleStatus.DELETED);
+        series.setArchivedAt(null);
+        series.setDeletedAt(deletedAt);
+    }
+
+    @Override
+    @Transactional
+    public void restoreDeletedOwnedSeries(
+            UUID seriesId,
+            UUID ownerId,
+            VideoSeriesCascadeMode cascadeMode) {
+        VideoSeriesEntity series = requireOwnedSeriesForLifecycle(
                 seriesId,
-                ownerId,
-                PostLifecycleStatus.DELETED,
-                LocalDateTime.now());
-        videoSeriesRepo.delete(series);
+                ownerId);
+        requireLifecycleStatus(
+                series,
+                VideoSeriesLifecycleStatus.DELETED);
+
+        LocalDateTime deletedAt = series.getDeletedAt();
+        if (cascadeMode.includesVideos()) {
+            videoSeriesItemRepo.restoreDeletedVideoPostsBySeriesId(
+                    seriesId,
+                    ownerId,
+                    PostLifecycleStatus.DELETED,
+                    PostLifecycleStatus.DRAFT,
+                    deletedAt,
+                    LocalDateTime.now());
+        }
+
+        series.setLifecycleStatus(VideoSeriesLifecycleStatus.ACTIVE);
+        series.setDeletedAt(null);
     }
 
     @Override
@@ -160,6 +247,12 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
     @Override
     public VideoSeriesEntity requirePublishedSeries(UUID seriesId) {
         VideoSeriesEntity series = requireSeries(seriesId);
+        if (series.getLifecycleStatus()
+                != VideoSeriesLifecycleStatus.ACTIVE) {
+            throw ExceptionFactory.notFound(
+                    "error.videoSeries.notFound",
+                    seriesId);
+        }
         boolean hasPublishedItems = videoSeriesItemRepo
                 .existsBySeries_IdAndVideoPost_Post_LifecycleStatusAndVideoPost_Post_ModerationStatus(
                         seriesId,
@@ -185,11 +278,41 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
     public VideoSeriesEntity requireOwnedSeriesForUpdate(
             UUID seriesId,
             UUID ownerId) {
+        VideoSeriesEntity series = requireOwnedSeriesForLifecycle(
+                seriesId,
+                ownerId);
+        requireLifecycleStatus(
+                series,
+                VideoSeriesLifecycleStatus.ACTIVE);
+        return series;
+    }
+
+    private VideoSeriesEntity requireOwnedSeriesForLifecycle(
+            UUID seriesId,
+            UUID ownerId) {
         VideoSeriesEntity series = videoSeriesRepo.findForUpdateById(seriesId)
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "error.videoSeries.notFound",
                         seriesId));
         return requireOwnedSeries(series, ownerId);
+    }
+
+    private void requireLifecycleStatus(
+            VideoSeriesEntity series,
+            VideoSeriesLifecycleStatus expectedStatus) {
+        if (series.getLifecycleStatus() != expectedStatus) {
+            throw ExceptionFactory.invalidParam(
+                    "error.videoSeries.lifecycleInvalid",
+                    series.getId());
+        }
+    }
+
+    private void requireVideosExclusiveToSeries(UUID seriesId) {
+        if (videoSeriesItemRepo.countVideoLinksOutsideSeries(seriesId) > 0) {
+            throw ExceptionFactory.invalidParam(
+                    "error.videoSeries.containsSharedVideos",
+                    seriesId);
+        }
     }
 
     private VideoSeriesEntity requireOwnedSeries(

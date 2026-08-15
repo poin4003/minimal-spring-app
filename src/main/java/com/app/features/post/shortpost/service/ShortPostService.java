@@ -32,6 +32,22 @@ public interface ShortPostService {
             @NotNull UUID postId,
             @NotNull UUID ownerId);
 
+    void archiveOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreArchivedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void deleteOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
+    void restoreDeletedOwnedPost(
+            @NotNull UUID postId,
+            @NotNull UUID ownerId);
+
     PublicShortPostResult getPublishedPost(@NotNull UUID postId);
 
     OwnerShortPostResult getOwnerPost(

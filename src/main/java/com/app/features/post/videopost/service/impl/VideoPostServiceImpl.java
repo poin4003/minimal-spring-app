@@ -1,5 +1,6 @@
 package com.app.features.post.videopost.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +27,7 @@ import com.app.features.post.enums.PostMediaRole;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.service.PostMediaService;
+import com.app.features.post.service.PostLifecycleService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.videopost.entity.VideoPostEntity;
 import com.app.features.post.videopost.mapper.VideoPostResultMapper;
@@ -54,6 +56,7 @@ public class VideoPostServiceImpl implements VideoPostService {
     private final UserService userSvc;
     private final ProfileService profileSvc;
     private final PostService postSvc;
+    private final PostLifecycleService postLifecycleSvc;
     private final VideoPostRepository videoPostRepo;
     private final MediaService mediaSvc;
     private final PostMediaService postMediaSvc;
@@ -144,6 +147,38 @@ public class VideoPostServiceImpl implements VideoPostService {
 
         requireVideoMedia(content.getMedia());
         postSvc.submitForReview(post);
+    }
+
+    @Override
+    @Transactional
+    public void archiveOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.archive(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void restoreArchivedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreArchived(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
+    }
+
+    @Override
+    @Transactional
+    public void deleteOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.softDelete(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
+    }
+
+    @Override
+    @Transactional
+    public void restoreDeletedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreDeleted(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
     }
 
     @Override
@@ -282,6 +317,16 @@ public class VideoPostServiceImpl implements VideoPostService {
         VideoPostEntity videoPost = requireVideoPost(postId);
         postSvc.requireOwnedPost(videoPost.getPost(), ownerId);
         return videoPost;
+    }
+
+    private PostEntity requireOwnedPostForLifecycle(
+            UUID postId,
+            UUID ownerId) {
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        if (post.getType() != PostType.VIDEO) {
+            throw ExceptionFactory.notFound("error.post.notFound", postId);
+        }
+        return post;
     }
 
     private MediaEntity requireOwnedVideoMedia(

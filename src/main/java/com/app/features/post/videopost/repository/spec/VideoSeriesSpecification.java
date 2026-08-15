@@ -16,6 +16,7 @@ import com.app.features.post.videopost.entity.VideoSeriesEntity;
 import com.app.features.post.videopost.entity.VideoSeriesEntity_;
 import com.app.features.post.videopost.entity.VideoSeriesItemEntity;
 import com.app.features.post.videopost.entity.VideoSeriesItemEntity_;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 import com.app.features.post.videopost.schema.filter.VideoSeriesFilterCriteria;
 import com.app.features.user.entity.UserBaseEntity_;
 
@@ -28,19 +29,22 @@ public final class VideoSeriesSpecification {
 
     public static Specification<VideoSeriesEntity> published(
             VideoSeriesFilterCriteria criteria) {
-        return filter(criteria, criteria.getOwnerId())
+        return filter(criteria, criteria.getOwnerId(), false)
+                .and(hasLifecycleStatus(
+                        VideoSeriesLifecycleStatus.ACTIVE))
                 .and(hasPublishedVideo());
     }
 
     public static Specification<VideoSeriesEntity> ownedBy(
             UUID ownerId,
             VideoSeriesFilterCriteria criteria) {
-        return filter(criteria, ownerId);
+        return filter(criteria, ownerId, true);
     }
 
     private static Specification<VideoSeriesEntity> filter(
             VideoSeriesFilterCriteria criteria,
-            UUID ownerId) {
+            UUID ownerId,
+            boolean includeLifecycleStatus) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -55,9 +59,22 @@ public final class VideoSeriesSpecification {
                         cb.lower(root.get(VideoSeriesEntity_.title)),
                         "%" + criteria.getTitle().trim().toLowerCase(Locale.ROOT) + "%"));
             }
+            if (includeLifecycleStatus
+                    && criteria.getLifecycleStatus() != null) {
+                predicates.add(cb.equal(
+                        root.get(VideoSeriesEntity_.lifecycleStatus),
+                        criteria.getLifecycleStatus()));
+            }
 
             return cb.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    private static Specification<VideoSeriesEntity> hasLifecycleStatus(
+            VideoSeriesLifecycleStatus lifecycleStatus) {
+        return (root, query, cb) -> cb.equal(
+                root.get(VideoSeriesEntity_.lifecycleStatus),
+                lifecycleStatus);
     }
 
     private static Specification<VideoSeriesEntity> hasPublishedVideo() {

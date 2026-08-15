@@ -1,13 +1,20 @@
 package com.app.features.post.videopost.entity;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import com.app.core.db.BaseAuditEntity;
 import com.app.features.media.entity.MediaEntity;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 import com.app.features.user.entity.UserBaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,8 +31,14 @@ import lombok.ToString;
 @Entity
 @Table(name = "video_series", indexes = {
         @Index(
-                name = "idx_video_series_owner_created_at",
-                columnList = "owner_id, created_at")
+                name = "idx_video_series_owner_lifecycle_created_at",
+                columnList = "owner_id, lifecycle_status, created_at"),
+        @Index(
+                name = "idx_video_series_lifecycle_created_at",
+                columnList = "lifecycle_status, created_at"),
+        @Index(
+                name = "idx_video_series_lifecycle_deleted_at",
+                columnList = "lifecycle_status, deleted_at")
 })
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -56,4 +69,16 @@ public class VideoSeriesEntity extends BaseAuditEntity {
     @PositiveOrZero
     @Column(name = "video_count", nullable = false)
     private int videoCount;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "lifecycle_status", nullable = false)
+    private VideoSeriesLifecycleStatus lifecycleStatus =
+            VideoSeriesLifecycleStatus.ACTIVE;
+
+    @Column(name = "archived_at")
+    private LocalDateTime archivedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

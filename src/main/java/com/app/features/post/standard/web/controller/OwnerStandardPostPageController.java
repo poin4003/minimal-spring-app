@@ -25,8 +25,6 @@ import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
-import com.app.features.post.enums.PostType;
-import com.app.features.post.service.PostService;
 import com.app.features.post.standard.entity.StandardPostEntity_;
 import com.app.features.post.standard.schema.filter.OwnerStandardPostFilterCriteria;
 import com.app.features.post.standard.schema.result.OwnerStandardPostResult;
@@ -80,7 +78,6 @@ public class OwnerStandardPostPageController {
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
-    private final PostService postSvc;
     private final StandardPostService standardPostSvc;
     private final ProfileService profileSvc;
     private final OwnerStandardPostViewFactory ownerPostViewFactory;
@@ -277,10 +274,9 @@ public class OwnerStandardPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.archiveOwnedPost(
+        standardPostSvc.archiveOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.STANDARD);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -292,10 +288,9 @@ public class OwnerStandardPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.restoreArchivedOwnedPost(
+        standardPostSvc.restoreArchivedOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.STANDARD);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -307,10 +302,9 @@ public class OwnerStandardPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.deleteOwnedPost(
+        standardPostSvc.deleteOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.STANDARD);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -322,10 +316,9 @@ public class OwnerStandardPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.restoreDeletedOwnedPost(
+        standardPostSvc.restoreDeletedOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.STANDARD);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 

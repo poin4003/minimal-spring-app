@@ -25,8 +25,6 @@ import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
-import com.app.features.post.enums.PostType;
-import com.app.features.post.service.PostService;
 import com.app.features.post.shortpost.entity.ShortPostEntity_;
 import com.app.features.post.shortpost.schema.filter.OwnerShortPostFilterCriteria;
 import com.app.features.post.shortpost.schema.result.OwnerShortPostResult;
@@ -80,7 +78,6 @@ public class OwnerShortPostPageController {
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
-    private final PostService postSvc;
     private final ShortPostService shortPostSvc;
     private final ProfileService profileSvc;
     private final OwnerShortPostViewFactory ownerShortViewFactory;
@@ -270,10 +267,9 @@ public class OwnerShortPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.archiveOwnedPost(
+        shortPostSvc.archiveOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.SHORT);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -285,10 +281,9 @@ public class OwnerShortPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.restoreArchivedOwnedPost(
+        shortPostSvc.restoreArchivedOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.SHORT);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -300,10 +295,9 @@ public class OwnerShortPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.deleteOwnedPost(
+        shortPostSvc.deleteOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.SHORT);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 
@@ -315,10 +309,9 @@ public class OwnerShortPostPageController {
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        postSvc.restoreDeletedOwnedPost(
+        shortPostSvc.restoreDeletedOwnedPost(
                 postId,
-                currentUser.getUserId(),
-                PostType.SHORT);
+                currentUser.getUserId());
         return completeAction(request, response, detail);
     }
 

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.media.schema.result.PublicMediaResult;
+import com.app.features.post.videopost.enums.VideoSeriesLifecycleStatus;
 import com.app.features.user.schema.result.UserPublicResult;
 
 import lombok.Data;
@@ -22,6 +23,12 @@ public class VideoSeriesResult {
     private String description;
 
     private int videoCount;
+
+    private VideoSeriesLifecycleStatus lifecycleStatus;
+
+    private LocalDateTime archivedAt;
+
+    private LocalDateTime deletedAt;
 
     private LocalDateTime createdAt;
 

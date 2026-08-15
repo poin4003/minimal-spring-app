@@ -1,6 +1,5 @@
 package com.app.features.post.service.impl;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -65,87 +64,6 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    @Transactional
-    public void archiveOwnedPost(
-            UUID postId,
-            UUID ownerId,
-            PostType expectedType) {
-        PostEntity post = requireOwnedPostOfTypeForUpdate(
-                postId,
-                ownerId,
-                expectedType);
-        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
-                || post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.lifecycleInvalid",
-                    post.getId());
-        }
-
-        post.setLifecycleStatus(PostLifecycleStatus.ARCHIVED);
-    }
-
-    @Override
-    @Transactional
-    public void restoreArchivedOwnedPost(
-            UUID postId,
-            UUID ownerId,
-            PostType expectedType) {
-        PostEntity post = requireOwnedPostOfTypeForUpdate(
-                postId,
-                ownerId,
-                expectedType);
-        if (post.getLifecycleStatus() != PostLifecycleStatus.ARCHIVED
-                || post.getModerationStatus() != PostModerationStatus.PUBLISHED) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.lifecycleInvalid",
-                    post.getId());
-        }
-
-        post.setLifecycleStatus(PostLifecycleStatus.ACTIVE);
-    }
-
-    @Override
-    @Transactional
-    public void deleteOwnedPost(
-            UUID postId,
-            UUID ownerId,
-            PostType expectedType) {
-        PostEntity post = requireOwnedPostOfTypeForUpdate(
-                postId,
-                ownerId,
-                expectedType);
-        if (post.getLifecycleStatus() == PostLifecycleStatus.DELETED) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.lifecycleInvalid",
-                    post.getId());
-        }
-
-        post.setLifecycleStatus(PostLifecycleStatus.DELETED);
-        post.setDeletedAt(LocalDateTime.now());
-    }
-
-    @Override
-    @Transactional
-    public void restoreDeletedOwnedPost(
-            UUID postId,
-            UUID ownerId,
-            PostType expectedType) {
-        PostEntity post = requireOwnedPostOfTypeForUpdate(
-                postId,
-                ownerId,
-                expectedType);
-        if (post.getLifecycleStatus() != PostLifecycleStatus.DELETED) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.lifecycleInvalid",
-                    post.getId());
-        }
-
-        post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
-        post.setDeletedAt(null);
-        clearModeration(post);
-    }
-
-    @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public PostEntity requireOwnedPostForUpdate(UUID postId, UUID ownerId) {
         PostEntity post = postRepo.findForUpdateById(postId)
@@ -201,19 +119,6 @@ public class PostServiceImpl implements PostService {
     @Override
     public void deletePost(PostEntity post) {
         postRepo.delete(post);
-    }
-
-    private PostEntity requireOwnedPostOfTypeForUpdate(
-            UUID postId,
-            UUID ownerId,
-            PostType expectedType) {
-        PostEntity post = requireOwnedPostForUpdate(postId, ownerId);
-        if (post.getType() != expectedType) {
-            throw ExceptionFactory.notFound(
-                    "error.post.notFound",
-                    postId);
-        }
-        return post;
     }
 
     private void clearModeration(PostEntity post) {
