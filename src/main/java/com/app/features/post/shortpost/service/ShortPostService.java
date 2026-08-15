@@ -28,23 +28,7 @@ public interface ShortPostService {
             @NotNull UUID ownerId,
             @NotNull @Valid UpdateShortPostPayload payload);
 
-    OwnerShortPostResult submitOwnedPostForReview(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerShortPostResult archiveOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerShortPostResult restoreArchivedOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerShortPostResult restoreDeletedOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    void deleteOwnedPost(
+    void submitOwnedPostForReview(
             @NotNull UUID postId,
             @NotNull UUID ownerId);
 

@@ -17,5 +17,5 @@ public class OwnerVideoPostResult {
 
     private String description;
 
-    private PostMediaResult source;
+    private PostMediaResult content;
 }

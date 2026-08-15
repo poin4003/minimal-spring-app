@@ -14,5 +14,5 @@ public class PublicVideoPostResult {
 
     private String description;
 
-    private PostMediaResult source;
+    private PostMediaResult content;
 }

@@ -27,19 +27,7 @@ public interface StandardPostService {
             @NotNull UUID ownerId,
             @NotNull @Valid UpdateStandardPostPayload payload);
 
-    OwnerStandardPostResult submitOwnedPostForReview(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerStandardPostResult archiveOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerStandardPostResult restoreArchivedOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
-
-    OwnerStandardPostResult restoreDeletedOwnedPost(
+    void submitOwnedPostForReview(
             @NotNull UUID postId,
             @NotNull UUID ownerId);
 
@@ -50,10 +38,6 @@ public interface StandardPostService {
             @NotNull UUID ownerId);
 
     StandardPostEntity requireStandardPost(@NotNull UUID postId);
-
-    void deleteOwnedPost(
-            @NotNull UUID postId,
-            @NotNull UUID ownerId);
 
     Page<PublicStandardPostResult> getPublishedPosts(
             @NotNull PublicStandardPostFilterCriteria criteria,

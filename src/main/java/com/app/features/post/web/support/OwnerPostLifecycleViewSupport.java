@@ -198,7 +198,7 @@ public class OwnerPostLifecycleViewSupport {
             boolean detailMode,
             String... segments) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromPath(ownerPath)
-                .pathSegment(postId.toString(), "actions", action.getPath());
+                .pathSegment(postId.toString(), action.getPath());
         for (String segment : segments) {
             builder.pathSegment(segment);
         }

@@ -115,6 +115,11 @@ app:
             ffprobe-executable: ${FFPROBE_PATH:ffprobe}
             segment-duration-seconds: ${FFMPEG_SEGMENT_DURATION_SECONDS:6}
             process-timeout-minutes: ${FFMPEG_PROCESS_TIMEOUT_MINUTES:30}
+            machine:
+                video-encoder: ${MEDIA_VIDEO_ENCODER:auto}
+                threads: ${MEDIA_FFMPEG_THREADS:0}
+                hardware-accel: ${MEDIA_HARDWARE_ACCEL:none}
+                fallback-to-software: ${MEDIA_FFMPEG_FALLBACK_TO_SOFTWARE:true}
         maintenance:
             pending-recovery-ttl: ${MEDIA_PENDING_RECOVERY_TTL:15m}
             staging-ttl: ${MEDIA_STAGING_TTL:1h}

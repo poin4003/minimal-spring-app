@@ -2,6 +2,7 @@ package com.app.features.post.service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.app.features.media.entity.MediaEntity;
@@ -16,6 +17,10 @@ public interface PostMediaService {
     List<PostMediaEntity> findAttachments(UUID postId, PostMediaRole role);
 
     List<PostMediaEntity> findAttachments(
+            Collection<UUID> postIds,
+            PostMediaRole role);
+
+    Map<UUID, List<PostMediaEntity>> findAttachmentsByPostId(
             Collection<UUID> postIds,
             PostMediaRole role);
 

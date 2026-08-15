@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.jobrunr.jobs.context.JobContext;
@@ -410,7 +412,14 @@ public class MediaServiceImpl implements MediaService {
                     "error.media.ownedSelectionInvalid");
         }
 
-        return media;
+        Map<UUID, MediaEntity> mediaById = media.stream()
+                .collect(Collectors.toMap(
+                        item -> item.getId(),
+                        item -> item));
+
+        return distinctIds.stream()
+                .map(mediaId -> mediaById.get(mediaId))
+                .toList();
     }
 
     private void requireReadyActiveMedia(

@@ -5,6 +5,5 @@ public enum PostMediaRole {
     CONTENT,
     GALLERY,
     TRAILER,
-    EPISODE,
-    SOURCE
+    EPISODE
 }

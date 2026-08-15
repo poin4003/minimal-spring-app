@@ -407,6 +407,25 @@ public class AppProperties {
 
         @Positive
         private int processTimeoutMinutes = 30;
+
+        @Valid
+        private final Machine machine = new Machine();
+    }
+
+    @Data
+    public static class Machine {
+        @NotBlank
+        @Pattern(regexp = "^[a-z0-9_:-]+$")
+        private String videoEncoder = "auto";
+
+        @Min(0)
+        private int threads = 0;
+
+        @NotBlank
+        @Pattern(regexp = "^[a-z0-9_:-]+$")
+        private String hardwareAccel = "none";
+
+        private boolean fallbackToSoftware = true;
     }
 
     @Data

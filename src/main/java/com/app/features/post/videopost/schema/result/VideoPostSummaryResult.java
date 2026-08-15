@@ -1,16 +1,20 @@
 package com.app.features.post.videopost.schema.result;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import com.app.features.post.schema.result.PostMediaResult;
-import com.app.features.post.schema.result.PostSummaryResult;
 
 import lombok.Data;
 
 @Data
 public class VideoPostSummaryResult {
 
-    private PostSummaryResult post;
+    private UUID id;
 
     private String title;
 
-    private PostMediaResult source;
+    private LocalDateTime publishedAt;
+
+    private PostMediaResult content;
 }
