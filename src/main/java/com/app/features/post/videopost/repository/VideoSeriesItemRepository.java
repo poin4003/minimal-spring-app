@@ -3,6 +3,7 @@ package com.app.features.post.videopost.repository;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -32,7 +33,7 @@ public interface VideoSeriesItemRepository
             VideoSeriesItemEntity_.VIDEO_POST + "." + VideoPostEntity_.POST
                     + "." + PostEntity_.AUTHOR
     })
-    Page<VideoSeriesItemEntity> findAllBySeries_IdOrderByPositionAsc(
+    Page<VideoSeriesItemEntity> findAllBySeries_Id(
             UUID seriesId,
             Pageable pageable);
 
@@ -42,7 +43,7 @@ public interface VideoSeriesItemRepository
             VideoSeriesItemEntity_.VIDEO_POST + "." + VideoPostEntity_.POST
                     + "." + PostEntity_.AUTHOR
     })
-    Page<VideoSeriesItemEntity> findAllBySeries_IdAndVideoPost_Post_LifecycleStatusAndVideoPost_Post_ModerationStatusOrderByPositionAsc(
+    Page<VideoSeriesItemEntity> findAllBySeries_IdAndVideoPost_Post_LifecycleStatusAndVideoPost_Post_ModerationStatus(
             UUID seriesId,
             PostLifecycleStatus lifecycleStatus,
             PostModerationStatus moderationStatus,
@@ -63,10 +64,6 @@ public interface VideoSeriesItemRepository
             PostLifecycleStatus lifecycleStatus,
             PostModerationStatus moderationStatus);
 
-    long deleteByIdAndSeries_Id(
-            UUID itemId,
-            UUID seriesId);
-
     @Query("""
             SELECT COALESCE(MAX(item.position), -1)
             FROM VideoSeriesItemEntity item
@@ -74,6 +71,43 @@ public interface VideoSeriesItemRepository
             """)
     int findMaxPositionBySeriesId(
             @Param("seriesId") UUID seriesId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT item
+            FROM VideoSeriesItemEntity item
+            WHERE item.id = :itemId
+              AND item.series.id = :seriesId
+            """)
+    Optional<VideoSeriesItemEntity> findForUpdate(
+            @Param("seriesId") UUID seriesId,
+            @Param("itemId") UUID itemId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE VideoSeriesItemEntity item
+            SET item.position = item.position + :offset
+            WHERE item.series.id = :seriesId
+              AND item.position BETWEEN :startPosition AND :endPosition
+            """)
+    int stagePositions(
+            @Param("seriesId") UUID seriesId,
+            @Param("startPosition") int startPosition,
+            @Param("endPosition") int endPosition,
+            @Param("offset") int offset);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+            UPDATE VideoSeriesItemEntity item
+            SET item.position = item.position - :normalizationOffset
+            WHERE item.series.id = :seriesId
+              AND item.position BETWEEN :stagedStart AND :stagedEnd
+            """)
+    int normalizeStagedPositions(
+            @Param("seriesId") UUID seriesId,
+            @Param("stagedStart") int stagedStart,
+            @Param("stagedEnd") int stagedEnd,
+            @Param("normalizationOffset") int normalizationOffset);
 
     @Query("""
             SELECT COUNT(sharedItem)
@@ -186,14 +220,4 @@ public interface VideoSeriesItemRepository
             @Param("deletedAt") LocalDateTime deletedAt,
             @Param("restoredAt") LocalDateTime restoredAt);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @EntityGraph(attributePaths = VideoSeriesItemEntity_.VIDEO_POST)
-    @Query("""
-            SELECT item
-            FROM VideoSeriesItemEntity item
-            WHERE item.series.id = :seriesId
-            ORDER BY item.position ASC
-            """)
-    List<VideoSeriesItemEntity> findAllForUpdateBySeriesId(
-            @Param("seriesId") UUID seriesId);
 }

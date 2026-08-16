@@ -22,7 +22,6 @@ import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
 import com.app.features.post.videopost.entity.VideoPostEntity_;
 import com.app.features.post.videopost.entity.VideoSeriesEntity_;
-import com.app.features.post.videopost.entity.VideoSeriesItemEntity_;
 import com.app.features.post.videopost.schema.filter.PublicVideoPostFilterCriteria;
 import com.app.features.post.videopost.schema.filter.VideoSeriesFilterCriteria;
 import com.app.features.post.videopost.schema.result.PublicVideoPostResult;
@@ -32,6 +31,7 @@ import com.app.features.post.videopost.service.VideoPostService;
 import com.app.features.post.videopost.service.VideoSeriesItemService;
 import com.app.features.post.videopost.service.VideoSeriesService;
 import com.app.features.post.videopost.web.enums.VideoLibraryTab;
+import com.app.features.post.videopost.web.support.VideoSeriesItemPageSupport;
 import com.app.features.post.videopost.web.view.PublicVideoCardView;
 import com.app.features.post.videopost.web.view.PublicVideoDetailPageView;
 import com.app.features.post.videopost.web.view.PublicVideoLibraryPageView;
@@ -57,6 +57,8 @@ import lombok.RequiredArgsConstructor;
 public class PublicVideoPageController {
 
     private static final String RESULTS_ID = "video-library-results";
+    private static final String SERIES_ITEMS_ID = "public-video-series-items";
+    private static final String PLAYLIST_ID = "public-video-playlist";
 
     private static final UiPageDefaults VIDEO_PAGE_DEFAULTS =
             UiPageDefaults.builder()
@@ -76,20 +78,13 @@ public class PublicVideoPageController {
                     .sortDirection(Sort.Direction.DESC)
                     .build();
 
-    private static final UiPageDefaults ITEM_PAGE_DEFAULTS =
-            UiPageDefaults.builder()
-                    .page(0)
-                    .size(20)
-                    .sortBy(VideoSeriesItemEntity_.POSITION)
-                    .sortDirection(Sort.Direction.ASC)
-                    .build();
-
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final VideoPostService videoPostSvc;
     private final VideoSeriesService videoSeriesSvc;
     private final VideoSeriesItemService videoSeriesItemSvc;
+    private final VideoSeriesItemPageSupport videoSeriesItemPageSupport;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
@@ -204,17 +199,20 @@ public class PublicVideoPageController {
             @Valid UiPageQuery query,
             Model model) {
         VideoSeriesResult series = videoSeriesSvc.getPublishedSeries(seriesId);
+        UiPageQuery itemQuery = videoSeriesItemPageSupport.normalize(query);
         Page<VideoSeriesItemResult> itemPage =
                 videoSeriesItemSvc.getPublishedItems(
                         seriesId,
-                        query.toPageable(ITEM_PAGE_DEFAULTS));
+                        itemQuery.toPageable(
+                                videoSeriesItemPageSupport.getDefaults()));
         UiPaginationView pagination = uiPaginationFactory.build(
                 itemPage,
                 uiPaginationPathBuilder.build(
                         buildSeriesPath(seriesId),
                         request,
-                        query,
-                        ITEM_PAGE_DEFAULTS));
+                        itemQuery,
+                        videoSeriesItemPageSupport.getDefaults()),
+                UiHtmxNavigationView.forComponent(SERIES_ITEMS_ID));
         PublicVideoSeriesDetailPageView page =
                 PublicVideoSeriesDetailPageView.builder()
                         .title(series.getTitle())
@@ -226,8 +224,15 @@ public class PublicVideoPageController {
                         .items(buildSeriesItemViews(
                                 itemPage,
                                 seriesId,
-                                null))
+                                null,
+                                itemQuery))
                         .pagination(pagination)
+                        .itemSort(videoSeriesItemPageSupport.buildSort(
+                                itemQuery,
+                                sortQuery -> sortQuery.toUri(
+                                        buildSeriesPath(seriesId),
+                                        videoSeriesItemPageSupport
+                                                .getDefaults())))
                         .build();
         model.addAttribute(PublicVideoSeriesDetailPageView.ATTRIBUTE, page);
         return "post/video/public/series-detail";
@@ -239,41 +244,50 @@ public class PublicVideoPageController {
             HttpServletRequest request,
             UiPageQuery query) {
         VideoSeriesResult series = videoSeriesSvc.getPublishedSeries(seriesId);
-        UiPageQuery playlistQuery = query.copy();
+        UiPageQuery playlistQuery = videoSeriesItemPageSupport.normalize(query);
         Page<VideoSeriesItemResult> itemPage = videoSeriesItemSvc
                 .getPublishedItems(
                         seriesId,
-                        playlistQuery.toPageable(ITEM_PAGE_DEFAULTS));
+                        playlistQuery.toPageable(
+                                videoSeriesItemPageSupport.getDefaults()));
         UiPaginationView pagination = uiPaginationFactory.build(
                 itemPage,
                 uiPaginationPathBuilder.build(
                         buildVideoPath(activePostId),
                         request,
                         playlistQuery,
-                        ITEM_PAGE_DEFAULTS));
+                        videoSeriesItemPageSupport.getDefaults()),
+                UiHtmxNavigationView.forComponent(PLAYLIST_ID));
 
         return PublicVideoPlaylistView.builder()
                 .series(series)
                 .items(buildSeriesItemViews(
                         itemPage,
                         seriesId,
-                        activePostId))
+                        activePostId,
+                        playlistQuery))
                 .pagination(pagination)
+                .itemSort(videoSeriesItemPageSupport.buildSort(
+                        playlistQuery,
+                        sortQuery -> buildSeriesVideoPath(
+                                activePostId,
+                                seriesId,
+                                sortQuery)))
                 .build();
     }
 
     private List<PublicVideoSeriesItemView> buildSeriesItemViews(
             Page<VideoSeriesItemResult> itemPage,
             UUID seriesId,
-            UUID activePostId) {
+            UUID activePostId,
+            UiPageQuery query) {
         return itemPage.getContent().stream()
                 .map(item -> PublicVideoSeriesItemView.builder()
                         .item(item)
                         .detailPath(buildSeriesVideoPath(
                                 item.getVideo().getId(),
                                 seriesId,
-                                itemPage.getNumber(),
-                                itemPage.getSize()))
+                                query))
                         .active(item.getVideo().getId().equals(activePostId))
                         .build())
                 .toList();
@@ -312,12 +326,16 @@ public class PublicVideoPageController {
     private String buildSeriesVideoPath(
             UUID postId,
             UUID seriesId,
-            int page,
-            int size) {
+            UiPageQuery query) {
+        UiPageQuery normalized = videoSeriesItemPageSupport.normalize(query);
         return UriComponentsBuilder.fromPath(buildVideoPath(postId))
                 .queryParam("seriesId", seriesId)
-                .queryParam("page", page)
-                .queryParam("size", size)
+                .queryParam("page", normalized.getPage())
+                .queryParam("size", normalized.getSize())
+                .queryParam("sortBy", normalized.getSortBy())
+                .queryParam(
+                        "sortDirection",
+                        normalized.getSortDirection().name())
                 .build()
                 .encode()
                 .toUriString();

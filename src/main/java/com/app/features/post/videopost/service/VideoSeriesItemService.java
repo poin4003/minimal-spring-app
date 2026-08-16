@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 import com.app.features.post.videopost.schema.payload.AddVideoSeriesItemsPayload;
 import com.app.features.post.videopost.schema.payload.CreateVideoSeriesPostsPayload;
-import com.app.features.post.videopost.schema.payload.ReorderVideoSeriesItemsPayload;
+import com.app.features.post.videopost.schema.payload.MoveVideoSeriesItemPayload;
 import com.app.features.post.videopost.schema.result.VideoSeriesItemResult;
 
 import jakarta.validation.Valid;
@@ -30,10 +30,11 @@ public interface VideoSeriesItemService {
             @NotNull UUID itemId,
             @NotNull UUID ownerId);
 
-    void reorderItems(
+    void moveItem(
             @NotNull UUID seriesId,
+            @NotNull UUID itemId,
             @NotNull UUID ownerId,
-            @NotNull @Valid ReorderVideoSeriesItemsPayload payload);
+            @NotNull @Valid MoveVideoSeriesItemPayload payload);
 
     Page<VideoSeriesItemResult> getPublishedItems(
             @NotNull UUID seriesId,

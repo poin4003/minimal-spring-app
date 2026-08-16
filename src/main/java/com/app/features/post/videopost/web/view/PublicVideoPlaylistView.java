@@ -15,4 +15,5 @@ public class PublicVideoPlaylistView {
     private final VideoSeriesResult series;
     private final List<PublicVideoSeriesItemView> items;
     private final UiPaginationView pagination;
+    private final VideoSeriesItemSortView itemSort;
 }

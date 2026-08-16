@@ -3,6 +3,7 @@ package com.app.features.post.videopost.web.controller;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.IntFunction;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -29,10 +30,10 @@ import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
 import com.app.features.post.videopost.entity.VideoPostEntity_;
-import com.app.features.post.videopost.entity.VideoSeriesItemEntity_;
 import com.app.features.post.videopost.enums.VideoSeriesCascadeMode;
 import com.app.features.post.videopost.schema.filter.OwnerVideoPostFilterCriteria;
 import com.app.features.post.videopost.schema.payload.AddVideoSeriesItemsPayload;
+import com.app.features.post.videopost.schema.payload.MoveVideoSeriesItemPayload;
 import com.app.features.post.videopost.schema.result.OwnerVideoPostResult;
 import com.app.features.post.videopost.schema.result.VideoSeriesItemResult;
 import com.app.features.post.videopost.schema.result.VideoSeriesResult;
@@ -40,6 +41,7 @@ import com.app.features.post.videopost.service.VideoPostService;
 import com.app.features.post.videopost.service.VideoSeriesItemService;
 import com.app.features.post.videopost.service.VideoSeriesService;
 import com.app.features.post.videopost.web.enums.VideoSeriesActionType;
+import com.app.features.post.videopost.web.support.VideoSeriesItemPageSupport;
 import com.app.features.post.videopost.web.view.OwnerVideoSeriesCardView;
 import com.app.features.post.videopost.web.view.OwnerVideoSeriesDetailPageView;
 import com.app.features.post.videopost.web.view.OwnerVideoSeriesItemsPageView;
@@ -67,14 +69,6 @@ public class OwnerVideoSeriesPageController {
     private static final String ITEMS_ID = "owner-video-series-items";
     private static final String AVAILABLE_ID = "available-series-videos";
 
-    private static final UiPageDefaults ITEM_PAGE_DEFAULTS =
-            UiPageDefaults.builder()
-                    .page(0)
-                    .size(20)
-                    .sortBy(VideoSeriesItemEntity_.POSITION)
-                    .sortDirection(Sort.Direction.ASC)
-                    .build();
-
     private static final UiPageDefaults VIDEO_PAGE_DEFAULTS =
             UiPageDefaults.builder()
                     .page(0)
@@ -90,6 +84,7 @@ public class OwnerVideoSeriesPageController {
     private final SocialShellFactory socialShellFactory;
     private final VideoSeriesService videoSeriesSvc;
     private final VideoSeriesItemService videoSeriesItemSvc;
+    private final VideoSeriesItemPageSupport videoSeriesItemPageSupport;
     private final VideoPostService videoPostSvc;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder paginationPathBuilder;
@@ -217,15 +212,46 @@ public class OwnerVideoSeriesPageController {
             @PathVariable UUID seriesId,
             @PathVariable UUID itemId,
             HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletResponse response,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
         videoSeriesItemSvc.removeItem(
                 seriesId,
                 itemId,
                 currentUser.getUserId());
-        return HtmxRequestSupport.redirectView(
+        return itemMutationResponse(
+                currentUser,
                 request,
                 response,
-                buildDetailPath(seriesId));
+                seriesId,
+                query,
+                model);
+    }
+
+    @PostMapping("/{seriesId}/items/{itemId}/move")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String moveItem(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID seriesId,
+            @PathVariable UUID itemId,
+            @Valid @ModelAttribute("form")
+            MoveVideoSeriesItemPayload form,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        videoSeriesItemSvc.moveItem(
+                seriesId,
+                itemId,
+                currentUser.getUserId(),
+                form);
+        return itemMutationResponse(
+                currentUser,
+                request,
+                response,
+                seriesId,
+                query,
+                model);
     }
 
     @GetMapping("/{seriesId}/{action}/confirm")
@@ -307,22 +333,45 @@ public class OwnerVideoSeriesPageController {
             UiPageQuery query,
             VideoSeriesActionModalView modal,
             String openModalId) {
+        return buildDetail(
+                currentUser,
+                request,
+                seriesId,
+                query,
+                modal,
+                openModalId,
+                true);
+    }
+
+    private OwnerVideoSeriesDetailPageView buildDetail(
+            UserPrincipal currentUser,
+            HttpServletRequest request,
+            UUID seriesId,
+            UiPageQuery query,
+            VideoSeriesActionModalView modal,
+            String openModalId,
+            boolean preserveRequestParameters) {
         VideoSeriesResult series = videoSeriesSvc.getOwnedSeries(
                 seriesId,
                 currentUser.getUserId());
+        UiPageQuery itemQuery = videoSeriesItemPageSupport.normalize(query);
         Page<VideoSeriesItemResult> itemPage =
                 videoSeriesItemSvc.getOwnedItems(
                         seriesId,
                         currentUser.getUserId(),
-                        query.toPageable(ITEM_PAGE_DEFAULTS));
+                        itemQuery.toPageable(
+                                videoSeriesItemPageSupport.getDefaults()));
         String detailPath = buildDetailPath(seriesId);
-        UiPaginationView pagination = uiPaginationFactory.build(
-                itemPage,
-                paginationPathBuilder.build(
+        IntFunction<String> pagePathBuilder = preserveRequestParameters
+                ? paginationPathBuilder.build(
                         detailPath,
                         request,
-                        query,
-                        ITEM_PAGE_DEFAULTS),
+                        itemQuery,
+                        videoSeriesItemPageSupport.getDefaults())
+                : buildCleanItemPagePath(detailPath, itemQuery);
+        UiPaginationView pagination = uiPaginationFactory.build(
+                itemPage,
+                pagePathBuilder,
                 UiHtmxNavigationView.forComponent(ITEMS_ID));
         return OwnerVideoSeriesDetailPageView.builder()
                 .title(series.getTitle())
@@ -340,11 +389,77 @@ public class OwnerVideoSeriesPageController {
                         .build()
                         .encode()
                         .toUriString())
-                .removeItemPathPrefix(detailPath + "/items/")
+                .itemActionPathPrefix(detailPath + "/items/")
+                .itemSort(videoSeriesItemPageSupport.buildSort(
+                        itemQuery,
+                        sortQuery -> sortQuery.toUri(
+                                detailPath,
+                                videoSeriesItemPageSupport.getDefaults())))
                 .actions(buildActions(series))
                 .actionModal(modal)
                 .openModalId(openModalId)
                 .build();
+    }
+
+    private String itemMutationResponse(
+            UserPrincipal currentUser,
+            HttpServletRequest request,
+            HttpServletResponse response,
+            UUID seriesId,
+            UiPageQuery query,
+            Model model) {
+        UiPageQuery itemQuery = videoSeriesItemPageSupport.normalize(query);
+        OwnerVideoSeriesDetailPageView page = buildDetail(
+                currentUser,
+                request,
+                seriesId,
+                itemQuery,
+                null,
+                null,
+                false);
+        if (page.getItems().isEmpty()
+                && page.getPagination().getCurrentPage() > 0) {
+            UiPageQuery previousPageQuery = itemQuery.copy();
+            previousPageQuery.setPage(
+                    previousPageQuery.getPage() - 1);
+            page = buildDetail(
+                    currentUser,
+                    request,
+                    seriesId,
+                    previousPageQuery,
+                    null,
+                    null,
+                    false);
+            itemQuery = previousPageQuery;
+        }
+
+        String currentPath = itemQuery.toUri(
+                buildDetailPath(seriesId),
+                videoSeriesItemPageSupport.getDefaults());
+
+        if (HtmxRequestSupport.isHtmxRequest(request)) {
+            HtmxRequestSupport.pushUrl(response, currentPath);
+            model.addAttribute(
+                    OwnerVideoSeriesDetailPageView.ATTRIBUTE,
+                    page);
+            return "post/video/owner/fragments/series-items"
+                    + " :: items (page=${page})";
+        }
+
+        return "redirect:" + currentPath;
+    }
+
+    private IntFunction<String> buildCleanItemPagePath(
+            String detailPath,
+            UiPageQuery query) {
+        UiPageQuery baseQuery = videoSeriesItemPageSupport.normalize(query);
+        return pageNumber -> {
+            UiPageQuery pageQuery = baseQuery.copy();
+            pageQuery.setPage(pageNumber);
+            return pageQuery.toUri(
+                    detailPath,
+                    videoSeriesItemPageSupport.getDefaults());
+        };
     }
 
     private OwnerVideoSeriesItemsPageView buildAddItemsPage(

@@ -24,7 +24,8 @@ public class OwnerVideoSeriesDetailPageView {
     private final UiPaginationView pagination;
     private final String addItemsPath;
     private final String createVideoPath;
-    private final String removeItemPathPrefix;
+    private final String itemActionPathPrefix;
+    private final VideoSeriesItemSortView itemSort;
     private final List<VideoSeriesActionView> actions;
     private final VideoSeriesActionModalView actionModal;
     private final String openModalId;

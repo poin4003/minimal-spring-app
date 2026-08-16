@@ -1,11 +1,8 @@
 package com.app.features.post.videopost.service.impl;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.data.domain.Page;
@@ -25,7 +22,7 @@ import com.app.features.post.videopost.mapper.VideoSeriesResultMapper;
 import com.app.features.post.videopost.repository.VideoSeriesItemRepository;
 import com.app.features.post.videopost.schema.payload.AddVideoSeriesItemsPayload;
 import com.app.features.post.videopost.schema.payload.CreateVideoSeriesPostsPayload;
-import com.app.features.post.videopost.schema.payload.ReorderVideoSeriesItemsPayload;
+import com.app.features.post.videopost.schema.payload.MoveVideoSeriesItemPayload;
 import com.app.features.post.videopost.schema.result.VideoSeriesItemResult;
 import com.app.features.post.videopost.service.VideoPostService;
 import com.app.features.post.videopost.service.VideoSeriesItemService;
@@ -97,14 +94,25 @@ public class VideoSeriesItemServiceImpl implements VideoSeriesItemService {
             UUID ownerId) {
         VideoSeriesEntity series = videoSeriesSvc
                 .requireOwnedSeriesForUpdate(seriesId, ownerId);
-        long deletedCount = videoSeriesItemRepo.deleteByIdAndSeries_Id(
-                itemId,
-                seriesId);
+        VideoSeriesItemEntity item = videoSeriesItemRepo
+                .findForUpdate(seriesId, itemId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.videoSeries.itemNotFound",
+                        itemId));
+        int removedPosition = item.getPosition();
+        int maxPosition = videoSeriesItemRepo
+                .findMaxPositionBySeriesId(seriesId);
 
-        if (deletedCount == 0) {
-            throw ExceptionFactory.notFound(
-                    "error.videoSeries.itemNotFound",
-                    itemId);
+        videoSeriesItemRepo.delete(item);
+        videoSeriesItemRepo.flush();
+
+        if (removedPosition < maxPosition) {
+            shiftPositions(
+                    seriesId,
+                    removedPosition + 1,
+                    maxPosition,
+                    maxPosition,
+                    -1);
         }
 
         series.setVideoCount(series.getVideoCount() - 1);
@@ -112,55 +120,54 @@ public class VideoSeriesItemServiceImpl implements VideoSeriesItemService {
 
     @Override
     @Transactional
-    public void reorderItems(
+    public void moveItem(
             UUID seriesId,
+            UUID itemId,
             UUID ownerId,
-            ReorderVideoSeriesItemsPayload payload) {
+            MoveVideoSeriesItemPayload payload) {
         videoSeriesSvc.requireOwnedSeriesForUpdate(seriesId, ownerId);
-        List<VideoSeriesItemEntity> currentItems = videoSeriesItemRepo
-                .findAllForUpdateBySeriesId(seriesId);
-        List<UUID> orderedItemIds = payload.getSeriesItemIds();
-        Set<UUID> distinctItemIds = new LinkedHashSet<>(orderedItemIds);
-        Set<UUID> currentItemIds = currentItems.stream()
-                .map(item -> item.getId())
-                .collect(Collectors.toSet());
+        VideoSeriesItemEntity item = videoSeriesItemRepo
+                .findForUpdate(seriesId, itemId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.videoSeries.itemNotFound",
+                        itemId));
+        int maxPosition = videoSeriesItemRepo
+                .findMaxPositionBySeriesId(seriesId);
+        int currentPosition = item.getPosition();
+        int targetPosition = payload.getTargetPosition();
 
-        if (orderedItemIds.size() != currentItems.size()
-                || distinctItemIds.size() != currentItems.size()
-                || !currentItemIds.equals(distinctItemIds)) {
+        if (targetPosition > maxPosition) {
             throw ExceptionFactory.invalidParam(
-                    "error.videoSeries.reorderMismatch",
-                    seriesId);
+                    "error.videoSeries.positionOutOfRange",
+                    targetPosition);
         }
 
-        if (currentItems.isEmpty()) {
+        if (currentPosition == targetPosition) {
             return;
         }
 
-        Map<UUID, VideoSeriesItemEntity> itemById = currentItems.stream()
-                .collect(Collectors.toMap(
-                        item -> item.getId(),
-                        item -> item));
-        int temporaryPositionStart = currentItems.stream()
-                .mapToInt(item -> item.getPosition())
-                .max()
-                .orElse(-1) + 1;
+        int stagingOffset = maxPosition + 1;
+        int temporaryPosition = maxPosition + stagingOffset + 1;
+        item.setPosition(temporaryPosition);
+        videoSeriesItemRepo.saveAndFlush(item);
 
-        IntStream.range(0, currentItems.size())
-                .forEach(index -> currentItems.get(index).setPosition(
-                        temporaryPositionStart + index));
-        videoSeriesItemRepo.saveAllAndFlush(currentItems);
+        if (currentPosition < targetPosition) {
+            shiftPositions(
+                    seriesId,
+                    currentPosition + 1,
+                    targetPosition,
+                    maxPosition,
+                    -1);
+        } else {
+            shiftPositions(
+                    seriesId,
+                    targetPosition,
+                    currentPosition - 1,
+                    maxPosition,
+                    1);
+        }
 
-        List<VideoSeriesItemEntity> reorderedItems = IntStream
-                .range(0, orderedItemIds.size())
-                .mapToObj(position -> {
-                    VideoSeriesItemEntity item = itemById.get(
-                            orderedItemIds.get(position));
-                    item.setPosition(position);
-                    return item;
-                })
-                .toList();
-        videoSeriesItemRepo.saveAll(reorderedItems);
+        item.setPosition(targetPosition);
     }
 
     @Override
@@ -169,7 +176,7 @@ public class VideoSeriesItemServiceImpl implements VideoSeriesItemService {
             Pageable pageable) {
         videoSeriesSvc.requirePublishedSeries(seriesId);
         Page<VideoSeriesItemEntity> entityPage = videoSeriesItemRepo
-                .findAllBySeries_IdAndVideoPost_Post_LifecycleStatusAndVideoPost_Post_ModerationStatusOrderByPositionAsc(
+                .findAllBySeries_IdAndVideoPost_Post_LifecycleStatusAndVideoPost_Post_ModerationStatus(
                         seriesId,
                         PostLifecycleStatus.ACTIVE,
                         PostModerationStatus.PUBLISHED,
@@ -184,7 +191,7 @@ public class VideoSeriesItemServiceImpl implements VideoSeriesItemService {
             Pageable pageable) {
         videoSeriesSvc.requireOwnedSeries(seriesId, ownerId);
         return mapItemPage(videoSeriesItemRepo
-                .findAllBySeries_IdOrderByPositionAsc(
+                .findAllBySeries_Id(
                         seriesId,
                         pageable));
     }
@@ -217,6 +224,25 @@ public class VideoSeriesItemServiceImpl implements VideoSeriesItemService {
 
         videoSeriesItemRepo.saveAll(items);
         series.setVideoCount(series.getVideoCount() + items.size());
+    }
+
+    private void shiftPositions(
+            UUID seriesId,
+            int startPosition,
+            int endPosition,
+            int maxPosition,
+            int positionDelta) {
+        int stagingOffset = maxPosition + 1;
+        videoSeriesItemRepo.stagePositions(
+                seriesId,
+                startPosition,
+                endPosition,
+                stagingOffset);
+        videoSeriesItemRepo.normalizeStagedPositions(
+                seriesId,
+                startPosition + stagingOffset,
+                endPosition + stagingOffset,
+                stagingOffset - positionDelta);
     }
 
     private Page<VideoSeriesItemResult> mapItemPage(

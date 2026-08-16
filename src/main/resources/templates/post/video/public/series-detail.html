@@ -56,8 +56,12 @@
                     </div>
                 </section>
 
-                <section class="d-grid gap-3">
-                    <h2 class="h5 mb-0" th:text="#{video.series.items}">Videos</h2>
+                <section id="public-video-series-items" class="d-grid gap-3">
+                    <header class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                        <h2 class="h5 mb-0" th:text="#{video.series.items}">Videos</h2>
+                        <div th:replace="~{post/video/fragments/series-sort
+                                :: toggle(${page.itemSort}, 'public-video-series-items')}"></div>
+                    </header>
                     <div th:if="${#lists.isEmpty(page.items)}"
                          class="app-empty-state app-surface-panel"
                          th:text="#{video.series.items.empty}">No videos.</div>

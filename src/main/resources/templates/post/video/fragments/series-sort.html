@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<a th:fragment="toggle(sort, targetId)"
+   th:href="${sort.togglePath}"
+   class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
+   th:title="${sort.ascending
+           ? #messages.msg('video.series.items.sortAscending')
+           : #messages.msg('video.series.items.sortDescending')}"
+   th:attr="hx-get=${sort.togglePath},
+            hx-target=${'#' + targetId},
+            hx-select=${'#' + targetId}"
+   hx-swap="outerHTML"
+   hx-push-url="true"
+   hx-disabled-elt="this">
+    <i th:class="${sort.ascending
+            ? 'bi bi-sort-numeric-down'
+            : 'bi bi-sort-numeric-up'}"
+       aria-hidden="true"></i>
+    <span th:text="${sort.ascending
+            ? #messages.msg('video.series.items.sortAscending')
+            : #messages.msg('video.series.items.sortDescending')}">Sort order</span>
+</a>
+</body>
+</html>
