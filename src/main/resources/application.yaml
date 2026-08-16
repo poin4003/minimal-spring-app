@@ -93,7 +93,7 @@ app:
             - extension: mp4
               kind: VIDEO
               max-file-size-bytes: 1073741824
-              content-types: [video/mp4]
+              content-types: [video/mp4, video/quicktime, application/mp4, video/x-m4v]
             - extension: mp3
               kind: AUDIO
               max-file-size-bytes: 209715200
