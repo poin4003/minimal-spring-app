@@ -31,7 +31,7 @@
                                        hx-target='#post-moderation-queue',
                                        hx-select='#post-moderation-queue',
                                        hx-swap='outerHTML',
-                                       hx-push-url='true',
+                                       hx-replace-url='true',
                                        hx-disabled-elt='button'">
                             <input type="hidden" name="page" value="0">
                             <input type="hidden" name="size" th:value="${page.query.size}">

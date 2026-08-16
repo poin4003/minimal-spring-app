@@ -7,7 +7,7 @@ public final class HtmxRequestSupport {
 
     private static final String REQUEST_HEADER = "HX-Request";
     private static final String REDIRECT_HEADER = "HX-Redirect";
-    private static final String PUSH_URL_HEADER = "HX-Push-Url";
+    private static final String REPLACE_URL_HEADER = "HX-Replace-Url";
     private static final String TRIGGER_HEADER = "HX-Trigger";
     private static final String EMPTY_RESPONSE_VIEW =
             "fragments/components/htmx-response :: empty";
@@ -25,8 +25,8 @@ public final class HtmxRequestSupport {
         response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    public static void pushUrl(HttpServletResponse response, String path) {
-        response.setHeader(PUSH_URL_HEADER, path);
+    public static void replaceUrl(HttpServletResponse response, String path) {
+        response.setHeader(REPLACE_URL_HEADER, path);
     }
 
     public static void trigger(

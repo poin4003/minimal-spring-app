@@ -40,7 +40,9 @@ public class MediaNotificationEventHandler {
         payload.setResourceId(event.mediaId());
 
         NotificationTextPayload text = new NotificationTextPayload();
-        text.setTitleKey("notification.media.uploaded.title");
+        text.setTitleKey(requiresProcessing
+                ? "notification.media.uploaded.processing.title"
+                : "notification.media.uploaded.ready.title");
         text.setContentKey(requiresProcessing
                 ? "notification.media.uploaded.processing"
                 : "notification.media.uploaded.ready");

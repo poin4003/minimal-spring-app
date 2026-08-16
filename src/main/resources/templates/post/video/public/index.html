@@ -33,7 +33,7 @@
                                     hx-target='#video-library-workspace',
                                     hx-select='#video-library-workspace',
                                     hx-swap='outerHTML',
-                                    hx-push-url='true'"
+                                    hx-replace-url='true'"
                            th:text="#{video.public.tab.videos}">Videos</a>
                         <a class="nav-link"
                            th:classappend="${page.activeTab.name() == 'SERIES'} ? ' active' : ''"
@@ -42,7 +42,7 @@
                                     hx-target='#video-library-workspace',
                                     hx-select='#video-library-workspace',
                                     hx-swap='outerHTML',
-                                    hx-push-url='true'"
+                                    hx-replace-url='true'"
                            th:text="#{video.public.tab.series}">Series</a>
                     </nav>
 
@@ -53,7 +53,7 @@
                                    hx-target='#video-library-results',
                                    hx-select='#video-library-results',
                                    hx-swap='outerHTML',
-                                   hx-push-url='true'">
+                                   hx-replace-url='true'">
                         <input type="hidden" name="tab" th:value="${page.activeTab}">
                         <input class="form-control form-control-sm"
                                type="search"
@@ -81,6 +81,10 @@
                         <div th:each="card : ${page.videos}" class="col">
                             <a th:href="${card.detailPath}"
                                class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body"
+                               hx-target="#app-social-workspace"
+                               hx-select="#app-social-workspace"
+                               hx-swap="outerHTML show:top"
+                               hx-push-url="true"
                                data-media-gallery-card>
                                 <div class="ratio ratio-16x9 bg-black">
                                     <img th:if="${card.video.content.media.thumbnailUrl != null}"
@@ -114,7 +118,11 @@
                          class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-3">
                         <div th:each="card : ${page.series}" class="col">
                             <a th:href="${card.detailPath}"
-                               class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body">
+                               class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body"
+                               hx-target="#app-social-workspace"
+                               hx-select="#app-social-workspace"
+                               hx-swap="outerHTML show:top"
+                               hx-push-url="true">
                                 <div class="ratio ratio-16x9 bg-body-tertiary">
                                     <img th:if="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
                                          th:src="${card.series.coverMedia.thumbnailUrl}"

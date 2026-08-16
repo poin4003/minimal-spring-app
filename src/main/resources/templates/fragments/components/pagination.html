@@ -15,6 +15,7 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-replace-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.replaceUrl : null},
                         hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
                         aria-disabled=${!pagination.hasPrevious},
                         tabindex=${!pagination.hasPrevious ? '-1' : null}">
@@ -36,6 +37,7 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-replace-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.replaceUrl : null},
                         hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
                         aria-current=${item.active ? 'page' : null}">
                 1
@@ -51,6 +53,7 @@
                         hx-select=${pagination.htmxNavigation != null ? pagination.htmxNavigation.select : null},
                         hx-swap=${pagination.htmxNavigation != null ? pagination.htmxNavigation.swap : null},
                         hx-push-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.pushUrl : null},
+                        hx-replace-url=${pagination.htmxNavigation != null ? pagination.htmxNavigation.replaceUrl : null},
                         hx-disabled-elt=${pagination.htmxNavigation != null ? 'this' : null},
                         aria-disabled=${!pagination.hasNext},
                         tabindex=${!pagination.hasNext ? '-1' : null}">

@@ -4,9 +4,11 @@
     const CSRF_COOKIE_NAME = "XSRF-TOKEN";
     const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
     const SIDEBAR_STORAGE_KEY = "app-sidebar-collapsed";
+    const BODY_CLASS_STORAGE_PREFIX = "app-body-class:";
     const root = document.documentElement;
     const desktopViewport = window.matchMedia("(min-width: 992px)");
     let sidebarTooltips = [];
+    const busyTargetCounts = new WeakMap();
 
     function getTheme() {
         const cookieTheme = readCookie(THEME_COOKIE_NAME);
@@ -50,6 +52,77 @@
 
     function hideLoader() {
         document.getElementById("app-loader")?.setAttribute("hidden", "");
+    }
+
+    function isBoosted(element) {
+        const boostRoot = element?.closest("[hx-boost]");
+        return boostRoot != null
+                && boostRoot.getAttribute("hx-boost") !== "false";
+    }
+
+    function setRequestTargetBusy(target, busy) {
+        if (!(target instanceof Element)) {
+            return;
+        }
+
+        const currentCount = busyTargetCounts.get(target) ?? 0;
+        const nextCount = busy
+                ? currentCount + 1
+                : Math.max(0, currentCount - 1);
+
+        if (nextCount === 0) {
+            busyTargetCounts.delete(target);
+            target.classList.remove("app-request-busy");
+            target.removeAttribute("aria-busy");
+            return;
+        }
+
+        busyTargetCounts.set(target, nextCount);
+        target.classList.add("app-request-busy");
+        target.setAttribute("aria-busy", "true");
+    }
+
+    function bodyClassStorageKey(path) {
+        return BODY_CLASS_STORAGE_PREFIX + path;
+    }
+
+    function storeBodyClass(path, className) {
+        sessionStorage.setItem(bodyClassStorageKey(path), className);
+        sessionStorage.setItem(
+            bodyClassStorageKey(path.split("?")[0]),
+            className);
+    }
+
+    function syncBodyClassFromResponse(event) {
+        if (!event.detail.boosted || event.detail.xhr?.responseText == null) {
+            return;
+        }
+
+        const responseDocument = new DOMParser().parseFromString(
+            event.detail.xhr.responseText,
+            "text/html");
+        const responseBody = responseDocument.body;
+        if (responseBody == null) {
+            return;
+        }
+
+        document.body.className = responseBody.className;
+        const responseUrl = new URL(
+            event.detail.xhr.responseURL || window.location.href,
+            window.location.href);
+        storeBodyClass(
+            responseUrl.pathname + responseUrl.search,
+            responseBody.className);
+    }
+
+    function restoreBodyClass() {
+        const className = sessionStorage.getItem(bodyClassStorageKey(
+            window.location.pathname + window.location.search))
+                ?? sessionStorage.getItem(bodyClassStorageKey(
+                    window.location.pathname));
+        if (className != null) {
+            document.body.className = className;
+        }
     }
 
     function hideHtmxError() {
@@ -148,25 +221,54 @@
 
     document.addEventListener("htmx:beforeRequest", function (event) {
         hideHtmxError();
-        if (event.detail.elt.closest("[data-app-loader='manual']") == null) {
+        if (event.detail.elt.closest("[data-app-loader='manual']") != null) {
+            return;
+        }
+
+        setRequestTargetBusy(event.detail.target, true);
+        if (event.detail.elt.closest("[data-app-loader='global']") != null) {
             showLoader();
         }
     });
-    document.addEventListener("htmx:afterRequest", hideLoader);
-    document.addEventListener("htmx:sendError", function () {
+    document.addEventListener("htmx:beforeSwap", syncBodyClassFromResponse);
+    document.addEventListener("htmx:removingHeadElement", function (event) {
+        if (event.detail.headElement instanceof HTMLScriptElement) {
+            event.preventDefault();
+        }
+    });
+    document.addEventListener("htmx:afterRequest", function (event) {
+        setRequestTargetBusy(event.detail.target, false);
+        hideLoader();
+    });
+    document.addEventListener("htmx:sendError", function (event) {
+        setRequestTargetBusy(event.detail.target, false);
         hideLoader();
         showHtmxError("connection");
     });
-    document.addEventListener("htmx:timeout", function () {
+    document.addEventListener("htmx:timeout", function (event) {
+        setRequestTargetBusy(event.detail.target, false);
         hideLoader();
         showHtmxError("connection");
     });
-    document.addEventListener("htmx:responseError", function () {
+    document.addEventListener("htmx:responseError", function (event) {
+        setRequestTargetBusy(event.detail.target, false);
         hideLoader();
         showHtmxError("request");
     });
+    document.addEventListener("htmx:historyRestore", restoreBodyClass);
+    document.addEventListener("htmx:afterSwap", function (event) {
+        if (!event.detail.boosted) {
+            return;
+        }
+
+        updateThemeButtons(getTheme());
+        applySidebarState(isSidebarCollapsed());
+    });
 
     document.addEventListener("DOMContentLoaded", function () {
+        storeBodyClass(
+            window.location.pathname + window.location.search,
+            document.body.className);
         updateThemeButtons(getTheme());
         applySidebarState(isSidebarCollapsed());
 
@@ -212,7 +314,8 @@
         document.addEventListener("submit", function (event) {
             const form = event.target;
             if (event.defaultPrevented
-                    || form.matches("[data-app-loader='manual']")) {
+                    || form.matches("[data-app-loader='manual']")
+                    || isBoosted(form)) {
                 return;
             }
 
@@ -233,6 +336,7 @@
                     || link.target === "_blank"
                     || link.hasAttribute("download")
                     || link.hasAttribute("hx-get")
+                    || isBoosted(link)
                     || href.startsWith("#")
                     || href.startsWith("javascript:")) {
                 return;

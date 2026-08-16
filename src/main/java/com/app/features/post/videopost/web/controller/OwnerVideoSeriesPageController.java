@@ -438,7 +438,7 @@ public class OwnerVideoSeriesPageController {
                 videoSeriesItemPageSupport.getDefaults());
 
         if (HtmxRequestSupport.isHtmxRequest(request)) {
-            HtmxRequestSupport.pushUrl(response, currentPath);
+            HtmxRequestSupport.replaceUrl(response, currentPath);
             model.addAttribute(
                     OwnerVideoSeriesDetailPageView.ATTRIBUTE,
                     page);

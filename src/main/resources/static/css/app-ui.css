@@ -420,6 +420,10 @@ a {
     cursor: progress;
 }
 
+.app-request-busy {
+    cursor: progress;
+}
+
 .htmx-request button[type="submit"],
 .htmx-request [hx-disabled-elt="this"] {
     opacity: 0.65;

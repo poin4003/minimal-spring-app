@@ -1,5 +1,7 @@
 package com.app.features.ui.web.component.view;
 
+import com.app.features.ui.web.enums.UiHtmxHistoryMode;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,7 +16,20 @@ public class UiHtmxNavigationView {
     private final String swap = "outerHTML";
 
     @Builder.Default
-    private final boolean pushUrl = true;
+    private final UiHtmxHistoryMode historyMode =
+            UiHtmxHistoryMode.REPLACE;
+
+    public Boolean getPushUrl() {
+        return historyMode == UiHtmxHistoryMode.PUSH
+                ? Boolean.TRUE
+                : null;
+    }
+
+    public Boolean getReplaceUrl() {
+        return historyMode == UiHtmxHistoryMode.REPLACE
+                ? Boolean.TRUE
+                : null;
+    }
 
     public static UiHtmxNavigationView forComponent(String componentId) {
         String selector = "#" + componentId;

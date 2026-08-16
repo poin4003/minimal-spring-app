@@ -6,6 +6,10 @@
        th:href="${card.detailPath}"
        class="card app-surface-panel text-decoration-none text-body overflow-hidden"
        th:classappend="${card.active} ? ' border-primary border-2' : ''"
+       hx-target="#app-social-workspace"
+       hx-select="#app-social-workspace"
+       hx-swap="outerHTML show:top"
+       hx-push-url="true"
        th:attr="aria-current=${card.active ? 'page' : null}">
         <div class="row g-0 align-items-center">
             <div class="col-5 col-md-4 col-xl-3">

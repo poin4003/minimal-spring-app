@@ -36,6 +36,10 @@
     <a th:unless="${detailMode}"
        th:href="${card.detailPath}"
        class="ratio ratio-16x9 bg-black text-decoration-none"
+       hx-target="#app-social-workspace"
+       hx-select="#app-social-workspace"
+       hx-swap="outerHTML show:top"
+       hx-push-url="true"
        data-media-gallery-card>
         <img th:if="${card.video.content.media.thumbnailUrl != null}"
              th:src="${card.video.content.media.thumbnailUrl}"
@@ -62,7 +66,11 @@
     <div class="card-body">
         <a th:unless="${detailMode}"
            th:href="${card.detailPath}"
-           class="text-body text-decoration-none stretched-link">
+           class="text-body text-decoration-none stretched-link"
+           hx-target="#app-social-workspace"
+           hx-select="#app-social-workspace"
+           hx-swap="outerHTML show:top"
+           hx-push-url="true">
             <h2 class="h6 text-truncate mb-2" th:text="${card.video.title}">Title</h2>
         </a>
         <h1 th:if="${detailMode}" class="h3 mb-3" th:text="${card.video.title}">Title</h1>

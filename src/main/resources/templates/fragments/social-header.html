@@ -3,7 +3,13 @@
       th:lang="${#locale.language}">
 <body>
     <header th:fragment="header(shell)"
-            class="social-header sticky-top border-bottom">
+            id="app-social-header"
+            class="social-header sticky-top border-bottom"
+            hx-preserve="true"
+            th:attr="hx-ext=${shell.notificationWidget != null ? 'sse' : null},
+                     sse-connect=${shell.notificationWidget != null
+                             ? shell.notificationWidget.streamPath
+                             : null}">
         <nav class="navbar p-0">
             <div class="container-fluid social-container flex-nowrap gap-2 px-3 px-lg-4">
                 <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold mb-0"
@@ -24,6 +30,7 @@
 
                     <a th:if="${shell.adminPath != null}"
                        th:href="${shell.adminPath}"
+                       hx-boost="false"
                        class="btn btn-outline-secondary app-header-action app-icon-button social-header-admin-action"
                        th:attr="aria-label=#{social.openAdmin},
                                 title=#{social.openAdmin}">
@@ -52,6 +59,7 @@
                     <form th:if="${shell.currentUser != null}"
                           method="post"
                           th:action="${shell.logoutPath}"
+                          hx-boost="false"
                           class="mb-0 social-header-signout-action">
                         <input type="hidden"
                                th:name="${_csrf.parameterName}"
@@ -68,6 +76,7 @@
                          class="d-flex align-items-center">
                         <a class="btn btn-outline-primary"
                            th:href="${shell.loginPath}"
+                           hx-boost="false"
                            th:text="#{auth.login.title}">
                             Sign in
                         </a>

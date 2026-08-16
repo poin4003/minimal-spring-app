@@ -11,7 +11,7 @@
             hx-target=${'#' + targetId},
             hx-select=${'#' + targetId}"
    hx-swap="outerHTML"
-   hx-push-url="true"
+   hx-replace-url="true"
    hx-disabled-elt="this">
     <i th:class="${sort.ascending
             ? 'bi bi-sort-numeric-down'

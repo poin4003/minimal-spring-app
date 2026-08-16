@@ -48,6 +48,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiPaginationView;
+import com.app.features.ui.web.enums.UiHtmxHistoryMode;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -373,7 +374,7 @@ public class ShortPostComposerPageController {
                 UiHtmxNavigationView.builder()
                         .target("#" + MEDIA_PICKER_ID)
                         .select("#" + MEDIA_PICKER_ID)
-                        .pushUrl(false)
+                        .historyMode(UiHtmxHistoryMode.NONE)
                         .build());
 
         return PostComposerMediaPickerView.builder()

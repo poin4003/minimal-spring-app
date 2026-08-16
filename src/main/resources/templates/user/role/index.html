@@ -48,7 +48,7 @@
                                                 hx-target='#user-role-assignment-workspace',
                                                 hx-select='#user-role-assignment-workspace',
                                                 hx-swap='outerHTML',
-                                                hx-push-url='true',
+                                                hx-replace-url='true',
                                                 hx-disabled-elt='this'"
                                        th:classappend="${page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
                                         Assigned
@@ -59,7 +59,7 @@
                                                 hx-target='#user-role-assignment-workspace',
                                                 hx-select='#user-role-assignment-workspace',
                                                 hx-swap='outerHTML',
-                                                hx-push-url='true',
+                                                hx-replace-url='true',
                                                 hx-disabled-elt='this'"
                                        th:classappend="${!page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
                                         Available
