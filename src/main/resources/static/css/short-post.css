@@ -6,7 +6,6 @@
 
 .short-gallery-cover {
     --bs-aspect-ratio: 177.7778%;
-    transition: transform 160ms ease;
 }
 
 .short-detail-page .social-container {
@@ -147,12 +146,6 @@
 .short-owner-play-icon {
     width: 3rem;
     height: 3rem;
-}
-
-@media (hover: hover) and (pointer: fine) {
-    .short-gallery-card:hover .short-gallery-cover {
-        transform: translateY(-0.2rem);
-    }
 }
 
 @media (max-width: 991.98px) {

@@ -107,6 +107,7 @@ public class OwnerStandardPostPageController {
                 .editProfilePath(
                         appProperties.getUi().getProfilePath())
                 .shortsPath(appProperties.getUi().getMyShortsPath())
+                .videosPath(appProperties.getUi().getMyVideosPath())
                 .createPath(getMyPostsPath() + "/create")
                 .workspace(workspace)
                 .build();
@@ -153,16 +154,75 @@ public class OwnerStandardPostPageController {
         return "post/standard/owner/detail";
     }
 
-    @GetMapping("/{postId}/actions/{actionPath}/confirm")
+    @GetMapping("/{postId}/submit/confirm")
     @Secured(PermissionConstants.POST_UPDATE_OWN)
-    public String actionConfirm(
+    public String submitConfirm(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID postId,
-            @PathVariable String actionPath,
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             Model model) {
-        OwnerPostActionType action = resolveAction(actionPath, postId);
+        return showActionConfirm(currentUser, postId,
+                OwnerPostActionType.SUBMIT, detail, request, model);
+    }
+
+    @GetMapping("/{postId}/archive/confirm")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String archiveConfirm(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            Model model) {
+        return showActionConfirm(currentUser, postId,
+                OwnerPostActionType.ARCHIVE, detail, request, model);
+    }
+
+    @GetMapping("/{postId}/restore-archived/confirm")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String restoreArchivedConfirm(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            Model model) {
+        return showActionConfirm(currentUser, postId,
+                OwnerPostActionType.RESTORE_ARCHIVED,
+                detail, request, model);
+    }
+
+    @GetMapping("/{postId}/delete/confirm")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String deleteConfirm(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            Model model) {
+        return showActionConfirm(currentUser, postId,
+                OwnerPostActionType.DELETE, detail, request, model);
+    }
+
+    @GetMapping("/{postId}/restore-deleted/confirm")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String restoreDeletedConfirm(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            Model model) {
+        return showActionConfirm(currentUser, postId,
+                OwnerPostActionType.RESTORE_DELETED,
+                detail, request, model);
+    }
+
+    private String showActionConfirm(
+            UserPrincipal currentUser,
+            UUID postId,
+            OwnerPostActionType action,
+            boolean detail,
+            HttpServletRequest request,
+            Model model) {
         OwnerStandardPostResult post = standardPostSvc.getOwnerPost(
                 postId,
                 currentUser.getUserId());
@@ -193,37 +253,80 @@ public class OwnerStandardPostPageController {
         return "post/standard/owner/detail";
     }
 
-    @PostMapping("/{postId}/actions/{actionPath}")
+    @PostMapping("/{postId}/submit")
     @Secured(PermissionConstants.POST_UPDATE_OWN)
-    public String performAction(
+    public String submitForReview(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @PathVariable UUID postId,
-            @PathVariable String actionPath,
             @RequestParam(defaultValue = "false") boolean detail,
             HttpServletRequest request,
             HttpServletResponse response) {
-        OwnerPostActionType action = resolveAction(actionPath, postId);
-        UUID ownerId = currentUser.getUserId();
-        switch (action) {
-            case SUBMIT -> standardPostSvc.submitOwnedPostForReview(
-                    postId,
-                    ownerId);
-            case ARCHIVE -> standardPostSvc.archiveOwnedPost(
-                    postId,
-                    ownerId);
-            case RESTORE_ARCHIVED ->
-                standardPostSvc.restoreArchivedOwnedPost(
-                        postId,
-                        ownerId);
-            case DELETE -> standardPostSvc.deleteOwnedPost(
-                    postId,
-                    ownerId);
-            case RESTORE_DELETED ->
-                standardPostSvc.restoreDeletedOwnedPost(
-                        postId,
-                        ownerId);
-        }
+        standardPostSvc.submitOwnedPostForReview(
+                postId,
+                currentUser.getUserId());
+        return completeAction(request, response, detail);
+    }
 
+    @PostMapping("/{postId}/archive")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String archivePost(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        standardPostSvc.archiveOwnedPost(
+                postId,
+                currentUser.getUserId());
+        return completeAction(request, response, detail);
+    }
+
+    @PostMapping("/{postId}/restore-archived")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String restoreArchived(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        standardPostSvc.restoreArchivedOwnedPost(
+                postId,
+                currentUser.getUserId());
+        return completeAction(request, response, detail);
+    }
+
+    @PostMapping("/{postId}/delete")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String deletePost(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        standardPostSvc.deleteOwnedPost(
+                postId,
+                currentUser.getUserId());
+        return completeAction(request, response, detail);
+    }
+
+    @PostMapping("/{postId}/restore-deleted")
+    @Secured(PermissionConstants.POST_UPDATE_OWN)
+    public String restoreDeleted(
+            @AuthenticationPrincipal UserPrincipal currentUser,
+            @PathVariable UUID postId,
+            @RequestParam(defaultValue = "false") boolean detail,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+        standardPostSvc.restoreDeletedOwnedPost(
+                postId,
+                currentUser.getUserId());
+        return completeAction(request, response, detail);
+    }
+
+    private String completeAction(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            boolean detail) {
         if (HtmxRequestSupport.isHtmxRequest(request) && !detail) {
             HtmxRequestSupport.trigger(
                     response,
@@ -298,19 +401,6 @@ public class OwnerStandardPostPageController {
                 .actionModal(actionModal)
                 .openModalId(openModalId)
                 .build();
-    }
-
-    private OwnerPostActionType resolveAction(
-            String actionPath,
-            UUID postId) {
-        OwnerPostActionType action = OwnerPostActionType.fromPath(
-                actionPath);
-        if (action == null) {
-            throw ExceptionFactory.invalidParam(
-                    "error.post.lifecycleInvalid",
-                    postId);
-        }
-        return action;
     }
 
     private UiBreadcrumbView buildDetailBreadcrumb() {

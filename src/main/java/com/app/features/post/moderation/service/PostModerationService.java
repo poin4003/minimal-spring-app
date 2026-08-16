@@ -11,6 +11,7 @@ import com.app.features.post.moderation.schema.result.ModerationPostResult;
 import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationVideoPostDetailResult;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -27,6 +28,9 @@ public interface PostModerationService {
             @NotNull UUID postId);
 
     ModerationShortPostDetailResult getShortPostDetail(
+            @NotNull UUID postId);
+
+    ModerationVideoPostDetailResult getVideoPostDetail(
             @NotNull UUID postId);
 
     void publishPost(

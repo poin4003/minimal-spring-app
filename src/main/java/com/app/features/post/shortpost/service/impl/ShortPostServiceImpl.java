@@ -1,9 +1,9 @@
 package com.app.features.post.shortpost.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +21,7 @@ import com.app.features.post.enums.PostMediaRole;
 import com.app.features.post.enums.PostType;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.service.PostMediaService;
+import com.app.features.post.service.PostLifecycleService;
 import com.app.features.post.service.PostService;
 import com.app.features.post.shortpost.entity.ShortPostEntity;
 import com.app.features.post.shortpost.mapper.ShortPostResultMapper;
@@ -50,6 +51,7 @@ public class ShortPostServiceImpl implements ShortPostService {
     private final UserService userSvc;
     private final ProfileService profileSvc;
     private final PostService postSvc;
+    private final PostLifecycleService postLifecycleSvc;
     private final ShortPostRepository shortPostRepo;
     private final MediaService mediaSvc;
     private final PostMediaService postMediaSvc;
@@ -112,11 +114,11 @@ public class ShortPostServiceImpl implements ShortPostService {
 
     @Override
     @Transactional
-    public OwnerShortPostResult submitOwnedPostForReview(
+    public void submitOwnedPostForReview(
             UUID postId,
             UUID ownerId) {
         PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
-        ShortPostEntity shortPost = requireShortPost(postId);
+        requireShortPost(postId);
         List<PostMediaEntity> attachments =
                 postMediaSvc.requirePublishableMedia(post);
         PostMediaEntity attachment = requireContentAttachment(
@@ -125,59 +127,38 @@ public class ShortPostServiceImpl implements ShortPostService {
 
         shortPostPolicy.requireAllowedMedia(attachment.getMedia());
         postSvc.submitForReview(post);
-
-        return shortPostMapper.toOwnerResult(
-                shortPost,
-                profileSvc.requireProfile(ownerId),
-                attachment);
     }
 
     @Override
     @Transactional
-    public OwnerShortPostResult archiveOwnedPost(
-            UUID postId,
-            UUID ownerId) {
-        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
-        ShortPostEntity shortPost = requireShortPost(postId);
-
-        postSvc.archivePost(post);
-
-        return toOwnerResult(shortPost, ownerId);
+    public void archiveOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.archive(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
     }
 
     @Override
     @Transactional
-    public OwnerShortPostResult restoreArchivedOwnedPost(
-            UUID postId,
-            UUID ownerId) {
-        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
-        ShortPostEntity shortPost = requireShortPost(postId);
-
-        postSvc.restoreArchivedPost(post);
-
-        return toOwnerResult(shortPost, ownerId);
-    }
-
-    @Override
-    @Transactional
-    public OwnerShortPostResult restoreDeletedOwnedPost(
-            UUID postId,
-            UUID ownerId) {
-        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
-        ShortPostEntity shortPost = requireShortPost(postId);
-
-        postSvc.restoreDeletedPost(post);
-
-        return toOwnerResult(shortPost, ownerId);
+    public void restoreArchivedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreArchived(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
     }
 
     @Override
     @Transactional
     public void deleteOwnedPost(UUID postId, UUID ownerId) {
-        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
-        requireShortPost(postId);
+        postLifecycleSvc.softDelete(
+                requireOwnedPostForLifecycle(postId, ownerId),
+                LocalDateTime.now());
+    }
 
-        postSvc.markPostDeleted(post);
+    @Override
+    @Transactional
+    public void restoreDeletedOwnedPost(UUID postId, UUID ownerId) {
+        postLifecycleSvc.restoreDeleted(requireOwnedPostForLifecycle(
+                postId,
+                ownerId));
     }
 
     @Override
@@ -214,16 +195,25 @@ public class ShortPostServiceImpl implements ShortPostService {
         Page<ShortPostEntity> entityPage = shortPostRepo.findAll(
                 ShortPostSpecification.published(criteria),
                 pageable);
-        Map<UUID, UserInfoEntity> profilesByAuthorId = loadProfilesByAuthorId(
-                entityPage.getContent());
-        Map<UUID, List<PostMediaEntity>> attachmentsByPostId =
-                loadAttachmentsByPostId(entityPage.getContent());
+        Map<UUID, UserInfoEntity> profilesByAuthorId = profileSvc
+                .requireProfiles(entityPage.getContent().stream()
+                        .map(shortPost -> shortPost
+                                .getPost()
+                                .getAuthor()
+                                .getId())
+                        .toList());
+        Map<UUID, List<PostMediaEntity>> attachmentsByPostId = postMediaSvc
+                .findAttachmentsByPostId(
+                        entityPage.getContent().stream()
+                                .map(shortPost -> shortPost.getPostId())
+                                .toList(),
+                        PostMediaRole.CONTENT);
 
         return entityPage.map(shortPost -> {
             PostEntity post = shortPost.getPost();
             return shortPostMapper.toPublicResult(
                     shortPost,
-                    requireLoadedProfile(
+                    profileSvc.requireProfile(
                             profilesByAuthorId,
                             post.getAuthor().getId()),
                     requireContentAttachment(
@@ -242,16 +232,25 @@ public class ShortPostServiceImpl implements ShortPostService {
         Page<ShortPostEntity> entityPage = shortPostRepo.findAll(
                 ShortPostSpecification.ownedBy(ownerId, criteria),
                 pageable);
-        Map<UUID, UserInfoEntity> profilesByAuthorId = loadProfilesByAuthorId(
-                entityPage.getContent());
-        Map<UUID, List<PostMediaEntity>> attachmentsByPostId =
-                loadAttachmentsByPostId(entityPage.getContent());
+        Map<UUID, UserInfoEntity> profilesByAuthorId = profileSvc
+                .requireProfiles(entityPage.getContent().stream()
+                        .map(shortPost -> shortPost
+                                .getPost()
+                                .getAuthor()
+                                .getId())
+                        .toList());
+        Map<UUID, List<PostMediaEntity>> attachmentsByPostId = postMediaSvc
+                .findAttachmentsByPostId(
+                        entityPage.getContent().stream()
+                                .map(shortPost -> shortPost.getPostId())
+                                .toList(),
+                        PostMediaRole.CONTENT);
 
         return entityPage.map(shortPost -> {
             PostEntity post = shortPost.getPost();
             return shortPostMapper.toOwnerResult(
                     shortPost,
-                    requireLoadedProfile(
+                    profileSvc.requireProfile(
                             profilesByAuthorId,
                             post.getAuthor().getId()),
                     requireContentAttachment(
@@ -278,13 +277,14 @@ public class ShortPostServiceImpl implements ShortPostService {
         return shortPost;
     }
 
-    private OwnerShortPostResult toOwnerResult(
-            ShortPostEntity shortPost,
+    private PostEntity requireOwnedPostForLifecycle(
+            UUID postId,
             UUID ownerId) {
-        return shortPostMapper.toOwnerResult(
-                shortPost,
-                profileSvc.requireProfile(ownerId),
-                requireContentAttachment(shortPost.getPostId()));
+        PostEntity post = postSvc.requireOwnedPostForUpdate(postId, ownerId);
+        if (post.getType() != PostType.SHORT) {
+            throw ExceptionFactory.notFound("error.post.notFound", postId);
+        }
+        return post;
     }
 
     private MediaEntity requireAllowedOwnedMedia(
@@ -315,41 +315,4 @@ public class ShortPostServiceImpl implements ShortPostService {
         return attachments.getFirst();
     }
 
-    private Map<UUID, UserInfoEntity> loadProfilesByAuthorId(
-            List<ShortPostEntity> shortPosts) {
-        List<UUID> authorIds = shortPosts.stream()
-                .map(shortPost -> shortPost.getPost().getAuthor().getId())
-                .distinct()
-                .toList();
-
-        return profileSvc.findProfiles(authorIds).stream()
-                .collect(Collectors.toMap(
-                        profile -> profile.getUserId(),
-                        profile -> profile));
-    }
-
-    private Map<UUID, List<PostMediaEntity>> loadAttachmentsByPostId(
-            List<ShortPostEntity> shortPosts) {
-        List<UUID> postIds = shortPosts.stream()
-                .map(shortPost -> shortPost.getPostId())
-                .toList();
-
-        return postMediaSvc.findAttachments(
-                        postIds,
-                        PostMediaRole.CONTENT).stream()
-                .collect(Collectors.groupingBy(
-                        attachment -> attachment.getPost().getId()));
-    }
-
-    private UserInfoEntity requireLoadedProfile(
-            Map<UUID, UserInfoEntity> profilesByAuthorId,
-            UUID authorId) {
-        UserInfoEntity profile = profilesByAuthorId.get(authorId);
-        if (profile == null) {
-            throw ExceptionFactory.notFound(
-                    "error.profile.notFound",
-                    authorId);
-        }
-        return profile;
-    }
 }

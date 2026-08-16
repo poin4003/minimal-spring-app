@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Series detail</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/video.js/video-js.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/video-post.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
+    <script defer th:src="@{/js/media-gallery.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/social-shell :: layout(${page.shell}, ~{::pageContent})}">
+    <th:block th:fragment="pageContent">
+        <div class="video-detail-page mx-auto d-grid gap-4">
+            <div th:replace="~{fragments/components/breadcrumb :: breadcrumb(${page.breadcrumb})}"></div>
+            <section class="card app-surface-panel overflow-hidden">
+                <div class="row g-0">
+                    <div class="col-12 col-lg-5">
+                        <div class="ratio ratio-16x9 video-series-cover bg-body-tertiary">
+                            <img th:if="${page.card.series.coverMedia != null and page.card.series.coverMedia.thumbnailUrl != null}"
+                                 th:src="${page.card.series.coverMedia.thumbnailUrl}"
+                                 th:alt="${page.card.series.title}"
+                                 class="w-100 h-100 object-fit-cover">
+                            <span th:unless="${page.card.series.coverMedia != null and page.card.series.coverMedia.thumbnailUrl != null}"
+                                  class="d-flex align-items-center justify-content-center text-secondary">
+                                <i class="bi bi-collection-play display-4" aria-hidden="true"></i>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-7">
+                        <div class="card-body p-4 d-flex flex-column h-100">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                <span class="badge rounded-pill"
+                                      th:classappend="${page.card.statusBadgeClass}"
+                                      th:text="${page.card.statusLabel}">Status</span>
+                                <div class="btn-group btn-group-sm">
+                                    <a th:href="${page.card.editPath}" class="btn btn-outline-primary"
+                                       th:title="#{post.owner.edit}">
+                                        <i class="bi bi-pencil" aria-hidden="true"></i>
+                                    </a>
+                                    <a th:each="action : ${page.actions}"
+                                       th:href="${action.modalPath}" class="btn"
+                                       th:classappend="${action.buttonClass}"
+                                       th:title="${action.label}"
+                                       th:attr="hx-get=${action.modalPath},
+                                                hx-target='#app-modal-host',
+                                                hx-swap='innerHTML',
+                                                hx-disabled-elt='this',
+                                                data-app-modal-request='true'">
+                                        <i th:class="${action.iconClass}" aria-hidden="true"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            <h1 class="h3" th:text="${page.card.series.title}">Series</h1>
+                            <p class="text-secondary preserve-lines"
+                               th:if="${page.card.series.description != null and !page.card.series.description.isBlank()}"
+                               th:text="${page.card.series.description}">Description</p>
+                            <span class="small text-secondary mt-auto"
+                                  th:text="#{video.series.videoCount(${page.card.series.videoCount})}">0 videos</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="d-grid gap-3">
+                <header class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <h2 class="h5 mb-0" th:text="#{video.series.items}">Videos</h2>
+                    <div class="d-flex gap-2">
+                        <a th:href="${page.addItemsPath}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                            <span th:text="#{video.series.items.addExisting}">Add existing</span>
+                        </a>
+                        <a th:href="${page.createVideoPath}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-camera-video me-1" aria-hidden="true"></i>
+                            <span th:text="#{video.series.items.createVideo}">Create video</span>
+                        </a>
+                    </div>
+                </header>
+                <div th:replace="~{post/video/owner/fragments/series-items :: items(${page})}"></div>
+            </section>
+        </div>
+
+        <div th:if="${page.actionModal != null}" hx-disable>
+            <div th:replace="~{post/video/owner/fragments/series-action-modal
+                    :: modal(${page.actionModal})}"></div>
+        </div>
+        <script th:if="${page.openModalId != null}" th:inline="javascript">
+            document.addEventListener("DOMContentLoaded", function () {
+                const element = document.getElementById(
+                    /*[[${page.openModalId}]]*/ "video-series-action-modal"
+                );
+                if (element) bootstrap.Modal.getOrCreateInstance(element).show();
+            });
+        </script>
+    </th:block>
+</div>
+</body>
+</html>

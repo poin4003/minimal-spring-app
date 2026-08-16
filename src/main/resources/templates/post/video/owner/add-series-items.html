@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Add videos</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/video-post.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</head>
+<body class="bg-body-tertiary">
+<div th:replace="~{fragments/social-shell :: layout(${page.shell}, ~{::pageContent})}">
+    <th:block th:fragment="pageContent">
+        <div class="video-detail-page mx-auto d-grid gap-3">
+            <div th:replace="~{fragments/components/breadcrumb :: breadcrumb(${page.breadcrumb})}"></div>
+            <section id="video-series-add-items"
+                     class="app-surface-panel app-component">
+                <form th:object="${form}"
+                      method="post"
+                      th:action="${page.actionPath}"
+                      th:attr="hx-post=${page.actionPath},
+                               hx-target='#video-series-add-items',
+                               hx-select='#video-series-add-items',
+                               hx-swap='outerHTML',
+                               hx-disabled-elt='button[type=submit]'">
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+                    <header class="app-section-header">
+                        <h1 class="app-page-title" th:text="#{video.series.items.add.title}">Add videos</h1>
+                        <p class="app-page-description" th:text="${page.series.title}">Series</p>
+                    </header>
+                    <div class="app-section-body d-grid gap-4">
+                        <div class="d-flex gap-2 video-library-search ms-auto">
+                            <input class="form-control form-control-sm" type="search" name="title"
+                                   th:value="${page.titleQuery}"
+                                   th:placeholder="#{video.public.searchPlaceholder}">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    th:attr="hx-get=${page.searchPath},
+                                             hx-include='previous input',
+                                             hx-target='#available-series-videos',
+                                             hx-select='#available-series-videos',
+                                             hx-swap='outerHTML'">
+                                <i class="bi bi-search" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <div class="text-danger small" th:if="${#fields.hasErrors('videoPostIds')}"
+                             th:errors="*{videoPostIds}">Select videos</div>
+                        <div th:replace="~{post/video/owner/fragments/available-videos
+                                :: available(${page})}"></div>
+                    </div>
+                    <footer class="app-component-footer">
+                        <a th:href="${page.backPath}" class="btn btn-sm btn-outline-secondary"
+                           th:text="#{action.cancel}">Cancel</a>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
+                            <span th:text="#{video.series.items.add.submit}">Add selected</span>
+                        </button>
+                    </footer>
+                </form>
+            </section>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

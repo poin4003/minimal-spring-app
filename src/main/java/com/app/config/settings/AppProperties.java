@@ -407,6 +407,25 @@ public class AppProperties {
 
         @Positive
         private int processTimeoutMinutes = 30;
+
+        @Valid
+        private final Machine machine = new Machine();
+    }
+
+    @Data
+    public static class Machine {
+        @NotBlank
+        @Pattern(regexp = "^[a-z0-9_:-]+$")
+        private String videoEncoder = "auto";
+
+        @Min(0)
+        private int threads = 0;
+
+        @NotBlank
+        @Pattern(regexp = "^[a-z0-9_:-]+$")
+        private String hardwareAccel = "none";
+
+        private boolean fallbackToSoftware = true;
     }
 
     @Data
@@ -566,6 +585,8 @@ public class AppProperties {
                 "/",
                 "/posts",
                 "/posts/**",
+                "/videos",
+                "/videos/**",
                 "/login",
                 "/register",
                 "/register/**",
@@ -603,10 +624,16 @@ public class AppProperties {
         private String shortsPath = "/shorts";
 
         @NotBlank
+        private String videosPath = "/videos";
+
+        @NotBlank
         private String myPostsPath = "/my/posts";
 
         @NotBlank
         private String myShortsPath = "/my/shorts";
+
+        @NotBlank
+        private String myVideosPath = "/my/videos";
 
         @NotBlank
         private String landingPath = "/home";

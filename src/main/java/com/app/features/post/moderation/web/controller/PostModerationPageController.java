@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.security.web.HtmxRequestSupport;
@@ -36,6 +37,7 @@ import com.app.features.post.moderation.schema.result.ModerationPostResult;
 import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationVideoPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
 import com.app.features.post.moderation.web.view.ModerationPostDetailPageView;
 import com.app.features.post.moderation.web.view.ModerationPostDetailView;
@@ -166,11 +168,13 @@ public class PostModerationPageController {
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
+            @RequestParam(defaultValue = "false") boolean detail,
             Model model) {
         UiConfirmModalView publishModal = buildPublishModal(
                 postId,
                 filter,
-                query);
+                query,
+                detail);
         if (HtmxRequestSupport.isHtmxRequest(request)) {
             model.addAttribute(
                     UiConfirmModalView.ATTRIBUTE,
@@ -201,13 +205,15 @@ public class PostModerationPageController {
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
+            @RequestParam(defaultValue = "false") boolean detail,
             Model model) {
         UiModalView rejectModal = buildRejectModal(
                 postId,
                 filter,
                 query,
                 new RejectPostModalForm(),
-                Map.of());
+                Map.of(),
+                detail);
         if (HtmxRequestSupport.isHtmxRequest(request)) {
             model.addAttribute(UiModalView.ATTRIBUTE, rejectModal);
             return "fragments/components/modal :: modal (modal=${modal})";
@@ -235,9 +241,10 @@ public class PostModerationPageController {
             HttpServletResponse response,
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
-            @Valid @ModelAttribute("query") UiPageQuery query) {
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            @RequestParam(defaultValue = "false") boolean detail) {
         postModerationSvc.publishPost(postId, currentUser.getUserId());
-        return actionSucceeded(request, response, filter, query);
+        return actionSucceeded(request, response, filter, query, detail);
     }
 
     @PostMapping("/{postId}/reject")
@@ -249,6 +256,7 @@ public class PostModerationPageController {
             @Valid @ModelAttribute("filter")
             ModerationPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
+            @RequestParam(defaultValue = "false") boolean detail,
             @Valid @ModelAttribute("form") RejectPostModalForm form,
             BindingResult bindingResult,
             Model model) {
@@ -264,7 +272,8 @@ public class PostModerationPageController {
                     request,
                     response,
                     filter,
-                    query);
+                    query,
+                    detail);
         }
 
         if (HtmxRequestSupport.isHtmxRequest(request)) {
@@ -275,7 +284,8 @@ public class PostModerationPageController {
                             filter,
                             query,
                             form,
-                            submitResult.fieldErrors()));
+                            submitResult.fieldErrors(),
+                            detail));
             return "fragments/components/modal :: modal (modal=${modal})";
         }
 
@@ -284,7 +294,8 @@ public class PostModerationPageController {
                 filter,
                 query,
                 form,
-                submitResult.fieldErrors());
+                submitResult.fieldErrors(),
+                detail);
         model.addAttribute(
                 ModerationPostDetailPageView.ATTRIBUTE,
                 buildDetailPage(
@@ -415,6 +426,18 @@ public class PostModerationPageController {
                 getModerationPath(),
                 filter,
                 query);
+        UiConfirmModalView detailPublishModal = publishModal != null
+                ? publishModal
+                : buildPublishModal(postId, filter, query, true);
+        UiModalView detailRejectModal = rejectModal != null
+                ? rejectModal
+                : buildRejectModal(
+                        postId,
+                        filter,
+                        query,
+                        new RejectPostModalForm(),
+                        Map.of(),
+                        true);
 
         return ModerationPostDetailPageView.builder()
                 .title(messageResolver.get(
@@ -431,13 +454,15 @@ public class PostModerationPageController {
                 .publishModalPath(buildStatePath(
                         buildPostPath(postId, "publish-confirm"),
                         filter,
-                        query))
+                        query,
+                        true))
                 .rejectModalPath(buildStatePath(
                         buildPostPath(postId, "reject"),
                         filter,
-                        query))
-                .publishModal(publishModal)
-                .rejectModal(rejectModal)
+                        query,
+                        true))
+                .publishModal(detailPublishModal)
+                .rejectModal(detailRejectModal)
                 .openModalId(openModalId)
                 .build();
     }
@@ -453,20 +478,31 @@ public class PostModerationPageController {
                     .build();
         }
 
-        ModerationShortPostDetailResult shortPost =
-                (ModerationShortPostDetailResult) post;
+        if (post instanceof ModerationShortPostDetailResult shortPost) {
+            return ModerationPostDetailView.builder()
+                    .post(shortPost.getPost())
+                    .state(shortPost.getState())
+                    .content(shortPost.getCaption())
+                    .media(List.of(shortPost.getMedia()))
+                    .build();
+        }
+
+        ModerationVideoPostDetailResult videoPost =
+                (ModerationVideoPostDetailResult) post;
         return ModerationPostDetailView.builder()
-                .post(shortPost.getPost())
-                .state(shortPost.getState())
-                .content(shortPost.getCaption())
-                .media(List.of(shortPost.getMedia()))
+                .post(videoPost.getPost())
+                .state(videoPost.getState())
+                .title(videoPost.getTitle())
+                .content(videoPost.getDescription())
+                .media(List.of(videoPost.getContent()))
                 .build();
     }
 
     private UiConfirmModalView buildPublishModal(
             UUID postId,
             ModerationPostFilterCriteria filter,
-            UiPageQuery query) {
+            UiPageQuery query,
+            boolean detail) {
         return UiConfirmModalView.builder()
                 .id("post-publish-modal")
                 .title(messageResolver.get(
@@ -476,7 +512,8 @@ public class PostModerationPageController {
                 .actionPath(buildStatePath(
                         buildPostPath(postId, "publish"),
                         filter,
-                        query))
+                        query,
+                        detail))
                 .confirmLabel(messageResolver.get("action.publish"))
                 .confirmButtonClass("btn-success")
                 .build();
@@ -487,7 +524,8 @@ public class PostModerationPageController {
             ModerationPostFilterCriteria filter,
             UiPageQuery query,
             RejectPostModalForm form,
-            Map<String, String> fieldErrors) {
+            Map<String, String> fieldErrors,
+            boolean detail) {
         return uiModalFactory.build(
                 UiModalDefinition.builder()
                         .id("post-reject-modal")
@@ -498,7 +536,8 @@ public class PostModerationPageController {
                         .actionPath(buildStatePath(
                                 buildPostPath(postId, "reject"),
                                 filter,
-                                query))
+                                query,
+                                detail))
                         .submitLabel(messageResolver.get("action.reject"))
                         .build(),
                 RejectPostModalForm.class,
@@ -552,22 +591,36 @@ public class PostModerationPageController {
             HttpServletRequest request,
             HttpServletResponse response,
             ModerationPostFilterCriteria filter,
-            UiPageQuery query) {
+            UiPageQuery query,
+            boolean detail) {
+        String queuePath = buildStatePath(
+                getModerationPath(),
+                filter,
+                query);
         if (HtmxRequestSupport.isHtmxRequest(request)) {
+            if (detail) {
+                HtmxRequestSupport.redirect(response, queuePath);
+                return EMPTY_RESPONSE_VIEW;
+            }
             HtmxRequestSupport.trigger(response, QUEUE_CHANGED_EVENT);
             return EMPTY_RESPONSE_VIEW;
         }
 
-        return "redirect:" + buildStatePath(
-                getModerationPath(),
-                filter,
-                query);
+        return "redirect:" + queuePath;
     }
 
     private String buildStatePath(
             String basePath,
             ModerationPostFilterCriteria filter,
             UiPageQuery query) {
+        return buildStatePath(basePath, filter, query, false);
+    }
+
+    private String buildStatePath(
+            String basePath,
+            ModerationPostFilterCriteria filter,
+            UiPageQuery query,
+            boolean detail) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(
                 query.toUri(basePath, PAGE_DEFAULTS));
 
@@ -582,6 +635,9 @@ public class PostModerationPageController {
         }
         if (filter.getCreatedTo() != null) {
             builder.queryParam("createdTo", filter.getCreatedTo());
+        }
+        if (detail) {
+            builder.queryParam("detail", true);
         }
 
         return builder.build().encode().toUriString();

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="player(asset, trackProgress)"
+         class="app-media-preview-player video-post-player bg-black"
+         data-media-preview
+         th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
+         th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
+         th:data-message-stream-failed="#{media.preview.streamFailed}">
+        <video class="video-js vjs-big-play-centered w-100 h-100"
+               controls
+               playsinline
+               preload="metadata"
+               data-video-player
+               data-auto-initialize
+               th:poster="${asset.thumbnailUrl}"
+               th:attr="data-video-source=${asset.contentUrl},
+                        data-media-progress-id=${trackProgress ? asset.id : null}"></video>
+        <div class="alert alert-danger m-3"
+             data-video-error
+             hidden></div>
+    </div>
+</body>
+</html>

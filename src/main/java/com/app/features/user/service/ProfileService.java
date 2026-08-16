@@ -1,7 +1,7 @@
 package com.app.features.user.service;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import com.app.features.user.entity.UserInfoEntity;
@@ -31,6 +31,10 @@ public interface ProfileService {
 
     UserInfoEntity requireProfile(@NotNull UUID userId);
 
-    List<UserInfoEntity> findProfiles(
+    Map<UUID, UserInfoEntity> requireProfiles(
             @NotNull Collection<@NotNull UUID> userIds);
+
+    UserInfoEntity requireProfile(
+            @NotNull Map<UUID, UserInfoEntity> profilesByUserId,
+            @NotNull UUID userId);
 }

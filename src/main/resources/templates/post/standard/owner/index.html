@@ -89,6 +89,11 @@
                            th:text="#{post.owner.type.short}">
                             Shorts
                         </a>
+                        <a class="nav-link"
+                           th:href="${page.videosPath}"
+                           th:text="#{post.owner.type.video}">
+                            Videos
+                        </a>
                     </nav>
 
                     <div th:replace="~{post/standard/owner/fragments/workspace

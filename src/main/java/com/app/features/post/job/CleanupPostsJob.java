@@ -28,8 +28,10 @@ public class CleanupPostsJob implements JobHandler {
         PostCleanupResult result = postMaintenanceSvc.cleanupExpiredPosts();
 
         log.info(
-                "Post cleanup completed: deleted [{}], rejected [{}].",
+                "Post cleanup completed: series deleted [{}], posts deleted [{}], rejected [{}], series counts synchronized [{}].",
+                result.getDeletedSeriesCount(),
                 result.getDeletedCount(),
-                result.getRejectedCount());
+                result.getRejectedCount(),
+                result.getSynchronizedSeriesCount());
     }
 }

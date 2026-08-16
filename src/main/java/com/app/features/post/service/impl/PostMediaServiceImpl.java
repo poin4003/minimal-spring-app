@@ -2,7 +2,9 @@ package com.app.features.post.service.impl;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
@@ -55,6 +57,15 @@ public class PostMediaServiceImpl implements PostMediaService {
         return postMediaRepo.findAllByPost_IdInAndRoleOrderByPost_IdAscPositionAsc(
                 postIds,
                 role);
+    }
+
+    @Override
+    public Map<UUID, List<PostMediaEntity>> findAttachmentsByPostId(
+            Collection<UUID> postIds,
+            PostMediaRole role) {
+        return findAttachments(postIds, role).stream()
+                .collect(Collectors.groupingBy(
+                        attachment -> attachment.getPost().getId()));
     }
 
     @Override

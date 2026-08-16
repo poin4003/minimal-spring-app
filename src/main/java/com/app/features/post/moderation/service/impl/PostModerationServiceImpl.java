@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +25,7 @@ import com.app.features.post.moderation.schema.result.ModerationPostResult;
 import com.app.features.post.moderation.schema.result.ModerationPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationShortPostDetailResult;
 import com.app.features.post.moderation.schema.result.ModerationStandardPostDetailResult;
+import com.app.features.post.moderation.schema.result.ModerationVideoPostDetailResult;
 import com.app.features.post.moderation.service.PostModerationService;
 import com.app.features.post.repository.PostRepository;
 import com.app.features.post.service.PostMediaService;
@@ -34,6 +34,8 @@ import com.app.features.post.shortpost.entity.ShortPostEntity;
 import com.app.features.post.shortpost.service.ShortPostService;
 import com.app.features.post.standard.entity.StandardPostEntity;
 import com.app.features.post.standard.service.StandardPostService;
+import com.app.features.post.videopost.entity.VideoPostEntity;
+import com.app.features.post.videopost.service.VideoPostService;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.service.ProfileService;
@@ -54,6 +56,7 @@ public class PostModerationServiceImpl implements PostModerationService {
     private final PostMediaService postMediaSvc;
     private final StandardPostService standardPostSvc;
     private final ShortPostService shortPostSvc;
+    private final VideoPostService videoPostSvc;
     private final PostRepository postRepo;
     private final PostModerationResultMapper postModerationMapper;
 
@@ -64,12 +67,14 @@ public class PostModerationServiceImpl implements PostModerationService {
         Page<PostEntity> entityPage = postRepo.findAll(
                 PostModerationSpecification.pendingReview(criteria),
                 pageable);
-        Map<UUID, UserInfoEntity> profilesByAuthorId = loadProfilesByAuthorId(
-                entityPage.getContent());
+        Map<UUID, UserInfoEntity> profilesByAuthorId = profileSvc
+                .requireProfiles(entityPage.getContent().stream()
+                        .map(post -> post.getAuthor().getId())
+                        .toList());
 
         return entityPage.map(post -> postModerationMapper.toListResult(
                 post,
-                requireLoadedProfile(
+                profileSvc.requireProfile(
                         profilesByAuthorId,
                         post.getAuthor().getId())));
     }
@@ -98,6 +103,7 @@ public class PostModerationServiceImpl implements PostModerationService {
         return switch (post.getType()) {
             case STANDARD -> getStandardPostDetail(postId);
             case SHORT -> getShortPostDetail(postId);
+            case VIDEO -> getVideoPostDetail(postId);
             default -> throw ExceptionFactory.invalidParam(
                     "error.post.typeUnsupported",
                     post.getType());
@@ -115,6 +121,19 @@ public class PostModerationServiceImpl implements PostModerationService {
                 shortPost,
                 authorInfo,
                 shortPostSvc.requireContentAttachment(postId));
+    }
+
+    @Override
+    public ModerationVideoPostDetailResult getVideoPostDetail(UUID postId) {
+        VideoPostEntity videoPost = videoPostSvc.requireVideoPost(postId);
+        PostEntity post = postSvc.requirePendingPost(videoPost.getPost());
+        UserInfoEntity authorInfo = profileSvc.requireProfile(
+                post.getAuthor().getId());
+
+        return postModerationMapper.toVideoDetailResult(
+                videoPost,
+                authorInfo,
+                videoPostSvc.requireContentAttachment(postId));
     }
 
     @Override
@@ -147,33 +166,6 @@ public class PostModerationServiceImpl implements PostModerationService {
         post.setModeratedBy(moderator);
         post.setModeratedAt(LocalDateTime.now());
         post.setRejectionReason(payload.getReason().trim());
-    }
-
-    private Map<UUID, UserInfoEntity> loadProfilesByAuthorId(
-            List<PostEntity> posts) {
-        List<UUID> authorIds = posts.stream()
-                .map(post -> post.getAuthor().getId())
-                .distinct()
-                .toList();
-
-        return profileSvc.findProfiles(authorIds).stream()
-                .collect(Collectors.toMap(
-                        profile -> profile.getUserId(),
-                        profile -> profile));
-    }
-
-    private UserInfoEntity requireLoadedProfile(
-            Map<UUID, UserInfoEntity> profilesByAuthorId,
-            UUID authorId) {
-        UserInfoEntity profile = profilesByAuthorId.get(authorId);
-
-        if (profile == null) {
-            throw ExceptionFactory.notFound(
-                    "error.profile.notFound",
-                    authorId);
-        }
-
-        return profile;
     }
 
 }

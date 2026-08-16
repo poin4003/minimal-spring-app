@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<section th:fragment="results(page)"
+         id="owner-video-results"
+         class="d-grid gap-4"
+         th:attr="hx-get=${page.searchPath},
+                  hx-trigger='ownerVideosChanged from:body',
+                  hx-target='#owner-video-results',
+                  hx-select='#owner-video-results',
+                  hx-swap='outerHTML'">
+    <div th:if="${page.activeTab.name() == 'VIDEOS' and #lists.isEmpty(page.videos)}"
+         class="app-empty-state app-surface-panel"
+         th:text="#{video.owner.empty}">No videos.</div>
+    <div th:if="${page.activeTab.name() == 'SERIES' and #lists.isEmpty(page.series)}"
+         class="app-empty-state app-surface-panel"
+         th:text="#{video.series.owner.empty}">No series.</div>
+
+    <div th:if="${page.activeTab.name() == 'VIDEOS' and !#lists.isEmpty(page.videos)}"
+         class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-3">
+        <div th:each="card : ${page.videos}" class="col">
+            <div th:replace="~{post/video/owner/fragments/video-card
+                    :: card(${card}, false)}"></div>
+        </div>
+    </div>
+
+    <div th:if="${page.activeTab.name() == 'SERIES' and !#lists.isEmpty(page.series)}"
+         class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-3">
+        <div th:each="card : ${page.series}" class="col">
+            <div th:replace="~{post/video/owner/fragments/series-card
+                    :: card(${card})}"></div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        <div th:replace="~{fragments/components/pagination
+                :: pagination(${page.pagination})}"></div>
+    </div>
+</section>
+</body>
+</html>

@@ -1,8 +1,12 @@
 package com.app.features.user.service.impl;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -88,12 +92,38 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<UserInfoEntity> findProfiles(Collection<UUID> userIds) {
+    public Map<UUID, UserInfoEntity> requireProfiles(
+            Collection<UUID> userIds) {
         if (userIds.isEmpty()) {
-            return List.of();
+            return Map.of();
         }
 
-        return userInfoRepo.findAllByUserIdIn(userIds);
+        Set<UUID> distinctUserIds = new LinkedHashSet<>(userIds);
+        Map<UUID, UserInfoEntity> profilesByUserId = userInfoRepo
+                .findAllByUserIdIn(distinctUserIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        profile -> profile.getUserId(),
+                        profile -> profile));
+
+        distinctUserIds.forEach(userId -> requireProfile(
+                profilesByUserId,
+                userId));
+
+        return profilesByUserId;
+    }
+
+    @Override
+    public UserInfoEntity requireProfile(
+            Map<UUID, UserInfoEntity> profilesByUserId,
+            UUID userId) {
+        UserInfoEntity profile = profilesByUserId.get(userId);
+        if (profile == null) {
+            throw ExceptionFactory.notFound(
+                    "error.profile.notFound",
+                    userId);
+        }
+        return profile;
     }
 
     private ProfileResult toResult(UserInfoEntity profile) {

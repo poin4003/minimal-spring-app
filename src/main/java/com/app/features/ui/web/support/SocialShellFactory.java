@@ -63,6 +63,7 @@ public class SocialShellFactory {
             String requestPath) {
         String feedPath = appProperties.getUi().getFeedPath();
         String shortsPath = appProperties.getUi().getShortsPath();
+        String videosPath = appProperties.getUi().getVideosPath();
         SocialNavigationItemView feed = SocialNavigationItemView.builder()
                 .label(messageResolver.get("social.navigation.feed"))
                 .icon("house-door")
@@ -75,7 +76,13 @@ public class SocialShellFactory {
                 .path(shortsPath)
                 .active(matchesPath(shortsPath, requestPath))
                 .build();
-        return List.of(feed, shorts);
+        SocialNavigationItemView videos = SocialNavigationItemView.builder()
+                .label(messageResolver.get("social.navigation.videos"))
+                .icon("collection-play")
+                .path(videosPath)
+                .active(matchesPath(videosPath, requestPath))
+                .build();
+        return List.of(feed, shorts, videos);
     }
 
     private NotificationWidgetView buildNotificationWidget() {

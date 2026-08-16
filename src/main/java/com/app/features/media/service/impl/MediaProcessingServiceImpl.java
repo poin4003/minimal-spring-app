@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -42,6 +43,7 @@ import com.app.features.media.validation.MediaProbe;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffmpeg.UrlInput;
 import com.github.kokorin.jaffree.ffmpeg.UrlOutput;
+import com.github.kokorin.jaffree.ffprobe.Stream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +54,13 @@ import lombok.extern.slf4j.Slf4j;
 public class MediaProcessingServiceImpl implements MediaProcessingService {
 
     private static final String HLS_CONTENT_TYPE = "application/vnd.apple.mpegurl";
+    private static final String SOFTWARE_VIDEO_ENCODER = "libx264";
+    private static final String QSV_VIDEO_ENCODER = "h264_qsv";
+    private static final String AUTO_VIDEO_ENCODER = "auto";
+    private static final String QSV_HARDWARE_ACCEL = "qsv";
+    private static final String NONE_HARDWARE_ACCEL = "none";
+    private static final String QSV_DEVICE_NAME = "hw";
+    private static final int QSV_EXTRA_HW_FRAMES = 64;
 
     private final MediaRepository mediaRepo;
     private final MediaVariantRepository mediaVariantRepo;
@@ -63,6 +72,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final AppProperties appProperties;
     private final ApplicationEventPublisher eventPublisher;
+
+    private volatile Boolean qsvEncodingAvailable;
 
     @Override
     public void process(UUID mediaId, UUID executionId) {
@@ -147,17 +158,24 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 mediaFileStorage.prepareProcessingWorkspace(media.getStorageKey());
 
         try {
-            List<HlsEncodingProfile> profiles = media.getKind() == MediaKind.VIDEO
-                    ? resolveVideoProfiles(source)
+            Stream primaryVideoStream = media.getKind() == MediaKind.VIDEO
+                    ? resolvePrimaryVideoStream(source)
+                    : null;
+            List<HlsEncodingProfile> profiles = primaryVideoStream != null
+                    ? resolveVideoProfiles(primaryVideoStream)
                     : List.of(HlsEncodingProfile.audio(
                             appProperties.getMedia().getHls().getAudioBitrate()));
+            String qsvDecoder = primaryVideoStream != null
+                    ? resolveQsvDecoder(primaryVideoStream)
+                    : null;
 
             for (HlsEncodingProfile profile : profiles) {
                 createHlsRendition(
                         source,
                         workspace.getTemporaryDirectory(),
                         profile,
-                        media.getKind());
+                        media.getKind(),
+                        qsvDecoder);
             }
             writeMasterPlaylist(
                     workspace.getTemporaryDirectory().resolve("index.m3u8"),
@@ -176,7 +194,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             Path source,
             Path hlsDirectory,
             HlsEncodingProfile profile,
-            MediaKind mediaKind) {
+            MediaKind mediaKind,
+            String qsvDecoder) {
         Path renditionDirectory = hlsDirectory.resolve(profile.getKey());
         Path playlist = renditionDirectory.resolve("index.m3u8");
 
@@ -188,7 +207,135 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     ex);
         }
 
-        UrlOutput output = UrlOutput.toPath(playlist)
+        if (mediaKind == MediaKind.VIDEO && profile.isVideo()) {
+            createVideoHlsRendition(
+                    source,
+                    playlist,
+                    renditionDirectory,
+                    profile,
+                    qsvDecoder);
+        } else {
+            UrlOutput output = createBaseHlsOutput(playlist, renditionDirectory, profile);
+            output.disableStream(StreamType.VIDEO);
+            executeHls(source, output, null);
+        }
+    }
+
+    private void createVideoHlsRendition(
+            Path source,
+            Path playlist,
+            Path renditionDirectory,
+            HlsEncodingProfile profile,
+            String qsvDecoder) {
+        String preferredEncoder = resolveVideoEncoder();
+
+        if (isQsvEncoder(preferredEncoder)
+                && Boolean.FALSE.equals(qsvEncodingAvailable)
+                && isSoftwareFallbackEnabled()) {
+            executeVideoHls(
+                    source,
+                    playlist,
+                    renditionDirectory,
+                    profile,
+                    buildSoftwareVideoPlan(profile));
+            return;
+        }
+
+        if (!isQsvEncoder(preferredEncoder)) {
+            executeVideoHls(
+                    source,
+                    playlist,
+                    renditionDirectory,
+                    profile,
+                    buildSoftwareVideoPlan(profile));
+            return;
+        }
+
+        RuntimeException qsvFailure = null;
+        if (qsvDecoder != null) {
+            try {
+                executeVideoHls(
+                        source,
+                        playlist,
+                        renditionDirectory,
+                        profile,
+                        buildQsvDecodeVideoPlan(profile, qsvDecoder));
+                qsvEncodingAvailable = Boolean.TRUE;
+                return;
+            } catch (RuntimeException ex) {
+                qsvFailure = ex;
+                log.warn(
+                        "QSV decode path failed for rendition [{}], retrying with upload path",
+                        profile.getKey(),
+                        ex);
+            }
+        }
+
+        try {
+            executeVideoHls(
+                    source,
+                    playlist,
+                    renditionDirectory,
+                    profile,
+                    buildQsvUploadVideoPlan(profile));
+            qsvEncodingAvailable = Boolean.TRUE;
+            return;
+        } catch (RuntimeException ex) {
+            qsvEncodingAvailable = Boolean.FALSE;
+            if (!isSoftwareFallbackEnabled()) {
+                if (qsvFailure != null) {
+                    qsvFailure.addSuppressed(ex);
+                    throw qsvFailure;
+                }
+                throw ex;
+            }
+
+            log.warn(
+                    "Falling back to [{}] for HLS rendition [{}] after QSV path failed",
+                    SOFTWARE_VIDEO_ENCODER,
+                    profile.getKey(),
+                    qsvFailure != null ? qsvFailure : ex);
+            executeVideoHls(
+                    source,
+                    playlist,
+                    renditionDirectory,
+                    profile,
+                    buildSoftwareVideoPlan(profile));
+        }
+    }
+
+    private void executeVideoHls(
+            Path source,
+            Path playlist,
+            Path renditionDirectory,
+            HlsEncodingProfile profile,
+            VideoExecutionPlan plan) {
+        UrlOutput output = createBaseHlsOutput(playlist, renditionDirectory, profile);
+        output.setCodec(StreamType.VIDEO, plan.videoEncoder())
+                .addArguments(
+                        "-vf",
+                        plan.videoFilter())
+                .addArguments("-b:v", String.valueOf(profile.getVideoBitrate()))
+                .addArguments("-maxrate", String.valueOf(profile.getVideoBitrate()))
+                .addArguments("-bufsize", String.valueOf(profile.getVideoBitrate() * 2))
+                .addArguments("-preset", "veryfast")
+                .addArguments("-sc_threshold", "0")
+                .addArguments(
+                        "-force_key_frames",
+                        "expr:gte(t,n_forced*"
+                                + appProperties.getMedia().getFfmpeg().getSegmentDurationSeconds()
+                                + ")");
+        if (plan.applyPixelFormat()) {
+            output.setPixelFormat("yuv420p");
+        }
+        executeHls(source, output, plan);
+    }
+
+    private UrlOutput createBaseHlsOutput(
+            Path playlist,
+            Path renditionDirectory,
+            HlsEncodingProfile profile) {
+        return UrlOutput.toPath(playlist)
                 .setFormat("hls")
                 .setCodec(StreamType.AUDIO, "aac")
                 .addArguments("-b:a", String.valueOf(profile.getAudioBitrate()))
@@ -199,36 +346,102 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 .addArguments(
                         "-hls_segment_filename",
                         renditionDirectory.resolve("segment-%05d.ts").toString());
+    }
 
-        if (mediaKind == MediaKind.VIDEO && profile.isVideo()) {
-            output.setCodec(StreamType.VIDEO, "libx264")
-                    .setPixelFormat("yuv420p")
-                    .addArguments(
-                            "-vf",
-                            "scale=" + profile.getWidth() + ":" + profile.getHeight())
-                    .addArguments("-b:v", String.valueOf(profile.getVideoBitrate()))
-                    .addArguments("-maxrate", String.valueOf(profile.getVideoBitrate()))
-                    .addArguments("-bufsize", String.valueOf(profile.getVideoBitrate() * 2))
-                    .addArguments("-preset", "veryfast")
-                    .addArguments("-sc_threshold", "0")
-                    .addArguments(
-                            "-force_key_frames",
-                            "expr:gte(t,n_forced*"
-                                    + appProperties.getMedia().getFfmpeg().getSegmentDurationSeconds()
-                                    + ")");
-        } else {
-            output.disableStream(StreamType.VIDEO);
+    private void executeHls(Path source, UrlOutput output, VideoExecutionPlan plan) {
+        var ffmpeg = mediaFfmpegFactory.create();
+
+        int threads = appProperties.getMedia().getFfmpeg().getMachine().getThreads();
+        if (threads > 0) {
+            ffmpeg.addArguments("-threads", String.valueOf(threads));
         }
 
-        mediaFfmpegFactory.create()
-                .addInput(UrlInput.fromPath(source))
+        UrlInput input = UrlInput.fromPath(source);
+        if (plan != null && plan.useQsvDevice()) {
+            ffmpeg.addArguments("-init_hw_device", "qsv=" + QSV_DEVICE_NAME + ":auto_any")
+                    .addArguments("-filter_hw_device", QSV_DEVICE_NAME);
+        }
+        if (plan != null && plan.inputDecoder() != null) {
+            input.addArguments("-hwaccel", "qsv")
+                    .addArguments("-hwaccel_output_format", "qsv")
+                    .addArguments("-c:v", plan.inputDecoder());
+        }
+
+        ffmpeg.addInput(input)
                 .addOutput(output)
                 .setOverwriteOutput(true)
                 .execute();
     }
 
-    private List<HlsEncodingProfile> resolveVideoProfiles(Path source) {
-        var videoStream = mediaProbe.probe(source).getStreams().stream()
+    private String resolveVideoEncoder() {
+        AppProperties.Machine machine = appProperties.getMedia().getFfmpeg().getMachine();
+        String configuredEncoder = normalizeMachineValue(
+                machine.getVideoEncoder(),
+                AUTO_VIDEO_ENCODER);
+        if (!AUTO_VIDEO_ENCODER.equals(configuredEncoder)) {
+            return configuredEncoder;
+        }
+
+        String hardwareAccel = normalizeMachineValue(
+                machine.getHardwareAccel(),
+                NONE_HARDWARE_ACCEL);
+        if (QSV_HARDWARE_ACCEL.equals(hardwareAccel)) {
+            return QSV_VIDEO_ENCODER;
+        }
+        return SOFTWARE_VIDEO_ENCODER;
+    }
+
+    private boolean isSoftwareFallbackEnabled() {
+        return appProperties.getMedia().getFfmpeg().getMachine().isFallbackToSoftware();
+    }
+
+    private boolean isQsvEncoder(String videoEncoder) {
+        return QSV_VIDEO_ENCODER.equals(videoEncoder);
+    }
+
+    private VideoExecutionPlan buildSoftwareVideoPlan(HlsEncodingProfile profile) {
+        return new VideoExecutionPlan(
+                SOFTWARE_VIDEO_ENCODER,
+                null,
+                "scale=" + profile.getWidth() + ":" + profile.getHeight(),
+                false,
+                true);
+    }
+
+    private VideoExecutionPlan buildQsvDecodeVideoPlan(
+            HlsEncodingProfile profile,
+            String qsvDecoder) {
+        return new VideoExecutionPlan(
+                QSV_VIDEO_ENCODER,
+                qsvDecoder,
+                "scale_qsv=" + profile.getWidth() + ":" + profile.getHeight(),
+                true,
+                false);
+    }
+
+    private VideoExecutionPlan buildQsvUploadVideoPlan(HlsEncodingProfile profile) {
+        return new VideoExecutionPlan(
+                QSV_VIDEO_ENCODER,
+                null,
+                "format=nv12,hwupload=extra_hw_frames="
+                        + QSV_EXTRA_HW_FRAMES
+                        + ",scale_qsv="
+                        + profile.getWidth()
+                        + ":"
+                        + profile.getHeight(),
+                true,
+                false);
+    }
+
+    private String normalizeMachineValue(String value, String defaultValue) {
+        if (value == null || value.isBlank()) {
+            return defaultValue;
+        }
+        return value.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private Stream resolvePrimaryVideoStream(Path source) {
+        return mediaProbe.probe(source).getStreams().stream()
                 .filter(stream -> StreamType.VIDEO.equals(stream.getCodecType()))
                 .filter(stream -> stream.getWidth() != null
                         && stream.getWidth() > 0
@@ -239,6 +452,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         right.getHeight()))
                 .orElseThrow(() -> ExceptionFactory.serverError(
                         "error.media.videoDimensionsUndetermined"));
+    }
+
+    private List<HlsEncodingProfile> resolveVideoProfiles(Stream videoStream) {
         int sourceWidth = videoStream.getWidth();
         int sourceHeight = videoStream.getHeight();
         int sourceShortEdge = Math.min(sourceWidth, sourceHeight);
@@ -265,6 +481,24 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         sourceWidth,
                         sourceHeight))
                 .toList();
+    }
+
+    private String resolveQsvDecoder(Stream videoStream) {
+        String codecName = videoStream.getCodecName();
+        if (codecName == null || codecName.isBlank()) {
+            return null;
+        }
+
+        return switch (codecName.trim().toLowerCase(Locale.ROOT)) {
+            case "h264" -> "h264_qsv";
+            case "hevc" -> "hevc_qsv";
+            case "vp9" -> "vp9_qsv";
+            case "vp8" -> "vp8_qsv";
+            case "av1" -> "av1_qsv";
+            case "mpeg2video" -> "mpeg2_qsv";
+            case "mjpeg" -> "mjpeg_qsv";
+            default -> null;
+        };
     }
 
     private void writeMasterPlaylist(Path manifest, List<HlsEncodingProfile> profiles) {
@@ -367,5 +601,13 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     media.getCreatedBy().getId(),
                     media.getOriginalName()));
         });
+    }
+
+    private record VideoExecutionPlan(
+            String videoEncoder,
+            String inputDecoder,
+            String videoFilter,
+            boolean useQsvDevice,
+            boolean applyPixelFormat) {
     }
 }

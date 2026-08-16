@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<section th:fragment="available(page)" id="available-series-videos" class="d-grid gap-3">
+    <div th:if="${#lists.isEmpty(page.videos)}"
+         class="app-empty-state app-surface-panel"
+         th:text="#{video.series.items.availableEmpty}">No standalone videos.</div>
+    <div th:unless="${#lists.isEmpty(page.videos)}"
+         class="row g-3 row-cols-1 row-cols-md-2">
+        <div th:each="video : ${page.videos}" class="col">
+            <label class="card app-surface-panel h-100 overflow-hidden">
+                <span class="ratio ratio-16x9 bg-black">
+                    <img th:if="${video.content.media.thumbnailUrl != null}"
+                         th:src="${video.content.media.thumbnailUrl}"
+                         th:alt="${video.title}"
+                         class="w-100 h-100 object-fit-cover" loading="lazy">
+                </span>
+                <span class="card-body d-flex align-items-start gap-3">
+                    <input class="form-check-input mt-1" type="checkbox"
+                           name="videoPostIds" th:value="${video.post.id}">
+                    <span class="min-w-0">
+                        <strong class="d-block text-truncate" th:text="${video.title}">Title</strong>
+                        <small class="text-secondary"
+                               th:text="${@uiDateTimeFormatter.format(video.state.createdAt)}">Date</small>
+                    </span>
+                </span>
+            </label>
+        </div>
+    </div>
+    <div class="d-flex justify-content-center">
+        <div th:replace="~{fragments/components/pagination :: pagination(${page.pagination})}"></div>
+    </div>
+</section>
+</body>
+</html>

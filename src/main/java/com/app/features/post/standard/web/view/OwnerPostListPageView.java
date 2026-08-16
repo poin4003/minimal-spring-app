@@ -17,6 +17,7 @@ public class OwnerPostListPageView {
     private final ProfileResult profile;
     private final String editProfilePath;
     private final String shortsPath;
+    private final String videosPath;
     private final String createPath;
     private final OwnerPostWorkspaceView workspace;
 }

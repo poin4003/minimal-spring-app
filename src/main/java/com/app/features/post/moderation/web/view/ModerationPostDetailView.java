@@ -15,6 +15,7 @@ public class ModerationPostDetailView {
 
     private final PostSummaryResult post;
     private final ModerationPostStateResult state;
+    private final String title;
     private final String content;
 
     @Builder.Default

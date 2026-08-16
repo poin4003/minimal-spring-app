@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<article th:fragment="card(card, detailMode)"
+         class="card app-surface-panel video-library-card h-100 overflow-hidden">
+    <header class="card-header bg-transparent d-flex align-items-center justify-content-between gap-2">
+        <span class="badge rounded-pill"
+              th:classappend="${card.statusBadgeClass}"
+              th:text="${card.statusLabel}">Status</span>
+        <div class="btn-group btn-group-sm video-owner-card-actions"
+             role="group"
+             th:aria-label="#{post.owner.actions}">
+            <a th:if="${card.editable}"
+               th:href="${card.editPath}"
+               class="btn btn-outline-primary"
+               th:title="#{post.owner.edit}">
+                <i class="bi bi-pencil" aria-hidden="true"></i>
+                <span class="visually-hidden" th:text="#{post.owner.edit}">Edit</span>
+            </a>
+            <a th:each="action : ${card.actions}"
+               th:href="${action.modalPath}"
+               class="btn"
+               th:classappend="${action.buttonClass}"
+               th:title="${action.label}"
+               th:attr="hx-get=${action.modalPath},
+                        hx-target='#app-modal-host',
+                        hx-swap='innerHTML',
+                        hx-disabled-elt='this',
+                        data-app-modal-request='true'">
+                <i th:class="${action.iconClass}" aria-hidden="true"></i>
+                <span class="visually-hidden" th:text="${action.label}">Action</span>
+            </a>
+        </div>
+    </header>
+
+    <a th:unless="${detailMode}"
+       th:href="${card.detailPath}"
+       class="ratio ratio-16x9 bg-black text-decoration-none"
+       data-media-gallery-card>
+        <img th:if="${card.video.content.media.thumbnailUrl != null}"
+             th:src="${card.video.content.media.thumbnailUrl}"
+             th:alt="${card.video.title}"
+             class="w-100 h-100 object-fit-cover"
+             loading="lazy">
+        <span th:unless="${card.video.content.media.thumbnailUrl != null}"
+              class="d-flex align-items-center justify-content-center text-white-50">
+            <i class="bi bi-play-circle fs-1" aria-hidden="true"></i>
+        </span>
+        <span class="app-media-hover-preview d-none"
+              th:attr="data-media-hover-preview=${card.video.content.media.contentUrl}"
+              aria-hidden="true"></span>
+        <span class="video-card-play d-flex align-items-center justify-content-center">
+            <i class="bi bi-play-fill" aria-hidden="true"></i>
+        </span>
+    </a>
+
+    <th:block th:if="${detailMode}">
+        <div th:replace="~{post/video/fragments/player
+                :: player(${card.video.content.media}, true)}"></div>
+    </th:block>
+
+    <div class="card-body">
+        <a th:unless="${detailMode}"
+           th:href="${card.detailPath}"
+           class="text-body text-decoration-none stretched-link">
+            <h2 class="h6 text-truncate mb-2" th:text="${card.video.title}">Title</h2>
+        </a>
+        <h1 th:if="${detailMode}" class="h3 mb-3" th:text="${card.video.title}">Title</h1>
+        <p th:if="${card.video.description != null and !card.video.description.isBlank()}"
+           class="text-secondary preserve-lines mb-0"
+           th:classappend="${detailMode} ? '' : ' text-truncate'"
+           th:text="${card.video.description}">Description</p>
+        <time class="small text-secondary d-block mt-3"
+              th:datetime="${card.video.state.createdAt}"
+              th:text="${@uiDateTimeFormatter.format(card.video.state.createdAt)}">Date</time>
+    </div>
+</article>
+</body>
+</html>

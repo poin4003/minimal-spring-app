@@ -2,6 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}"
       th:with="
+          viewStatus=${page != null ? page.status : (status != null ? status : 500)},
           viewError=${page != null ? page.error : (#strings.isEmpty(error) ? #messages.msg('error.system.title') : error)},
           viewTitle=${page != null ? page.title : #messages.msg('error.system.title')},
           viewMessage=${page != null ? page.message : (#strings.isEmpty(message) ? #messages.msg('error.system.message') : message)},
@@ -26,7 +27,11 @@
                 <div class="col-lg-6">
                     <div class="app-surface-panel app-error-panel mx-auto">
                         <div>
-                            <div class="app-error-code text-secondary" th:text="${viewError}">Oops</div>
+                            <div class="app-error-code text-secondary" th:text="${viewStatus}">500</div>
+                            <div class="small font-monospace text-secondary text-break mb-3"
+                                 th:text="${viewError}">
+                                INTERNAL_SERVER_ERROR
+                            </div>
                             <h1 class="h3 mb-3" th:text="${viewTitle}">Something went wrong</h1>
                             <p class="text-secondary mb-4" th:text="${viewMessage}">
                                 The server could not process this request.
