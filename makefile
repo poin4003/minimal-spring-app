@@ -1,38 +1,35 @@
 -include .env
+.EXPORT_ALL_VARIABLES:
 
 APP_ENV ?= dev
-MAIN_CLASS := com.app.Application
+JAR_FILE := target/spring-application-0.0.1-SNAPSHOT.jar
 
 ifeq ($(OS),Windows_NT)
     SHELL := cmd.exe
-    MVN_CMD := mvnw.cmd
+    MVN_CMD := mvn
     JAVA_CMD := java
-    RUNTIME_CP := target\classes;target\dependency\*
 else
     MVN_CMD := ./mvnw
     JAVA_CMD := java
-    RUNTIME_CP := target/classes:target/dependency/*
 endif
 
-PROFILE_FILE := src/main/resources/application-$(APP_ENV).yaml
-
-.PHONY: dev build run clean check-profile
+.PHONY: dev build run clean check-build
 
 dev:
 	@echo "Starting server in DEV mode..."
 	$(MVN_CMD) -DskipTests clean spring-boot:run -Dspring-boot.run.profiles=dev
 
 build:
-	@echo "Building compiled output..."
-	$(MVN_CMD) -DskipTests clean compile dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=target/dependency
+	@echo "Building executable JAR..."
+	$(MVN_CMD) -DskipTests clean package
 
-run: check-profile
-	@echo "Running compiled output with APP_ENV=$(APP_ENV)..."
-	$(JAVA_CMD) -cp "$(RUNTIME_CP)" $(MAIN_CLASS) --spring.profiles.active=$(APP_ENV)
+run: check-build
+	@echo "Running packaged application with APP_ENV=$(APP_ENV)..."
+	$(JAVA_CMD) -jar "$(JAR_FILE)" --spring.profiles.active=$(APP_ENV)
 
 clean:
 	@echo "Cleaning build output..."
 	$(MVN_CMD) clean
 
-check-profile:
-	$(if $(wildcard $(PROFILE_FILE)),,$(error Missing profile file: $(PROFILE_FILE)))
+check-build:
+	$(if $(wildcard $(JAR_FILE)),,$(error Missing executable JAR: $(JAR_FILE). Run 'make build' first))
