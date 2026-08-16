@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<div th:fragment="modal(modal)" class="modal fade" th:id="${modal.id}"
+     tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content app-modal-content">
+            <form method="post" th:action="${modal.actionPath}"
+                  data-app-modal-form="true"
+                  th:attr="hx-post=${modal.actionPath},
+                           hx-swap='none',
+                           hx-disabled-elt='button[type=submit]'">
+                <input type="hidden" th:if="${_csrf != null}"
+                       th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <header class="modal-header app-section-header">
+                    <h2 class="modal-title fs-5" th:text="${modal.title}">Confirm</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            th:attr="aria-label=#{action.close}"></button>
+                </header>
+                <div class="modal-body app-section-body d-grid gap-3">
+                    <p class="mb-0" th:text="${modal.description}">Description</p>
+                    <fieldset>
+                        <legend class="form-label fs-6" th:text="#{video.series.action.scope}">Scope</legend>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cascadeMode"
+                                   id="series-only" value="SERIES_ONLY" checked>
+                            <label class="form-check-label" for="series-only"
+                                   th:text="#{video.series.action.seriesOnly}">Series only</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="cascadeMode"
+                                   id="include-videos" value="INCLUDE_VIDEOS">
+                            <label class="form-check-label" for="include-videos"
+                                   th:text="#{video.series.action.includeVideos}">Include videos</label>
+                        </div>
+                    </fieldset>
+                </div>
+                <footer class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal" th:text="#{action.cancel}">Cancel</button>
+                    <button type="submit" class="btn"
+                            th:classappend="${modal.submitButtonClass}"
+                            th:text="${modal.submitLabel}">Confirm</button>
+                </footer>
+            </form>
+        </div>
+    </div>
+</div>
+</body>
+</html>

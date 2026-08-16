@@ -18,6 +18,7 @@ public class OwnerShortListPageView {
     private final String editProfilePath;
     private final String standardPostsPath;
     private final String shortsPath;
+    private final String videosPath;
     private final String createPath;
     private final OwnerShortWorkspaceView workspace;
 }

@@ -107,6 +107,7 @@ public class OwnerStandardPostPageController {
                 .editProfilePath(
                         appProperties.getUi().getProfilePath())
                 .shortsPath(appProperties.getUi().getMyShortsPath())
+                .videosPath(appProperties.getUi().getMyVideosPath())
                 .createPath(getMyPostsPath() + "/create")
                 .workspace(workspace)
                 .build();

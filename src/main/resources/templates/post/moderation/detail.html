@@ -42,26 +42,20 @@
                        th:text="#{post.moderation.backToQueue}">
                         Back to queue
                     </a>
-                    <a th:href="${page.rejectModalPath}"
-                       class="btn btn-sm btn-outline-danger"
-                       th:attr="hx-get=${page.rejectModalPath},
-                                hx-target='#app-modal-host',
-                                hx-swap='innerHTML',
-                                hx-disabled-elt='this',
-                                data-app-modal-request='true'">
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger"
+                            data-bs-toggle="modal"
+                            th:data-bs-target="${'#' + page.rejectModal.id}">
                         <i class="bi bi-x-circle me-2" aria-hidden="true"></i>
                         <span th:text="#{action.reject}">Reject</span>
-                    </a>
-                    <a th:href="${page.publishModalPath}"
-                       class="btn btn-sm btn-success"
-                       th:attr="hx-get=${page.publishModalPath},
-                                hx-target='#app-modal-host',
-                                hx-swap='innerHTML',
-                                hx-disabled-elt='this',
-                                data-app-modal-request='true'">
+                    </button>
+                    <button type="button"
+                            class="btn btn-sm btn-success"
+                            data-bs-toggle="modal"
+                            th:data-bs-target="${'#' + page.publishModal.id}">
                         <i class="bi bi-check-circle me-2" aria-hidden="true"></i>
                         <span th:text="#{action.publish}">Publish</span>
-                    </a>
+                    </button>
                 </div>
 
                 <article class="card app-surface-panel app-component overflow-hidden">
@@ -150,11 +144,11 @@
                 </article>
             </div>
 
-            <div th:if="${page.publishModal != null}" hx-disable>
+            <div th:if="${page.publishModal != null}">
                 <div th:replace="~{fragments/components/confirm-modal
                         :: modal(${page.publishModal})}"></div>
             </div>
-            <div th:if="${page.rejectModal != null}" hx-disable>
+            <div th:if="${page.rejectModal != null}">
                 <div th:replace="~{fragments/components/modal
                         :: modal(${page.rejectModal})}"></div>
             </div>

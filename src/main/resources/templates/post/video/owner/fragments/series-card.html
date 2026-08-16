@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<article th:fragment="card(card)"
+         class="card app-surface-panel video-library-card h-100 overflow-hidden">
+    <a th:href="${card.detailPath}"
+       class="ratio ratio-16x9 bg-body-tertiary text-decoration-none">
+        <img th:if="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
+             th:src="${card.series.coverMedia.thumbnailUrl}"
+             th:alt="${card.series.title}"
+             class="w-100 h-100 object-fit-cover"
+             loading="lazy">
+        <span th:unless="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
+              class="d-flex align-items-center justify-content-center text-secondary">
+            <i class="bi bi-collection-play fs-1" aria-hidden="true"></i>
+        </span>
+    </a>
+    <div class="card-body">
+        <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+            <a th:href="${card.detailPath}" class="text-body text-decoration-none flex-grow-1 min-w-0">
+                <h2 class="h6 text-truncate mb-0" th:text="${card.series.title}">Series</h2>
+            </a>
+            <span class="badge rounded-pill"
+                  th:classappend="${card.statusBadgeClass}"
+                  th:text="${card.statusLabel}">Status</span>
+        </div>
+        <p class="small text-secondary mb-3"
+           th:text="#{video.series.videoCount(${card.series.videoCount})}">0 videos</p>
+        <a th:href="${card.editPath}"
+           class="btn btn-sm btn-outline-primary"
+           th:title="#{post.owner.edit}">
+            <i class="bi bi-pencil" aria-hidden="true"></i>
+            <span class="visually-hidden" th:text="#{post.owner.edit}">Edit</span>
+        </a>
+    </div>
+</article>
+</body>
+</html>

@@ -206,6 +206,8 @@ app:
             - "${app.ui.feed-path}/**"
             - "${app.ui.shorts-path}"
             - "${app.ui.shorts-path}/**"
+            - "${app.ui.videos-path}"
+            - "${app.ui.videos-path}/**"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -232,8 +234,10 @@ app:
         social-path: ${UI_SOCIAL_PATH:/}
         feed-path: ${UI_FEED_PATH:/posts}
         shorts-path: ${UI_SHORTS_PATH:/shorts}
+        videos-path: ${UI_VIDEOS_PATH:/videos}
         my-posts-path: ${UI_MY_POSTS_PATH:/my/posts}
         my-shorts-path: ${UI_MY_SHORTS_PATH:/my/shorts}
+        my-videos-path: ${UI_MY_VIDEOS_PATH:/my/videos}
         landing-path: ${UI_LANDING_PATH:/home}
         login-path: ${UI_LOGIN_PATH:/login}
         registration-path: ${UI_REGISTRATION_PATH:/register}

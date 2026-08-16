@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<body>
+<section th:fragment="composer(page)"
+         id="video-series-composer"
+         class="app-surface-panel app-component"
+         data-post-composer
+         data-max-media-count="1"
+         th:data-message-limit="#{post.composer.media.limit(1)}">
+    <form th:object="${form}" method="post" th:action="${page.actionPath}"
+          th:attr="hx-post=${page.actionPath},
+                   hx-target='#video-series-composer',
+                   hx-swap='outerHTML',
+                   hx-disabled-elt='button[type=submit]'">
+        <header class="app-section-header">
+            <h1 class="app-page-title" th:text="${page.heading}">Series</h1>
+            <p class="app-page-description" th:text="${page.description}">Description</p>
+        </header>
+        <div class="app-section-body d-grid gap-4">
+            <div>
+                <label for="series-title" class="form-label" th:text="#{video.field.title}">Title</label>
+                <input id="series-title" class="form-control"
+                       th:classappend="${#fields.hasErrors('title')} ? ' is-invalid' : ''"
+                       th:field="*{title}" maxlength="255">
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Invalid</div>
+            </div>
+            <div>
+                <label for="series-description" class="form-label" th:text="#{video.field.description}">Description</label>
+                <textarea id="series-description" class="form-control"
+                          th:classappend="${#fields.hasErrors('description')} ? ' is-invalid' : ''"
+                          th:field="*{description}" rows="6" maxlength="10000"></textarea>
+                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Invalid</div>
+            </div>
+
+            <select th:field="*{coverMediaId}" hidden data-selected-media-inputs>
+                <option th:if="*{coverMediaId != null}"
+                        th:value="*{coverMediaId}"
+                        th:text="*{coverMediaId}"
+                        selected></option>
+            </select>
+            <div class="alert alert-warning mb-0" data-media-selection-error hidden></div>
+
+            <section class="d-grid gap-3">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <h2 class="h5 mb-1" th:text="#{video.series.composer.cover}">Cover</h2>
+                        <p class="small text-secondary mb-0" th:text="#{video.series.composer.coverHint}">Optional cover image.</p>
+                    </div>
+                    <a th:href="${page.actionPath}" class="btn btn-sm btn-outline-primary"
+                       th:attr="hx-get=${page.uploadPartialPath},
+                                hx-target='#app-modal-host',
+                                hx-swap='innerHTML',
+                                hx-disabled-elt='this',
+                                data-app-modal-request='true'">
+                        <i class="bi bi-cloud-arrow-up me-2" aria-hidden="true"></i>
+                        <span th:text="#{post.composer.uploadMedia}">Upload</span>
+                    </a>
+                </div>
+                <div th:replace="~{post/fragments/media-picker :: picker(${page.coverPicker})}"></div>
+            </section>
+        </div>
+        <footer class="app-component-footer">
+            <a th:href="${page.backPath}" class="btn btn-sm btn-outline-secondary" th:text="#{action.cancel}">Cancel</a>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="bi bi-floppy me-2" aria-hidden="true"></i>
+                <span th:text="${page.submitLabel}">Save</span>
+            </button>
+        </footer>
+    </form>
+</section>
+</body>
+</html>

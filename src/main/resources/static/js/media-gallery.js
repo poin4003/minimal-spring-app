@@ -11,6 +11,7 @@
 
         const preview = activePreview;
         activePreview = null;
+        preview.card.classList.remove("is-media-previewing");
         preview.mount.classList.add("d-none");
         preview.player.dispose();
         preview.mount.replaceChildren();
@@ -62,6 +63,7 @@
 
         player.one("playing", function () {
             if (activePreview?.player === player) {
+                card.classList.add("is-media-previewing");
                 mount.classList.remove("d-none");
             }
         });

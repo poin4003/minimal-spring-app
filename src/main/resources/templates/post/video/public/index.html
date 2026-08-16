@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Videos</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/video.js/video-js.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/video-post.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
+    <script defer th:src="@{/js/media-gallery.js}"></script>
+</head>
+<body class="bg-body-tertiary">
+    <div th:replace="~{fragments/social-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <div id="video-library-workspace"
+                 class="video-library-page mx-auto d-grid gap-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom pb-3">
+                    <nav class="nav nav-underline gap-4" th:aria-label="#{video.public.tabs}">
+                        <a class="nav-link"
+                           th:classappend="${page.activeTab.name() == 'VIDEOS'} ? ' active' : ''"
+                           th:href="${page.videosPath}"
+                           th:attr="hx-get=${page.videosPath},
+                                    hx-target='#video-library-workspace',
+                                    hx-select='#video-library-workspace',
+                                    hx-swap='outerHTML',
+                                    hx-push-url='true'"
+                           th:text="#{video.public.tab.videos}">Videos</a>
+                        <a class="nav-link"
+                           th:classappend="${page.activeTab.name() == 'SERIES'} ? ' active' : ''"
+                           th:href="${page.seriesPath}"
+                           th:attr="hx-get=${page.seriesPath},
+                                    hx-target='#video-library-workspace',
+                                    hx-select='#video-library-workspace',
+                                    hx-swap='outerHTML',
+                                    hx-push-url='true'"
+                           th:text="#{video.public.tab.series}">Series</a>
+                    </nav>
+
+                    <form method="get"
+                          th:action="${page.searchPath}"
+                          class="d-flex gap-2 video-library-search"
+                          th:attr="hx-get=${page.searchPath},
+                                   hx-target='#video-library-results',
+                                   hx-select='#video-library-results',
+                                   hx-swap='outerHTML',
+                                   hx-push-url='true'">
+                        <input type="hidden" name="tab" th:value="${page.activeTab}">
+                        <input class="form-control form-control-sm"
+                               type="search"
+                               name="title"
+                               maxlength="255"
+                               th:value="${page.titleQuery}"
+                               th:placeholder="#{video.public.searchPlaceholder}">
+                        <button class="btn btn-sm btn-outline-primary" type="submit">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                            <span class="visually-hidden" th:text="#{action.search}">Search</span>
+                        </button>
+                    </form>
+                </div>
+
+                <section id="video-library-results" class="d-grid gap-4">
+                    <div th:if="${page.activeTab.name() == 'VIDEOS' and #lists.isEmpty(page.videos)}"
+                         class="app-empty-state app-surface-panel"
+                         th:text="#{video.public.empty}">No videos found.</div>
+                    <div th:if="${page.activeTab.name() == 'SERIES' and #lists.isEmpty(page.series)}"
+                         class="app-empty-state app-surface-panel"
+                         th:text="#{video.series.public.empty}">No series found.</div>
+
+                    <div th:if="${page.activeTab.name() == 'VIDEOS' and !#lists.isEmpty(page.videos)}"
+                         class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-3">
+                        <div th:each="card : ${page.videos}" class="col">
+                            <a th:href="${card.detailPath}"
+                               class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body"
+                               data-media-gallery-card>
+                                <div class="ratio ratio-16x9 bg-black">
+                                    <img th:if="${card.video.content.media.thumbnailUrl != null}"
+                                         th:src="${card.video.content.media.thumbnailUrl}"
+                                         th:alt="${card.video.title}"
+                                         class="w-100 h-100 object-fit-cover"
+                                         loading="lazy">
+                                    <span th:unless="${card.video.content.media.thumbnailUrl != null}"
+                                          class="d-flex align-items-center justify-content-center text-white">
+                                        <i class="bi bi-play-circle fs-1" aria-hidden="true"></i>
+                                    </span>
+                                    <span class="app-media-hover-preview d-none"
+                                          th:attr="data-media-hover-preview=${card.video.content.media.contentUrl}"
+                                          aria-hidden="true"></span>
+                                    <span class="video-card-play d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-play-fill" aria-hidden="true"></i>
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <h2 class="h6 text-truncate mb-2" th:text="${card.video.title}">Title</h2>
+                                    <p class="small text-secondary text-truncate mb-0"
+                                       th:text="${card.video.post.author.fullName != null and !card.video.post.author.fullName.isBlank()
+                                               ? card.video.post.author.fullName
+                                               : #messages.msg('post.public.unknownAuthor')}">Author</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div th:if="${page.activeTab.name() == 'SERIES' and !#lists.isEmpty(page.series)}"
+                         class="row g-3 row-cols-1 row-cols-md-2 row-cols-xl-3">
+                        <div th:each="card : ${page.series}" class="col">
+                            <a th:href="${card.detailPath}"
+                               class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body">
+                                <div class="ratio ratio-16x9 bg-body-tertiary">
+                                    <img th:if="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
+                                         th:src="${card.series.coverMedia.thumbnailUrl}"
+                                         th:alt="${card.series.title}"
+                                         class="w-100 h-100 object-fit-cover"
+                                         loading="lazy">
+                                    <span th:unless="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
+                                          class="d-flex align-items-center justify-content-center text-secondary">
+                                        <i class="bi bi-collection-play fs-1" aria-hidden="true"></i>
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between gap-3">
+                                        <h2 class="h6 text-truncate mb-1" th:text="${card.series.title}">Series</h2>
+                                        <span class="badge text-bg-secondary"
+                                              th:text="#{video.series.videoCount(${card.series.videoCount})}">0 videos</span>
+                                    </div>
+                                    <p class="small text-secondary text-truncate mb-0"
+                                       th:text="${card.series.owner.fullName != null and !card.series.owner.fullName.isBlank()
+                                               ? card.series.owner.fullName
+                                               : #messages.msg('post.public.unknownAuthor')}">Owner</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <div th:replace="~{fragments/components/pagination
+                                :: pagination(${page.pagination})}"></div>
+                    </div>
+                </section>
+            </div>
+        </th:block>
+    </div>
+</body>
+</html>

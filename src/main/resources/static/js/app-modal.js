@@ -38,9 +38,24 @@
             return;
         }
 
+        form.dataset.appModalSubmitting = "true";
+    });
+
+    document.addEventListener("htmx:afterRequest", function (event) {
+        const form = event.detail.elt;
+        if (!(form instanceof HTMLFormElement)
+                || !form.matches("[data-app-modal-form]")) {
+            return;
+        }
+
+        delete form.dataset.appModalSubmitting;
+        if (!event.detail.successful) {
+            return;
+        }
+
         const modalElement = form.closest(".modal");
         if (modalElement) {
-            bootstrap.Modal.getInstance(modalElement)?.hide();
+            bootstrap.Modal.getOrCreateInstance(modalElement).hide();
         }
     });
 
