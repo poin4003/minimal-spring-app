@@ -429,6 +429,8 @@ public class AppProperties {
 
         @NotNull
         private Set<String> softwareDecodeCodecs = Set.of("av1");
+
+        private String libvaDriverName = "iHD";
     }
 
     @Data
