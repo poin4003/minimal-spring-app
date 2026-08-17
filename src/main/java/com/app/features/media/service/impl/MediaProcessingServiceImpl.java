@@ -167,8 +167,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     ? resolveVideoProfiles(primaryVideoStream)
                     : List.of(HlsEncodingProfile.audio(
                             appProperties.getMedia().getHls().getAudioBitrate()));
-            String qsvDecoder = primaryVideoStream != null
-                    ? resolveQsvDecoder(primaryVideoStream)
+            String preferredEncoder = resolveVideoEncoder();
+            String videoDecoder = primaryVideoStream != null
+                    ? resolveDecoderForEncoder(preferredEncoder, primaryVideoStream)
                     : null;
 
             for (HlsEncodingProfile profile : profiles) {
@@ -177,7 +178,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         workspace.getTemporaryDirectory(),
                         profile,
                         media.getKind(),
-                        qsvDecoder);
+                        preferredEncoder,
+                        videoDecoder);
             }
             writeMasterPlaylist(
                     workspace.getTemporaryDirectory().resolve("index.m3u8"),
@@ -197,7 +199,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             Path hlsDirectory,
             HlsEncodingProfile profile,
             MediaKind mediaKind,
-            String qsvDecoder) {
+            String preferredEncoder,
+            String videoDecoder) {
         Path renditionDirectory = hlsDirectory.resolve(profile.getKey());
         Path playlist = renditionDirectory.resolve("index.m3u8");
 
@@ -215,7 +218,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     playlist,
                     renditionDirectory,
                     profile,
-                    qsvDecoder);
+                    preferredEncoder,
+                    videoDecoder);
         } else {
             UrlOutput output = createBaseHlsOutput(playlist, renditionDirectory, profile);
             output.disableStream(StreamType.VIDEO);
@@ -228,9 +232,8 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             Path playlist,
             Path renditionDirectory,
             HlsEncodingProfile profile,
-            String qsvDecoder) {
-        String preferredEncoder = resolveVideoEncoder();
-
+            String preferredEncoder,
+            String videoDecoder) {
         if (isHardwareEncoder(preferredEncoder)
                 && Boolean.FALSE.equals(hwEncodingAvailable)
                 && isSoftwareFallbackEnabled()) {
@@ -239,9 +242,11 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
         switch (preferredEncoder) {
             case VAAPI_VIDEO_ENCODER ->
-                    executeVaapiRendition(source, playlist, renditionDirectory, profile);
+                    executeVaapiRendition(
+                            source, playlist, renditionDirectory, profile, videoDecoder);
             case QSV_VIDEO_ENCODER ->
-                    executeQsvRendition(source, playlist, renditionDirectory, profile, qsvDecoder);
+                    executeQsvRendition(
+                            source, playlist, renditionDirectory, profile, videoDecoder);
             default ->
                     executeVideoHls(
                             source,
@@ -256,7 +261,28 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             Path source,
             Path playlist,
             Path renditionDirectory,
-            HlsEncodingProfile profile) {
+            HlsEncodingProfile profile,
+            String vaapiDecoder) {
+        RuntimeException decodeFailure = null;
+        if (vaapiDecoder != null) {
+            try {
+                executeVideoHls(
+                        source,
+                        playlist,
+                        renditionDirectory,
+                        profile,
+                        buildVaapiDecodeVideoPlan(profile, vaapiDecoder));
+                hwEncodingAvailable = Boolean.TRUE;
+                return;
+            } catch (RuntimeException ex) {
+                decodeFailure = ex;
+                log.warn(
+                        "VAAPI decode path failed for rendition [{}], retrying with upload path",
+                        profile.getKey(),
+                        ex);
+            }
+        }
+
         try {
             executeVideoHls(
                     source,
@@ -268,13 +294,18 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         } catch (RuntimeException ex) {
             hwEncodingAvailable = Boolean.FALSE;
             if (!isSoftwareFallbackEnabled()) {
+                if (decodeFailure != null) {
+                    decodeFailure.addSuppressed(ex);
+                    throw decodeFailure;
+                }
                 throw ex;
             }
+
             log.warn(
                     "Falling back to [{}] for HLS rendition [{}] after VAAPI path failed",
                     SOFTWARE_VIDEO_ENCODER,
                     profile.getKey(),
-                    ex);
+                    decodeFailure != null ? decodeFailure : ex);
             executeVideoHls(
                     source,
                     playlist,
@@ -355,9 +386,11 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         plan.videoFilter())
                 .addArguments("-b:v", String.valueOf(profile.getVideoBitrate()))
                 .addArguments("-maxrate", String.valueOf(profile.getVideoBitrate()))
-                .addArguments("-bufsize", String.valueOf(profile.getVideoBitrate() * 2))
-                .addArguments("-preset", "veryfast")
-                .addArguments("-sc_threshold", "0")
+                .addArguments("-bufsize", String.valueOf(profile.getVideoBitrate() * 2));
+        if (!VAAPI_VIDEO_ENCODER.equals(plan.videoEncoder())) {
+            output.addArguments("-preset", "veryfast");
+        }
+        output.addArguments("-sc_threshold", "0")
                 .addArguments(
                         "-force_key_frames",
                         "expr:gte(t,n_forced*"
@@ -388,6 +421,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
 
     private void executeHls(Path source, UrlOutput output, VideoExecutionPlan plan) {
         var ffmpeg = mediaFfmpegFactory.create();
+        ffmpeg.addArguments("-loglevel", "level+info");
 
         int threads = appProperties.getMedia().getFfmpeg().getMachine().getThreads();
         if (threads > 0) {
@@ -403,9 +437,14 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                     .addArguments("-filter_hw_device", "hw");
         }
         if (plan != null && plan.inputDecoder() != null) {
-            input.addArguments("-hwaccel", "qsv")
-                    .addArguments("-hwaccel_output_format", "qsv")
-                    .addArguments("-c:v", plan.inputDecoder());
+            if ("qsv".equals(plan.hwDeviceType())) {
+                input.addArguments("-hwaccel", "qsv")
+                        .addArguments("-hwaccel_output_format", "qsv")
+                        .addArguments("-c:v", plan.inputDecoder());
+            } else if ("vaapi".equals(plan.hwDeviceType())) {
+                input.addArguments("-hwaccel", "vaapi")
+                        .addArguments("-hwaccel_output_format", "vaapi");
+            }
         }
 
         ffmpeg.addInput(input)
@@ -472,6 +511,17 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                 false);
     }
 
+    private VideoExecutionPlan buildVaapiDecodeVideoPlan(
+            HlsEncodingProfile profile,
+            String vaapiDecoder) {
+        return new VideoExecutionPlan(
+                VAAPI_VIDEO_ENCODER,
+                vaapiDecoder,
+                "scale_vaapi=" + profile.getWidth() + ":" + profile.getHeight(),
+                "vaapi",
+                false);
+    }
+
     private VideoExecutionPlan buildVaapiUploadVideoPlan(HlsEncodingProfile profile) {
         return new VideoExecutionPlan(
                 VAAPI_VIDEO_ENCODER,
@@ -482,6 +532,19 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         + profile.getHeight(),
                 "vaapi",
                 false);
+    }
+
+    private String resolveVaapiDecoder(Stream videoStream) {
+        String codecName = videoStream.getCodecName();
+        if (codecName == null || codecName.isBlank()) {
+            return null;
+        }
+
+        return switch (codecName.trim().toLowerCase(Locale.ROOT)) {
+            case "h264", "hevc", "mpeg2video", "vp8", "vp9", "av1" ->
+                    codecName.trim().toLowerCase(Locale.ROOT);
+            default -> null;
+        };
     }
 
     private String normalizeMachineValue(String value, String defaultValue) {
@@ -532,6 +595,14 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         sourceWidth,
                         sourceHeight))
                 .toList();
+    }
+
+    private String resolveDecoderForEncoder(String encoder, Stream videoStream) {
+        return switch (encoder) {
+            case QSV_VIDEO_ENCODER -> resolveQsvDecoder(videoStream);
+            case VAAPI_VIDEO_ENCODER -> resolveVaapiDecoder(videoStream);
+            default -> null;
+        };
     }
 
     private String resolveQsvDecoder(Stream videoStream) {
