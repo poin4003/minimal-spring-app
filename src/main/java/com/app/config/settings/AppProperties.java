@@ -11,7 +11,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.features.media.enums.HlsReservedVariantKey;
+import com.app.features.media.enums.MediaHardwareAccel;
 import com.app.features.media.enums.MediaKind;
+import com.app.features.media.enums.MediaVideoEncoder;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.AssertTrue;
@@ -414,16 +416,14 @@ public class AppProperties {
 
     @Data
     public static class Machine {
-        @NotBlank
-        @Pattern(regexp = "^[a-z0-9_:-]+$")
-        private String videoEncoder = "auto";
+        @NotNull
+        private MediaVideoEncoder videoEncoder = MediaVideoEncoder.AUTO;
 
         @Min(0)
         private int threads = 0;
 
-        @NotBlank
-        @Pattern(regexp = "^[a-z0-9_:-]+$")
-        private String hardwareAccel = "none";
+        @NotNull
+        private MediaHardwareAccel hardwareAccel = MediaHardwareAccel.NONE;
 
         private boolean fallbackToSoftware = true;
     }
