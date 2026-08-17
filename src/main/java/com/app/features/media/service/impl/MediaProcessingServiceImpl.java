@@ -592,11 +592,26 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     }
 
     private String resolveDecoderForEncoder(MediaVideoEncoder encoder, Stream videoStream) {
+        if (isSoftwareDecodeCodec(videoStream)) {
+            return null;
+        }
         return switch (encoder) {
             case H264_QSV -> resolveQsvDecoder(videoStream);
             case H264_VAAPI -> resolveVaapiDecoder(videoStream);
             case AUTO, LIBX264 -> null;
         };
+    }
+
+    private boolean isSoftwareDecodeCodec(Stream videoStream) {
+        String codecName = videoStream.getCodecName();
+        if (codecName == null || codecName.isBlank()) {
+            return false;
+        }
+        String normalized = codecName.trim().toLowerCase(Locale.ROOT);
+        return appProperties.getMedia().getFfmpeg().getMachine()
+                .getSoftwareDecodeCodecs()
+                .stream()
+                .anyMatch(codec -> codec.trim().toLowerCase(Locale.ROOT).equals(normalized));
     }
 
     private String resolveQsvDecoder(Stream videoStream) {

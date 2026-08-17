@@ -426,6 +426,9 @@ public class AppProperties {
         private MediaHardwareAccel hardwareAccel = MediaHardwareAccel.NONE;
 
         private boolean fallbackToSoftware = true;
+
+        @NotNull
+        private Set<String> softwareDecodeCodecs = Set.of("av1");
     }
 
     @Data

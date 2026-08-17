@@ -120,6 +120,7 @@ app:
                 threads: ${MEDIA_FFMPEG_THREADS:0}
                 hardware-accel: ${MEDIA_HARDWARE_ACCEL:none}
                 fallback-to-software: ${MEDIA_FFMPEG_FALLBACK_TO_SOFTWARE:true}
+                software-decode-codecs: ${MEDIA_SOFTWARE_DECODE_CODECS:av1}
         maintenance:
             pending-recovery-ttl: ${MEDIA_PENDING_RECOVERY_TTL:15m}
             staging-ttl: ${MEDIA_STAGING_TTL:1h}
