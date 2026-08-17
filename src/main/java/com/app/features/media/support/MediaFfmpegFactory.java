@@ -46,6 +46,13 @@ public class MediaFfmpegFactory {
         return ffmpeg.setExecutorTimeoutMillis(Math.toIntExact(timeoutMillis));
     }
 
+    public int calculateOptimalDecoderThreads() {
+        int totalCores = Runtime.getRuntime().availableProcessors();
+        return totalCores <= 4
+                ? Math.max(1, totalCores - 1)
+                : Math.max(2, totalCores - 2);
+    }
+
     private Path resolveDriverWrappedDirectory(Path executableDirectory) {
         String driverName = appProperties.getMedia().getFfmpeg()
                 .getMachine().getLibvaDriverName();

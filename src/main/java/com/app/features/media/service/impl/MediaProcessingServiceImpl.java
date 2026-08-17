@@ -419,6 +419,9 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
         ffmpeg.addArguments("-loglevel", "level+info");
 
         int threads = appProperties.getMedia().getFfmpeg().getMachine().getThreads();
+        if (threads <= 0 && plan != null && plan.inputDecoder() == null) {
+            threads = mediaFfmpegFactory.calculateOptimalDecoderThreads();
+        }
         if (threads > 0) {
             ffmpeg.addArguments("-threads", String.valueOf(threads));
         }
