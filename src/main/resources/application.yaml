@@ -64,8 +64,6 @@ app:
             completed-session-retention: ${MEDIA_COMPLETED_SESSION_RETENTION:24h}
         hls:
             audio-bitrate: ${MEDIA_HLS_AUDIO_BITRATE:192000}
-            ram-disk-enabled: ${MEDIA_HLS_RAM_DISK_ENABLED:true}
-            ram-disk-path: ${MEDIA_HLS_RAM_DISK_PATH:/dev/shm}
             renditions:
                 - key: 360p
                   short-edge: 360

@@ -9,7 +9,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -40,9 +39,6 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     private static final List<String> PROCESSING_WORKSPACE_PREFIXES = List.of(
             ".hls-processing-",
             ".thumbnail-processing-");
-    private static final boolean IS_WINDOWS = System.getProperty("os.name", "")
-            .toLowerCase(Locale.ROOT)
-            .contains("win");
 
     private final AppProperties appProperties;
 
@@ -141,7 +137,8 @@ public class LocalMediaFileStorage implements MediaFileStorage {
     public MediaProcessingWorkspace prepareProcessingWorkspace(String sourceStorageKey) {
         Path source = resolveStorageKey(sourceStorageKey);
         Path mediaDirectory = source.getParent();
-        Path temporaryDirectory = resolveHlsProcessingDirectory(mediaDirectory);
+        Path temporaryDirectory = mediaDirectory.resolve(
+                ".hls-processing-" + UUID.randomUUID());
         Path publishedDirectory = mediaDirectory.resolve("hls");
 
         try {
@@ -156,27 +153,6 @@ public class LocalMediaFileStorage implements MediaFileStorage {
                 temporaryDirectory,
                 publishedDirectory,
                 MediaStorageKeySupport.directoryOf(sourceStorageKey) + "/hls");
-    }
-
-    private Path resolveHlsProcessingDirectory(Path mediaDirectory) {
-        AppProperties.Hls hls = appProperties.getMedia().getHls();
-        if (hls.isRamDiskEnabled()) {
-            Path ramBase = Path.of(hls.getRamDiskPath());
-            boolean supportsShm = !IS_WINDOWS
-                    && Files.isDirectory(ramBase)
-                    && Files.isWritable(ramBase);
-            if (supportsShm) {
-                try {
-                    return Files.createTempDirectory(ramBase, ".hls-processing-");
-                } catch (IOException ex) {
-                    log.warn(
-                            "Failed to create HLS processing directory on RAM disk [{}], falling back to disk",
-                            ramBase,
-                            ex);
-                }
-            }
-        }
-        return mediaDirectory.resolve(".hls-processing-" + UUID.randomUUID());
     }
 
     @Override
@@ -546,17 +522,7 @@ public class LocalMediaFileStorage implements MediaFileStorage {
         if (directory.startsWith(storageRoot)) {
             return true;
         }
-
-        String name = directory.getFileName() == null
-                ? ""
-                : directory.getFileName().toString();
-        boolean workspaceLike = PROCESSING_WORKSPACE_PREFIXES.stream()
-                .anyMatch(prefix -> name.startsWith(prefix));
-        if (!workspaceLike) {
-            return false;
-        }
-        Path ramBase = Path.of(appProperties.getMedia().getHls().getRamDiskPath());
-        return directory.startsWith(ramBase);
+        return false;
     }
 
     private void deleteQuietly(Path path) {

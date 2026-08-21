@@ -338,10 +338,6 @@ public class AppProperties {
         @Positive
         private int audioBitrate = 192_000;
 
-        private boolean ramDiskEnabled = true;
-
-        private String ramDiskPath = "/dev/shm";
-
         @Valid
         @NotEmpty
         private List<@NotNull HlsRendition> renditions = List.of();
