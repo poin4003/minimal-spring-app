@@ -35,4 +35,9 @@ logs
 
 .env
 data
+ai-models
 META-INF
+
+# Local Telegram import data
+/scripts/*.zip
+/scripts/.telegram-import-checkpoint.json

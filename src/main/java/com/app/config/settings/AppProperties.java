@@ -525,6 +525,9 @@ public class AppProperties {
 
         @Valid
         private final ShortPostSettings shortPost = new ShortPostSettings();
+
+        @Valid
+        private final AiModerationSettings aiModeration = new AiModerationSettings();
     }
 
     @Data
@@ -554,6 +557,39 @@ public class AppProperties {
                     && minAspectRatio > 0
                     && minAspectRatio <= maxAspectRatio
                     && minShortEdge > 0;
+        }
+
+        private boolean isPositive(Duration value) {
+            return value != null && !value.isZero() && !value.isNegative();
+        }
+    }
+
+    @Data
+    public static class AiModerationSettings {
+        @Valid
+        private final AiModerationMachine machine = new AiModerationMachine();
+    }
+
+    @Data
+    public static class AiModerationMachine {
+        @NotBlank
+        private String baseUrl = "http://127.0.0.1:8081";
+
+        @NotBlank
+        private String model = "local-aimoderation";
+
+        @NotNull
+        private Duration timeout = Duration.ofSeconds(30);
+
+        @Min(0)
+        private int maxImages = 1;
+
+        @Positive
+        private int maxTokens = 256;
+
+        @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
+        public boolean isMachineConfigurationValid() {
+            return isPositive(timeout);
         }
 
         private boolean isPositive(Duration value) {

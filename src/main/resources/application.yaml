@@ -157,6 +157,13 @@ app:
             min-aspect-ratio: ${POST_SHORT_MIN_ASPECT_RATIO:0.5}
             max-aspect-ratio: ${POST_SHORT_MAX_ASPECT_RATIO:1.0}
             min-short-edge: ${POST_SHORT_MIN_SHORT_EDGE:720}
+        ai-moderation:
+            machine:
+                base-url: ${POST_AI_MODERATION_BASE_URL:http://127.0.0.1:8081}
+                model: ${POST_AI_MODERATION_MODEL:local-aimoderation}
+                timeout: ${POST_AI_MODERATION_TIMEOUT:30s}
+                max-images: ${POST_AI_MODERATION_MAX_IMAGES:1}
+                max-tokens: ${POST_AI_MODERATION_MAX_TOKENS:256}
     security:
         rate-limit:
             enabled: ${RATE_LIMIT_ENABLED:true}
