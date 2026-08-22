@@ -137,13 +137,17 @@ public class PublicShortPostPageController {
                                 post,
                                 shortPage.getNumber()))
                         .toList());
-        boolean selectedPostLoaded = cards.stream()
-                .anyMatch(card -> card.getPost().getPost().getId()
-                        .equals(postId));
-        if (!selectedPostLoaded) {
-            cards.add(0, toCard(
-                    shortPostSvc.getPublishedPost(postId),
-                    shortPage.getNumber()));
+        PublicShortCardView selectedCard = cards.stream()
+                .filter(card -> card.getPost().getPost().getId()
+                        .equals(postId))
+                .findFirst()
+                .orElseGet(() -> toCard(
+                        shortPostSvc.getPublishedPost(postId),
+                        shortPage.getNumber()));
+        cards.remove(selectedCard);
+        cards.addFirst(selectedCard);
+        if (cards.size() > SHORT_PAGE_DEFAULTS.getSize()) {
+            cards.removeLast();
         }
 
         PublicShortDetailPageView page = PublicShortDetailPageView.builder()

@@ -12,7 +12,15 @@
          th:data-message-stream-failed="#{media.preview.streamFailed}">
         <div th:switch="${asset.kind.name()}">
             <div th:case="'VIDEO'"
-                 class="standard-post-media-stage bg-black">
+                 class="standard-post-media-stage bg-black mx-auto"
+                 th:classappend="${asset.originalWidth != null
+                         and asset.originalHeight != null
+                         and asset.originalHeight > asset.originalWidth}
+                         ? ' standard-post-media-portrait' : ''"
+                 th:style="${asset.originalWidth != null
+                         and asset.originalHeight != null}
+                         ? 'aspect-ratio:' + asset.originalWidth
+                         + '/' + asset.originalHeight : null">
                 <div class="app-media-preview-player w-100 h-100"
                      data-media-preview-player>
                     <video class="video-js vjs-big-play-centered app-media-preview-video"
@@ -52,9 +60,20 @@
 
     <div th:fragment="compact(media, detailPath, galleryPartialPath)"
          th:if="${not #lists.isEmpty(media)}"
-         th:with="visibleCount=${#lists.size(media) > 4 ? 4 : #lists.size(media)}">
+         th:with="visibleCount=${#lists.size(media) > 4 ? 4 : #lists.size(media)},
+                  singleAsset=${#lists.size(media) == 1 ? media[0].media : null}">
         <a th:href="${detailPath}"
            class="post-media-collage position-relative z-2 text-decoration-none bg-dark"
+           th:classappend="${singleAsset != null
+                   and singleAsset.originalWidth != null
+                   and singleAsset.originalHeight != null
+                   and singleAsset.originalHeight > singleAsset.originalWidth}
+                   ? ' post-media-collage-portrait' : ''"
+           th:style="${singleAsset != null
+                   and singleAsset.originalWidth != null
+                   and singleAsset.originalHeight != null}
+                   ? 'aspect-ratio:' + singleAsset.originalWidth
+                   + '/' + singleAsset.originalHeight : null"
            th:data-media-count="${visibleCount}"
            th:aria-label="#{post.public.mediaGallery}"
            th:attr="hx-get=${galleryPartialPath},

@@ -33,6 +33,10 @@
     overflow: hidden;
 }
 
+.standard-post-media-stage.standard-post-media-portrait {
+    width: min(100%, 26rem);
+}
+
 .standard-post-media-stage .app-media-preview-video.video-js,
 .standard-post-media-stage .app-media-preview-player {
     width: 100%;
@@ -95,6 +99,11 @@
 
 .post-media-collage[data-media-count="1"] {
     grid-template-columns: 1fr;
+    margin-inline: auto;
+}
+
+.post-media-collage[data-media-count="1"].post-media-collage-portrait {
+    width: min(100%, 26rem);
 }
 
 .post-media-collage[data-media-count="2"] {
