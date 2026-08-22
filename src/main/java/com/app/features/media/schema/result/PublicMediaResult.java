@@ -17,6 +17,10 @@ public class PublicMediaResult {
 
     private String contentType;
 
+    private Integer originalWidth;
+
+    private Integer originalHeight;
+
     private String contentUrl;
 
     private String originalUrl;

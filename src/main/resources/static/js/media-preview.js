@@ -204,6 +204,43 @@
         });
     }
 
+    function initializeCurrentQualityDisplay(player, qualitySelector) {
+        const qualityLevels = player.qualityLevels();
+
+        function resolveCurrentResolution() {
+            const selectedIndex = qualityLevels.selectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= qualityLevels.length) {
+                return null;
+            }
+
+            const level = qualityLevels[selectedIndex];
+            const resolution = Math.min(level.width || 0, level.height || 0);
+            return resolution > 0 ? resolution + "p" : null;
+        }
+
+        function updateQualityLabel() {
+            const selectedQuality = qualitySelector.getCurrentQuality();
+            const currentResolution = resolveCurrentResolution();
+            if (selectedQuality !== "auto") {
+                qualitySelector.setButtonInnerText(selectedQuality + "p");
+                return;
+            }
+
+            const autoLabel = player.localize("Auto");
+            qualitySelector.setButtonInnerText(currentResolution
+                ? autoLabel + " / " + currentResolution
+                : autoLabel);
+        }
+
+        qualityLevels.on("change", updateQualityLabel);
+        qualityLevels.on("addqualitylevel", updateQualityLabel);
+        player.on("loadedmetadata", updateQualityLabel);
+        player.on("dispose", function () {
+            qualityLevels.off("change", updateQualityLabel);
+            qualityLevels.off("addqualitylevel", updateQualityLabel);
+        });
+    }
+
     function initializePlayer(mediaElement) {
         if (playerSessions.has(mediaElement)) {
             return;
@@ -229,9 +266,10 @@
         player.ready(function () {
             if (mediaElement instanceof HTMLVideoElement
                     && typeof player.hlsQualitySelector === "function") {
-                player.hlsQualitySelector({
+                const qualitySelector = player.hlsQualitySelector({
                     displayCurrentQuality: true
                 });
+                initializeCurrentQualityDisplay(player, qualitySelector);
             }
 
             initializeWatchProgress(mediaElement, player);
