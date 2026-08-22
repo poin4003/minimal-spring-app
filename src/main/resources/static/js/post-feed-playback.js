@@ -3,6 +3,7 @@
 
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
+    const FEED_SOUND_ENABLED_KEY = "feed-sound-enabled";
     const START_VISIBILITY_RATIO = 0.65;
     const STOP_VISIBILITY_RATIO = 0.35;
     const SWITCH_SCORE_ADVANTAGE = 0.15;
@@ -11,6 +12,26 @@
     let activeEntry = null;
     let reconcileFrame = null;
     let playVersion = 0;
+    let feedSoundEnabled = readSoundPreference();
+
+    function readSoundPreference() {
+        try {
+            return sessionStorage.getItem(FEED_SOUND_ENABLED_KEY) === "true";
+        } catch (_error) {
+            return false;
+        }
+    }
+
+    function writeSoundPreference(enabled) {
+        try {
+            sessionStorage.setItem(
+                    FEED_SOUND_ENABLED_KEY,
+                    String(enabled)
+            );
+        } catch (_error) {
+            // Playback remains available when browser storage is disabled.
+        }
+    }
 
     const observer = new IntersectionObserver(function (observations) {
         observations.forEach(function (observation) {
@@ -89,7 +110,7 @@
 
         const currentPlayVersion = ++playVersion;
         activeEntry = entry;
-        entry.player.muted(true);
+        entry.player.muted(!feedSoundEnabled);
         requestAutomaticPlay(entry, currentPlayVersion);
     }
 
@@ -199,6 +220,15 @@
             if (activeEntry === entry) {
                 activeEntry = null;
             }
+        });
+        player.on("volumechange", function () {
+            if (activeEntry !== entry) {
+                return;
+            }
+
+            feedSoundEnabled = !player.muted()
+                    && player.volume() > 0;
+            writeSoundPreference(feedSoundEnabled);
         });
 
         entries.set(mediaElement, entry);

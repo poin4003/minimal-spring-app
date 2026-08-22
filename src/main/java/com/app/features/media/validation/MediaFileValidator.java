@@ -20,7 +20,9 @@ import com.app.config.settings.AppProperties;
 import com.app.config.settings.AppProperties.AllowedMediaType;
 import com.app.core.exception.MyException;
 import com.app.features.media.exception.InvalidMediaContentException;
+import com.app.features.media.schema.model.MediaVideoGeometry;
 import com.app.features.media.storage.schema.StagedMediaFile;
+import com.app.features.media.support.MediaVideoGeometryResolver;
 import com.app.features.media.validation.schema.ValidatedMediaFile;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
@@ -36,6 +38,7 @@ public class MediaFileValidator {
     private final AppProperties appProperties;
     private final MediaTypePolicyResolver mediaTypePolicyResolver;
     private final MediaProbe mediaProbe;
+    private final MediaVideoGeometryResolver mediaVideoGeometryResolver;
 
     private final Tika tika = new Tika();
 
@@ -165,10 +168,14 @@ public class MediaFileValidator {
                         .orElse(null)
                 : null;
 
+        MediaVideoGeometry geometry = videoStream == null
+                ? null
+                : mediaVideoGeometryResolver.resolve(videoStream);
+
         return new ValidatedMediaFile(
                 contentType,
-                videoStream == null ? null : videoStream.getWidth(),
-                videoStream == null ? null : videoStream.getHeight(),
+                geometry == null ? null : geometry.getWidth(),
+                geometry == null ? null : geometry.getHeight(),
                 Math.max(1L, Math.round(duration * 1_000)));
     }
 
