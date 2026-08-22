@@ -3,6 +3,7 @@
 
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
+    const INITIAL_HLS_BANDWIDTH = 10_000_000;
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const playerSessions = new Map();
@@ -161,10 +162,11 @@
             html5: {
                 vhs: {
                     overrideNative: true,
+                    bandwidth: INITIAL_HLS_BANDWIDTH,
                     enableLowInitialPlaylist: false,
-                    useBandwidthFromLocalStorage: true,
-                    limitRenditionByPlayerDimensions: true,
-                    useDevicePixelRatio: true
+                    useBandwidthFromLocalStorage: false,
+                    limitRenditionByPlayerDimensions: false,
+                    useNetworkInformationApi: false
                 },
                 nativeAudioTracks: false,
                 nativeVideoTracks: false

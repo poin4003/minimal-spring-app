@@ -89,14 +89,11 @@
 
         const currentPlayVersion = ++playVersion;
         activeEntry = entry;
-        entry.player.muted(false);
-        requestAutomaticPlay(entry, currentPlayVersion, true);
+        entry.player.muted(true);
+        requestAutomaticPlay(entry, currentPlayVersion);
     }
 
-    function requestAutomaticPlay(
-            entry,
-            currentPlayVersion,
-            allowMutedFallback) {
+    function requestAutomaticPlay(entry, currentPlayVersion) {
         entry.automaticPlayRequest = true;
         const playRequest = entry.player.play();
         if (playRequest && typeof playRequest.catch === "function") {
@@ -105,16 +102,6 @@
                 if (activeEntry !== entry
                         || playVersion !== currentPlayVersion
                         || entry.player.isDisposed()) {
-                    return;
-                }
-
-                if (allowMutedFallback) {
-                    entry.player.muted(true);
-                    requestAutomaticPlay(
-                            entry,
-                            currentPlayVersion,
-                            false
-                    );
                     return;
                 }
 
