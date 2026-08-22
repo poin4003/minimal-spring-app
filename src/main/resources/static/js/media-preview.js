@@ -153,14 +153,18 @@
         const options = {
             controls: true,
             preload: "metadata",
-            muted: mediaElement.hasAttribute("data-feed-autoplay"),
+            muted: false,
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
             playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
             html5: {
                 vhs: {
-                    overrideNative: true
+                    overrideNative: true,
+                    enableLowInitialPlaylist: false,
+                    useBandwidthFromLocalStorage: true,
+                    limitRenditionByPlayerDimensions: true,
+                    useDevicePixelRatio: true
                 },
                 nativeAudioTracks: false,
                 nativeVideoTracks: false

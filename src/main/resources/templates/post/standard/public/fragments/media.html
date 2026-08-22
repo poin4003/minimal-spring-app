@@ -12,21 +12,22 @@
          th:data-message-stream-failed="#{media.preview.streamFailed}">
         <div th:switch="${asset.kind.name()}">
             <div th:case="'VIDEO'"
-                 class="app-media-preview-player bg-black"
-                 data-media-preview-player>
-                <video class="video-js vjs-big-play-centered app-media-preview-video"
-                       controls
-                       muted
-                       playsinline
-                       preload="metadata"
-                       data-video-player
-                       data-auto-initialize
-                       data-feed-autoplay
-                       th:poster="${asset.thumbnailUrl}"
-                       th:attr="data-video-source=${asset.contentUrl}"></video>
-                <div class="alert alert-danger w-100 mt-3 mb-0"
-                     data-video-error
-                     hidden></div>
+                 class="standard-post-media-stage bg-black">
+                <div class="app-media-preview-player w-100 h-100"
+                     data-media-preview-player>
+                    <video class="video-js vjs-big-play-centered app-media-preview-video"
+                           controls
+                           playsinline
+                           preload="metadata"
+                           data-video-player
+                           data-auto-initialize
+                           data-feed-autoplay
+                           th:poster="${asset.thumbnailUrl}"
+                           th:attr="data-video-source=${asset.contentUrl}"></video>
+                    <div class="alert alert-danger w-100 mt-3 mb-0"
+                         data-video-error
+                         hidden></div>
+                </div>
             </div>
 
             <div th:case="'AUDIO'"
@@ -68,12 +69,12 @@
                     <img th:if="${asset.kind.name() == 'IMAGE' and asset.contentUrl != null}"
                          th:src="${asset.contentUrl}"
                          th:alt="${asset.originalName}"
-                         class="w-100 h-100 object-fit-cover">
+                         class="w-100 h-100 object-fit-contain">
 
                     <img th:if="${asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null}"
                          th:src="${asset.thumbnailUrl}"
                          th:alt="${asset.originalName}"
-                         class="w-100 h-100 object-fit-cover">
+                         class="w-100 h-100 object-fit-contain">
 
                     <span th:unless="${(asset.kind.name() == 'IMAGE' and asset.contentUrl != null)
                             or (asset.kind.name() == 'VIDEO' and asset.thumbnailUrl != null)}"
@@ -136,11 +137,12 @@
            hx-disabled-elt="this"
            data-app-modal-request="true">
             <th:block th:switch="${asset.kind.name()}">
-                <figure th:case="'IMAGE'" class="mb-0">
+                <figure th:case="'IMAGE'"
+                        class="mb-0 d-flex justify-content-center bg-black">
                     <img th:if="${asset.contentUrl != null}"
                          th:src="${asset.contentUrl}"
                          th:alt="${asset.originalName}"
-                         class="img-fluid w-100 rounded border bg-black post-detail-image">
+                         class="img-fluid rounded border post-detail-image">
                     <span th:unless="${asset.contentUrl != null}"
                           class="ratio ratio-16x9 rounded border bg-body-tertiary">
                         <span class="d-flex align-items-center justify-content-center">
@@ -155,7 +157,7 @@
                     <img th:if="${asset.thumbnailUrl != null}"
                          th:src="${asset.thumbnailUrl}"
                          th:alt="${asset.originalName}"
-                         class="w-100 h-100 object-fit-cover">
+                         class="w-100 h-100 object-fit-contain">
                     <span th:unless="${asset.thumbnailUrl != null}"
                           class="d-flex align-items-center justify-content-center text-white">
                         <i class="bi bi-film fs-1" aria-hidden="true"></i>
@@ -181,11 +183,12 @@
         <div th:unless="${galleryEnabled}"
              th:switch="${asset.kind.name()}"
              class="h-100">
-            <figure th:case="'IMAGE'" class="mb-0">
+            <figure th:case="'IMAGE'"
+                    class="mb-0 d-flex justify-content-center bg-black">
                 <img th:if="${asset.contentUrl != null}"
                      th:src="${asset.contentUrl}"
                      th:alt="${asset.originalName}"
-                     class="img-fluid w-100 rounded border bg-black post-detail-image">
+                     class="img-fluid rounded border post-detail-image">
             </figure>
 
             <div th:case="'VIDEO'"

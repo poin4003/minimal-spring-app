@@ -22,6 +22,37 @@
     flex: 0 0 7rem;
 }
 
+.post-public-card {
+    width: 100%;
+    min-width: 0;
+}
+
+.standard-post-media-stage {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+}
+
+.standard-post-media-stage .app-media-preview-video.video-js,
+.standard-post-media-stage .app-media-preview-player {
+    width: 100%;
+    height: 100%;
+}
+
+.standard-post-media-stage .app-media-preview-video.video-js.vjs-fluid {
+    padding-top: 0;
+}
+
+.standard-post-page .app-media-preview-video .vjs-poster img,
+.standard-post-page .app-media-preview-video .vjs-tech {
+    object-fit: contain;
+}
+
+.short-gallery-grid > .app-infinite-scroll-sentinel {
+    flex: 0 0 100%;
+    width: 100%;
+}
+
 .post-owner-content,
 .post-owner-workspace {
     grid-template-columns: minmax(0, 1fr);
@@ -56,6 +87,7 @@
 
 .post-media-collage {
     display: grid;
+    width: 100%;
     gap: 0.125rem;
     aspect-ratio: 16 / 9;
     overflow: hidden;

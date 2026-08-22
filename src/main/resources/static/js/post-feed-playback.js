@@ -89,17 +89,37 @@
 
         const currentPlayVersion = ++playVersion;
         activeEntry = entry;
+        entry.player.muted(false);
+        requestAutomaticPlay(entry, currentPlayVersion, true);
+    }
+
+    function requestAutomaticPlay(
+            entry,
+            currentPlayVersion,
+            allowMutedFallback) {
         entry.automaticPlayRequest = true;
-        entry.player.muted(true);
         const playRequest = entry.player.play();
         if (playRequest && typeof playRequest.catch === "function") {
             playRequest.catch(function () {
                 entry.automaticPlayRequest = false;
-                if (activeEntry === entry
-                        && playVersion === currentPlayVersion) {
-                    entry.manualPause = true;
-                    activeEntry = null;
+                if (activeEntry !== entry
+                        || playVersion !== currentPlayVersion
+                        || entry.player.isDisposed()) {
+                    return;
                 }
+
+                if (allowMutedFallback) {
+                    entry.player.muted(true);
+                    requestAutomaticPlay(
+                            entry,
+                            currentPlayVersion,
+                            false
+                    );
+                    return;
+                }
+
+                entry.manualPause = true;
+                activeEntry = null;
             });
         }
     }
