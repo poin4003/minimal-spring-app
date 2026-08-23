@@ -22,7 +22,12 @@ ifeq ($(OS),Windows_NT)
 else
     MVN_CMD := ./mvnw
     JAVA_CMD := java
-    AI_RUN_CMD := echo "llama-server is managed by systemd on Linux." && systemctl is-active --quiet llama-server.service
+    AI_RUN_CMD := if command -v systemctl >/dev/null 2>&1 \
+            && systemctl is-active --quiet llama-server.service; then \
+        echo "llama-server.service is active."; \
+    else \
+        echo "WARNING: llama-server.service is unavailable; Spring will start without the optional AI runtime." >&2; \
+    fi
     AI_DOWN_CMD := echo "Run: sudo systemctl stop llama-server.service"
     AI_HEALTH_CMD := sh ./scripts/ai/health-llama.sh
 endif

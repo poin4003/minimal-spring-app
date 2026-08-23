@@ -83,3 +83,24 @@ already running sidecar; stop it explicitly with:
 ```bash
 sudo systemctl stop llama-server.service
 ```
+
+### Spring Managed by PM2
+
+When PM2 already manages Spring, do not also enable
+`minimal-spring-app.service`. Install and enable only the llama unit:
+
+```bash
+sudo cp environment/systemd/llama-server.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now llama-server.service
+```
+
+PM2 may continue to start Spring with `make run`. On Linux, the `ai-run`
+dependency only checks whether `llama-server.service` is active. A missing or
+inactive unit produces a warning but does not stop Spring, because the AI
+runtime is optional. Use the strict health target when deployment should verify
+that llama is actually ready:
+
+```bash
+make ai-health
+```
