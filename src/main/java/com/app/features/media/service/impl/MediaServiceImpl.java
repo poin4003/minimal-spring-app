@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +56,7 @@ import com.app.features.media.support.MediaProcessingPolicy;
 import com.app.features.media.validation.MediaFileValidator;
 import com.app.features.media.validation.MediaTypePolicyResolver;
 import com.app.features.media.validation.schema.ValidatedMediaFile;
+import com.app.features.post.service.PostMediaService;
 import com.app.features.user.entity.UserBaseEntity;
 import com.app.features.user.service.UserService;
 
@@ -78,6 +80,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaThumbnailService mediaThumbnailSvc;
     private final MediaProcessingPolicy mediaProcessingPolicy;
     private final MediaResultMapper mediaResultMapper;
+    private final PostMediaService postMediaSvc;
     private final JobScheduler jobScheduler;
     private final ApplicationEventPublisher eventPublisher;
     private final ModelMapper mapper;
@@ -451,9 +454,24 @@ public class MediaServiceImpl implements MediaService {
 
     private void deleteMediaEntity(MediaEntity media) {
         UUID mediaId = media.getId();
+
+        if (postMediaSvc.isMediaAttached(mediaId)) {
+            throw ExceptionFactory.invalidParam(
+                    "error.media.inUse",
+                    mediaId);
+        }
+
         String storageKey = media.getStorageKey();
 
-        mediaRepo.delete(media);
+        try {
+            mediaRepo.delete(media);
+            mediaRepo.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw ExceptionFactory.invalidParam(
+                    "error.media.inUse",
+                    mediaId);
+        }
+
         eventPublisher.publishEvent(new MediaDeletedEvent(mediaId));
         registerAfterCommitCleanup(storageKey);
     }
