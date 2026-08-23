@@ -34,7 +34,7 @@
 }
 
 .standard-post-media-stage.standard-post-media-portrait {
-    width: min(100%, 26rem);
+    width: min(100%, 32rem);
 }
 
 .standard-post-media-stage .app-media-preview-video.video-js,
@@ -103,7 +103,7 @@
 }
 
 .post-media-collage[data-media-count="1"].post-media-collage-portrait {
-    width: min(100%, 26rem);
+    width: min(100%, 32rem);
 }
 
 .post-media-collage[data-media-count="2"] {

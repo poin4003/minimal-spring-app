@@ -154,7 +154,7 @@
         const options = {
             controls: true,
             preload: "metadata",
-            muted: false,
+            muted: mediaElement.hasAttribute("data-feed-autoplay"),
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
@@ -244,7 +244,8 @@
     }
 
     function initializePlayer(mediaElement) {
-        if (playerSessions.has(mediaElement)) {
+        if (!(mediaElement instanceof HTMLMediaElement)
+                || playerSessions.has(mediaElement)) {
             return;
         }
 
