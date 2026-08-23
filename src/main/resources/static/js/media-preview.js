@@ -154,7 +154,7 @@
         const options = {
             controls: true,
             preload: "metadata",
-            muted: mediaElement.hasAttribute("data-feed-autoplay"),
+            muted: false,
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
