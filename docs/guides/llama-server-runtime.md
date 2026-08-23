@@ -8,6 +8,20 @@ HTTP but does not start or stop it from Java. Make and systemd consult
 
 ## Windows Development
 
+Copy the two GGUF files into `ai-models`, then install the current Windows CPU
+runtime, create local configuration, and start it with:
+
+```powershell
+make ai-setup
+```
+
+The installer is idempotent. Use `-Force` directly when the local llama.cpp
+runtime should be replaced:
+
+```powershell
+powershell -File scripts/ai/setup-llama-windows.ps1 -Force
+```
+
 Set the capability in `.env` and start Spring normally:
 
 ```dotenv
@@ -33,6 +47,27 @@ make ai-down
 Runtime PID and logs are stored under `.runtime/llama-server`.
 
 ## Arch Linux Production
+
+The Windows `.exe` and `.dll` files are not portable. Only copy the two GGUF
+files from development, then run the Arch installer from the deployed project:
+
+```bash
+make ai-setup
+```
+
+It installs the Arch build toolchain, builds the current `llama-server`, writes
+machine configuration, renders the systemd unit for the current project path
+and user, starts the unit, and verifies its health. Use `LLAMA_CPP_REF` to pin a
+specific llama.cpp tag when production requires reproducible upgrades:
+
+```bash
+LLAMA_CPP_REF=b12345 make ai-setup
+```
+
+### Manual `/opt` Layout
+
+The following steps are the manual alternative to `make ai-setup`. They are
+useful when both Spring and llama should run as dedicated system services.
 
 Install the application under `/opt/minimal-spring-app`, including the Linux
 `llama-server` binary, GGUF files, and `scripts/ai` directory. Create the
@@ -87,12 +122,12 @@ sudo systemctl stop llama-server.service
 ### Spring Managed by PM2
 
 When PM2 already manages Spring, do not also enable
-`minimal-spring-app.service`. Install and enable only the llama unit:
+`minimal-spring-app.service`. `make ai-setup` renders and enables only the
+llama unit for the current deployment path and Linux user. PM2 can then be
+restarted normally:
 
 ```bash
-sudo cp environment/systemd/llama-server.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now llama-server.service
+pm2 restart minimal-spring-app --update-env
 ```
 
 PM2 may continue to start Spring with `make run`. On Linux, the `ai-run`

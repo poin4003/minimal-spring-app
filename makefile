@@ -17,6 +17,7 @@ ifeq ($(OS),Windows_NT)
     MVN_CMD := mvn
     JAVA_CMD := java
     AI_RUN_CMD := powershell -NoProfile -ExecutionPolicy Bypass -File scripts\ai\start-llama.ps1
+    AI_SETUP_CMD := powershell -NoProfile -ExecutionPolicy Bypass -File scripts\ai\setup-llama-windows.ps1
     AI_DOWN_CMD := powershell -NoProfile -ExecutionPolicy Bypass -File scripts\ai\stop-llama.ps1
     AI_HEALTH_CMD := powershell -NoProfile -ExecutionPolicy Bypass -File scripts\ai\health-llama.ps1
 else
@@ -28,15 +29,19 @@ else
     else \
         echo "WARNING: llama-server.service is unavailable; Spring will start without the optional AI runtime." >&2; \
     fi
+    AI_SETUP_CMD := bash ./scripts/ai/setup-llama-arch.sh
     AI_DOWN_CMD := echo "Run: sudo systemctl stop llama-server.service"
     AI_HEALTH_CMD := sh ./scripts/ai/health-llama.sh
 endif
 
-.PHONY: dev build run clean check-build ai-run ai-up ai-down ai-health
+.PHONY: dev build run clean check-build ai-setup ai-run ai-up ai-down ai-health
 
 dev: $(AI_RUNTIME_DEPENDENCY)
 	@echo "Starting server in DEV mode..."
 	$(MVN_CMD) -DskipTests spring-boot:run -Dspring-boot.run.profiles=dev
+
+ai-setup:
+	@$(AI_SETUP_CMD)
 
 ai-run:
 	@$(AI_RUN_CMD)
