@@ -4,6 +4,7 @@
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const FEED_SOUND_ENABLED_KEY = "feed-sound-enabled";
+    const HAVE_FUTURE_DATA = 3;
     const START_VISIBILITY_RATIO = 0.65;
     const STOP_VISIBILITY_RATIO = 0.35;
     const SWITCH_SCORE_ADVANTAGE = 0.15;
@@ -79,6 +80,7 @@
                 .filter(function (entry) {
                     return entry.wrapper.isConnected
                             && entry.autoplayEligible
+                            && entry.playbackReady
                             && entry.visibilityRatio >= START_VISIBILITY_RATIO
                             && !entry.manualPause;
                 })
@@ -88,13 +90,14 @@
     }
 
     function pauseEntry(entry) {
-        if (!entry || entry.player.isDisposed()) {
+        if (!entry
+                || entry.player.isDisposed()
+                || entry.player.paused()) {
             return;
         }
 
         entry.programmaticPause = true;
         entry.player.pause();
-        entry.programmaticPause = false;
     }
 
     function clearActiveEntry() {
@@ -111,10 +114,16 @@
         const currentPlayVersion = ++playVersion;
         activeEntry = entry;
         entry.player.muted(!feedSoundEnabled);
-        requestAutomaticPlay(entry, currentPlayVersion);
+        requestAutomaticPlay(
+                entry,
+                currentPlayVersion,
+                !entry.player.muted());
     }
 
-    function requestAutomaticPlay(entry, currentPlayVersion) {
+    function requestAutomaticPlay(
+            entry,
+            currentPlayVersion,
+            allowMutedFallback) {
         entry.automaticPlayRequest = true;
         const playRequest = entry.player.play();
         if (playRequest && typeof playRequest.catch === "function") {
@@ -123,6 +132,17 @@
                 if (activeEntry !== entry
                         || playVersion !== currentPlayVersion
                         || entry.player.isDisposed()) {
+                    return;
+                }
+
+                if (allowMutedFallback) {
+                    feedSoundEnabled = false;
+                    writeSoundPreference(false);
+                    entry.player.muted(true);
+                    requestAutomaticPlay(
+                            entry,
+                            currentPlayVersion,
+                            false);
                     return;
                 }
 
@@ -194,6 +214,7 @@
             wrapper: wrapper,
             visibilityRatio: 0,
             autoplayEligible: mediaElement.hasAttribute("data-feed-autoplay"),
+            playbackReady: player.readyState() >= HAVE_FUTURE_DATA,
             automaticPlayRequest: false,
             automaticPlayback: false,
             manualPause: false,
@@ -201,18 +222,26 @@
         };
 
         player.on("play", function () {
+            entry.programmaticPause = false;
             entry.automaticPlayback = entry.automaticPlayRequest;
             entry.automaticPlayRequest = false;
             entry.manualPause = false;
             activeEntry = entry;
         });
         player.on("pause", function () {
-            if (!entry.programmaticPause && activeEntry === entry) {
+            const programmaticPause = entry.programmaticPause;
+            entry.programmaticPause = false;
+
+            if (!programmaticPause && activeEntry === entry) {
                 entry.manualPause = entry.autoplayEligible;
                 entry.automaticPlayback = false;
                 activeEntry = null;
                 scheduleReconcile();
             }
+        });
+        player.on("canplay", function () {
+            entry.playbackReady = true;
+            scheduleReconcile();
         });
         player.on("ended", function () {
             entry.manualPause = entry.autoplayEligible;
