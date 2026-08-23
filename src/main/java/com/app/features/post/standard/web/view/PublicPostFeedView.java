@@ -2,8 +2,6 @@ package com.app.features.post.standard.web.view;
 
 import java.util.List;
 
-import com.app.features.ui.web.component.view.UiPaginationView;
-
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,5 +13,5 @@ public class PublicPostFeedView {
 
     private final String id;
     private final List<PublicPostCardView> posts;
-    private final UiPaginationView pagination;
+    private final String nextPagePath;
 }

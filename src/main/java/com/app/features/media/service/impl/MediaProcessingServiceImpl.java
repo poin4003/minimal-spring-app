@@ -34,6 +34,7 @@ import com.app.features.media.repository.MediaVariantRepository;
 import com.app.features.media.schema.model.HlsEncodingProfile;
 import com.app.features.media.schema.model.HlsProcessingResult;
 import com.app.features.media.schema.model.MediaThumbnailResult;
+import com.app.features.media.schema.model.MediaVideoGeometry;
 import com.app.features.media.service.MediaProcessingLeaseService;
 import com.app.features.media.service.MediaProcessingService;
 import com.app.features.media.service.MediaThumbnailService;
@@ -41,6 +42,7 @@ import com.app.features.media.storage.MediaFileStorage;
 import com.app.features.media.storage.schema.MediaProcessingWorkspace;
 import com.app.features.media.support.MediaFfmpegFactory;
 import com.app.features.media.support.MediaProcessingPolicy;
+import com.app.features.media.support.MediaVideoGeometryResolver;
 import com.app.features.media.validation.MediaProbe;
 import com.github.kokorin.jaffree.StreamType;
 import com.github.kokorin.jaffree.ffmpeg.UrlInput;
@@ -67,6 +69,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
     private final MediaProcessingLeaseService mediaProcessingLeaseSvc;
     private final MediaFfmpegFactory mediaFfmpegFactory;
     private final MediaProcessingPolicy mediaProcessingPolicy;
+    private final MediaVideoGeometryResolver mediaVideoGeometryResolver;
     private final AppProperties appProperties;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -158,12 +161,17 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
             Stream primaryVideoStream = media.getKind() == MediaKind.VIDEO
                     ? resolvePrimaryVideoStream(source)
                     : null;
-            List<HlsEncodingProfile> profiles = primaryVideoStream != null
-                    ? resolveVideoProfiles(primaryVideoStream)
+            MediaVideoGeometry videoGeometry = primaryVideoStream == null
+                    ? null
+                    : mediaVideoGeometryResolver.resolve(primaryVideoStream);
+            List<HlsEncodingProfile> profiles = videoGeometry != null
+                    ? resolveVideoProfiles(videoGeometry)
                     : List.of(HlsEncodingProfile.audio(
                             appProperties.getMedia().getHls().getAudioBitrate()));
             MediaVideoEncoder preferredEncoder = resolveVideoEncoder();
             String videoDecoder = primaryVideoStream != null
+                    && videoGeometry != null
+                    && !videoGeometry.hasRotation()
                     ? resolveDecoderForEncoder(preferredEncoder, primaryVideoStream)
                     : null;
 
@@ -565,9 +573,10 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                         "error.media.videoDimensionsUndetermined"));
     }
 
-    private List<HlsEncodingProfile> resolveVideoProfiles(Stream videoStream) {
-        int sourceWidth = videoStream.getWidth();
-        int sourceHeight = videoStream.getHeight();
+    private List<HlsEncodingProfile> resolveVideoProfiles(
+            MediaVideoGeometry geometry) {
+        int sourceWidth = geometry.getWidth();
+        int sourceHeight = geometry.getHeight();
         int sourceShortEdge = Math.min(sourceWidth, sourceHeight);
 
         List<HlsRendition> configuredProfiles = appProperties.getMedia()

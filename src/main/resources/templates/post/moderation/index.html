@@ -25,7 +25,7 @@
                     <div class="app-section-body">
                         <form method="get"
                               th:action="${page.listPath}"
-                              th:object="${page.filter}"
+                              data-app-prune-empty-params
                               class="row g-3 align-items-end"
                               th:attr="hx-get=${page.listPath},
                                        hx-target='#post-moderation-queue',
@@ -38,37 +38,58 @@
                             <input type="hidden" name="sortBy" th:value="${page.query.sortBy}">
                             <input type="hidden" name="sortDirection" th:value="${page.query.sortDirection}">
 
-                            <div class="col-12 col-md-6 col-xl-3">
+                            <div class="col-12 col-md-6 col-xl-2">
+                                <label for="moderation-status"
+                                       class="form-label"
+                                       th:text="#{post.moderation.filter.status}">
+                                    Moderation status
+                                </label>
+                                <select id="moderation-status"
+                                        name="moderationStatus"
+                                        class="form-select">
+                                    <option th:each="option : ${page.moderationStatuses}"
+                                            th:value="${option.value}"
+                                            th:selected="${option.value == page.filter.moderationStatus}"
+                                            th:text="${option.label}">
+                                        Pending review
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="col-12 col-md-6 col-xl-2">
                                 <label for="moderation-type"
                                        class="form-label"
                                        th:text="#{post.moderation.filter.type}">
                                     Post type
                                 </label>
                                 <select id="moderation-type"
-                                        class="form-select"
-                                        th:field="*{type}">
+                                        name="type"
+                                        class="form-select">
                                     <option value=""
+                                            th:selected="${page.filter.type == null}"
                                             th:text="#{post.moderation.filter.allTypes}">
                                         All types
                                     </option>
                                     <option th:each="option : ${page.postTypes}"
                                             th:value="${option.value}"
+                                            th:selected="${option.value == page.filter.type}"
                                             th:text="${option.label}">
                                         Standard
                                     </option>
                                 </select>
                             </div>
 
-                            <div class="col-12 col-md-6 col-xl-3">
+                            <div class="col-12 col-md-6 col-xl-2">
                                 <label for="moderation-author-id"
                                        class="form-label"
                                        th:text="#{post.moderation.filter.authorId}">
                                     Author ID
                                 </label>
                                 <input id="moderation-author-id"
+                                       name="authorId"
                                        type="text"
                                        class="form-control"
-                                       th:field="*{authorId}"
+                                       th:value="${page.filter.authorId}"
                                        th:placeholder="#{post.moderation.filter.authorIdPlaceholder}">
                             </div>
 
@@ -79,9 +100,10 @@
                                     Submitted from
                                 </label>
                                 <input id="moderation-created-from"
+                                       name="createdFrom"
                                        type="datetime-local"
                                        class="form-control"
-                                       th:field="*{createdFrom}">
+                                       th:value="${page.filter.createdFrom}">
                             </div>
 
                             <div class="col-12 col-md-6 col-xl-2">
@@ -91,9 +113,10 @@
                                     Submitted to
                                 </label>
                                 <input id="moderation-created-to"
+                                       name="createdTo"
                                        type="datetime-local"
                                        class="form-control"
-                                       th:field="*{createdTo}">
+                                       th:value="${page.filter.createdTo}">
                             </div>
 
                             <div class="col-12 col-xl-2 app-page-toolbar">

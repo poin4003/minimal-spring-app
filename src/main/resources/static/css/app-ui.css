@@ -534,6 +534,10 @@ a {
     background-color: var(--bs-primary);
 }
 
+.app-media-preview-player .video-js .vjs-quality-selector {
+    min-width: 7em;
+}
+
 .app-media-preview-audio.video-js {
     width: 100%;
     height: 3rem;

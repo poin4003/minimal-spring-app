@@ -17,15 +17,32 @@
             </div>
         </div>
 
+        <th:block th:unless="${#lists.isEmpty(feed.posts)}"
+                  th:replace="~{post/standard/public/fragments/feed
+                          :: items(${feed})}"></th:block>
+    </section>
+
+    <th:block th:fragment="items(feed)">
         <th:block th:each="card : ${feed.posts}">
             <div th:replace="~{post/standard/public/fragments/card
                     :: card(${card}, false)}"></div>
         </th:block>
 
-        <div class="d-flex justify-content-center">
-            <div th:replace="~{fragments/components/pagination
-                    :: pagination(${feed.pagination})}"></div>
+        <div th:if="${feed.nextPagePath != null}"
+             class="app-infinite-scroll-sentinel d-flex justify-content-center py-3"
+             role="status"
+             th:attr="hx-get=${feed.nextPagePath}"
+             hx-trigger="intersect once threshold:0.1"
+             hx-target="this"
+             hx-swap="outerHTML"
+             hx-disabled-elt="this"
+             hx-indicator="find .spinner-border">
+            <span class="spinner-border spinner-border-sm htmx-indicator"
+                  aria-hidden="true"></span>
+            <span class="visually-hidden" th:text="#{common.loading}">
+                Loading
+            </span>
         </div>
-    </section>
+    </th:block>
 </body>
 </html>

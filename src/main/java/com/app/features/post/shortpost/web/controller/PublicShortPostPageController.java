@@ -30,12 +30,9 @@ import com.app.features.post.shortpost.web.view.PublicShortDetailFeedView;
 import com.app.features.post.shortpost.web.view.PublicShortDetailPageView;
 import com.app.features.post.shortpost.web.view.PublicShortGalleryView;
 import com.app.features.post.shortpost.web.view.PublicShortListPageView;
-import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
-import com.app.features.ui.web.component.view.UiHtmxNavigationView;
-import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,7 +63,6 @@ public class PublicShortPostPageController {
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final ShortPostService shortPostSvc;
-    private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
     @GetMapping
@@ -82,25 +78,10 @@ public class PublicShortPostPageController {
                 shortPostSvc.getPublishedPosts(
                         filter,
                         query.toPageable(SHORT_PAGE_DEFAULTS));
-        UiPaginationView pagination = uiPaginationFactory.build(
+        PublicShortGalleryView gallery = buildGallery(
+                request,
                 shortPage,
-                uiPaginationPathBuilder.build(
-                        getShortsPath(),
-                        request,
-                        query,
-                        SHORT_PAGE_DEFAULTS),
-                UiHtmxNavigationView.forComponent(
-                        PUBLIC_SHORT_GALLERY_ID));
-        PublicShortGalleryView gallery =
-                PublicShortGalleryView.builder()
-                        .id(PUBLIC_SHORT_GALLERY_ID)
-                        .shorts(shortPage.getContent().stream()
-                                .map(post -> toCard(
-                                        post,
-                                        shortPage.getNumber()))
-                                .toList())
-                        .pagination(pagination)
-                        .build();
+                query);
         PublicShortListPageView page = PublicShortListPageView.builder()
                 .title(messageResolver.get("short.public.feed.title"))
                 .shell(socialShellFactory.build(
@@ -114,6 +95,26 @@ public class PublicShortPostPageController {
 
         model.addAttribute(PublicShortListPageView.ATTRIBUTE, page);
         return "post/short/public/index";
+    }
+
+    @GetMapping("/gallery-stream")
+    public String galleryStream(
+            HttpServletRequest request,
+            @Valid @ModelAttribute("filter")
+            PublicShortPostFilterCriteria filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        query.setSize(SHORT_PAGE_DEFAULTS.getSize());
+        Page<PublicShortPostResult> shortPage =
+                shortPostSvc.getPublishedPosts(
+                        filter,
+                        query.toPageable(SHORT_PAGE_DEFAULTS));
+
+        model.addAttribute(
+                PublicShortGalleryView.ATTRIBUTE,
+                buildGallery(request, shortPage, query));
+        return "post/short/public/fragments/gallery"
+                + " :: items (gallery=${gallery})";
     }
 
     @GetMapping("/{postId}")
@@ -136,13 +137,17 @@ public class PublicShortPostPageController {
                                 post,
                                 shortPage.getNumber()))
                         .toList());
-        boolean selectedPostLoaded = cards.stream()
-                .anyMatch(card -> card.getPost().getPost().getId()
-                        .equals(postId));
-        if (!selectedPostLoaded) {
-            cards.add(0, toCard(
-                    shortPostSvc.getPublishedPost(postId),
-                    shortPage.getNumber()));
+        PublicShortCardView selectedCard = cards.stream()
+                .filter(card -> card.getPost().getPost().getId()
+                        .equals(postId))
+                .findFirst()
+                .orElseGet(() -> toCard(
+                        shortPostSvc.getPublishedPost(postId),
+                        shortPage.getNumber()));
+        cards.remove(selectedCard);
+        cards.addFirst(selectedCard);
+        if (cards.size() > SHORT_PAGE_DEFAULTS.getSize()) {
+            cards.removeLast();
         }
 
         PublicShortDetailPageView page = PublicShortDetailPageView.builder()
@@ -203,6 +208,30 @@ public class PublicShortPostPageController {
                 .build();
     }
 
+    private PublicShortGalleryView buildGallery(
+            HttpServletRequest request,
+            Page<PublicShortPostResult> shortPage,
+            UiPageQuery query) {
+        String nextPagePath = shortPage.hasNext()
+                ? uiPaginationPathBuilder.build(
+                        getGalleryStreamPath(),
+                        request,
+                        query,
+                        SHORT_PAGE_DEFAULTS)
+                        .apply(shortPage.getNumber() + 1)
+                : null;
+
+        return PublicShortGalleryView.builder()
+                .id(PUBLIC_SHORT_GALLERY_ID)
+                .shorts(shortPage.getContent().stream()
+                        .map(post -> toCard(
+                                post,
+                                shortPage.getNumber()))
+                        .toList())
+                .nextPagePath(nextPagePath)
+                .build();
+    }
+
     private PublicShortDetailFeedView buildDetailFeed(
             HttpServletRequest request,
             UUID activePostId,
@@ -257,6 +286,14 @@ public class PublicShortPostPageController {
     private String buildStreamPath(UUID postId) {
         return UriComponentsBuilder.fromPath(getShortsPath())
                 .pathSegment(postId.toString(), "stream")
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    private String getGalleryStreamPath() {
+        return UriComponentsBuilder.fromPath(getShortsPath())
+                .pathSegment("gallery-stream")
                 .build()
                 .encode()
                 .toUriString();

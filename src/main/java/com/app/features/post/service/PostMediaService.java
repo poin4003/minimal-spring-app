@@ -26,6 +26,8 @@ public interface PostMediaService {
 
     List<PostMediaEntity> requirePublishableMedia(PostEntity post);
 
+    boolean isMediaAttached(UUID mediaId);
+
     List<PostMediaEntity> createAttachments(
             PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia);
 

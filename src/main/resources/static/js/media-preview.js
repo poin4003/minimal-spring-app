@@ -3,6 +3,7 @@
 
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
+    const INITIAL_HLS_BANDWIDTH = 10_000_000;
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const playerSessions = new Map();
@@ -153,14 +154,19 @@
         const options = {
             controls: true,
             preload: "metadata",
-            muted: mediaElement.hasAttribute("data-feed-autoplay"),
+            muted: false,
             responsive: true,
             fluid: isVideo,
             audioOnlyMode: !isVideo,
             playbackRates: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2],
             html5: {
                 vhs: {
-                    overrideNative: true
+                    overrideNative: true,
+                    bandwidth: INITIAL_HLS_BANDWIDTH,
+                    enableLowInitialPlaylist: false,
+                    useBandwidthFromLocalStorage: false,
+                    limitRenditionByPlayerDimensions: false,
+                    useNetworkInformationApi: false
                 },
                 nativeAudioTracks: false,
                 nativeVideoTracks: false
@@ -200,6 +206,43 @@
         });
     }
 
+    function initializeCurrentQualityDisplay(player, qualitySelector) {
+        const qualityLevels = player.qualityLevels();
+
+        function resolveCurrentResolution() {
+            const selectedIndex = qualityLevels.selectedIndex;
+            if (selectedIndex < 0 || selectedIndex >= qualityLevels.length) {
+                return null;
+            }
+
+            const level = qualityLevels[selectedIndex];
+            const resolution = Math.min(level.width || 0, level.height || 0);
+            return resolution > 0 ? resolution + "p" : null;
+        }
+
+        function updateQualityLabel() {
+            const selectedQuality = qualitySelector.getCurrentQuality();
+            const currentResolution = resolveCurrentResolution();
+            if (selectedQuality !== "auto") {
+                qualitySelector.setButtonInnerText(selectedQuality + "p");
+                return;
+            }
+
+            const autoLabel = player.localize("Auto");
+            qualitySelector.setButtonInnerText(currentResolution
+                ? autoLabel + " / " + currentResolution
+                : autoLabel);
+        }
+
+        qualityLevels.on("change", updateQualityLabel);
+        qualityLevels.on("addqualitylevel", updateQualityLabel);
+        player.on("loadedmetadata", updateQualityLabel);
+        player.on("dispose", function () {
+            qualityLevels.off("change", updateQualityLabel);
+            qualityLevels.off("addqualitylevel", updateQualityLabel);
+        });
+    }
+
     function initializePlayer(mediaElement) {
         if (playerSessions.has(mediaElement)) {
             return;
@@ -225,9 +268,10 @@
         player.ready(function () {
             if (mediaElement instanceof HTMLVideoElement
                     && typeof player.hlsQualitySelector === "function") {
-                player.hlsQualitySelector({
+                const qualitySelector = player.hlsQualitySelector({
                     displayCurrentQuality: true
                 });
+                initializeCurrentQualityDisplay(player, qualitySelector);
             }
 
             initializeWatchProgress(mediaElement, player);

@@ -1,7 +1,11 @@
 package com.app.features.post.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +15,7 @@ import com.app.core.exception.ExceptionFactory;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.enums.PostType;
+import com.app.features.post.event.PostSubmittedForReviewEvent;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.repository.PostRepository;
 import com.app.features.post.service.PostService;
@@ -24,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     public PostEntity createDraftPost(UserBaseEntity author, PostType type) {
@@ -34,6 +40,14 @@ public class PostServiceImpl implements PostService {
         post.setModerationStatus(null);
 
         return postRepo.save(post);
+    }
+
+    @Override
+    public PostEntity requirePost(UUID postId) {
+        return postRepo.findById(postId)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.post.notFound",
+                        postId));
     }
 
     @Override
@@ -87,16 +101,19 @@ public class PostServiceImpl implements PostService {
 
         post.setLifecycleStatus(PostLifecycleStatus.ACTIVE);
         post.setModerationStatus(PostModerationStatus.PENDING_REVIEW);
+        post.setModerationSource(null);
         post.setPublishedAt(null);
         post.setModeratedBy(null);
         post.setModeratedAt(null);
         post.setRejectionReason(null);
+
+        eventPublisher.publishEvent(
+                new PostSubmittedForReviewEvent(post.getId()));
     }
 
     @Override
     public PostEntity requirePendingPost(PostEntity post) {
-        if (post.getLifecycleStatus() != PostLifecycleStatus.ACTIVE
-                || post.getModerationStatus() != PostModerationStatus.PENDING_REVIEW) {
+        if (!isPendingPost(post)) {
             throw ExceptionFactory.invalidParam(
                     "error.post.moderationInvalid",
                     post.getId());
@@ -117,15 +134,40 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
+    public Optional<PostEntity> findPendingPost(UUID postId) {
+        return postRepo.findById(postId)
+                .filter(post -> isPendingPost(post));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<PostEntity> findPendingPostForUpdate(
+            UUID postId,
+            LocalDateTime expectedUpdatedAt) {
+        return postRepo.findForUpdateById(postId)
+                .filter(post -> isPendingPost(post))
+                .filter(post -> Objects.equals(
+                        post.getUpdatedAt(),
+                        expectedUpdatedAt));
+    }
+
+    @Override
     public void deletePost(PostEntity post) {
         postRepo.delete(post);
     }
 
     private void clearModeration(PostEntity post) {
         post.setModerationStatus(null);
+        post.setModerationSource(null);
         post.setPublishedAt(null);
         post.setModeratedBy(null);
         post.setModeratedAt(null);
         post.setRejectionReason(null);
+    }
+
+    private boolean isPendingPost(PostEntity post) {
+        return post.getLifecycleStatus() == PostLifecycleStatus.ACTIVE
+                && post.getModerationStatus()
+                        == PostModerationStatus.PENDING_REVIEW;
     }
 }

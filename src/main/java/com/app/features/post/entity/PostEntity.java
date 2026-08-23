@@ -9,6 +9,7 @@ import org.hibernate.type.SqlTypes;
 import com.app.core.db.BaseAuditEntity;
 import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.enums.PostType;
+import com.app.features.post.moderation.enums.PostModerationSource;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.user.entity.UserBaseEntity;
 
@@ -74,6 +75,11 @@ public class PostEntity extends BaseAuditEntity {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "moderation_status")
     private PostModerationStatus moderationStatus;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "moderation_source")
+    private PostModerationSource moderationSource;
 
     @Column(name = "published_at")
     private LocalDateTime publishedAt;

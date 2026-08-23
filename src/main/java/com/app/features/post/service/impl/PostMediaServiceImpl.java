@@ -88,6 +88,11 @@ public class PostMediaServiceImpl implements PostMediaService {
     }
 
     @Override
+    public boolean isMediaAttached(UUID mediaId) {
+        return postMediaRepo.existsByMedia_Id(mediaId);
+    }
+
+    @Override
     public List<PostMediaEntity> createAttachments(
             PostEntity post, PostMediaRole role, List<MediaEntity> orderedMedia) {
         List<PostMediaEntity> attachments = IntStream.range(0, orderedMedia.size())

@@ -25,6 +25,10 @@ public class MediaResult {
 
     private long fileSize;
 
+    private Integer originalWidth;
+
+    private Integer originalHeight;
+
     private String contentUrl;
 
     private String originalUrl;

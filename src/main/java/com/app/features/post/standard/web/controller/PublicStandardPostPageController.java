@@ -33,12 +33,9 @@ import com.app.features.post.standard.web.view.PublicPostCardView;
 import com.app.features.post.standard.web.view.PublicPostDetailPageView;
 import com.app.features.post.standard.web.view.PublicPostFeedView;
 import com.app.features.post.standard.web.view.PublicPostListPageView;
-import com.app.features.ui.web.component.support.UiPaginationFactory;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
-import com.app.features.ui.web.component.view.UiHtmxNavigationView;
-import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,7 +63,6 @@ public class PublicStandardPostPageController {
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final StandardPostService standardPostSvc;
-    private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
 
     @GetMapping
@@ -82,32 +78,10 @@ public class PublicStandardPostPageController {
                         filter,
                         query.toPageable(POST_PAGE_DEFAULTS));
 
-        UiPaginationView pagination = uiPaginationFactory.build(
+        PublicPostFeedView feed = buildFeed(
+                request,
                 postPage,
-                uiPaginationPathBuilder.build(
-                        getFeedPath(),
-                        request,
-                        query,
-                        POST_PAGE_DEFAULTS),
-                UiHtmxNavigationView.forComponent(
-                        PUBLIC_POST_FEED_ID));
-        PublicPostFeedView feed = PublicPostFeedView.builder()
-                .id(PUBLIC_POST_FEED_ID)
-                .posts(postPage.getContent().stream()
-                        .map(post -> PublicPostCardView.builder()
-                                .post(post)
-                                .detailPath(buildDetailPath(
-                                        post.getPost().getId()))
-                                .mediaGalleryPartialPath(
-                                        buildMediaGalleryPartialPath(
-                                                post.getPost().getId()))
-                                .singlePlayableMedia(
-                                        resolveSinglePlayableMedia(
-                                                post.getMedia()))
-                                .build())
-                        .toList())
-                .pagination(pagination)
-                .build();
+                query);
         PublicPostListPageView page = PublicPostListPageView.builder()
                 .title(messageResolver.get("post.public.feed.title"))
                 .shell(socialShellFactory.build(
@@ -118,6 +92,25 @@ public class PublicStandardPostPageController {
 
         model.addAttribute(PublicPostListPageView.ATTRIBUTE, page);
         return "post/standard/public/index";
+    }
+
+    @GetMapping("/stream")
+    public String stream(
+            HttpServletRequest request,
+            @Valid @ModelAttribute("filter")
+            PublicStandardPostFilterCriteria filter,
+            @Valid @ModelAttribute("query") UiPageQuery query,
+            Model model) {
+        Page<PublicStandardPostResult> postPage =
+                standardPostSvc.getPublishedPosts(
+                        filter,
+                        query.toPageable(POST_PAGE_DEFAULTS));
+
+        model.addAttribute(
+                PublicPostFeedView.ATTRIBUTE,
+                buildFeed(request, postPage, query));
+        return "post/standard/public/fragments/feed"
+                + " :: items (feed=${feed})";
     }
 
     @GetMapping("/{postId}")
@@ -247,6 +240,46 @@ public class PublicStandardPostPageController {
         return kind == MediaKind.VIDEO || kind == MediaKind.AUDIO
                 ? attachment
                 : null;
+    }
+
+    private PublicPostFeedView buildFeed(
+            HttpServletRequest request,
+            Page<PublicStandardPostResult> postPage,
+            UiPageQuery query) {
+        String nextPagePath = postPage.hasNext()
+                ? uiPaginationPathBuilder.build(
+                        getFeedStreamPath(),
+                        request,
+                        query,
+                        POST_PAGE_DEFAULTS)
+                        .apply(postPage.getNumber() + 1)
+                : null;
+
+        return PublicPostFeedView.builder()
+                .id(PUBLIC_POST_FEED_ID)
+                .posts(postPage.getContent().stream()
+                        .map(post -> PublicPostCardView.builder()
+                                .post(post)
+                                .detailPath(buildDetailPath(
+                                        post.getPost().getId()))
+                                .mediaGalleryPartialPath(
+                                        buildMediaGalleryPartialPath(
+                                                post.getPost().getId()))
+                                .singlePlayableMedia(
+                                        resolveSinglePlayableMedia(
+                                                post.getMedia()))
+                                .build())
+                        .toList())
+                .nextPagePath(nextPagePath)
+                .build();
+    }
+
+    private String getFeedStreamPath() {
+        return UriComponentsBuilder.fromPath(getFeedPath())
+                .pathSegment("stream")
+                .build()
+                .encode()
+                .toUriString();
     }
 
     private String getFeedPath() {
