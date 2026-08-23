@@ -19,6 +19,7 @@ import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.aimoderation.enums.PostAiModerationMode;
 import com.app.features.post.aimoderation.service.PostAiModerationAdminService;
+import com.app.features.post.aimoderation.support.PostAiModerationCapability;
 import com.app.features.post.aimoderation.web.support.PostAiModerationPageViewFactory;
 import com.app.features.post.aimoderation.web.view.PostAiModerationConfigForm;
 import com.app.features.post.aimoderation.web.view.PostAiModerationConfigPageView;
@@ -40,6 +41,7 @@ public class PostAiModerationPageController {
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
     private final PostAiModerationAdminService postAiModerationAdminSvc;
+    private final PostAiModerationCapability postAiModerationCapability;
     private final PostAiModerationPageViewFactory
             postAiModerationPageViewFactory;
     private final UiFormSubmitSupport uiFormSubmitSupport;
@@ -72,13 +74,20 @@ public class PostAiModerationPageController {
             BindingResult bindingResult,
             RedirectAttributes redirectAttributes,
             Model model) {
-        if (form.getMode() == PostAiModerationMode.AUTO
-                && !StringUtils.hasText(form.getPromptText())) {
-            bindingResult.rejectValue(
-                    "promptText",
-                    "validation.post.aiModeration.prompt.required",
-                    messageResolver.get(
-                            "validation.post.aiModeration.prompt.required"));
+        if (form.getMode() == PostAiModerationMode.AUTO) {
+            if (!postAiModerationCapability.isEnabled()) {
+                bindingResult.rejectValue(
+                        "mode",
+                        "error.post.aiModerationDisabled",
+                        messageResolver.get(
+                                "error.post.aiModerationDisabled"));
+            } else if (!StringUtils.hasText(form.getPromptText())) {
+                bindingResult.rejectValue(
+                        "promptText",
+                        "validation.post.aiModeration.prompt.required",
+                        messageResolver.get(
+                                "validation.post.aiModeration.prompt.required"));
+            }
         }
 
         UiFormSubmitResult submitResult = uiFormSubmitSupport.submit(

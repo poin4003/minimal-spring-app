@@ -2,18 +2,21 @@ package com.app.features.post.aimoderation.service.impl;
 
 import java.util.UUID;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.features.post.aimoderation.entity.PostAiModerationConfigEntity;
 import com.app.features.post.aimoderation.enums.PostAiModerationMode;
+import com.app.features.post.aimoderation.exceptions.PostAiModerationClientException;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationCandidate;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationClientResult;
 import com.app.features.post.aimoderation.service.PostAiModerationClient;
 import com.app.features.post.aimoderation.service.PostAiModerationConfigService;
 import com.app.features.post.aimoderation.service.PostAiModerationDecisionService;
 import com.app.features.post.aimoderation.service.PostAiModerationWorkflowService;
+import com.app.features.post.aimoderation.support.PostAiModerationCapability;
 import com.app.features.post.aimoderation.support.PostAiModerationRequestFactory;
 
 import lombok.RequiredArgsConstructor;
@@ -28,11 +31,17 @@ public class PostAiModerationWorkflowServiceImpl
 
     private final PostAiModerationConfigService postAiModerationConfigSvc;
     private final PostAiModerationRequestFactory postAiModerationRequestFactory;
-    private final PostAiModerationClient postAiModerationClient;
+    private final ObjectProvider<PostAiModerationClient>
+            postAiModerationClientProvider;
     private final PostAiModerationDecisionService postAiModerationDecisionSvc;
+    private final PostAiModerationCapability postAiModerationCapability;
 
     @Override
     public void moderate(UUID postId) {
+        if (!postAiModerationCapability.isEnabled()) {
+            return;
+        }
+
         PostAiModerationCandidate candidate = null;
 
         try {
@@ -61,8 +70,15 @@ public class PostAiModerationWorkflowServiceImpl
                 return;
             }
 
+            PostAiModerationClient client =
+                    postAiModerationClientProvider.getIfAvailable();
+            if (client == null) {
+                throw new PostAiModerationClientException(
+                        "AI moderation is enabled but no client is available.");
+            }
+
             PostAiModerationClientResult result =
-                    postAiModerationClient.moderate(candidate.request());
+                    client.moderate(candidate.request());
             postAiModerationDecisionSvc.apply(candidate, result);
         } catch (RuntimeException exception) {
             if (candidate != null) {

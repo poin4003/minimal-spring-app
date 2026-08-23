@@ -25,6 +25,12 @@ public class PostAiModerationPanelView {
 
     private final String statusLabel;
 
+    private final String availabilityLabel;
+
+    private final String availabilityDescription;
+
+    private final String availabilityBadgeClass;
+
     private final String updatedAt;
 
     private final boolean saved;

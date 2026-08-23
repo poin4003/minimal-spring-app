@@ -22,6 +22,7 @@ import com.app.features.post.aimoderation.schema.result.PostAiModerationDecision
 import com.app.features.post.aimoderation.schema.result.PostAiModerationDecisionLogResult;
 import com.app.features.post.aimoderation.service.PostAiModerationAdminService;
 import com.app.features.post.aimoderation.service.PostAiModerationConfigService;
+import com.app.features.post.aimoderation.support.PostAiModerationCapability;
 import com.app.features.post.service.PostService;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class PostAiModerationAdminServiceImpl
         implements PostAiModerationAdminService {
 
     private final PostAiModerationConfigService postAiModerationConfigSvc;
+    private final PostAiModerationCapability postAiModerationCapability;
     private final PostAiModerationDecisionLogRepository
             postAiModerationDecisionLogRepo;
     private final PostService postSvc;
@@ -52,6 +54,12 @@ public class PostAiModerationAdminServiceImpl
     public void updateConfig(
             PostAiModerationMode mode,
             String promptText) {
+        if (mode == PostAiModerationMode.AUTO
+                && !postAiModerationCapability.isEnabled()) {
+            throw ExceptionFactory.invalidParam(
+                    "error.post.aiModerationDisabled");
+        }
+
         if (mode == PostAiModerationMode.AUTO
                 && !StringUtils.hasText(promptText)) {
             throw ExceptionFactory.invalidParam(

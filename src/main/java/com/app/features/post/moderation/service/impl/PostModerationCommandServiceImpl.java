@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
@@ -38,6 +39,14 @@ public class PostModerationCommandServiceImpl
                 post,
                 userSvc.requireUser(moderatorId),
                 PostModerationSource.MANUAL);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void publishPostDirectly(UUID postId) {
+        PostEntity post = postSvc.requirePendingPostForUpdate(postId);
+        postMediaSvc.requirePublishableMedia(post);
+        applyPublish(post, null, PostModerationSource.DIRECT);
     }
 
     @Override

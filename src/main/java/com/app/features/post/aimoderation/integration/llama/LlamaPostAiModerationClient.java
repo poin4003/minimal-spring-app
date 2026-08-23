@@ -3,6 +3,7 @@ package com.app.features.post.aimoderation.integration.llama;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,10 @@ import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Validated
+@ConditionalOnProperty(
+        prefix = "app.post.ai-moderation",
+        name = "enabled",
+        havingValue = "true")
 public class LlamaPostAiModerationClient implements PostAiModerationClient {
 
     private static final double TEMPERATURE = 0.0d;

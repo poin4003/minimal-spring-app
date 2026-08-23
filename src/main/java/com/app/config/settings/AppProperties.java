@@ -562,6 +562,8 @@ public class AppProperties {
 
     @Data
     public static class AiModerationSettings {
+        private boolean enabled;
+
         @Valid
         private final AiModerationMachine machine = new AiModerationMachine();
     }
@@ -580,6 +582,9 @@ public class AppProperties {
         @NotNull
         private Duration timeout = Duration.ofSeconds(30);
 
+        @NotNull
+        private Duration healthTimeout = Duration.ofSeconds(3);
+
         @Min(0)
         private int maxImages = 1;
 
@@ -588,7 +593,8 @@ public class AppProperties {
 
         @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
         public boolean isMachineConfigurationValid() {
-            return isPositive(timeout);
+            return isPositive(timeout)
+                    && isPositive(healthTimeout);
         }
 
         private boolean isPositive(Duration value) {

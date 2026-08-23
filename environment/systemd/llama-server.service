@@ -8,7 +8,9 @@ Type=simple
 User=minimal-spring-app
 Group=minimal-spring-app
 WorkingDirectory=/opt/minimal-spring-app
-EnvironmentFile=/etc/minimal-spring-app/llama-server.env
+EnvironmentFile=-/etc/minimal-spring-app/app.env
+EnvironmentFile=-/etc/minimal-spring-app/llama-server.env
+ExecCondition=/bin/sh -c '[ "${POST_AI_MODERATION_ENABLED}" = "true" ]'
 ExecStart=/bin/sh /opt/minimal-spring-app/scripts/ai/run-llama.sh
 ExecStartPost=/bin/sh /opt/minimal-spring-app/scripts/ai/health-llama.sh ${LLAMA_HEALTH_URL} ${LLAMA_STARTUP_TIMEOUT_SECONDS}
 Restart=on-failure

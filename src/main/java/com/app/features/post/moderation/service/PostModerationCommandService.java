@@ -16,6 +16,8 @@ public interface PostModerationCommandService {
             @NotNull UUID postId,
             @NotNull UUID moderatorId);
 
+    void publishPostDirectly(@NotNull UUID postId);
+
     Optional<PostEntity> publishPostAutomatically(
             @NotNull UUID postId,
             @NotNull LocalDateTime expectedUpdatedAt);

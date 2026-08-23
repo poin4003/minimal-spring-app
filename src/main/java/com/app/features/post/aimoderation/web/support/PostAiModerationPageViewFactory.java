@@ -17,12 +17,14 @@ import com.app.core.schema.query.UiPageDefaults;
 import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.aimoderation.entity.PostAiModerationDecisionLogEntity_;
+import com.app.features.post.aimoderation.enums.PostAiModerationAvailability;
 import com.app.features.post.aimoderation.enums.PostAiModerationMode;
 import com.app.features.post.aimoderation.enums.PostAiModerationOutcome;
 import com.app.features.post.aimoderation.schema.result.PostAiModerationConfigResult;
 import com.app.features.post.aimoderation.schema.result.PostAiModerationDecisionLogDetailResult;
 import com.app.features.post.aimoderation.schema.result.PostAiModerationDecisionLogResult;
 import com.app.features.post.aimoderation.service.PostAiModerationAdminService;
+import com.app.features.post.aimoderation.support.PostAiModerationCapability;
 import com.app.features.post.aimoderation.web.view.PostAiModerationConfigForm;
 import com.app.features.post.aimoderation.web.view.PostAiModerationConfigPageView;
 import com.app.features.post.aimoderation.web.view.PostAiModerationDecisionLogModalView;
@@ -63,6 +65,7 @@ public class PostAiModerationPageViewFactory {
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
     private final PostAiModerationAdminService postAiModerationAdminSvc;
+    private final PostAiModerationCapability postAiModerationCapability;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiTableFactory uiTableFactory;
     private final UiShellFactory uiShellFactory;
@@ -83,6 +86,8 @@ public class PostAiModerationPageViewFactory {
 
     public PostAiModerationPanelView buildPanel(
             PostAiModerationPanelState state) {
+        PostAiModerationAvailability availability =
+                postAiModerationCapability.resolveAvailability();
         PostAiModerationConfigResult config =
                 postAiModerationAdminSvc.getConfig();
         PostAiModerationConfigForm form = state != null
@@ -96,11 +101,17 @@ public class PostAiModerationPageViewFactory {
                 .id(PANEL_ID)
                 .updatePath(getAiModerationPath() + "/config")
                 .form(form)
-                .modes(buildModeOptions())
+                .modes(buildModeOptions(availability))
                 .fieldErrors(state == null
                         ? Map.of()
                         : state.getFieldErrors())
                 .statusLabel(resolveModeLabel(config.getMode()))
+                .availabilityLabel(resolveAvailabilityLabel(
+                        availability))
+                .availabilityDescription(
+                        resolveAvailabilityDescription(availability))
+                .availabilityBadgeClass(
+                        resolveAvailabilityBadgeClass(availability))
                 .updatedAt(dateTimeFormatter.format(
                         config.getUpdatedAt()))
                 .saved(state != null && state.isSaved())
@@ -219,13 +230,40 @@ public class PostAiModerationPageViewFactory {
                 .build();
     }
 
-    private List<PostAiModerationModeOptionView> buildModeOptions() {
+    private List<PostAiModerationModeOptionView> buildModeOptions(
+            PostAiModerationAvailability availability) {
         return Arrays.stream(PostAiModerationMode.values())
                 .map(mode -> PostAiModerationModeOptionView.builder()
                         .value(mode)
                         .label(resolveModeLabel(mode))
+                        .disabled(mode == PostAiModerationMode.AUTO
+                                && availability
+                                        == PostAiModerationAvailability.DISABLED)
                         .build())
                 .toList();
+    }
+
+    private String resolveAvailabilityLabel(
+            PostAiModerationAvailability availability) {
+        return messageResolver.get(
+                "post.aiModeration.availability."
+                        + availability.name().toLowerCase());
+    }
+
+    private String resolveAvailabilityDescription(
+            PostAiModerationAvailability availability) {
+        return messageResolver.get(
+                "post.aiModeration.availabilityDescription."
+                        + availability.name().toLowerCase());
+    }
+
+    private String resolveAvailabilityBadgeClass(
+            PostAiModerationAvailability availability) {
+        return switch (availability) {
+            case DISABLED -> "text-bg-secondary";
+            case READY -> "text-bg-success";
+            case UNAVAILABLE -> "text-bg-warning";
+        };
     }
 
     private String resolveModeLabel(PostAiModerationMode mode) {

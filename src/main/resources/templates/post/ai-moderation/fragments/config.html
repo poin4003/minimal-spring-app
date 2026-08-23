@@ -17,13 +17,25 @@
                         Configure automatic review for newly submitted posts.
                     </p>
                 </div>
-                <span class="badge rounded-pill text-bg-info"
-                      th:text="${aiModeration.statusLabel}">
-                    Manual
-                </span>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <span class="badge rounded-pill text-bg-info"
+                          th:text="${aiModeration.statusLabel}">
+                        Manual
+                    </span>
+                    <span class="badge rounded-pill"
+                          th:classappend="${aiModeration.availabilityBadgeClass}"
+                          th:text="${aiModeration.availabilityLabel}">
+                        Ready
+                    </span>
+                </div>
             </div>
 
             <div class="app-section-body">
+                <p class="text-body-secondary mb-3"
+                   th:text="${aiModeration.availabilityDescription}">
+                    AI runtime availability.
+                </p>
+
                 <div th:if="${aiModeration.saved}"
                      class="alert alert-success py-2"
                      role="status"
@@ -51,6 +63,7 @@
                             <option th:each="option : ${aiModeration.modes}"
                                     th:value="${option.value}"
                                     th:selected="${option.value == aiModeration.form.mode}"
+                                    th:disabled="${option.disabled}"
                                     th:text="${option.label}">
                                 Manual
                             </option>

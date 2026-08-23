@@ -12,4 +12,6 @@ public class PostAiModerationModeOptionView {
     private final PostAiModerationMode value;
 
     private final String label;
+
+    private final boolean disabled;
 }

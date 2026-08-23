@@ -8,6 +8,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import com.app.features.post.aimoderation.enums.PostAiModerationMode;
 import com.app.features.post.aimoderation.job.PostAiModerationJob;
 import com.app.features.post.aimoderation.service.PostAiModerationConfigService;
+import com.app.features.post.aimoderation.support.PostAiModerationCapability;
 import com.app.features.post.event.PostSubmittedForReviewEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -20,10 +21,15 @@ public class PostAiModerationQueueEventHandler {
 
     private final JobScheduler jobScheduler;
     private final PostAiModerationConfigService postAiModerationConfigSvc;
+    private final PostAiModerationCapability postAiModerationCapability;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handlePostSubmittedForReview(
             PostSubmittedForReviewEvent event) {
+        if (!postAiModerationCapability.isEnabled()) {
+            return;
+        }
+
         try {
             if (postAiModerationConfigSvc.requireCurrentConfig().getMode()
                     != PostAiModerationMode.AUTO) {
