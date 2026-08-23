@@ -5,6 +5,7 @@ param(
     [string]$Architecture = "x64",
     [string]$LlamaCppRef = "latest",
     [switch]$Force,
+    [switch]$ForceModels,
     [switch]$SkipStart
 )
 
@@ -22,6 +23,20 @@ $runtimeDirectory = Join-Path $modelsDirectory "llama-server"
 $serverPath = Join-Path $runtimeDirectory "llama-server.exe"
 $modelPath = Join-Path $modelsDirectory "SmolVLM2-2.2B-Instruct-Q4_K_M.gguf"
 $mmprojPath = Join-Path $modelsDirectory "mmproj-SmolVLM2-2.2B-Instruct-f16.gguf"
+$modelUrl = if ($env:LLAMA_MODEL_URL) {
+    $env:LLAMA_MODEL_URL
+} else {
+    "https://huggingface.co/ggml-org/SmolVLM2-2.2B-Instruct-GGUF/resolve/main/SmolVLM2-2.2B-Instruct-Q4_K_M.gguf?download=true"
+}
+$mmprojUrl = if ($env:LLAMA_MMPROJ_URL) {
+    $env:LLAMA_MMPROJ_URL
+} else {
+    "https://huggingface.co/ggml-org/SmolVLM2-2.2B-Instruct-GGUF/resolve/main/mmproj-SmolVLM2-2.2B-Instruct-f16.gguf?download=true"
+}
+$modelSha256 = "0cf76814555b8665149075b74ab6b5c1d428ea1d3d01c1918c12012e8d7c9f58"
+$mmprojSha256 = "db9a3a1648cab1ebc3af4a2b0c8145dd8faebf6f7dd7b16e7dc1842229f14ac4"
+$modelSize = [int64]1112602656
+$mmprojSize = [int64]872303680
 $llamaEnvPath = Join-Path $ProjectRoot "llama-server.env"
 $appEnvPath = Join-Path $ProjectRoot ".env"
 $utf8WithoutBom = New-Object System.Text.UTF8Encoding($false)
@@ -88,6 +103,88 @@ function Get-LlamaRelease {
                 + [uri]::EscapeDataString($LlamaCppRef))
 }
 
+function Test-ModelFile {
+    param(
+        [string]$Path,
+        [int64]$ExpectedSize,
+        [string]$ExpectedSha256,
+        [switch]$VerifyHash
+    )
+
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return $false
+    }
+    if ((Get-Item -LiteralPath $Path).Length -ne $ExpectedSize) {
+        return $false
+    }
+    if (-not $VerifyHash) {
+        return $true
+    }
+
+    return (Get-FileHash -Algorithm SHA256 $Path).Hash -eq $ExpectedSha256
+}
+
+function Install-ModelFile {
+    param(
+        [string]$Name,
+        [string]$DestinationPath,
+        [string]$Url,
+        [int64]$ExpectedSize,
+        [string]$ExpectedSha256
+    )
+
+    if (-not $ForceModels -and (Test-ModelFile `
+            -Path $DestinationPath `
+            -ExpectedSize $ExpectedSize `
+            -ExpectedSha256 $ExpectedSha256 `
+            -VerifyHash)) {
+        Write-Output "$Name is already installed."
+        return
+    }
+
+    $curl = Get-Command "curl.exe" -ErrorAction SilentlyContinue
+    if (-not $curl) {
+        throw "curl.exe is required to download GGUF models."
+    }
+
+    New-Item -ItemType Directory -Force -Path $modelsDirectory | Out-Null
+    $temporaryPath = "$DestinationPath.download"
+    if ((Test-Path -LiteralPath $temporaryPath -PathType Leaf) `
+            -and (Get-Item -LiteralPath $temporaryPath).Length -gt $ExpectedSize) {
+        Remove-Item -LiteralPath $temporaryPath -Force
+    }
+
+    if (-not (Test-ModelFile `
+            -Path $temporaryPath `
+            -ExpectedSize $ExpectedSize `
+            -ExpectedSha256 $ExpectedSha256 `
+            -VerifyHash)) {
+        Write-Output "Downloading $Name ($ExpectedSize bytes)..."
+        & $curl.Source `
+            --location `
+            --fail `
+            --retry 5 `
+            --retry-delay 3 `
+            --continue-at - `
+            --output $temporaryPath `
+            $Url
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to download $Name. curl exited with code $LASTEXITCODE."
+        }
+    }
+
+    if (-not (Test-ModelFile `
+            -Path $temporaryPath `
+            -ExpectedSize $ExpectedSize `
+            -ExpectedSha256 $ExpectedSha256 `
+            -VerifyHash)) {
+        throw "Downloaded $Name failed size or SHA-256 verification."
+    }
+
+    Move-Item -LiteralPath $temporaryPath -Destination $DestinationPath -Force
+    Write-Output "Installed $Name at $DestinationPath."
+}
+
 function Install-LlamaRuntime {
     if ((Test-Path -LiteralPath $serverPath -PathType Leaf) -and -not $Force) {
         Write-Output "llama-server.exe is already installed at $serverPath."
@@ -151,11 +248,18 @@ function Install-LlamaRuntime {
     }
 }
 
-foreach ($requiredModel in @($modelPath, $mmprojPath)) {
-    if (-not (Test-Path -LiteralPath $requiredModel -PathType Leaf)) {
-        throw "Required GGUF file was not found: $requiredModel"
-    }
-}
+Install-ModelFile `
+    -Name "SmolVLM2 Q4_K_M model" `
+    -DestinationPath $modelPath `
+    -Url $modelUrl `
+    -ExpectedSize $modelSize `
+    -ExpectedSha256 $modelSha256
+Install-ModelFile `
+    -Name "SmolVLM2 multimodal projector" `
+    -DestinationPath $mmprojPath `
+    -Url $mmprojUrl `
+    -ExpectedSize $mmprojSize `
+    -ExpectedSha256 $mmprojSha256
 
 Install-LlamaRuntime
 

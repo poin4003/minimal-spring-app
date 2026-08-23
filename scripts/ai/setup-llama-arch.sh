@@ -7,6 +7,7 @@ service_user="${SUDO_USER:-$(id -un)}"
 skip_packages=false
 skip_systemd=false
 skip_start=false
+force_models=false
 
 usage() {
     cat <<'EOF'
@@ -19,6 +20,7 @@ Options:
   --skip-packages       Do not install Arch build dependencies.
   --skip-systemd        Build/configure only; do not install the systemd unit.
   --skip-start          Install the unit without starting it.
+  --force-models        Download and verify both GGUF files again.
   --help                Show this help.
 EOF
 }
@@ -57,6 +59,10 @@ while [[ $# -gt 0 ]]; do
             skip_start=true
             shift
             ;;
+        --force-models)
+            force_models=true
+            shift
+            ;;
         --help|-h)
             usage
             exit 0
@@ -81,6 +87,12 @@ models_directory="$project_root/ai-models"
 runtime_directory="$models_directory/llama-server"
 model_path="$models_directory/SmolVLM2-2.2B-Instruct-Q4_K_M.gguf"
 mmproj_path="$models_directory/mmproj-SmolVLM2-2.2B-Instruct-f16.gguf"
+model_url="${LLAMA_MODEL_URL:-https://huggingface.co/ggml-org/SmolVLM2-2.2B-Instruct-GGUF/resolve/main/SmolVLM2-2.2B-Instruct-Q4_K_M.gguf?download=true}"
+mmproj_url="${LLAMA_MMPROJ_URL:-https://huggingface.co/ggml-org/SmolVLM2-2.2B-Instruct-GGUF/resolve/main/mmproj-SmolVLM2-2.2B-Instruct-f16.gguf?download=true}"
+model_sha256="0cf76814555b8665149075b74ab6b5c1d428ea1d3d01c1918c12012e8d7c9f58"
+mmproj_sha256="db9a3a1648cab1ebc3af4a2b0c8145dd8faebf6f7dd7b16e7dc1842229f14ac4"
+model_size=1112602656
+mmproj_size=872303680
 source_directory="$project_root/.runtime/llama.cpp"
 build_directory="$project_root/.runtime/llama.cpp-build"
 local_llama_env="$project_root/llama-server.env"
@@ -91,8 +103,6 @@ systemd_template="$project_root/environment/systemd/llama-server.service"
 systemd_unit="/etc/systemd/system/llama-server.service"
 build_jobs="${LLAMA_BUILD_JOBS:-$(nproc)}"
 
-[[ -f "$model_path" ]] || fail "Required GGUF file was not found: $model_path"
-[[ -f "$mmproj_path" ]] || fail "Required GGUF file was not found: $mmproj_path"
 [[ -f "$systemd_template" ]] \
     || fail "Systemd template was not found: $systemd_template"
 
@@ -101,10 +111,71 @@ if [[ "$skip_packages" == false ]]; then
     sudo pacman -S --needed --noconfirm base-devel cmake git curl
 fi
 
-for command_name in cmake git curl; do
+for command_name in cmake git curl sha256sum stat; do
     command -v "$command_name" >/dev/null 2>&1 \
         || fail "$command_name is required."
 done
+
+model_file_matches() {
+    local file="$1"
+    local expected_size="$2"
+    local expected_sha256="$3"
+    local verify_hash="${4:-false}"
+
+    [[ -f "$file" ]] || return 1
+    [[ "$(stat -c '%s' "$file")" == "$expected_size" ]] || return 1
+    if [[ "$verify_hash" == true ]]; then
+        [[ "$(sha256sum "$file" | awk '{ print $1 }')" == "$expected_sha256" ]]
+    fi
+}
+
+install_model_file() {
+    local name="$1"
+    local destination="$2"
+    local url="$3"
+    local expected_size="$4"
+    local expected_sha256="$5"
+    local temporary_file="${destination}.download"
+
+    if [[ "$force_models" == false ]] \
+            && model_file_matches \
+                "$destination" "$expected_size" "$expected_sha256" true; then
+        echo "$name is already installed."
+        return
+    fi
+
+    mkdir -p "$(dirname "$destination")"
+    if [[ -f "$temporary_file" ]] \
+            && (( $(stat -c '%s' "$temporary_file") > expected_size )); then
+        rm -f "$temporary_file"
+    fi
+
+    if ! model_file_matches \
+            "$temporary_file" "$expected_size" "$expected_sha256" true; then
+        echo "Downloading $name ($expected_size bytes)..."
+        curl --location --fail --retry 5 --retry-delay 3 \
+            --continue-at - --output "$temporary_file" "$url"
+    fi
+
+    model_file_matches \
+        "$temporary_file" "$expected_size" "$expected_sha256" true \
+        || fail "Downloaded $name failed size or SHA-256 verification."
+    mv -f "$temporary_file" "$destination"
+    echo "Installed $name at $destination."
+}
+
+install_model_file \
+    "SmolVLM2 Q4_K_M model" \
+    "$model_path" \
+    "$model_url" \
+    "$model_size" \
+    "$model_sha256"
+install_model_file \
+    "SmolVLM2 multimodal projector" \
+    "$mmproj_path" \
+    "$mmproj_url" \
+    "$mmproj_size" \
+    "$mmproj_sha256"
 
 mkdir -p "$(dirname "$source_directory")"
 if [[ ! -d "$source_directory/.git" ]]; then

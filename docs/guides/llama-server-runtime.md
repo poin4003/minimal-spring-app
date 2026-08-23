@@ -8,8 +8,8 @@ HTTP but does not start or stop it from Java. Make and systemd consult
 
 ## Windows Development
 
-Copy the two GGUF files into `ai-models`, then install the current Windows CPU
-runtime, create local configuration, and start it with:
+Download the two GGUF files, install the current Windows CPU runtime, create
+local configuration, and start it with:
 
 ```powershell
 make ai-setup
@@ -48,17 +48,18 @@ Runtime PID and logs are stored under `.runtime/llama-server`.
 
 ## Arch Linux Production
 
-The Windows `.exe` and `.dll` files are not portable. Only copy the two GGUF
-files from development, then run the Arch installer from the deployed project:
+The Windows `.exe` and `.dll` files are not portable. Run the Arch installer
+from the deployed project; it downloads the GGUF files independently:
 
 ```bash
 make ai-setup
 ```
 
-It installs the Arch build toolchain, builds the current `llama-server`, writes
-machine configuration, renders the systemd unit for the current project path
-and user, starts the unit, and verifies its health. Use `LLAMA_CPP_REF` to pin a
-specific llama.cpp tag when production requires reproducible upgrades:
+It downloads and verifies the model files, installs the Arch build toolchain,
+builds the current `llama-server`, writes machine configuration, renders the
+systemd unit for the current project path and user, starts the unit, and
+verifies its health. Use `LLAMA_CPP_REF` to pin a specific llama.cpp tag when
+production requires reproducible upgrades:
 
 ```bash
 LLAMA_CPP_REF=b12345 make ai-setup
