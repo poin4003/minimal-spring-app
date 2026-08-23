@@ -18,9 +18,9 @@
                          and asset.originalHeight > asset.originalWidth}
                          ? ' standard-post-media-portrait' : ''"
                  th:style="${asset.originalWidth != null
-                         and asset.originalHeight != null}
+                         and asset.originalHeight != null
                          ? 'aspect-ratio:' + asset.originalWidth
-                         + '/' + asset.originalHeight : null">
+                         + '/' + asset.originalHeight : null}">
                 <div class="app-media-preview-player w-100 h-100"
                      data-media-preview-player>
                     <video class="video-js vjs-big-play-centered app-media-preview-video"
@@ -71,9 +71,9 @@
                    ? ' post-media-collage-portrait' : ''"
            th:style="${singleAsset != null
                    and singleAsset.originalWidth != null
-                   and singleAsset.originalHeight != null}
+                   and singleAsset.originalHeight != null
                    ? 'aspect-ratio:' + singleAsset.originalWidth
-                   + '/' + singleAsset.originalHeight : null"
+                   + '/' + singleAsset.originalHeight : null}"
            th:data-media-count="${visibleCount}"
            th:aria-label="#{post.public.mediaGallery}"
            th:attr="hx-get=${galleryPartialPath},
