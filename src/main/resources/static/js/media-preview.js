@@ -6,6 +6,7 @@
     const INITIAL_HLS_BANDWIDTH = 10_000_000;
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
+    const PLAYER_PRELOAD_EVENT = "app:media-player-preload";
     const playerSessions = new Map();
     const progressTrackers = new Map();
     let activePlaybackPlayer = null;
@@ -153,7 +154,7 @@
         const isVideo = mediaElement instanceof HTMLVideoElement;
         const options = {
             controls: true,
-            preload: "metadata",
+            preload: mediaElement.preload === "auto" ? "auto" : "metadata",
             muted: mediaElement.hasAttribute("data-feed-autoplay"),
             responsive: true,
             fluid: isVideo,
@@ -260,10 +261,16 @@
             return;
         }
 
-        const player = window.videojs(mediaElement, createPlayerOptions(mediaElement));
+        const preload = mediaElement.preload === "auto"
+                ? "auto"
+                : "metadata";
+        const player = window.videojs(
+                mediaElement,
+                createPlayerOptions(mediaElement));
         registerExclusivePlayback(player);
         playerSessions.set(mediaElement, {
-            player: player
+            player: player,
+            preload: preload
         });
 
         player.ready(function () {
@@ -280,6 +287,9 @@
                 src: sourceUrl,
                 type: "application/x-mpegURL"
             });
+            if (preload === "auto") {
+                player.load();
+            }
 
             document.dispatchEvent(new CustomEvent(PLAYER_READY_EVENT, {
                 detail: {
@@ -314,6 +324,35 @@
             session.player.dispose();
         }
         playerSessions.delete(mediaElement);
+    }
+
+    function preparePlayer(mediaElement, requestedPreload) {
+        if (!(mediaElement instanceof HTMLMediaElement)) {
+            return;
+        }
+
+        const preload = requestedPreload === "auto"
+                ? "auto"
+                : "metadata";
+        mediaElement.preload = preload;
+        lazyPlayerObserver.unobserve(mediaElement);
+
+        const session = playerSessions.get(mediaElement);
+        if (!session) {
+            initializePlayer(mediaElement);
+            return;
+        }
+        if (session.player.isDisposed() || session.preload === preload) {
+            return;
+        }
+
+        session.preload = preload;
+        session.player.preload(preload);
+        if (preload === "auto"
+                && session.player.paused()
+                && session.player.readyState() < 3) {
+            session.player.load();
+        }
     }
 
     function initializeAutoPlayers(root) {
@@ -435,6 +474,12 @@
 
     document.addEventListener("htmx:beforeCleanupElement", function (event) {
         destroyPlayers(event.detail.elt);
+    });
+
+    document.addEventListener(PLAYER_PRELOAD_EVENT, function (event) {
+        preparePlayer(
+                event.detail?.mediaElement,
+                event.detail?.preload);
     });
 
     document.addEventListener("shown.bs.modal", function (event) {

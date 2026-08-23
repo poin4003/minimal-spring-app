@@ -10,27 +10,38 @@
                 :: items(${feed})}"></th:block>
     </section>
 
-    <th:block th:fragment="items(feed)">
+    <th:block th:fragment="items(feed)"
+              th:with="loadTriggerIndex=${#lists.size(feed.shorts) > 2
+                      ? #lists.size(feed.shorts) - 3
+                      : #lists.size(feed.shorts) - 1}">
         <div th:each="card, iteration : ${feed.shorts}"
              class="short-detail-feed-item"
              th:attr="data-short-active=${card.post.post.id.equals(feed.activePostId)},
-                      hx-get=${iteration.last ? feed.nextPagePath : null},
-                      hx-trigger=${iteration.last and feed.nextPagePath != null
-                              ? 'intersect once root:#' + feed.id + ' threshold:0.6'
+                      data-short-detail-path=${card.detailPath},
+                      hx-get=${iteration.index == loadTriggerIndex
+                              ? feed.nextPagePath : null},
+                      hx-trigger=${iteration.index == loadTriggerIndex
+                              and feed.nextPagePath != null
+                              ? 'intersect once root:#' + feed.id
+                              + ' threshold:0.25, short:load-more once'
                               : null},
-                      hx-target=${iteration.last and feed.nextPagePath != null
-                              ? 'this'
+                      hx-target=${iteration.index == loadTriggerIndex
+                              and feed.nextPagePath != null
+                              ? '#' + feed.id
                               : null},
-                      hx-swap=${iteration.last and feed.nextPagePath != null
-                              ? 'afterend'
+                      hx-swap=${iteration.index == loadTriggerIndex
+                              and feed.nextPagePath != null
+                              ? 'beforeend'
                               : null},
-                      hx-indicator=${iteration.last and feed.nextPagePath != null
+                      hx-indicator=${iteration.index == loadTriggerIndex
+                              and feed.nextPagePath != null
                               ? 'find .short-detail-feed-loader'
                               : null}">
             <div th:replace="~{post/short/public/fragments/player
                     :: player(${card})}"></div>
 
-            <div th:if="${iteration.last and feed.nextPagePath != null}"
+            <div th:if="${iteration.index == loadTriggerIndex
+                    and feed.nextPagePath != null}"
                  class="short-detail-feed-loader htmx-indicator"
                  role="status">
                 <span class="spinner-border spinner-border-sm"

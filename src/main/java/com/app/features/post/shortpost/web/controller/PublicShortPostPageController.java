@@ -137,17 +137,13 @@ public class PublicShortPostPageController {
                                 post,
                                 shortPage.getNumber()))
                         .toList());
-        PublicShortCardView selectedCard = cards.stream()
-                .filter(card -> card.getPost().getPost().getId()
-                        .equals(postId))
-                .findFirst()
-                .orElseGet(() -> toCard(
-                        shortPostSvc.getPublishedPost(postId),
-                        shortPage.getNumber()));
-        cards.remove(selectedCard);
-        cards.addFirst(selectedCard);
-        if (cards.size() > SHORT_PAGE_DEFAULTS.getSize()) {
-            cards.removeLast();
+        boolean activeInPage = cards.stream()
+                .anyMatch(card -> card.getPost().getPost().getId()
+                        .equals(postId));
+        if (!activeInPage) {
+            cards = List.of(toCard(
+                    shortPostSvc.getPublishedPost(postId),
+                    shortPage.getNumber()));
         }
 
         PublicShortDetailPageView page = PublicShortDetailPageView.builder()
@@ -161,7 +157,8 @@ public class PublicShortPostPageController {
                         postId,
                         shortPage,
                         cards,
-                        query))
+                        query,
+                        activeInPage))
                 .build();
 
         model.addAttribute(PublicShortDetailPageView.ATTRIBUTE, page);
@@ -192,7 +189,8 @@ public class PublicShortPostPageController {
                         postId,
                         shortPage,
                         cards,
-                        query));
+                        query,
+                        true));
         return "post/short/public/fragments/detail-feed"
                 + " :: items (feed=${feed})";
     }
@@ -237,8 +235,9 @@ public class PublicShortPostPageController {
             UUID activePostId,
             Page<PublicShortPostResult> shortPage,
             List<PublicShortCardView> cards,
-            UiPageQuery query) {
-        String nextPagePath = shortPage.hasNext()
+            UiPageQuery query,
+            boolean streamEnabled) {
+        String nextPagePath = streamEnabled && shortPage.hasNext()
                 ? uiPaginationPathBuilder.build(
                         buildStreamPath(activePostId),
                         request,
