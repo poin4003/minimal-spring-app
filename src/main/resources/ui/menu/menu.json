@@ -46,6 +46,12 @@
         "messageKey": "menu.postModeration",
         "icon": "journal-check",
         "path": "/admin/posts/moderation"
+      },
+      {
+        "id": "post-ai-moderation",
+        "messageKey": "menu.postAiModeration",
+        "icon": "robot",
+        "path": "/admin/posts/ai-moderation"
       }
     ]
   },

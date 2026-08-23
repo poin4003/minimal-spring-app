@@ -196,6 +196,7 @@ public interface VideoSeriesItemRepository
             UPDATE PostEntity post
             SET post.lifecycleStatus = :draftStatus,
                 post.moderationStatus = NULL,
+                post.moderationSource = NULL,
                 post.publishedAt = NULL,
                 post.moderatedBy = NULL,
                 post.moderatedAt = NULL,

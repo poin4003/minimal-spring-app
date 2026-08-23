@@ -7,11 +7,11 @@ import jakarta.validation.constraints.NotBlank;
 public record PostAiModerationRequest(
         @NotBlank String systemPrompt,
         @NotBlank String userPrompt,
-        List<String> imageDataUrls) {
+        List<String> imageUrls) {
 
     public PostAiModerationRequest {
-        imageDataUrls = imageDataUrls == null
+        imageUrls = imageUrls == null
                 ? List.of()
-                : List.copyOf(imageDataUrls);
+                : List.copyOf(imageUrls);
     }
 }

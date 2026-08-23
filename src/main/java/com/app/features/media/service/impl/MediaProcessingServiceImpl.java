@@ -170,6 +170,7 @@ public class MediaProcessingServiceImpl implements MediaProcessingService {
                             appProperties.getMedia().getHls().getAudioBitrate()));
             MediaVideoEncoder preferredEncoder = resolveVideoEncoder();
             String videoDecoder = primaryVideoStream != null
+                    && videoGeometry != null
                     && !videoGeometry.hasRotation()
                     ? resolveDecoderForEncoder(preferredEncoder, primaryVideoStream)
                     : null;

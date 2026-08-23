@@ -158,8 +158,9 @@ app:
         ai-moderation:
             machine:
                 base-url: ${POST_AI_MODERATION_BASE_URL:http://127.0.0.1:8081}
+                media-base-url: ${POST_AI_MODERATION_MEDIA_BASE_URL:http://127.0.0.1:8080}
                 model: ${POST_AI_MODERATION_MODEL:local-aimoderation}
-                timeout: ${POST_AI_MODERATION_TIMEOUT:30s}
+                timeout: ${POST_AI_MODERATION_TIMEOUT:120s}
                 max-images: ${POST_AI_MODERATION_MAX_IMAGES:1}
                 max-tokens: ${POST_AI_MODERATION_MAX_TOKENS:256}
     security:

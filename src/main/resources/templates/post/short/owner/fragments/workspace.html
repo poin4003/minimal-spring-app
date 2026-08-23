@@ -5,6 +5,7 @@
     <section th:fragment="workspace(workspace)"
              th:id="${workspace.id}"
              class="app-page-stack post-owner-workspace"
+             hx-disinherit="hx-target hx-select hx-swap"
              th:attr="hx-get=${workspace.refreshPath},
                       hx-trigger=${workspace.refreshEvent + ' from:body'},
                       hx-target='this',

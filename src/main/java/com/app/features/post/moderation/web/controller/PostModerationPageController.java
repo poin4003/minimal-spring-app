@@ -30,6 +30,7 @@ import com.app.core.schema.query.UiPageQuery;
 import com.app.core.security.UserPrincipal;
 import com.app.features.post.entity.PostEntity_;
 import com.app.features.post.enums.PostType;
+import com.app.features.post.moderation.enums.ModerationPostStatusFilter;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.moderation.schema.filter.ModerationPostFilterCriteria;
 import com.app.features.post.moderation.schema.payload.RejectPostPayload;
@@ -43,6 +44,7 @@ import com.app.features.post.moderation.web.view.ModerationPostDetailPageView;
 import com.app.features.post.moderation.web.view.ModerationPostDetailView;
 import com.app.features.post.moderation.web.view.ModerationPostListPageView;
 import com.app.features.post.moderation.web.view.ModerationPostQueueView;
+import com.app.features.post.moderation.web.view.ModerationPostStatusOptionView;
 import com.app.features.post.moderation.web.view.ModerationPostTableRowView;
 import com.app.features.post.moderation.web.view.ModerationPostTypeOptionView;
 import com.app.features.post.moderation.web.view.RejectPostModalForm;
@@ -117,6 +119,8 @@ public class PostModerationPageController {
                                 request.getRequestURI()))
                         .filter(filter)
                         .query(query.applyDefaults(PAGE_DEFAULTS))
+                        .moderationStatuses(
+                                buildModerationStatusOptions())
                         .postTypes(buildPostTypeOptions())
                         .queue(buildQueue(filter, query))
                         .build();
@@ -314,7 +318,7 @@ public class PostModerationPageController {
             ModerationPostFilterCriteria filter,
             UiPageQuery query) {
         Page<ModerationPostResult> postPage =
-                postModerationSvc.getPendingPosts(
+                postModerationSvc.getPosts(
                         filter,
                         query.toPageable(PAGE_DEFAULTS));
         List<ModerationPostTableRowView> rows =
@@ -366,6 +370,7 @@ public class PostModerationPageController {
         return ModerationPostTableRowView.builder()
                 .id(post.getId())
                 .type(post.getType())
+                .moderationStatus(post.getModerationStatus())
                 .typeLabel(resolveTypeLabel(post.getType()))
                 .authorName(authorName)
                 .moderationStatusLabel(resolveStatusLabel(
@@ -390,6 +395,19 @@ public class PostModerationPageController {
                 buildPostPath(row.getId(), "reject"),
                 filter,
                 query);
+        String aiLogsPath = buildPostPath(row.getId(), "ai-logs");
+
+        UiTableActionView aiLogsAction = UiTableActionView.builder()
+                .label(messageResolver.get(
+                        "post.aiModeration.log.view"))
+                .path(aiLogsPath)
+                .buttonClass("btn-outline-secondary")
+                .build();
+
+        if (row.getModerationStatus()
+                != PostModerationStatus.PENDING_REVIEW) {
+            return List.of(aiLogsAction);
+        }
 
         return List.of(
                 UiTableActionView.builder()
@@ -397,6 +415,7 @@ public class PostModerationPageController {
                         .path(detailPath)
                         .buttonClass("btn-outline-primary")
                         .build(),
+                aiLogsAction,
                 UiTableActionView.builder()
                         .label(messageResolver.get("action.publish"))
                         .path(publishModalPath)
@@ -571,6 +590,26 @@ public class PostModerationPageController {
                 .toList();
     }
 
+    private List<ModerationPostStatusOptionView>
+            buildModerationStatusOptions() {
+        return Arrays.stream(ModerationPostStatusFilter.values())
+                .map(status -> ModerationPostStatusOptionView.builder()
+                        .value(status)
+                        .label(resolveStatusFilterLabel(status))
+                        .build())
+                .toList();
+    }
+
+    private String resolveStatusFilterLabel(
+            ModerationPostStatusFilter status) {
+        if (status == ModerationPostStatusFilter.ALL) {
+            return messageResolver.get(
+                    "post.moderation.filter.allStatuses");
+        }
+        return resolveStatusLabel(PostModerationStatus.valueOf(
+                status.name()));
+    }
+
     private String resolveTypeLabel(PostType type) {
         return messageResolver.get(
                 "post.type." + type.name().toLowerCase());
@@ -624,6 +663,9 @@ public class PostModerationPageController {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(
                 query.toUri(basePath, PAGE_DEFAULTS));
 
+        builder.queryParam(
+                "moderationStatus",
+                filter.getModerationStatus().name());
         if (filter.getType() != null) {
             builder.queryParam("type", filter.getType());
         }

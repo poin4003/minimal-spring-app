@@ -18,7 +18,7 @@ import jakarta.validation.constraints.NotNull;
 
 public interface PostModerationService {
 
-    Page<ModerationPostResult> getPendingPosts(
+    Page<ModerationPostResult> getPosts(
             @NotNull ModerationPostFilterCriteria criteria,
             @NotNull Pageable pageable);
 

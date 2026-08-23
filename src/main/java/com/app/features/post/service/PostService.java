@@ -1,5 +1,7 @@
 package com.app.features.post.service;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.app.features.post.entity.PostEntity;
@@ -13,6 +15,8 @@ public interface PostService {
     PostEntity createDraftPost(
             @NotNull UserBaseEntity author,
             @NotNull PostType type);
+
+    PostEntity requirePost(@NotNull UUID postId);
 
     PostEntity requireOwnedPost(
             @NotNull PostEntity post,
@@ -31,6 +35,12 @@ public interface PostService {
     PostEntity requirePendingPost(@NotNull PostEntity post);
 
     PostEntity requirePendingPostForUpdate(@NotNull UUID postId);
+
+    Optional<PostEntity> findPendingPost(@NotNull UUID postId);
+
+    Optional<PostEntity> findPendingPostForUpdate(
+            @NotNull UUID postId,
+            @NotNull LocalDateTime expectedUpdatedAt);
 
     void deletePost(@NotNull PostEntity post);
 }

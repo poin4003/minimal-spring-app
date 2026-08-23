@@ -1,6 +1,7 @@
 package com.app.features.post.aimoderation.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
@@ -24,6 +25,15 @@ public class PostAiModerationConfigServiceImpl implements PostAiModerationConfig
     @Override
     public PostAiModerationConfigEntity requireCurrentConfig() {
         return postAiModerationConfigRepo.findByCode(DEFAULT_CONFIG_CODE)
+                .orElseThrow(() -> ExceptionFactory.notFound(
+                        "error.post.aiModerationConfigNotFound"));
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public PostAiModerationConfigEntity requireCurrentConfigForUpdate() {
+        return postAiModerationConfigRepo
+                .findForUpdateByCode(DEFAULT_CONFIG_CODE)
                 .orElseThrow(() -> ExceptionFactory.notFound(
                         "error.post.aiModerationConfigNotFound"));
     }

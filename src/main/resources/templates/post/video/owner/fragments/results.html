@@ -4,6 +4,7 @@
 <section th:fragment="results(page)"
          id="owner-video-results"
          class="d-grid gap-4"
+         hx-disinherit="hx-target hx-select hx-swap"
          th:attr="hx-get=${page.searchPath},
                   hx-trigger='ownerVideosChanged from:body',
                   hx-target='#owner-video-results',

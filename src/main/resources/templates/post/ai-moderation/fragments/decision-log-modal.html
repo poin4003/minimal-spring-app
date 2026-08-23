@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <div th:fragment="modal(modal)"
+         class="modal fade"
+         th:id="${modal.id}"
+         tabindex="-1"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content app-modal-content">
+                <div class="modal-header app-section-header">
+                    <h2 class="modal-title fs-5" th:text="${modal.title}">
+                        AI decision detail
+                    </h2>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            th:attr="aria-label=#{action.close}"></button>
+                </div>
+
+                <div class="modal-body app-section-body">
+                    <dl class="row mb-4 app-metadata-list">
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.postId}">
+                            Post ID
+                        </dt>
+                        <dd class="col-sm-9 mb-0"><code th:text="${modal.postId}">id</code></dd>
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.outcome}">
+                            Outcome
+                        </dt>
+                        <dd class="col-sm-9 mb-0" th:text="${modal.outcome}">Approve</dd>
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.model}">
+                            Model
+                        </dt>
+                        <dd class="col-sm-9 mb-0" th:text="${modal.modelName}">model</dd>
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.createdAt}">
+                            Processed
+                        </dt>
+                        <dd class="col-sm-9 mb-0" th:text="${modal.createdAt}">date</dd>
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.reason}">
+                            Reason
+                        </dt>
+                        <dd class="col-sm-9 mb-0" th:text="${modal.reason}">reason</dd>
+                        <dt class="col-sm-3"
+                            th:text="#{post.aiModeration.log.detail.error}">
+                            Error
+                        </dt>
+                        <dd class="col-sm-9 mb-0" th:text="${modal.errorMessage}">error</dd>
+                    </dl>
+
+                    <section class="mb-4">
+                        <h3 class="h6"
+                            th:text="#{post.aiModeration.log.detail.prompt}">
+                            Prompt snapshot
+                        </h3>
+                        <pre class="p-3 mb-0 border rounded bg-body-tertiary text-wrap small"
+                             th:text="${modal.promptSnapshot}">prompt</pre>
+                    </section>
+
+                    <section>
+                        <h3 class="h6"
+                            th:text="#{post.aiModeration.log.detail.rawResponse}">
+                            Raw response
+                        </h3>
+                        <pre class="p-3 mb-0 border rounded bg-body-tertiary text-wrap small"
+                             th:text="${modal.rawResponse}">response</pre>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

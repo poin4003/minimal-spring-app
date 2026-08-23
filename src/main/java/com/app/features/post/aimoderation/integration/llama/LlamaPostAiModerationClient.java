@@ -130,13 +130,13 @@ public class LlamaPostAiModerationClient implements PostAiModerationClient {
         List<LlamaChatContentItem> userContent = new ArrayList<>();
         userContent.add(LlamaChatContentItem.text(request.userPrompt()));
 
-        request.imageDataUrls().stream()
+        request.imageUrls().stream()
                 .limit(appProperties.getPost()
                         .getAiModeration()
                         .getMachine()
                         .getMaxImages())
-                .forEach(imageDataUrl -> userContent.add(
-                        LlamaChatContentItem.image(imageDataUrl)));
+                .forEach(imageUrl -> userContent.add(
+                        LlamaChatContentItem.image(imageUrl)));
 
         return new LlamaChatCompletionRequest(
                 appProperties.getPost()

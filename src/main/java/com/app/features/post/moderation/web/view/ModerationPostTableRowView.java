@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.app.features.post.enums.PostType;
+import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.ui.web.annotation.UiColumn;
 import com.app.features.ui.web.enums.UiCellType;
 
@@ -16,6 +17,7 @@ public class ModerationPostTableRowView {
 
     private final UUID id;
     private final PostType type;
+    private final PostModerationStatus moderationStatus;
 
     @UiColumn(
             label = "post.moderation.table.type",
@@ -33,7 +35,7 @@ public class ModerationPostTableRowView {
             label = "post.moderation.table.status",
             order = 3,
             type = UiCellType.BADGE,
-            badgeClass = "text-bg-warning")
+            badgeClass = "text-bg-secondary")
     private final String moderationStatusLabel;
 
     @UiColumn(

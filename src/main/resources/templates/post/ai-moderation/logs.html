@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">AI decision history</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap-icons/font/bootstrap-icons.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/shell.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/js/app-modal.js}"></script>
+</head>
+<body class="app-shell bg-body-tertiary">
+    <div th:replace="~{fragments/app-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <div class="app-page-stack">
+                <div th:replace="~{fragments/components/breadcrumb
+                        :: breadcrumb(${page.breadcrumb})}"></div>
+
+                <div class="app-page-toolbar">
+                    <a th:href="${page.moderationPath}"
+                       class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
+                        <span th:text="#{post.aiModeration.log.backToQueue}">
+                            Back to moderation queue
+                        </span>
+                    </a>
+                </div>
+
+                <header class="card app-surface-panel app-component">
+                    <div class="app-section-header">
+                        <h1 class="app-section-title"
+                            th:text="${page.title}">
+                            AI decision history
+                        </h1>
+                        <p class="app-section-description mb-0">
+                            <span th:text="#{post.aiModeration.log.postId}">
+                                Post ID
+                            </span>
+                            <code class="ms-1" th:text="${page.postId}">id</code>
+                        </p>
+                    </div>
+                </header>
+
+                <div th:replace="~{fragments/components/table
+                        :: table(${page.logs})}"></div>
+            </div>
+        </th:block>
+    </div>
+</body>
+</html>

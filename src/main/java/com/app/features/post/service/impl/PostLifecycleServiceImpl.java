@@ -82,6 +82,7 @@ public class PostLifecycleServiceImpl implements PostLifecycleService {
 
     private void clearModeration(PostEntity post) {
         post.setModerationStatus(null);
+        post.setModerationSource(null);
         post.setPublishedAt(null);
         post.setModeratedBy(null);
         post.setModeratedAt(null);

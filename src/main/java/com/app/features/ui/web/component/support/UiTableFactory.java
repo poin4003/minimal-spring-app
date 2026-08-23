@@ -133,6 +133,9 @@ public class UiTableFactory {
                 case "READY" -> "text-bg-success";
                 case "PENDING" -> "text-bg-warning";
                 case "FAILED" -> "text-bg-danger";
+                case "APPROVE" -> "text-bg-success";
+                case "REJECT", "ERROR" -> "text-bg-danger";
+                case "ESCALATE" -> "text-bg-warning";
                 default -> "text-bg-primary";
             };
         }

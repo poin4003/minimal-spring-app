@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="panel(aiModeration)"
+             th:id="${aiModeration.id}"
+             class="app-page-stack">
+        <article class="card app-surface-panel app-component">
+            <div class="app-section-header d-flex flex-wrap align-items-start justify-content-between gap-3">
+                <div>
+                    <h2 class="app-section-title"
+                        th:text="#{post.aiModeration.config.title}">
+                        AI moderation
+                    </h2>
+                    <p class="app-section-description"
+                       th:text="#{post.aiModeration.config.description}">
+                        Configure automatic review for newly submitted posts.
+                    </p>
+                </div>
+                <span class="badge rounded-pill text-bg-info"
+                      th:text="${aiModeration.statusLabel}">
+                    Manual
+                </span>
+            </div>
+
+            <div class="app-section-body">
+                <div th:if="${aiModeration.saved}"
+                     class="alert alert-success py-2"
+                     role="status"
+                     th:text="#{post.aiModeration.config.saved}">
+                    Settings saved.
+                </div>
+
+                <form method="post"
+                      th:action="${aiModeration.updatePath}"
+                      class="row g-3"
+                      th:attr="hx-post=${aiModeration.updatePath},
+                               hx-target=${'#' + aiModeration.id},
+                               hx-swap='outerHTML',
+                               hx-disabled-elt='button, select, textarea'">
+                    <div class="col-12 col-lg-4">
+                        <label for="post-ai-moderation-mode"
+                               class="form-label fw-semibold"
+                               th:text="#{post.aiModeration.config.mode}">
+                            Review mode
+                        </label>
+                        <select id="post-ai-moderation-mode"
+                                name="mode"
+                                class="form-select"
+                                th:classappend="${aiModeration.fieldErrors.containsKey('mode')} ? 'is-invalid' : ''">
+                            <option th:each="option : ${aiModeration.modes}"
+                                    th:value="${option.value}"
+                                    th:selected="${option.value == aiModeration.form.mode}"
+                                    th:text="${option.label}">
+                                Manual
+                            </option>
+                        </select>
+                        <div class="invalid-feedback"
+                             th:if="${aiModeration.fieldErrors.containsKey('mode')}"
+                             th:text="${aiModeration.fieldErrors.get('mode')}">
+                            Invalid mode.
+                        </div>
+                        <div class="form-text"
+                             th:text="#{post.aiModeration.config.modeHelp}">
+                            Automatic mode applies to new submissions only.
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-8">
+                        <label for="post-ai-moderation-prompt"
+                               class="form-label fw-semibold"
+                               th:text="#{post.aiModeration.config.prompt}">
+                            Moderation policy
+                        </label>
+                        <textarea id="post-ai-moderation-prompt"
+                                  name="promptText"
+                                  rows="6"
+                                  class="form-control"
+                                  th:classappend="${aiModeration.fieldErrors.containsKey('promptText')} ? 'is-invalid' : ''"
+                                  th:text="${aiModeration.form.promptText}"
+                                  th:placeholder="#{post.aiModeration.config.promptPlaceholder}"></textarea>
+                        <div class="invalid-feedback"
+                             th:if="${aiModeration.fieldErrors.containsKey('promptText')}"
+                             th:text="${aiModeration.fieldErrors.get('promptText')}">
+                            Invalid prompt.
+                        </div>
+                        <div class="form-text"
+                             th:text="#{post.aiModeration.config.promptHelp}">
+                            Describe which posts should be approved, rejected, or escalated.
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                        <small class="text-body-secondary">
+                            <span th:text="#{post.aiModeration.config.updatedAt}">
+                                Last updated
+                            </span>
+                            <span th:text="${aiModeration.updatedAt}">Aug 23, 2026</span>
+                        </small>
+                        <button type="submit"
+                                class="btn btn-primary"
+                                th:text="#{action.saveChanges}">
+                            Save changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </article>
+    </section>
+</body>
+</html>

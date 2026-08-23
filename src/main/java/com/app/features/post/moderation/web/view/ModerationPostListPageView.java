@@ -20,6 +20,7 @@ public class ModerationPostListPageView {
     private final UiShellView shell;
     private final ModerationPostFilterCriteria filter;
     private final UiPageQuery query;
+    private final List<ModerationPostStatusOptionView> moderationStatuses;
     private final List<ModerationPostTypeOptionView> postTypes;
     private final ModerationPostQueueView queue;
 }

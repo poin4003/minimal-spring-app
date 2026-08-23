@@ -212,6 +212,27 @@
         ? "collapsed"
         : "expanded";
 
+    document.addEventListener("submit", function (event) {
+        const form = event.target;
+        if (!form.matches("[data-app-prune-empty-params]")) {
+            return;
+        }
+
+        const emptyControls = Array.from(form.elements)
+            .filter(control => control.name
+                    && !control.disabled
+                    && typeof control.value === "string"
+                    && control.value.trim() === "");
+        emptyControls.forEach(control => {
+            control.disabled = true;
+        });
+        window.setTimeout(() => {
+            emptyControls.forEach(control => {
+                control.disabled = false;
+            });
+        }, 0);
+    }, true);
+
     document.addEventListener("htmx:configRequest", function (event) {
         const csrfToken = readCookie(CSRF_COOKIE_NAME);
         if (csrfToken) {

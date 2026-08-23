@@ -572,6 +572,9 @@ public class AppProperties {
         private String baseUrl = "http://127.0.0.1:8081";
 
         @NotBlank
+        private String mediaBaseUrl = "http://127.0.0.1:8080";
+
+        @NotBlank
         private String model = "local-aimoderation";
 
         @NotNull
