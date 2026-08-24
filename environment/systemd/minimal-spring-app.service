@@ -10,7 +10,7 @@ Group=minimal-spring-app
 WorkingDirectory=/opt/minimal-spring-app
 Environment=APP_ENV=prod
 EnvironmentFile=-/etc/minimal-spring-app/app.env
-ExecStart=/usr/bin/java -jar /opt/minimal-spring-app/app.jar --spring.profiles.active=${APP_ENV}
+ExecStart=/usr/bin/java --add-modules jdk.incubator.vector --enable-preview -jar /opt/minimal-spring-app/app.jar --spring.profiles.active=${APP_ENV}
 Restart=on-failure
 RestartSec=5
 TimeoutStopSec=30

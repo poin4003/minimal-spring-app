@@ -159,7 +159,10 @@ app:
             enabled: ${POST_AI_MODERATION_ENABLED:false}
             machine:
                 media-base-url: ${POST_AI_MODERATION_MEDIA_BASE_URL:http://127.0.0.1:8080}
-                model: ${POST_AI_MODERATION_MODEL:local-text-model}
+                model-id: ${POST_AI_MODERATION_MODEL_ID:tjake/Qwen2.5-0.5B-Instruct-JQ4}
+                model-directory: ${POST_AI_MODERATION_MODEL_DIRECTORY:ai-models/jlama}
+                threads: ${POST_AI_MODERATION_THREADS:4}
+                max-concurrency: ${POST_AI_MODERATION_MAX_CONCURRENCY:1}
                 timeout: ${POST_AI_MODERATION_TIMEOUT:120s}
                 max-images: ${POST_AI_MODERATION_MAX_IMAGES:1}
                 max-tokens: ${POST_AI_MODERATION_MAX_TOKENS:256}

@@ -574,7 +574,16 @@ public class AppProperties {
         private String mediaBaseUrl = "http://127.0.0.1:8080";
 
         @NotBlank
-        private String model = "local-text-model";
+        private String modelId = "tjake/Qwen2.5-0.5B-Instruct-JQ4";
+
+        @NotBlank
+        private String modelDirectory = "ai-models/jlama";
+
+        @Positive
+        private int threads = 4;
+
+        @Positive
+        private int maxConcurrency = 1;
 
         @NotNull
         private Duration timeout = Duration.ofSeconds(30);

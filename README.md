@@ -12,7 +12,7 @@ duyệt bài viết thủ công hoặc bằng AI local.
 - Spring Data JPA, H2 và Flyway
 - JobRunr cho background jobs
 - FFmpeg/FFprobe cho image, audio và video pipeline
-- AI moderation tùy chọn, tách khỏi moderation core qua internal client
+- Jlama cho AI moderation local tùy chọn, tách khỏi moderation core qua internal client
 
 ## Yêu cầu
 
@@ -23,7 +23,8 @@ duyệt bài viết thủ công hoặc bằng AI local.
 - Kết nối Internet trong lần build đầu tiên
 
 AI không bắt buộc. Nếu `POST_AI_MODERATION_ENABLED=false`, dự án chạy bình
-thường mà không cần model AI.
+thường mà không cần model AI. Các lệnh Makefile đã tự thêm Java preview flags
+cần thiết cho Jlama trên JDK 21.
 
 ## Chạy nhanh
 
@@ -55,6 +56,7 @@ Database H2 và media local được lưu trong thư mục `data/`.
 | Lệnh | Chức năng |
 | --- | --- |
 | `make dev` | Chạy trực tiếp bằng Spring Boot với profile `dev`. |
+| `make ai-setup` | Tải model Jlama tùy chọn theo cấu hình vào máy hiện tại. |
 | `make build` | Clean và đóng gói executable JAR vào `target/`. Lệnh này bỏ qua test. |
 | `make run` | Chạy JAR đã build với profile trong `APP_ENV`, mặc định là `dev`. |
 | `make clean` | Xóa Maven build output trong `target/`. |
@@ -82,6 +84,29 @@ make run
 
 `make run` không tự build lại. Nếu JAR chưa tồn tại hoặc source vừa thay đổi,
 hãy chạy `make build` trước.
+
+## AI moderation tùy chọn
+
+Để chuẩn bị model mặc định cho máy có sử dụng AI:
+
+```bash
+make ai-setup
+```
+
+Model được tải vào `POST_AI_MODERATION_MODEL_DIRECTORY` và không được commit
+vào Git. Có thể đổi model bằng `POST_AI_MODERATION_MODEL_ID`; với repository
+riêng tư, đặt thêm `HF_TOKEN` trong môi trường chạy lệnh.
+
+`make dev`, `make build` và `make run` không tự tải model. Vì vậy cùng một source
+và JAR vẫn chạy được trên máy không có model khi
+`POST_AI_MODERATION_ENABLED=false`.
+
+Khi `POST_AI_MODERATION_ENABLED=true`, Spring sẽ load model local trong lúc
+khởi động và đóng model khi ứng dụng dừng. Nếu model bị thiếu hoặc không load
+được, ứng dụng vẫn khởi động nhưng AI được đánh dấu `UNAVAILABLE`; moderation
+thủ công tiếp tục hoạt động. V1 chỉ đưa text vào Jlama, còn thumbnail URL được
+giữ làm reference trong moderation request và log chứ chưa được model phân
+tích hình ảnh.
 
 ## Kiểm thử
 
