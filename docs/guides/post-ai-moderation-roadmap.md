@@ -167,3 +167,6 @@ V1 chỉ cần làm tốt một việc:
 - tự động duyệt bài ở mức cơ bản
 - an toàn khi lỗi
 - dễ mở rộng cho chat và RAG sau này
+
+Kế hoạch bổ sung execution state, heartbeat và recovery cho worker được tách tại
+[Stateful worker plan](post-ai-moderation-stateful-worker-plan.md).

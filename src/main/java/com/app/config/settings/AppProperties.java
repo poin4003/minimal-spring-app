@@ -574,7 +574,7 @@ public class AppProperties {
         private String mediaBaseUrl = "http://127.0.0.1:8080";
 
         @NotBlank
-        private String modelId = "tjake/Qwen2.5-0.5B-Instruct-JQ4";
+        private String modelId = "tjake/Llama-3.2-1B-Instruct-JQ4";
 
         @NotBlank
         private String modelDirectory = "ai-models/jlama";
@@ -592,7 +592,7 @@ public class AppProperties {
         private int maxImages = 1;
 
         @Positive
-        private int maxTokens = 256;
+        private int maxTokens = 64;
 
         @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
         public boolean isMachineConfigurationValid() {

@@ -15,7 +15,7 @@ public final class JlamaModelSetup {
     private static final String MODEL_DIRECTORY_ENV =
             "POST_AI_MODERATION_MODEL_DIRECTORY";
     private static final String DEFAULT_MODEL_ID =
-            "tjake/Qwen2.5-0.5B-Instruct-JQ4";
+            "tjake/Llama-3.2-1B-Instruct-JQ4";
     private static final String DEFAULT_MODEL_DIRECTORY =
             "ai-models/jlama";
 
