@@ -1,7 +1,7 @@
 [Unit]
 Description=Minimal Spring App
-Wants=network-online.target llama-server.service
-After=network-online.target llama-server.service
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple

@@ -16,19 +16,15 @@ Mục tiêu hiện tại:
 
 ## 2. Quyết Định Kiến Trúc Hiện Tại
 
-- AI backbone ban đầu dùng `GGUF + llama-server sidecar`.
-- `llama-server` được xem là một process nội bộ đi cùng application, không
-  phải external AI service.
-- Chưa chuyển sang `ONNX Runtime` trong giai đoạn này vì lợi ích chưa đủ lớn
-  so với độ phức tạp tích hợp.
+- AI backbone mục tiêu dùng Jlama và SafeTensors trực tiếp trong JVM.
+- AI runtime là optional và không có process hoặc HTTP sidecar riêng.
+- V1 chỉ kiểm duyệt text. Link thumbnail vẫn được giữ trong request để tránh
+  thay đổi moderation core và phục vụ khả năng multimodal/hybrid sau này.
 - Post lifecycle hiện tại vẫn được giữ nguyên:
   - `PENDING_REVIEW -> PUBLISHED`
   - `PENDING_REVIEW -> REJECTED`
 - Không tạo queue moderation mới nếu lifecycle hiện tại đã đáp ứng đủ.
-- V1 chỉ cần dùng:
-  - text bài đăng
-  - metadata cơ bản
-  - thumbnail đầu tiên nếu bài có media
+- V1 chỉ dùng text bài đăng và metadata cơ bản để đưa ra quyết định.
 - Chưa đọc full video trong giai đoạn đầu.
 - AI phải trả về JSON chặt chẽ thay vì text tự do.
 
@@ -47,8 +43,8 @@ Deliverables:
   - bài chuyển sang `PENDING_REVIEW`
   - sau commit thì enqueue AI moderation job nếu mode là `AUTO`
 - Tạo worker/job AI moderation nhận `postId`.
-- Worker load lại post, build prompt, gọi `llama-server`, parse kết quả, rồi
-  áp dụng decision.
+- Worker load lại post, build prompt, gọi internal AI client, parse kết quả,
+  rồi áp dụng decision.
 - Quy ước AI decision:
   - `APPROVE`
   - `REJECT`
@@ -58,7 +54,8 @@ Deliverables:
 
 Scope nên giữ gọn:
 
-- Chỉ cần text + metadata + thumbnail đầu tiên nếu có media.
+- Chỉ cần text + metadata; thumbnail URL chỉ là reference và không được model
+  text-only xem như nội dung đã kiểm tra.
 - Chưa cần nhiều policy riêng lẻ.
 - Chưa cần vector database.
 - Chưa cần đọc sâu video/audio.
@@ -86,8 +83,8 @@ Deliverables:
 - Tách và cấu hình rõ:
   - timeout
   - concurrency
-  - process health-check
-  - số request song song tới `llama-server`
+  - runtime readiness
+  - số inference chạy song song
 
 Kết quả mong đợi:
 
@@ -134,7 +131,7 @@ Mục tiêu mở rộng:
 
 Nguyên tắc:
 
-- `SmolVLM2` hiện tại có thể tái sử dụng làm generator basic.
+- Jlama text model có thể được tái sử dụng làm generator basic.
 - Retrieval nên tách riêng khỏi moderation.
 - Embedding model nên là model chuyên embeddings, không ép model chat/VLM làm
   luôn nhiệm vụ này.
@@ -158,9 +155,9 @@ scope phình nhanh và khó chốt chất lượng.
 
 Trong V1 hiện tại, các quyết định đã chốt là:
 
-- Dùng `GGUF + llama-server` làm backbone AI.
-- Chưa chuyển sang ONNX.
-- Chưa thêm AMD/Mac-specific AI runtime branch.
+- Dùng Jlama và SafeTensors làm backbone AI trong cùng JVM.
+- Chưa thêm image classifier hoặc multimodal runtime.
+- Không thêm native runtime branch theo hệ điều hành.
 - Chưa đọc full video.
 - Chưa thêm vector DB.
 - Chưa nhúng chatbot hoặc RAG vào moderation flow.

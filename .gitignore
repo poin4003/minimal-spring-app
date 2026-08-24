@@ -34,7 +34,6 @@ build/
 logs
 
 .env
-/llama-server.env
 /.runtime/
 data
 ai-models

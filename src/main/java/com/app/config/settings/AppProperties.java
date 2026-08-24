@@ -571,19 +571,13 @@ public class AppProperties {
     @Data
     public static class AiModerationMachine {
         @NotBlank
-        private String baseUrl = "http://127.0.0.1:8081";
-
-        @NotBlank
         private String mediaBaseUrl = "http://127.0.0.1:8080";
 
         @NotBlank
-        private String model = "local-aimoderation";
+        private String model = "local-text-model";
 
         @NotNull
         private Duration timeout = Duration.ofSeconds(30);
-
-        @NotNull
-        private Duration healthTimeout = Duration.ofSeconds(3);
 
         @Min(0)
         private int maxImages = 1;
@@ -593,8 +587,7 @@ public class AppProperties {
 
         @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
         public boolean isMachineConfigurationValid() {
-            return isPositive(timeout)
-                    && isPositive(healthTimeout);
+            return isPositive(timeout);
         }
 
         private boolean isPositive(Duration value) {
