@@ -5,6 +5,7 @@ APP_ENV ?= dev
 JAR_FILE := target/spring-application-0.0.1-SNAPSHOT.jar
 JAVA_PREVIEW_ARGS := --add-modules jdk.incubator.vector --enable-preview
 JLAMA_SETUP_MAIN := com.app.features.ai.setup.JlamaModelSetup
+EMBEDDING_SETUP_MAIN := com.app.features.ai.embedding.setup.MultilingualE5ModelSetup
 VISION_SETUP_MAIN := com.app.features.ai.vision.setup.ClipVisionModelSetup
 MAVEN_OPTS := $(strip $(MAVEN_OPTS) $(JAVA_PREVIEW_ARGS))
 
@@ -17,7 +18,7 @@ else
     JAVA_CMD := java
 endif
 
-.PHONY: dev build run clean check-build ai-setup jlama-setup vision-setup
+.PHONY: dev build run clean check-build ai-setup jlama-setup embedding-setup vision-setup
 
 dev:
 	@echo "Starting server in DEV mode..."
@@ -29,6 +30,11 @@ ifneq ($(filter true TRUE 1 yes YES,$(POST_AI_MODERATION_ENABLED)),)
 else
 	@echo "Skipping Jlama setup because POST_AI_MODERATION_ENABLED is not true."
 endif
+ifneq ($(filter true TRUE 1 yes YES,$(AI_EMBEDDING_ENABLED)),)
+	$(MAKE) embedding-setup
+else
+	@echo "Skipping embedding setup because AI_EMBEDDING_ENABLED is not true."
+endif
 ifneq ($(filter true TRUE 1 yes YES,$(AI_VISION_ENABLED)),)
 	$(MAKE) vision-setup
 else
@@ -39,6 +45,10 @@ endif
 jlama-setup:
 	@echo "Downloading the optional Jlama model..."
 	$(MVN_CMD) -DskipTests compile exec:java -Dexec.mainClass=$(JLAMA_SETUP_MAIN)
+
+embedding-setup:
+	@echo "Downloading and validating the optional multilingual E5 ONNX model..."
+	$(MVN_CMD) -DskipTests compile exec:java -Dexec.mainClass=$(EMBEDDING_SETUP_MAIN)
 
 vision-setup:
 	@echo "Downloading and validating the optional CLIP ONNX model..."

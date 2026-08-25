@@ -13,6 +13,7 @@ duyệt bài viết thủ công hoặc bằng AI local.
 - JobRunr cho background jobs
 - FFmpeg/FFprobe cho image, audio và video pipeline
 - Jlama cho AI moderation local tùy chọn, tách khỏi moderation core qua internal client
+- ONNX Runtime và multilingual E5 cho text embedding local tùy chọn
 
 ## Yêu cầu
 
@@ -58,6 +59,7 @@ Database H2 và media local được lưu trong thư mục `data/`.
 | `make dev` | Chạy trực tiếp bằng Spring Boot với profile `dev`. |
 | `make ai-setup` | Setup các model AI có capability đang bật. |
 | `make jlama-setup` | Chủ động tải model Jlama, không phụ thuộc cờ enabled. |
+| `make embedding-setup` | Chủ động tải tokenizer và model multilingual E5 ONNX. |
 | `make vision-setup` | Chủ động tải và kiểm tra model CLIP ONNX. |
 | `make build` | Clean và đóng gói executable JAR vào `target/`. Lệnh này bỏ qua test. |
 | `make run` | Chạy JAR đã build với profile trong `APP_ENV`, mặc định là `dev`. |
@@ -95,14 +97,20 @@ hãy chạy `make build` trước.
 make ai-setup
 ```
 
-`make ai-setup` gọi Jlama setup khi `POST_AI_MODERATION_ENABLED=true`, sau đó
-gọi vision setup khi `AI_VISION_ENABLED=true`. Có thể chủ động setup từng model
-bằng `make jlama-setup` hoặc `make vision-setup` mà không cần bật capability.
+`make ai-setup` gọi Jlama setup khi `POST_AI_MODERATION_ENABLED=true`, embedding
+setup khi `AI_EMBEDDING_ENABLED=true`, sau đó gọi vision setup khi
+`AI_VISION_ENABLED=true`. Có thể chủ động setup từng model bằng
+`make jlama-setup`, `make embedding-setup` hoặc `make vision-setup` mà không cần
+bật capability.
 
 Các model được tải vào thư mục tương ứng và không được commit vào Git. Với
 repository riêng tư, đặt thêm `HF_TOKEN` trong môi trường chạy lệnh. Vision
 setup pin model theo commit, kiểm tra SHA-256 và ONNX contract, chạy smoke
 inference rồi ghi `.ready.json` vào thư mục revision.
+
+Embedding setup tải cả `multilingual-e5-small` và tokenizer đã pin checksum.
+Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage; feature
+này chưa tự lưu vector hoặc nối vào search/RAG.
 
 `make dev`, `make build` và `make run` không tự tải model. Vì vậy cùng một source
 và JAR vẫn chạy được trên máy không có model khi các capability tương ứng tắt.

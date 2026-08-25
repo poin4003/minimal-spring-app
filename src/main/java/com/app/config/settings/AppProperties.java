@@ -52,7 +52,57 @@ public class AppProperties {
     @Data
     public static class AiSettings {
         @Valid
+        private final EmbeddingSettings embedding = new EmbeddingSettings();
+
+        @Valid
         private final VisionSettings vision = new VisionSettings();
+    }
+
+    @Data
+    public static class EmbeddingSettings {
+        private boolean enabled;
+
+        @Valid
+        private final EmbeddingModel model = new EmbeddingModel();
+
+        @Valid
+        private final EmbeddingMachine machine = new EmbeddingMachine();
+    }
+
+    @Data
+    public static class EmbeddingModel {
+        @NotBlank
+        private String id = "intfloat/multilingual-e5-small";
+
+        @Pattern(regexp = "[0-9a-f]{40}")
+        private String revision =
+                "03415a4be176a1620747c692ed433219fabc3def";
+
+        @Pattern(regexp = "[0-9a-f]{64}")
+        private String sha256 =
+                "ca456c06b3a9505ddfd9131408916dd79290368331e7d76bb621f1cba6bc8665";
+
+        @NotBlank
+        private String file = "onnx/model.onnx";
+
+        @Pattern(regexp = "[0-9a-f]{64}")
+        private String tokenizerSha256 =
+                "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39";
+
+        @NotBlank
+        private String tokenizerFile = "onnx/tokenizer.json";
+    }
+
+    @Data
+    public static class EmbeddingMachine {
+        @NotBlank
+        private String modelDirectory = "./data/ai-models/onnx";
+
+        @Positive
+        private int threads = 4;
+
+        @Positive
+        private int maxConcurrency = 1;
     }
 
     @Data
