@@ -12,6 +12,7 @@ import com.app.features.post.aimoderation.entity.PostAiModerationDecisionLogEnti
 import com.app.features.post.aimoderation.entity.PostAiModerationConfigEntity;
 import com.app.features.post.aimoderation.enums.PostAiModerationMode;
 import com.app.features.post.aimoderation.enums.PostAiModerationOutcome;
+import com.app.features.post.aimoderation.exceptions.PostAiModerationClientException;
 import com.app.features.post.aimoderation.repository.PostAiModerationDecisionLogRepository;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationCandidate;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationClientResult;
@@ -113,13 +114,16 @@ public class PostAiModerationDecisionServiceImpl
         String errorMessage = StringUtils.hasText(exception.getMessage())
                 ? exception.getMessage()
                 : exception.getClass().getSimpleName();
+        String rawResponse = exception instanceof PostAiModerationClientException
+                ? ((PostAiModerationClientException) exception).getRawResponse()
+                : null;
 
         saveLog(
                 postSvc.requirePost(candidate.postId()),
                 candidate.promptSnapshot(),
                 PostAiModerationOutcome.ERROR,
                 null,
-                null,
+                rawResponse,
                 errorMessage,
                 null);
     }

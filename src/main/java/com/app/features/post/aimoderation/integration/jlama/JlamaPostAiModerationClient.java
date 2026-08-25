@@ -28,15 +28,18 @@ public class JlamaPostAiModerationClient
         implements PostAiModerationClient, PostAiModerationHealthClient {
 
     private static final float TEMPERATURE = 0.0f;
-    private static final String OUTPUT_INSTRUCTIONS = """
+    private static final String RUNTIME_INSTRUCTIONS = """
 
             This runtime is text-only. Thumbnail URLs are references only and
             their visual content has not been inspected. Never claim that you
             inspected an image. If the policy requires media inspection and
             the text alone is insufficient, choose ESCALATE.
+            """;
+    private static final String OUTPUT_INSTRUCTIONS = """
 
+            Respond to the moderation request above now.
             Return exactly one JSON object using this schema:
-            {"outcome":"APPROVE|REJECT|ESCALATE","reason":"short explanation"}
+            {"outcome":"APPROVE|REJECT|ESCALATE","reason":"maximum 12 words"}
             Do not include markdown, code fences, or any text outside the JSON.
             """;
 
@@ -54,8 +57,8 @@ public class JlamaPostAiModerationClient
 
         try {
             String rawResponse = jlamaRuntime.generate(
-                    request.systemPrompt() + OUTPUT_INSTRUCTIONS,
-                    request.userPrompt(),
+                    request.systemPrompt() + RUNTIME_INSTRUCTIONS,
+                    request.userPrompt() + OUTPUT_INSTRUCTIONS,
                     TEMPERATURE,
                     appProperties.getPost()
                             .getAiModeration()
@@ -89,14 +92,16 @@ public class JlamaPostAiModerationClient
     private PostAiModerationStructuredOutput parse(String rawResponse) {
         if (!StringUtils.hasText(rawResponse)) {
             throw new PostAiModerationClientException(
-                    "Jlama returned an empty moderation response.");
+                    "Jlama returned an empty moderation response.",
+                    rawResponse);
         }
 
         int jsonStart = rawResponse.indexOf('{');
         int jsonEnd = rawResponse.lastIndexOf('}');
         if (jsonStart < 0 || jsonEnd <= jsonStart) {
             throw new PostAiModerationClientException(
-                    "Jlama moderation response does not contain a JSON object.");
+                    "Jlama moderation response does not contain a JSON object.",
+                    rawResponse);
         }
 
         try {
@@ -108,7 +113,8 @@ public class JlamaPostAiModerationClient
                     || output.outcome() == PostAiModerationOutcome.ERROR
                     || !StringUtils.hasText(output.reason())) {
                 throw new PostAiModerationClientException(
-                        "Jlama moderation response contains invalid fields.");
+                        "Jlama moderation response contains invalid fields.",
+                        rawResponse);
             }
 
             return output;
@@ -117,6 +123,7 @@ public class JlamaPostAiModerationClient
         } catch (RuntimeException exception) {
             throw new PostAiModerationClientException(
                     "Unable to parse Jlama moderation JSON.",
+                    rawResponse,
                     exception);
         }
     }

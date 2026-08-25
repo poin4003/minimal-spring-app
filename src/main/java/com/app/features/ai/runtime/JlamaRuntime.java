@@ -120,6 +120,16 @@ public class JlamaRuntime {
                     temperature,
                     totalTokenLimit);
 
+            log.info(
+                    "Jlama generation completed with [{}] prompt tokens and "
+                            + "[{}] generated tokens in [{}] ms prompt time "
+                            + "and [{}] ms generation time; finish reason [{}].",
+                    response.promptTokens,
+                    response.generatedTokens,
+                    response.promptTimeMs,
+                    response.generateTimeMs,
+                    response.finishReason);
+
             return response.responseText;
         } catch (JlamaRuntimeException exception) {
             throw exception;

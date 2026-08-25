@@ -34,6 +34,7 @@
         <jaffree.version>2024.08.29</jaffree.version>
         <bucket4j.version>8.19.0</bucket4j.version>
         <jlama.version>0.8.4</jlama.version>
+        <onnxruntime.version>1.29.0</onnxruntime.version>
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
@@ -187,6 +188,12 @@
             <groupId>com.github.tjake</groupId>
             <artifactId>jlama-core</artifactId>
             <version>${jlama.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>${onnxruntime.version}</version>
         </dependency>
 
         <dependency>

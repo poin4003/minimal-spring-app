@@ -56,7 +56,9 @@ Database H2 và media local được lưu trong thư mục `data/`.
 | Lệnh | Chức năng |
 | --- | --- |
 | `make dev` | Chạy trực tiếp bằng Spring Boot với profile `dev`. |
-| `make ai-setup` | Tải model Jlama tùy chọn theo cấu hình vào máy hiện tại. |
+| `make ai-setup` | Setup các model AI có capability đang bật. |
+| `make jlama-setup` | Chủ động tải model Jlama, không phụ thuộc cờ enabled. |
+| `make vision-setup` | Chủ động tải và kiểm tra model CLIP ONNX. |
 | `make build` | Clean và đóng gói executable JAR vào `target/`. Lệnh này bỏ qua test. |
 | `make run` | Chạy JAR đã build với profile trong `APP_ENV`, mặc định là `dev`. |
 | `make clean` | Xóa Maven build output trong `target/`. |
@@ -87,19 +89,23 @@ hãy chạy `make build` trước.
 
 ## AI moderation tùy chọn
 
-Để chuẩn bị model mặc định cho máy có sử dụng AI:
+Để chuẩn bị các model cho những capability đang bật:
 
 ```bash
 make ai-setup
 ```
 
-Model được tải vào `POST_AI_MODERATION_MODEL_DIRECTORY` và không được commit
-vào Git. Có thể đổi model bằng `POST_AI_MODERATION_MODEL_ID`; với repository
-riêng tư, đặt thêm `HF_TOKEN` trong môi trường chạy lệnh.
+`make ai-setup` gọi Jlama setup khi `POST_AI_MODERATION_ENABLED=true`, sau đó
+gọi vision setup khi `AI_VISION_ENABLED=true`. Có thể chủ động setup từng model
+bằng `make jlama-setup` hoặc `make vision-setup` mà không cần bật capability.
+
+Các model được tải vào thư mục tương ứng và không được commit vào Git. Với
+repository riêng tư, đặt thêm `HF_TOKEN` trong môi trường chạy lệnh. Vision
+setup pin model theo commit, kiểm tra SHA-256 và ONNX contract, chạy smoke
+inference rồi ghi `.ready.json` vào thư mục revision.
 
 `make dev`, `make build` và `make run` không tự tải model. Vì vậy cùng một source
-và JAR vẫn chạy được trên máy không có model khi
-`POST_AI_MODERATION_ENABLED=false`.
+và JAR vẫn chạy được trên máy không có model khi các capability tương ứng tắt.
 
 Khi `POST_AI_MODERATION_ENABLED=true`, Spring sẽ load model local trong lúc
 khởi động và đóng model khi ứng dụng dừng. Nếu model bị thiếu hoặc không load
@@ -130,5 +136,5 @@ Các cấu hình mẫu nằm trong [.env.example](.env.example). Những phần 
 điều chỉnh gồm database, storage, FFmpeg encoder, email, Telegram, JobRunr,
 rate limit và AI moderation.
 
-Các file `.env`, `data/`, `.runtime/` và `ai-models/` là dữ liệu theo từng máy
+Các file `.env`, `data/` và `.runtime/` là dữ liệu theo từng máy
 và không được commit vào Git.

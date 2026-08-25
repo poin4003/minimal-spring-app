@@ -36,6 +36,8 @@ import lombok.Data;
 @ConfigurationProperties(prefix = "app")
 public class AppProperties {
 
+    @Valid
+    private final AiSettings ai = new AiSettings();
     private final Auth auth = new Auth();
     private final CacheSettings cache = new CacheSettings();
     private final Cors cors = new Cors();
@@ -46,6 +48,52 @@ public class AppProperties {
     private final PostSettings post = new PostSettings();
     private final Security security = new Security();
     private final Ui ui = new Ui();
+
+    @Data
+    public static class AiSettings {
+        @Valid
+        private final VisionSettings vision = new VisionSettings();
+    }
+
+    @Data
+    public static class VisionSettings {
+        private boolean enabled;
+
+        @Valid
+        private final VisionModel model = new VisionModel();
+
+        @Valid
+        private final VisionMachine machine = new VisionMachine();
+    }
+
+    @Data
+    public static class VisionModel {
+        @NotBlank
+        private String id = "openai/clip-vit-base-patch32";
+
+        @Pattern(regexp = "[0-9a-f]{40}")
+        private String revision =
+                "12b36594d53414ecfba93c7200dbb7c7db3c900a";
+
+        @Pattern(regexp = "[0-9a-f]{64}")
+        private String sha256 =
+                "57879bb1c23cdeb350d23569dd251ed4b740a96d747c529e94a2bb8040ac5d00";
+
+        @NotBlank
+        private String file = "onnx/model.onnx";
+    }
+
+    @Data
+    public static class VisionMachine {
+        @NotBlank
+        private String modelDirectory = "./data/ai-models/onnx";
+
+        @Positive
+        private int threads = 4;
+
+        @Positive
+        private int maxConcurrency = 1;
+    }
 
     @Data
     public static class Auth {
@@ -577,7 +625,7 @@ public class AppProperties {
         private String modelId = "tjake/Llama-3.2-1B-Instruct-JQ4";
 
         @NotBlank
-        private String modelDirectory = "ai-models/jlama";
+        private String modelDirectory = "./data/ai-models/jlama";
 
         @Positive
         private int threads = 4;
@@ -592,7 +640,7 @@ public class AppProperties {
         private int maxImages = 1;
 
         @Positive
-        private int maxTokens = 64;
+        private int maxTokens = 128;
 
         @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
         public boolean isMachineConfigurationValid() {
