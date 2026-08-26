@@ -16,12 +16,12 @@ import com.app.features.ai.embedding.service.AiEmbeddingClient;
 import com.app.features.ai.embedding.service.AiEmbeddingHealthClient;
 import com.app.features.ai.embedding.support.MultilingualE5ModelContract;
 import com.app.features.ai.onnx.schema.model.OnnxModelArtifact;
+import com.app.features.ai.onnx.runtime.OnnxSessionResource;
 import com.app.features.ai.onnx.support.OnnxModelFiles;
-import com.app.features.ai.onnx.support.OnnxSessionOptionsFactory;
+import com.app.features.ai.onnx.support.OnnxSessionFactory;
 import ai.djl.huggingface.tokenizers.HuggingFaceTokenizer;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
-import ai.onnxruntime.OrtSession;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -39,6 +39,7 @@ public class MultilingualE5OnnxRuntime
     private final OnnxModelArtifact modelArtifact;
     private final OnnxModelArtifact tokenizerArtifact;
     private final AppProperties.EmbeddingMachine machine;
+    private final AppProperties.OnnxSettings onnxSettings;
     private final OrtEnvironment environment;
     private final Semaphore inferencePermits;
     private final ReadWriteLock lifecycleLock =
@@ -61,6 +62,7 @@ public class MultilingualE5OnnxRuntime
                 model.getTokenizerSha256(),
                 model.getTokenizerFile());
         this.machine = embedding.getMachine();
+        this.onnxSettings = appProperties.getAi().getOnnx();
         this.environment = OrtEnvironment.getEnvironment();
         this.inferencePermits = new Semaphore(
                 machine.getMaxConcurrency(),
@@ -69,7 +71,7 @@ public class MultilingualE5OnnxRuntime
 
     @PostConstruct
     public void start() {
-        OrtSession initializedSession = null;
+        OnnxSessionResource initializedSession = null;
         HuggingFaceTokenizer initializedTokenizer = null;
         try {
             Path modelPath = resolveLocalArtifactPath(modelArtifact);
@@ -89,15 +91,14 @@ public class MultilingualE5OnnxRuntime
                     machine.getThreads());
             initializedTokenizer =
                     MultilingualE5ModelContract.createTokenizer(tokenizerPath);
-            try (OrtSession.SessionOptions options =
-                    OnnxSessionOptionsFactory.create(machine.getThreads())) {
-                initializedSession = environment.createSession(
-                        modelPath.toString(),
-                        options);
-            }
+            initializedSession = OnnxSessionFactory.create(
+                    environment,
+                    modelPath.toString(),
+                    machine,
+                    onnxSettings);
             MultilingualE5ModelContract.validateAndRunSmokeInference(
                     environment,
-                    initializedSession,
+                    initializedSession.session(),
                     initializedTokenizer);
 
             lifecycleLock.writeLock().lock();
@@ -112,9 +113,10 @@ public class MultilingualE5OnnxRuntime
             initializedTokenizer = null;
 
             log.info(
-                    "Multilingual E5 ONNX model [{}@{}] is ready.",
+                    "Multilingual E5 ONNX model [{}@{}] is ready on [{}].",
                     modelArtifact.id(),
-                    modelArtifact.revision());
+                    modelArtifact.revision(),
+                    resources.sessionResource().executionProvider());
         } catch (Exception | LinkageError exception) {
             closeQuietly(initializedSession, initializedTokenizer);
             resources = null;
@@ -131,7 +133,7 @@ public class MultilingualE5OnnxRuntime
     public float[] embedQuery(String text) {
         return execute(resources -> MultilingualE5ModelContract.embedQuery(
                 environment,
-                resources.session(),
+                resources.sessionResource().session(),
                 resources.tokenizer(),
                 text));
     }
@@ -140,7 +142,7 @@ public class MultilingualE5OnnxRuntime
     public float[] embedPassage(String text) {
         return execute(resources -> MultilingualE5ModelContract.embedPassage(
                 environment,
-                resources.session(),
+                resources.sessionResource().session(),
                 resources.tokenizer(),
                 text));
     }
@@ -160,6 +162,16 @@ public class MultilingualE5OnnxRuntime
         return resources != null;
     }
 
+    @Override
+    public String getRuntimeProvider() {
+        RuntimeResources currentResources = resources;
+        return currentResources == null
+                ? "UNAVAILABLE"
+                : currentResources.sessionResource()
+                        .executionProvider()
+                        .name();
+    }
+
     @PreDestroy
     public void close() {
         RuntimeResources currentResources;
@@ -173,7 +185,7 @@ public class MultilingualE5OnnxRuntime
 
         if (currentResources != null) {
             closeQuietly(
-                    currentResources.session(),
+                    currentResources.sessionResource(),
                     currentResources.tokenizer());
             log.info(
                     "Multilingual E5 ONNX model [{}@{}] was closed.",
@@ -237,11 +249,11 @@ public class MultilingualE5OnnxRuntime
     }
 
     private void closeQuietly(
-            OrtSession session,
+            OnnxSessionResource sessionResource,
             HuggingFaceTokenizer tokenizer) {
-        if (session != null) {
+        if (sessionResource != null) {
             try {
-                session.close();
+                sessionResource.close();
             } catch (OrtException | RuntimeException exception) {
                 log.warn(
                         "Unable to close multilingual E5 ONNX session cleanly.",
@@ -266,7 +278,7 @@ public class MultilingualE5OnnxRuntime
     }
 
     private record RuntimeResources(
-            OrtSession session,
+            OnnxSessionResource sessionResource,
             HuggingFaceTokenizer tokenizer) {
     }
 }

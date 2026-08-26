@@ -7,15 +7,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import com.app.config.settings.AppProperties;
-import com.app.features.ai.vision.exceptions.AiVisionRuntimeException;
 import com.app.features.ai.onnx.schema.model.OnnxModelArtifact;
+import com.app.features.ai.onnx.runtime.OnnxSessionResource;
 import com.app.features.ai.onnx.support.OnnxModelFiles;
-import com.app.features.ai.onnx.support.OnnxSessionOptionsFactory;
+import com.app.features.ai.onnx.support.OnnxSessionFactory;
+import com.app.features.ai.vision.exceptions.AiVisionRuntimeException;
 import com.app.features.ai.vision.service.AiVisionHealthClient;
 import com.app.features.ai.vision.support.ClipVisionModelContract;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtException;
-import ai.onnxruntime.OrtSession;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -31,8 +31,9 @@ public class ClipOnnxRuntime implements AiVisionHealthClient {
 
     private final OnnxModelArtifact artifact;
     private final AppProperties.VisionMachine machine;
+    private final AppProperties.OnnxSettings onnxSettings;
 
-    private volatile OrtSession session;
+    private volatile OnnxSessionResource sessionResource;
 
     public ClipOnnxRuntime(AppProperties appProperties) {
         AppProperties.VisionSettings vision =
@@ -44,11 +45,12 @@ public class ClipOnnxRuntime implements AiVisionHealthClient {
                 model.getSha256(),
                 model.getFile());
         this.machine = vision.getMachine();
+        this.onnxSettings = appProperties.getAi().getOnnx();
     }
 
     @PostConstruct
     public void start() {
-        OrtSession initializedSession = null;
+        OnnxSessionResource initializedSession = null;
         try {
             Path modelPath = resolveLocalModelPath();
             validateLocalModel(modelPath);
@@ -61,24 +63,24 @@ public class ClipOnnxRuntime implements AiVisionHealthClient {
                     machine.getThreads());
 
             OrtEnvironment environment = OrtEnvironment.getEnvironment();
-            try (OrtSession.SessionOptions options =
-                    OnnxSessionOptionsFactory.create(machine.getThreads())) {
-                initializedSession = environment.createSession(
-                        modelPath.toString(),
-                        options);
-            }
+            initializedSession = OnnxSessionFactory.create(
+                    environment,
+                    modelPath.toString(),
+                    machine,
+                    onnxSettings);
             ClipVisionModelContract.validateAndRunSmokeInference(
                     environment,
-                    initializedSession);
-            session = initializedSession;
+                    initializedSession.session());
+            sessionResource = initializedSession;
 
             log.info(
-                    "CLIP ONNX model [{}@{}] is ready.",
+                    "CLIP ONNX model [{}@{}] is ready on [{}].",
                     artifact.id(),
-                    artifact.revision());
+                    artifact.revision(),
+                    initializedSession.executionProvider());
         } catch (Exception | LinkageError exception) {
             closeQuietly(initializedSession);
-            session = null;
+            sessionResource = null;
             log.error(
                     "Unable to initialize CLIP ONNX model [{}@{}]. "
                             + "AI vision remains unavailable.",
@@ -90,13 +92,21 @@ public class ClipOnnxRuntime implements AiVisionHealthClient {
 
     @Override
     public boolean isReady() {
-        return session != null;
+        return sessionResource != null;
+    }
+
+    @Override
+    public String getRuntimeProvider() {
+        OnnxSessionResource currentSession = sessionResource;
+        return currentSession == null
+                ? "UNAVAILABLE"
+                : currentSession.executionProvider().name();
     }
 
     @PreDestroy
     public void close() {
-        OrtSession currentSession = session;
-        session = null;
+        OnnxSessionResource currentSession = sessionResource;
+        sessionResource = null;
         closeQuietly(currentSession);
         if (currentSession != null) {
             log.info(
@@ -123,7 +133,7 @@ public class ClipOnnxRuntime implements AiVisionHealthClient {
                 artifact.sha256());
     }
 
-    private void closeQuietly(OrtSession targetSession) {
+    private void closeQuietly(OnnxSessionResource targetSession) {
         if (targetSession == null) {
             return;
         }

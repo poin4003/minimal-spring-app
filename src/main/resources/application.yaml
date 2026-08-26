@@ -10,6 +10,11 @@ server:
 # App config
 app:
     ai:
+        onnx:
+            fallback-to-cpu: ${AI_ONNX_FALLBACK_TO_CPU:true}
+            cuda:
+                device-id: ${AI_ONNX_CUDA_DEVICE_ID:0}
+                memory-limit-mb: ${AI_ONNX_CUDA_MEMORY_LIMIT_MB:2048}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:
@@ -23,6 +28,7 @@ app:
                 model-directory: ${AI_EMBEDDING_MODEL_DIRECTORY:./data/ai-models/onnx}
                 threads: ${AI_EMBEDDING_THREADS:4}
                 max-concurrency: ${AI_EMBEDDING_MAX_CONCURRENCY:1}
+                execution-provider: ${AI_EMBEDDING_EXECUTION_PROVIDER:CPU}
         vision:
             enabled: ${AI_VISION_ENABLED:false}
             model:
@@ -34,6 +40,7 @@ app:
                 model-directory: ${AI_VISION_MODEL_DIRECTORY:./data/ai-models/onnx}
                 threads: ${AI_VISION_THREADS:4}
                 max-concurrency: ${AI_VISION_MAX_CONCURRENCY:1}
+                execution-provider: ${AI_VISION_EXECUTION_PROVIDER:CPU}
     auth:
         credential-hash-secret: ${AUTH_CREDENTIAL_HASH_SECRET}
         cookie:

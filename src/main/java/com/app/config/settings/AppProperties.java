@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
+import com.app.features.ai.onnx.enums.OnnxExecutionProvider;
 import com.app.features.media.enums.HlsReservedVariantKey;
 import com.app.features.media.enums.MediaHardwareAccel;
 import com.app.features.media.enums.MediaKind;
@@ -51,6 +52,9 @@ public class AppProperties {
 
     @Data
     public static class AiSettings {
+        @Valid
+        private final OnnxSettings onnx = new OnnxSettings();
+
         @Valid
         private final EmbeddingSettings embedding = new EmbeddingSettings();
 
@@ -94,7 +98,24 @@ public class AppProperties {
     }
 
     @Data
-    public static class EmbeddingMachine {
+    public static class OnnxSettings {
+        private boolean fallbackToCpu = true;
+
+        @Valid
+        private final OnnxCudaSettings cuda = new OnnxCudaSettings();
+    }
+
+    @Data
+    public static class OnnxCudaSettings {
+        @Min(0)
+        private int deviceId;
+
+        @Positive
+        private long memoryLimitMb = 2048;
+    }
+
+    @Data
+    public static class OnnxMachine {
         @NotBlank
         private String modelDirectory = "./data/ai-models/onnx";
 
@@ -103,6 +124,13 @@ public class AppProperties {
 
         @Positive
         private int maxConcurrency = 1;
+
+        @NotNull
+        private OnnxExecutionProvider executionProvider =
+                OnnxExecutionProvider.CPU;
+    }
+
+    public static class EmbeddingMachine extends OnnxMachine {
     }
 
     @Data
@@ -133,16 +161,7 @@ public class AppProperties {
         private String file = "onnx/model.onnx";
     }
 
-    @Data
-    public static class VisionMachine {
-        @NotBlank
-        private String modelDirectory = "./data/ai-models/onnx";
-
-        @Positive
-        private int threads = 4;
-
-        @Positive
-        private int maxConcurrency = 1;
+    public static class VisionMachine extends OnnxMachine {
     }
 
     @Data

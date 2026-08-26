@@ -116,6 +116,13 @@ Embedding setup tải cả `multilingual-e5-small` và tokenizer đã pin checks
 Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage; feature
 này chưa tự lưu vector hoặc nối vào search/RAG.
 
+ONNX có thể chọn execution provider riêng cho từng capability bằng
+`AI_EMBEDDING_EXECUTION_PROVIDER` và `AI_VISION_EXECUTION_PROVIDER`, với các giá
+trị `CPU`, `CUDA` hoặc `AUTO`. CUDA dùng device và giới hạn VRAM từ
+`AI_ONNX_CUDA_DEVICE_ID` và `AI_ONNX_CUDA_MEMORY_LIMIT_MB`. Khi
+`AI_ONNX_FALLBACK_TO_CPU=true`, runtime tự quay về CPU nếu máy không có CUDA
+provider hoặc thiếu CUDA/cuDNN. Dự án không tự cài CUDA toolkit hay cuDNN.
+
 ## Benchmark AI
 
 Setup các model cần đo trước, sau đó chạy toàn bộ benchmark:
@@ -139,6 +146,10 @@ Số warm-up, iterations và Jlama output tokens có thể chỉnh bằng các b
 `AI_BENCHMARK_VISION_WARMUP`, `AI_BENCHMARK_VISION_ITERATIONS`,
 `AI_BENCHMARK_JLAMA_WARMUP`, `AI_BENCHMARK_JLAMA_ITERATIONS` và
 `AI_BENCHMARK_JLAMA_MAX_TOKENS`.
+
+Report ONNX ghi cả provider được yêu cầu và provider thực tế. Nếu cấu hình CUDA
+nhưng report có `activeExecutionProvider=CPU`, hãy kiểm tra CUDA/cuDNN và log
+fallback trước khi so sánh hiệu năng.
 
 Vision hiện chỉ benchmark ONNX smoke inference bằng tensor đúng shape, chưa
 bao gồm decode/preprocess ảnh hoặc đánh label. Java report có số liệu JVM heap,

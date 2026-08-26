@@ -21,13 +21,13 @@ import com.app.features.ai.benchmark.support.AiBenchmarkMeasurement;
 import com.app.features.ai.benchmark.support.AiBenchmarkMeasurement.MeasuredCase;
 import com.app.features.ai.embedding.integration.onnx.MultilingualE5OnnxRuntime;
 import com.app.features.ai.onnx.schema.model.OnnxModelArtifact;
+import com.app.features.ai.onnx.runtime.OnnxSessionResource;
 import com.app.features.ai.onnx.support.OnnxModelFiles;
-import com.app.features.ai.onnx.support.OnnxSessionOptionsFactory;
+import com.app.features.ai.onnx.support.OnnxSessionFactory;
 import com.app.features.ai.runtime.JlamaRuntime;
 import com.app.features.ai.schema.model.JlamaGenerationResult;
 import com.app.features.ai.vision.support.ClipVisionModelContract;
 import ai.onnxruntime.OrtEnvironment;
-import ai.onnxruntime.OrtException;
 import ai.onnxruntime.OrtSession;
 import tools.jackson.databind.ObjectMapper;
 
@@ -105,7 +105,7 @@ public final class AiBenchmarkRunner {
                         STATUS_UNAVAILABLE,
                         runtime.getModelVersion(),
                         loadDurationMs,
-                        embeddingConfiguration(settings),
+                        embeddingConfiguration(properties),
                         List.of(),
                         "Embedding runtime is unavailable; inspect the Java log.");
             }
@@ -126,8 +126,11 @@ public final class AiBenchmarkRunner {
                     .report());
 
             Map<String, Object> configuration =
-                    embeddingConfiguration(settings);
+                    embeddingConfiguration(properties);
             configuration.put("dimension", runtime.getDimension());
+            configuration.put(
+                    "activeExecutionProvider",
+                    runtime.getRuntimeProvider());
             configuration.put(
                     "measurementScope",
                     "DJL tokenizer, ONNX inference, mean pooling and L2 normalization");
@@ -148,7 +151,7 @@ public final class AiBenchmarkRunner {
                             + "@"
                             + settings.getModel().getRevision(),
                     loadDurationMs,
-                    embeddingConfiguration(settings),
+                    embeddingConfiguration(properties),
                     List.of(),
                     describe(exception));
         } finally {
@@ -167,7 +170,7 @@ public final class AiBenchmarkRunner {
                 model.getRevision(),
                 model.getSha256(),
                 model.getFile());
-        OrtSession session = null;
+        OnnxSessionResource sessionResource = null;
         double loadDurationMs = 0.0;
         try {
             Path modelPath = OnnxModelFiles.resolveModelPath(
@@ -181,18 +184,17 @@ public final class AiBenchmarkRunner {
             long loadStart = System.nanoTime();
             OnnxModelFiles.verifySha256(modelPath, artifact.sha256());
             OrtEnvironment environment = OrtEnvironment.getEnvironment();
-            try (OrtSession.SessionOptions sessionOptions =
-                    OnnxSessionOptionsFactory.create(machine.getThreads())) {
-                session = environment.createSession(
-                        modelPath.toString(),
-                        sessionOptions);
-            }
+            sessionResource = OnnxSessionFactory.create(
+                    environment,
+                    modelPath.toString(),
+                    machine,
+                    properties.getAi().getOnnx());
             ClipVisionModelContract.validateAndRunSmokeInference(
                     environment,
-                    session);
+                    sessionResource.session());
             loadDurationMs = elapsedMilliseconds(loadStart);
 
-            OrtSession benchmarkSession = session;
+            OrtSession benchmarkSession = sessionResource.session();
             CaseResult smokeInference = AiBenchmarkMeasurement.measure(
                     "clip-onnx-smoke-inference",
                     options.warmupIterations(),
@@ -203,7 +205,10 @@ public final class AiBenchmarkRunner {
                                 benchmarkSession);
                         return Map.of();
                     }).report();
-            Map<String, Object> configuration = visionConfiguration(settings);
+            Map<String, Object> configuration = visionConfiguration(properties);
+            configuration.put(
+                    "activeExecutionProvider",
+                    sessionResource.executionProvider().name());
             configuration.put(
                     "measurementScope",
                     "ONNX inference with correctly shaped synthetic tensors; image preprocessing excluded");
@@ -222,11 +227,11 @@ public final class AiBenchmarkRunner {
                     STATUS_FAILED,
                     artifact.id() + "@" + artifact.revision(),
                     loadDurationMs,
-                    visionConfiguration(settings),
+                    visionConfiguration(properties),
                     List.of(),
                     describe(exception));
         } finally {
-            closeSession(session);
+            closeSession(sessionResource);
         }
     }
 
@@ -325,7 +330,9 @@ public final class AiBenchmarkRunner {
     }
 
     private static Map<String, Object> embeddingConfiguration(
-            AppProperties.EmbeddingSettings settings) {
+            AppProperties properties) {
+        AppProperties.EmbeddingSettings settings = properties.getAi()
+                .getEmbedding();
         Map<String, Object> configuration = new LinkedHashMap<>();
         configuration.put("threads", settings.getMachine().getThreads());
         configuration.put(
@@ -334,11 +341,16 @@ public final class AiBenchmarkRunner {
         configuration.put(
                 "modelDirectory",
                 settings.getMachine().getModelDirectory());
+        addOnnxConfiguration(
+                configuration,
+                settings.getMachine(),
+                properties.getAi().getOnnx());
         return configuration;
     }
 
     private static Map<String, Object> visionConfiguration(
-            AppProperties.VisionSettings settings) {
+            AppProperties properties) {
+        AppProperties.VisionSettings settings = properties.getAi().getVision();
         Map<String, Object> configuration = new LinkedHashMap<>();
         configuration.put("threads", settings.getMachine().getThreads());
         configuration.put(
@@ -347,7 +359,29 @@ public final class AiBenchmarkRunner {
         configuration.put(
                 "modelDirectory",
                 settings.getMachine().getModelDirectory());
+        addOnnxConfiguration(
+                configuration,
+                settings.getMachine(),
+                properties.getAi().getOnnx());
         return configuration;
+    }
+
+    private static void addOnnxConfiguration(
+            Map<String, Object> configuration,
+            AppProperties.OnnxMachine machine,
+            AppProperties.OnnxSettings onnxSettings) {
+        configuration.put(
+                "requestedExecutionProvider",
+                machine.getExecutionProvider().name());
+        configuration.put(
+                "fallbackToCpu",
+                onnxSettings.isFallbackToCpu());
+        configuration.put(
+                "cudaDeviceId",
+                onnxSettings.getCuda().getDeviceId());
+        configuration.put(
+                "cudaMemoryLimitMb",
+                onnxSettings.getCuda().getMemoryLimitMb());
     }
 
     private static Map<String, Object> jlamaConfiguration(
@@ -423,13 +457,13 @@ public final class AiBenchmarkRunner {
                         : ": " + message);
     }
 
-    private static void closeSession(OrtSession session) {
-        if (session == null) {
+    private static void closeSession(OnnxSessionResource sessionResource) {
+        if (sessionResource == null) {
             return;
         }
         try {
-            session.close();
-        } catch (OrtException | RuntimeException exception) {
+            sessionResource.close();
+        } catch (Exception exception) {
             System.err.println(
                     "Unable to close benchmark ONNX session: "
                             + exception.getMessage());

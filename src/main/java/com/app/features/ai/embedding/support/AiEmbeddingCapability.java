@@ -32,4 +32,15 @@ public class AiEmbeddingCapability {
                 ? AiAvailability.READY
                 : AiAvailability.UNAVAILABLE;
     }
+
+    public String resolveRuntimeProvider() {
+        if (!isEnabled()) {
+            return AiAvailability.DISABLED.name();
+        }
+        AiEmbeddingHealthClient healthClient =
+                aiEmbeddingHealthClientProvider.getIfAvailable();
+        return healthClient == null
+                ? AiAvailability.UNAVAILABLE.name()
+                : healthClient.getRuntimeProvider();
+    }
 }

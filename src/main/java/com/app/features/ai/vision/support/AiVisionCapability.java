@@ -32,4 +32,15 @@ public class AiVisionCapability {
                 ? AiAvailability.READY
                 : AiAvailability.UNAVAILABLE;
     }
+
+    public String resolveRuntimeProvider() {
+        if (!isEnabled()) {
+            return AiAvailability.DISABLED.name();
+        }
+        AiVisionHealthClient healthClient =
+                aiVisionHealthClientProvider.getIfAvailable();
+        return healthClient == null
+                ? AiAvailability.UNAVAILABLE.name()
+                : healthClient.getRuntimeProvider();
+    }
 }
