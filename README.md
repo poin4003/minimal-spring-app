@@ -61,6 +61,10 @@ Database H2 và media local được lưu trong thư mục `data/`.
 | `make jlama-setup` | Chủ động tải model Jlama, không phụ thuộc cờ enabled. |
 | `make embedding-setup` | Chủ động tải tokenizer và model multilingual E5 ONNX. |
 | `make vision-setup` | Chủ động tải và kiểm tra model CLIP ONNX. |
+| `make ai-benchmark` | Chạy ba benchmark AI trong các JVM tách biệt. |
+| `make benchmark-embedding` | Chỉ benchmark multilingual E5. |
+| `make benchmark-vision` | Chỉ benchmark CLIP ONNX. |
+| `make benchmark-jlama` | Chỉ benchmark Jlama generation. |
 | `make build` | Clean và đóng gói executable JAR vào `target/`. Lệnh này bỏ qua test. |
 | `make run` | Chạy JAR đã build với profile trong `APP_ENV`, mặc định là `dev`. |
 | `make clean` | Xóa Maven build output trong `target/`. |
@@ -111,6 +115,35 @@ inference rồi ghi `.ready.json` vào thư mục revision.
 Embedding setup tải cả `multilingual-e5-small` và tokenizer đã pin checksum.
 Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage; feature
 này chưa tự lưu vector hoặc nối vào search/RAG.
+
+## Benchmark AI
+
+Setup các model cần đo trước, sau đó chạy toàn bộ benchmark:
+
+```bash
+make ai-benchmark AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev
+```
+
+Trên NUC dùng cùng source và lệnh, đổi output thành `data/benchmarks/nuc`.
+Mỗi capability chạy trong một Maven JVM riêng và tạo ba file `embedding.json`,
+`vision.json`, `jlama.json`. Có thể chạy riêng từng model:
+
+```bash
+make benchmark-embedding AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev
+make benchmark-vision AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev
+make benchmark-jlama AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev
+```
+
+Số warm-up, iterations và Jlama output tokens có thể chỉnh bằng các biến Make
+`AI_BENCHMARK_EMBEDDING_WARMUP`, `AI_BENCHMARK_EMBEDDING_ITERATIONS`,
+`AI_BENCHMARK_VISION_WARMUP`, `AI_BENCHMARK_VISION_ITERATIONS`,
+`AI_BENCHMARK_JLAMA_WARMUP`, `AI_BENCHMARK_JLAMA_ITERATIONS` và
+`AI_BENCHMARK_JLAMA_MAX_TOKENS`.
+
+Vision hiện chỉ benchmark ONNX smoke inference bằng tensor đúng shape, chưa
+bao gồm decode/preprocess ảnh hoặc đánh label. Java report có số liệu JVM heap,
+không phải toàn bộ native RSS của ONNX/Jlama. Report được lưu dưới `data/` nên
+không được commit vào Git.
 
 `make dev`, `make build` và `make run` không tự tải model. Vì vậy cùng một source
 và JAR vẫn chạy được trên máy không có model khi các capability tương ứng tắt.

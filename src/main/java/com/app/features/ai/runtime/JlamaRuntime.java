@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.app.config.settings.AppProperties;
 import com.app.features.ai.exceptions.JlamaRuntimeException;
+import com.app.features.ai.schema.model.JlamaGenerationResult;
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.ModelSupport;
 import com.github.tjake.jlama.model.functions.Generator;
@@ -96,6 +97,18 @@ public class JlamaRuntime {
             String userPrompt,
             float temperature,
             int maxTokens) {
+        return generateWithMetrics(
+                systemPrompt,
+                userPrompt,
+                temperature,
+                maxTokens).responseText();
+    }
+
+    public JlamaGenerationResult generateWithMetrics(
+            String systemPrompt,
+            String userPrompt,
+            float temperature,
+            int maxTokens) {
         acquireInferencePermit();
         lifecycleLock.readLock().lock();
 
@@ -130,7 +143,13 @@ public class JlamaRuntime {
                     response.generateTimeMs,
                     response.finishReason);
 
-            return response.responseText;
+            return new JlamaGenerationResult(
+                    response.responseText,
+                    response.promptTokens,
+                    response.generatedTokens,
+                    response.promptTimeMs,
+                    response.generateTimeMs,
+                    response.finishReason.name());
         } catch (JlamaRuntimeException exception) {
             throw exception;
         } catch (RuntimeException exception) {
