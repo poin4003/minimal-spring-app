@@ -36,6 +36,7 @@
         <jlama.version>0.8.4</jlama.version>
         <djl.version>0.36.0</djl.version>
         <onnxruntime.version>1.29.0</onnxruntime.version>
+        <onnxruntime.artifactId>onnxruntime</onnxruntime.artifactId>
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
@@ -193,7 +194,7 @@
 
         <dependency>
             <groupId>com.microsoft.onnxruntime</groupId>
-            <artifactId>onnxruntime_gpu</artifactId>
+            <artifactId>${onnxruntime.artifactId}</artifactId>
             <version>${onnxruntime.version}</version>
         </dependency>
 
@@ -336,4 +337,13 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>onnx-gpu</id>
+            <properties>
+                <onnxruntime.artifactId>onnxruntime_gpu</onnxruntime.artifactId>
+            </properties>
+        </profile>
+    </profiles>
 </project>

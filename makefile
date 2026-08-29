@@ -16,6 +16,8 @@ AI_BENCHMARK_VISION_ITERATIONS ?= 10
 AI_BENCHMARK_JLAMA_WARMUP ?= 1
 AI_BENCHMARK_JLAMA_ITERATIONS ?= 3
 AI_BENCHMARK_JLAMA_MAX_TOKENS ?= 32
+ONNX_MAVEN_PROFILE ?=
+ONNX_RUNTIME_LABEL ?= CPU
 MAVEN_OPTS := $(strip $(MAVEN_OPTS) $(JAVA_PREVIEW_ARGS))
 
 ifeq ($(OS),Windows_NT)
@@ -27,11 +29,16 @@ else
     JAVA_CMD := java
 endif
 
-.PHONY: dev build run clean check-build ai-setup jlama-setup embedding-setup vision-setup ai-benchmark benchmark-embedding benchmark-vision benchmark-jlama
+.PHONY: dev dev-gpu build build-gpu run clean check-build ai-setup jlama-setup embedding-setup vision-setup ai-benchmark ai-benchmark-gpu benchmark-embedding benchmark-vision benchmark-jlama
 
+dev: AI_EMBEDDING_EXECUTION_PROVIDER=CPU
+dev: AI_VISION_EXECUTION_PROVIDER=CPU
 dev:
-	@echo "Starting server in DEV mode..."
-	$(MVN_CMD) -DskipTests -Dspring-boot.run.profiles=dev -Dspring-boot.run.optimizedLaunch=false spring-boot:run
+	@echo "Starting server in DEV mode with ONNX $(ONNX_RUNTIME_LABEL) runtime..."
+	$(MVN_CMD) $(ONNX_MAVEN_PROFILE) -DskipTests -Dspring-boot.run.profiles=dev -Dspring-boot.run.optimizedLaunch=false spring-boot:run
+
+dev-gpu:
+	$(MAKE) dev ONNX_MAVEN_PROFILE=-Ponnx-gpu ONNX_RUNTIME_LABEL=GPU AI_EMBEDDING_EXECUTION_PROVIDER=CUDA AI_VISION_EXECUTION_PROVIDER=CUDA
 
 ai-setup:
 ifneq ($(filter true TRUE 1 yes YES,$(POST_AI_MODERATION_ENABLED)),)
@@ -69,21 +76,29 @@ ai-benchmark:
 	$(MAKE) benchmark-jlama
 	@echo "AI benchmark reports are available in $(AI_BENCHMARK_OUTPUT_DIRECTORY)."
 
+ai-benchmark-gpu:
+	$(MAKE) ai-benchmark ONNX_MAVEN_PROFILE=-Ponnx-gpu AI_EMBEDDING_EXECUTION_PROVIDER=CUDA AI_VISION_EXECUTION_PROVIDER=CUDA
+
+benchmark-embedding: AI_EMBEDDING_EXECUTION_PROVIDER=CPU
 benchmark-embedding:
 	@echo "Benchmarking multilingual E5 in an isolated JVM..."
-	$(MVN_CMD) -DskipTests compile exec:java -Dexec.mainClass=$(AI_BENCHMARK_MAIN) "-Dexec.args=--capability=embedding --output=$(AI_BENCHMARK_OUTPUT_DIRECTORY)/embedding.json --warmup=$(AI_BENCHMARK_EMBEDDING_WARMUP) --iterations=$(AI_BENCHMARK_EMBEDDING_ITERATIONS)"
+	$(MVN_CMD) $(ONNX_MAVEN_PROFILE) -DskipTests compile exec:java -Dexec.mainClass=$(AI_BENCHMARK_MAIN) "-Dexec.args=--capability=embedding --output=$(AI_BENCHMARK_OUTPUT_DIRECTORY)/embedding.json --warmup=$(AI_BENCHMARK_EMBEDDING_WARMUP) --iterations=$(AI_BENCHMARK_EMBEDDING_ITERATIONS)"
 
+benchmark-vision: AI_VISION_EXECUTION_PROVIDER=CPU
 benchmark-vision:
 	@echo "Benchmarking CLIP ONNX in an isolated JVM..."
-	$(MVN_CMD) -DskipTests compile exec:java -Dexec.mainClass=$(AI_BENCHMARK_MAIN) "-Dexec.args=--capability=vision --output=$(AI_BENCHMARK_OUTPUT_DIRECTORY)/vision.json --warmup=$(AI_BENCHMARK_VISION_WARMUP) --iterations=$(AI_BENCHMARK_VISION_ITERATIONS)"
+	$(MVN_CMD) $(ONNX_MAVEN_PROFILE) -DskipTests compile exec:java -Dexec.mainClass=$(AI_BENCHMARK_MAIN) "-Dexec.args=--capability=vision --output=$(AI_BENCHMARK_OUTPUT_DIRECTORY)/vision.json --warmup=$(AI_BENCHMARK_VISION_WARMUP) --iterations=$(AI_BENCHMARK_VISION_ITERATIONS)"
 
 benchmark-jlama:
 	@echo "Benchmarking Jlama in an isolated JVM..."
 	$(MVN_CMD) -DskipTests compile exec:java -Dexec.mainClass=$(AI_BENCHMARK_MAIN) "-Dexec.args=--capability=jlama --output=$(AI_BENCHMARK_OUTPUT_DIRECTORY)/jlama.json --warmup=$(AI_BENCHMARK_JLAMA_WARMUP) --iterations=$(AI_BENCHMARK_JLAMA_ITERATIONS) --max-tokens=$(AI_BENCHMARK_JLAMA_MAX_TOKENS)"
 
 build:
-	@echo "Building executable JAR..."
-	$(MVN_CMD) -DskipTests clean package
+	@echo "Building executable JAR with ONNX $(ONNX_RUNTIME_LABEL) runtime..."
+	$(MVN_CMD) $(ONNX_MAVEN_PROFILE) -DskipTests clean package
+
+build-gpu:
+	$(MAKE) build ONNX_MAVEN_PROFILE=-Ponnx-gpu ONNX_RUNTIME_LABEL=GPU
 
 run: check-build
 	@echo "Running packaged application with APP_ENV=$(APP_ENV)..."

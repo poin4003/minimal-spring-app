@@ -56,16 +56,19 @@ Database H2 và media local được lưu trong thư mục `data/`.
 
 | Lệnh | Chức năng |
 | --- | --- |
-| `make dev` | Chạy trực tiếp bằng Spring Boot với profile `dev`. |
+| `make dev` | Chạy Spring Boot profile `dev` với ONNX CPU runtime. |
+| `make dev-gpu` | Chạy Spring Boot profile `dev` với ONNX CUDA runtime. |
 | `make ai-setup` | Setup các model AI có capability đang bật. |
 | `make jlama-setup` | Chủ động tải model Jlama, không phụ thuộc cờ enabled. |
 | `make embedding-setup` | Chủ động tải tokenizer và model multilingual E5 ONNX. |
 | `make vision-setup` | Chủ động tải và kiểm tra model CLIP ONNX. |
-| `make ai-benchmark` | Chạy ba benchmark AI trong các JVM tách biệt. |
+| `make ai-benchmark` | Chạy ba benchmark AI, ONNX dùng CPU runtime. |
+| `make ai-benchmark-gpu` | Chạy ba benchmark AI, ONNX dùng CUDA runtime. |
 | `make benchmark-embedding` | Chỉ benchmark multilingual E5. |
 | `make benchmark-vision` | Chỉ benchmark CLIP ONNX. |
 | `make benchmark-jlama` | Chỉ benchmark Jlama generation. |
-| `make build` | Clean và đóng gói executable JAR vào `target/`. Lệnh này bỏ qua test. |
+| `make build` | Đóng gói JAR với ONNX CPU runtime. Lệnh này bỏ qua test. |
+| `make build-gpu` | Đóng gói JAR với ONNX CUDA runtime. Lệnh này bỏ qua test. |
 | `make run` | Chạy JAR đã build với profile trong `APP_ENV`, mặc định là `dev`. |
 | `make clean` | Xóa Maven build output trong `target/`. |
 | `make check-build` | Kiểm tra executable JAR đã tồn tại trước khi chạy. |
@@ -76,6 +79,19 @@ Database H2 và media local được lưu trong thư mục `data/`.
 make build
 make run
 ```
+
+Máy có NVIDIA CUDA có thể build biến thể GPU rồi chạy cùng lệnh `make run`:
+
+```bash
+make build-gpu
+make run
+```
+
+`make build` dùng artifact `onnxruntime` gọn hơn và chạy được trên mọi máy hỗ
+trợ ONNX Runtime. `make build-gpu` kích hoạt Maven profile `onnx-gpu`, thay nó
+bằng `onnxruntime_gpu`; dependency này lớn hơn đáng kể vì chứa native CUDA
+runtime. Hai lệnh tạo cùng tên JAR, nên bản build sau cùng là bản được `make run`
+sử dụng.
 
 Chạy profile production trên Linux:
 
@@ -105,7 +121,8 @@ make ai-setup
 setup khi `AI_EMBEDDING_ENABLED=true`, sau đó gọi vision setup khi
 `AI_VISION_ENABLED=true`. Có thể chủ động setup từng model bằng
 `make jlama-setup`, `make embedding-setup` hoặc `make vision-setup` mà không cần
-bật capability.
+bật capability. Các lệnh setup luôn dùng ONNX CPU runtime để máy không có CUDA
+vẫn tải và kiểm tra model được; model đã tải dùng chung cho cả bản CPU và GPU.
 
 Các model được tải vào thư mục tương ứng và không được commit vào Git. Với
 repository riêng tư, đặt thêm `HF_TOKEN` trong môi trường chạy lệnh. Vision
@@ -122,6 +139,8 @@ trị `CPU`, `CUDA` hoặc `AUTO`. CUDA dùng device và giới hạn VRAM từ
 `AI_ONNX_CUDA_DEVICE_ID` và `AI_ONNX_CUDA_MEMORY_LIMIT_MB`. Khi
 `AI_ONNX_FALLBACK_TO_CPU=true`, runtime tự quay về CPU nếu máy không có CUDA
 provider hoặc thiếu CUDA/cuDNN. Dự án không tự cài CUDA toolkit hay cuDNN.
+`make dev` chủ động đặt hai provider về `CPU`; `make dev-gpu` đặt chúng thành
+`CUDA` và kích hoạt đúng Maven profile GPU.
 
 ## Benchmark AI
 
@@ -129,6 +148,12 @@ Setup các model cần đo trước, sau đó chạy toàn bộ benchmark:
 
 ```bash
 make ai-benchmark AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev
+```
+
+Để đo ONNX bằng CUDA trên máy đã cài CUDA/cuDNN:
+
+```bash
+make ai-benchmark-gpu AI_BENCHMARK_OUTPUT_DIRECTORY=data/benchmarks/dev-gpu
 ```
 
 Trên NUC dùng cùng source và lệnh, đổi output thành `data/benchmarks/nuc`.
