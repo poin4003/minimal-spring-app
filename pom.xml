@@ -37,6 +37,7 @@
         <djl.version>0.36.0</djl.version>
         <onnxruntime.version>1.29.0</onnxruntime.version>
         <onnxruntime.artifactId>onnxruntime</onnxruntime.artifactId>
+        <lucene.version>10.5.1</lucene.version>
         
         <!-- Plugin Versions -->
         <aspectj-maven-plugin.version>1.16.0</aspectj-maven-plugin.version>
@@ -196,6 +197,12 @@
             <groupId>com.microsoft.onnxruntime</groupId>
             <artifactId>${onnxruntime.artifactId}</artifactId>
             <version>${onnxruntime.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <version>${lucene.version}</version>
         </dependency>
 
         <dependency>

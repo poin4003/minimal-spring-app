@@ -14,6 +14,7 @@ duyệt bài viết thủ công hoặc bằng AI local.
 - FFmpeg/FFprobe cho image, audio và video pipeline
 - Jlama cho AI moderation local tùy chọn, tách khỏi moderation core qua internal client
 - ONNX Runtime và multilingual E5 cho text embedding local tùy chọn
+- Apache Lucene cho semantic vector index local tùy chọn
 
 ## Yêu cầu
 
@@ -131,7 +132,15 @@ inference rồi ghi `.ready.json` vào thư mục revision.
 
 Embedding setup tải cả `multilingual-e5-small` và tokenizer đã pin checksum.
 Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage; feature
-này chưa tự lưu vector hoặc nối vào search/RAG.
+này chưa tự gắn embedding vào lifecycle của post.
+
+Lucene search infrastructure được bật bằng `AI_SEARCH_ENABLED=true` và lưu
+index dưới `AI_SEARCH_INDEX_DIRECTORY`. Runtime chỉ chuyển sang `READY` khi
+embedding runtime cũng đã sẵn sàng. Index được khóa theo schema version, model
+version và vector dimension; metadata không khớp sẽ tạo lại projection rỗng để
+tránh trộn vector từ các model khác nhau. Đợt hiện tại mới cung cấp internal
+upsert/delete/KNN search contract và health state, chưa enqueue post lifecycle,
+backfill dữ liệu, thêm route public hoặc UI tìm kiếm.
 
 ONNX có thể chọn execution provider riêng cho từng capability bằng
 `AI_EMBEDDING_EXECUTION_PROVIDER` và `AI_VISION_EXECUTION_PROVIDER`, với các giá

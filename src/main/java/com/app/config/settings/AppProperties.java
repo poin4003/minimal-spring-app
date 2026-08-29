@@ -59,6 +59,9 @@ public class AppProperties {
         private final EmbeddingSettings embedding = new EmbeddingSettings();
 
         @Valid
+        private final SearchSettings search = new SearchSettings();
+
+        @Valid
         private final VisionSettings vision = new VisionSettings();
     }
 
@@ -131,6 +134,29 @@ public class AppProperties {
     }
 
     public static class EmbeddingMachine extends OnnxMachine {
+    }
+
+    @Data
+    public static class SearchSettings {
+        private boolean enabled;
+
+        @NotBlank
+        private String indexDirectory = "./data/search/post-index";
+
+        @Positive
+        private int defaultLimit = 10;
+
+        @Positive
+        @Max(100)
+        private int maxLimit = 50;
+
+        @Positive
+        private int reconciliationBatchSize = 100;
+
+        @AssertTrue(message = "AI search default limit must not exceed its maximum limit.")
+        public boolean isDefaultLimitValid() {
+            return defaultLimit <= maxLimit;
+        }
     }
 
     @Data

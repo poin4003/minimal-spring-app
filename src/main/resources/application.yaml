@@ -29,6 +29,12 @@ app:
                 threads: ${AI_EMBEDDING_THREADS:4}
                 max-concurrency: ${AI_EMBEDDING_MAX_CONCURRENCY:1}
                 execution-provider: ${AI_EMBEDDING_EXECUTION_PROVIDER:CPU}
+        search:
+            enabled: ${AI_SEARCH_ENABLED:false}
+            index-directory: ${AI_SEARCH_INDEX_DIRECTORY:./data/search/post-index}
+            default-limit: ${AI_SEARCH_DEFAULT_LIMIT:10}
+            max-limit: ${AI_SEARCH_MAX_LIMIT:50}
+            reconciliation-batch-size: ${AI_SEARCH_RECONCILIATION_BATCH_SIZE:100}
         vision:
             enabled: ${AI_VISION_ENABLED:false}
             model:
