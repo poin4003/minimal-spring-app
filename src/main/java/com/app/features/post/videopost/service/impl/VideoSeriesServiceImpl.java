@@ -1,9 +1,12 @@
 package com.app.features.post.videopost.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,11 @@ import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.service.MediaService;
 import com.app.features.post.enums.PostLifecycleStatus;
+import com.app.features.post.event.PostArchivedEvent;
+import com.app.features.post.event.PostDeletedEvent;
+import com.app.features.post.event.PostMutationEvent;
+import com.app.features.post.event.PostRestoredFromArchiveEvent;
+import com.app.features.post.event.PostRestoredFromDeletionEvent;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.videopost.entity.VideoSeriesEntity;
 import com.app.features.post.videopost.enums.VideoSeriesCascadeMode;
@@ -47,6 +55,7 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
     private final VideoSeriesRepository videoSeriesRepo;
     private final VideoSeriesItemRepository videoSeriesItemRepo;
     private final VideoSeriesResultMapper videoSeriesMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -104,13 +113,20 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
         LocalDateTime archivedAt = LocalDateTime.now();
         if (cascadeMode.includesVideos()) {
             requireVideosExclusiveToSeries(seriesId);
-            videoSeriesItemRepo.archiveVideoPostsBySeriesId(
+            List<UUID> affectedPostIds = findSeriesPostIds(
+                    seriesId,
+                    ownerId);
+            int updatedPosts = videoSeriesItemRepo.archiveVideoPostsBySeriesId(
                     seriesId,
                     ownerId,
                     PostLifecycleStatus.ACTIVE,
                     PostLifecycleStatus.ARCHIVED,
                     PostModerationStatus.PUBLISHED,
                     archivedAt);
+            publishPostEvents(
+                    affectedPostIds,
+                    updatedPosts,
+                    postId -> new PostArchivedEvent(postId));
         }
 
         series.setLifecycleStatus(VideoSeriesLifecycleStatus.ARCHIVED);
@@ -132,14 +148,22 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
 
         LocalDateTime archivedAt = series.getArchivedAt();
         if (cascadeMode.includesVideos()) {
-            videoSeriesItemRepo.restoreArchivedVideoPostsBySeriesId(
+            List<UUID> affectedPostIds = findSeriesPostIds(
                     seriesId,
-                    ownerId,
-                    PostLifecycleStatus.ARCHIVED,
-                    PostLifecycleStatus.ACTIVE,
-                    PostModerationStatus.PUBLISHED,
-                    archivedAt,
-                    LocalDateTime.now());
+                    ownerId);
+            int updatedPosts = videoSeriesItemRepo
+                    .restoreArchivedVideoPostsBySeriesId(
+                            seriesId,
+                            ownerId,
+                            PostLifecycleStatus.ARCHIVED,
+                            PostLifecycleStatus.ACTIVE,
+                            PostModerationStatus.PUBLISHED,
+                            archivedAt,
+                            LocalDateTime.now());
+            publishPostEvents(
+                    affectedPostIds,
+                    updatedPosts,
+                    postId -> new PostRestoredFromArchiveEvent(postId));
         }
 
         series.setLifecycleStatus(VideoSeriesLifecycleStatus.ACTIVE);
@@ -165,11 +189,19 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
         LocalDateTime deletedAt = LocalDateTime.now();
         if (cascadeMode.includesVideos()) {
             requireVideosExclusiveToSeries(seriesId);
-            videoSeriesItemRepo.softDeleteVideoPostsBySeriesId(
+            List<UUID> affectedPostIds = findSeriesPostIds(
                     seriesId,
-                    ownerId,
-                    PostLifecycleStatus.DELETED,
-                    deletedAt);
+                    ownerId);
+            int updatedPosts = videoSeriesItemRepo
+                    .softDeleteVideoPostsBySeriesId(
+                            seriesId,
+                            ownerId,
+                            PostLifecycleStatus.DELETED,
+                            deletedAt);
+            publishPostEvents(
+                    affectedPostIds,
+                    updatedPosts,
+                    postId -> new PostDeletedEvent(postId));
         }
 
         series.setLifecycleStatus(VideoSeriesLifecycleStatus.DELETED);
@@ -192,13 +224,21 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
 
         LocalDateTime deletedAt = series.getDeletedAt();
         if (cascadeMode.includesVideos()) {
-            videoSeriesItemRepo.restoreDeletedVideoPostsBySeriesId(
+            List<UUID> affectedPostIds = findSeriesPostIds(
                     seriesId,
-                    ownerId,
-                    PostLifecycleStatus.DELETED,
-                    PostLifecycleStatus.DRAFT,
-                    deletedAt,
-                    LocalDateTime.now());
+                    ownerId);
+            int updatedPosts = videoSeriesItemRepo
+                    .restoreDeletedVideoPostsBySeriesId(
+                            seriesId,
+                            ownerId,
+                            PostLifecycleStatus.DELETED,
+                            PostLifecycleStatus.DRAFT,
+                            deletedAt,
+                            LocalDateTime.now());
+            publishPostEvents(
+                    affectedPostIds,
+                    updatedPosts,
+                    postId -> new PostRestoredFromDeletionEvent(postId));
         }
 
         series.setLifecycleStatus(VideoSeriesLifecycleStatus.ACTIVE);
@@ -313,6 +353,25 @@ public class VideoSeriesServiceImpl implements VideoSeriesService {
                     "error.videoSeries.containsSharedVideos",
                     seriesId);
         }
+    }
+
+    private List<UUID> findSeriesPostIds(
+            UUID seriesId,
+            UUID ownerId) {
+        return videoSeriesItemRepo.findVideoPostIdsBySeriesIdAndOwnerId(
+                seriesId,
+                ownerId);
+    }
+
+    private void publishPostEvents(
+            List<UUID> postIds,
+            int updatedPosts,
+            Function<UUID, PostMutationEvent> eventFactory) {
+        if (updatedPosts == 0) {
+            return;
+        }
+        postIds.forEach(postId -> eventPublisher.publishEvent(
+                eventFactory.apply(postId)));
     }
 
     private VideoSeriesEntity requireOwnedSeries(

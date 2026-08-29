@@ -131,16 +131,20 @@ setup pin model theo commit, kiểm tra SHA-256 và ONNX contract, chạy smoke
 inference rồi ghi `.ready.json` vào thư mục revision.
 
 Embedding setup tải cả `multilingual-e5-small` và tokenizer đã pin checksum.
-Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage; feature
-này chưa tự gắn embedding vào lifecycle của post.
+Runtime cung cấp vector 384 chiều đã L2-normalize cho query và passage.
 
 Lucene search infrastructure được bật bằng `AI_SEARCH_ENABLED=true` và lưu
 index dưới `AI_SEARCH_INDEX_DIRECTORY`. Runtime chỉ chuyển sang `READY` khi
 embedding runtime cũng đã sẵn sàng. Index được khóa theo schema version, model
 version và vector dimension; metadata không khớp sẽ tạo lại projection rỗng để
-tránh trộn vector từ các model khác nhau. Đợt hiện tại mới cung cấp internal
-upsert/delete/KNN search contract và health state, chưa enqueue post lifecycle,
-backfill dữ liệu, thêm route public hoặc UI tìm kiếm.
+tránh trộn vector từ các model khác nhau. Các factual event như
+`PostPublishedEvent` và `PostArchivedEvent` cùng implement `PostMutationEvent`;
+search handler chỉ enqueue sau khi transaction commit. JobRunr đọc lại DB rồi
+index các post `ACTIVE + PUBLISHED`, hoặc xóa document nếu post không còn public.
+Nội dung index
+là standard content, short caption, hoặc video title + description. Bài chỉ có
+media chưa được index cho đến khi vision label được tích hợp. Recovery/backfill,
+route public và UI tìm kiếm chưa được thêm ở đợt này.
 
 ONNX có thể chọn execution provider riêng cho từng capability bằng
 `AI_EMBEDDING_EXECUTION_PROVIDER` và `AI_VISION_EXECUTION_PROVIDER`, với các giá

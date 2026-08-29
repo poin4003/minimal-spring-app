@@ -4,12 +4,15 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.features.post.entity.PostEntity;
+import com.app.features.post.event.PostPublishedEvent;
+import com.app.features.post.event.PostRejectedEvent;
 import com.app.features.post.moderation.enums.PostModerationSource;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.moderation.service.PostModerationCommandService;
@@ -29,6 +32,7 @@ public class PostModerationCommandServiceImpl
     private final UserService userSvc;
     private final PostService postSvc;
     private final PostMediaService postMediaSvc;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -107,6 +111,7 @@ public class PostModerationCommandServiceImpl
         post.setModeratedBy(moderator);
         post.setModeratedAt(moderatedAt);
         post.setRejectionReason(null);
+        eventPublisher.publishEvent(new PostPublishedEvent(post.getId()));
     }
 
     private void applyRejection(
@@ -120,5 +125,6 @@ public class PostModerationCommandServiceImpl
         post.setModeratedBy(moderator);
         post.setModeratedAt(LocalDateTime.now());
         post.setRejectionReason(reason.trim());
+        eventPublisher.publishEvent(new PostRejectedEvent(post.getId()));
     }
 }

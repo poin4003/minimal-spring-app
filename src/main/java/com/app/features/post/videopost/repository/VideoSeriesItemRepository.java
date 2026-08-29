@@ -122,6 +122,16 @@ public interface VideoSeriesItemRepository
     long countVideoLinksOutsideSeries(
             @Param("seriesId") UUID seriesId);
 
+    @Query("""
+            SELECT DISTINCT item.videoPost.postId
+            FROM VideoSeriesItemEntity item
+            WHERE item.series.id = :seriesId
+              AND item.videoPost.post.author.id = :ownerId
+            """)
+    List<UUID> findVideoPostIdsBySeriesIdAndOwnerId(
+            @Param("seriesId") UUID seriesId,
+            @Param("ownerId") UUID ownerId);
+
     @Modifying(flushAutomatically = true)
     @Query("""
             UPDATE PostEntity post

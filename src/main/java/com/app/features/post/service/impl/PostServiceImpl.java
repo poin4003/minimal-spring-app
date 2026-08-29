@@ -15,6 +15,8 @@ import com.app.core.exception.ExceptionFactory;
 import com.app.features.post.entity.PostEntity;
 import com.app.features.post.enums.PostLifecycleStatus;
 import com.app.features.post.enums.PostType;
+import com.app.features.post.event.PostMovedToDraftEvent;
+import com.app.features.post.event.PostPermanentlyDeletedEvent;
 import com.app.features.post.event.PostSubmittedForReviewEvent;
 import com.app.features.post.moderation.enums.PostModerationStatus;
 import com.app.features.post.repository.PostRepository;
@@ -71,8 +73,14 @@ public class PostServiceImpl implements PostService {
                     post.getId());
         }
 
+        boolean movedToDraft = post.getLifecycleStatus()
+                != PostLifecycleStatus.DRAFT;
         post.setLifecycleStatus(PostLifecycleStatus.DRAFT);
         clearModeration(post);
+        if (movedToDraft) {
+            eventPublisher.publishEvent(
+                    new PostMovedToDraftEvent(post.getId()));
+        }
 
         return post;
     }
@@ -153,7 +161,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public void deletePost(PostEntity post) {
+        UUID postId = post.getId();
         postRepo.delete(post);
+        eventPublisher.publishEvent(
+                new PostPermanentlyDeletedEvent(postId));
     }
 
     private void clearModeration(PostEntity post) {
