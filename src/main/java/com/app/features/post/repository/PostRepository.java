@@ -1,6 +1,8 @@
 package com.app.features.post.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,6 +35,11 @@ public interface PostRepository extends JpaRepository<PostEntity, UUID>, JpaSpec
             PostEntity_.AUTHOR,
             PostEntity_.MODERATED_BY })
     Optional<PostEntity> findForUpdateById(UUID postId);
+
+    List<PostEntity> findAllByIdInAndLifecycleStatusAndModerationStatus(
+            Collection<UUID> postIds,
+            PostLifecycleStatus lifecycleStatus,
+            PostModerationStatus moderationStatus);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
