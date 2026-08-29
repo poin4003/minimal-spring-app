@@ -20,7 +20,7 @@ public class PostSearchSyncJob {
 
     private final PostSearchSyncService postSearchSyncSvc;
 
-    @Job(name = "Synchronize post with semantic search index", retries = 3)
+    @Job(name = "Synchronize post with semantic search index", retries = 0)
     public void execute(UUID postId) {
         postSearchSyncSvc.synchronize(postId);
     }

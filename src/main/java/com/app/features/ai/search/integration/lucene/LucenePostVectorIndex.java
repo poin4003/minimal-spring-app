@@ -62,10 +62,11 @@ import lombok.extern.slf4j.Slf4j;
 public class LucenePostVectorIndex
         implements PostVectorIndex, AiSearchHealthClient {
 
-    private static final String INDEX_SCHEMA_VERSION = "1";
+    private static final String INDEX_SCHEMA_VERSION = "2";
     private static final String COMMIT_SCHEMA_VERSION = "schema_version";
     private static final String COMMIT_MODEL_VERSION = "model_version";
     private static final String COMMIT_VECTOR_DIMENSION = "vector_dimension";
+    private static final String COMMIT_INDEX_GENERATION = "index_generation";
     private static final String FIELD_POST_ID = "post_id";
     private static final String FIELD_POST_TYPE = "post_type";
     private static final String FIELD_MODEL_VERSION = "model_version";
@@ -127,7 +128,8 @@ public class LucenePostVectorIndex
                     writerConfig);
             initializedWriter.setLiveCommitData(commitMetadata(
                     modelVersion,
-                    vectorDimension).entrySet());
+                    vectorDimension,
+                    openPlan.indexGeneration()).entrySet());
             initializedWriter.commit();
             initializedSearcherManager = new SearcherManager(
                     initializedWriter,
@@ -139,7 +141,8 @@ public class LucenePostVectorIndex
                     initializedSearcherManager,
                     indexDirectory,
                     modelVersion,
-                    vectorDimension);
+                    vectorDimension,
+                    openPlan.indexGeneration());
             lifecycleLock.writeLock().lock();
             try {
                 resources = initializedResources;
@@ -269,6 +272,12 @@ public class LucenePostVectorIndex
     }
 
     @Override
+    public UUID getIndexGeneration() {
+        RuntimeResources currentResources = requireResources();
+        return currentResources.indexGeneration();
+    }
+
+    @Override
     public String getIndexDirectory() {
         RuntimeResources currentResources = resources;
         return currentResources == null
@@ -367,10 +376,11 @@ public class LucenePostVectorIndex
         if (!DirectoryReader.indexExists(directory)) {
             return new IndexOpenPlan(
                     IndexWriterConfig.OpenMode.CREATE_OR_APPEND,
-                    false);
+                    false,
+                    UUID.randomUUID());
         }
 
-        Map<String, String> expectedMetadata = commitMetadata(
+        Map<String, String> expectedMetadata = compatibilityMetadata(
                 modelVersion,
                 vectorDimension);
         try (DirectoryReader reader = DirectoryReader.open(directory)) {
@@ -380,17 +390,43 @@ public class LucenePostVectorIndex
             boolean matches = expectedMetadata.entrySet().stream()
                     .allMatch(entry -> entry.getValue().equals(
                             currentMetadata.get(entry.getKey())));
-            return matches
-                    ? new IndexOpenPlan(
+            String currentGeneration = currentMetadata.get(
+                    COMMIT_INDEX_GENERATION);
+            if (matches && currentGeneration != null) {
+                try {
+                    return new IndexOpenPlan(
                             IndexWriterConfig.OpenMode.CREATE_OR_APPEND,
-                            false)
-                    : new IndexOpenPlan(
-                            IndexWriterConfig.OpenMode.CREATE,
-                            true);
+                            false,
+                            UUID.fromString(currentGeneration));
+                } catch (IllegalArgumentException exception) {
+                    log.warn(
+                            "Lucene post index contains an invalid generation [{}].",
+                            currentGeneration);
+                }
+            }
+            return new IndexOpenPlan(
+                    IndexWriterConfig.OpenMode.CREATE,
+                    true,
+                    UUID.randomUUID());
         }
     }
 
     private Map<String, String> commitMetadata(
+            String modelVersion,
+            int vectorDimension,
+            UUID indexGeneration) {
+        return Map.of(
+                COMMIT_SCHEMA_VERSION,
+                INDEX_SCHEMA_VERSION,
+                COMMIT_MODEL_VERSION,
+                modelVersion,
+                COMMIT_VECTOR_DIMENSION,
+                Integer.toString(vectorDimension),
+                COMMIT_INDEX_GENERATION,
+                indexGeneration.toString());
+    }
+
+    private Map<String, String> compatibilityMetadata(
             String modelVersion,
             int vectorDimension) {
         return Map.of(
@@ -462,7 +498,8 @@ public class LucenePostVectorIndex
 
     private record IndexOpenPlan(
             IndexWriterConfig.OpenMode openMode,
-            boolean recreate) {
+            boolean recreate,
+            UUID indexGeneration) {
     }
 
     private record RuntimeResources(
@@ -471,6 +508,7 @@ public class LucenePostVectorIndex
             SearcherManager searcherManager,
             Path indexDirectory,
             String modelVersion,
-            int vectorDimension) {
+            int vectorDimension,
+            UUID indexGeneration) {
     }
 }

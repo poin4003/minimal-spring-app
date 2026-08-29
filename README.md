@@ -143,8 +143,14 @@ search handler chỉ enqueue sau khi transaction commit. JobRunr đọc lại DB
 index các post `ACTIVE + PUBLISHED`, hoặc xóa document nếu post không còn public.
 Nội dung index
 là standard content, short caption, hoặc video title + description. Bài chỉ có
-media chưa được index cho đến khi vision label được tích hợp. Recovery/backfill,
-route public và UI tìm kiếm chưa được thêm ở đợt này.
+media chưa được index cho đến khi vision label được tích hợp. Recurring job
+`RECONCILE_POST_SEARCH_INDEX` chạy mỗi 15 phút và chỉ xử lý tối đa một batch
+state `PENDING`, `FAILED`, lease hết hạn hoặc sai Lucene generation. Phần còn
+lại của batch được dùng để backfill post public chưa có state; job không quét
+toàn bộ DB hay toàn bộ Lucene index. Chi tiết lifecycle và định hướng pgvector
+khi chuyển sang PostgreSQL nằm trong
+[AI Search Infrastructure](docs/guides/ai-search-infrastructure.md). Route public
+và UI tìm kiếm chưa được thêm ở đợt này.
 
 ONNX có thể chọn execution provider riêng cho từng capability bằng
 `AI_EMBEDDING_EXECUTION_PROVIDER` và `AI_VISION_EXECUTION_PROVIDER`, với các giá

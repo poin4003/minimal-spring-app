@@ -15,6 +15,10 @@ public interface PostVectorIndex {
 
     void delete(@NotNull UUID postId);
 
+    String getModelVersion();
+
+    UUID getIndexGeneration();
+
     List<PostVectorSearchHit> search(
             @NotNull float[] queryVector,
             @Positive int limit);

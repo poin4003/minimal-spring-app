@@ -151,6 +151,7 @@ public class AppProperties {
         private int maxLimit = 50;
 
         @Positive
+        @Max(1000)
         private int reconciliationBatchSize = 100;
 
         @AssertTrue(message = "AI search default limit must not exceed its maximum limit.")
