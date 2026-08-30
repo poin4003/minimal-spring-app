@@ -25,6 +25,7 @@ app:
                 timeout: ${AI_GENERATION_TIMEOUT:120s}
         rag:
             retrieval-limit: ${AI_RAG_RETRIEVAL_LIMIT:3}
+            max-context-characters: ${AI_RAG_MAX_CONTEXT_CHARACTERS:6000}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:

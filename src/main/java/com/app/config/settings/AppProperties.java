@@ -111,6 +111,10 @@ public class AppProperties {
         @Positive
         @Max(10)
         private int retrievalLimit = 3;
+
+        @Min(100)
+        @Max(50000)
+        private int maxContextCharacters = 6000;
     }
 
     @Data
