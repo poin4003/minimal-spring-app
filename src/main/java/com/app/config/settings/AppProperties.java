@@ -60,6 +60,9 @@ public class AppProperties {
                 new AiGenerationSettings();
 
         @Valid
+        private final RagSettings rag = new RagSettings();
+
+        @Valid
         private final EmbeddingSettings embedding = new EmbeddingSettings();
 
         @Valid
@@ -101,6 +104,13 @@ public class AppProperties {
                     && !timeout.isZero()
                     && !timeout.isNegative();
         }
+    }
+
+    @Data
+    public static class RagSettings {
+        @Positive
+        @Max(10)
+        private int retrievalLimit = 3;
     }
 
     @Data
