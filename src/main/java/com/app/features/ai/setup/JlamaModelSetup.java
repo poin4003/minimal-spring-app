@@ -11,9 +11,9 @@ import com.github.tjake.jlama.util.Downloader;
 public final class JlamaModelSetup {
 
     private static final String MODEL_ID_ENV =
-            "POST_AI_MODERATION_MODEL_ID";
+            "AI_GENERATION_MODEL_ID";
     private static final String MODEL_DIRECTORY_ENV =
-            "POST_AI_MODERATION_MODEL_DIRECTORY";
+            "AI_GENERATION_MODEL_DIRECTORY";
     private static final String DEFAULT_MODEL_ID =
             "tjake/Llama-3.2-1B-Instruct-JQ4";
     private static final String DEFAULT_MODEL_DIRECTORY =

@@ -1,6 +1,6 @@
-package com.app.features.ai.schema.model;
+package com.app.features.ai.generation.schema.model;
 
-public record JlamaGenerationResult(
+public record AiTextGenerationResult(
         String responseText,
         int promptTokens,
         int generatedTokens,

@@ -10,10 +10,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import com.app.config.settings.AppProperties;
 import com.app.features.ai.exceptions.JlamaRuntimeException;
-import com.app.features.ai.schema.model.JlamaGenerationResult;
+import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
+import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
+import com.app.features.ai.generation.service.AiTextGenerationClient;
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.ModelSupport;
 import com.github.tjake.jlama.model.functions.Generator;
@@ -27,13 +30,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
+@Validated
 @ConditionalOnProperty(
-        prefix = "app.post.ai-moderation",
+        prefix = "app.ai.generation",
         name = "enabled",
         havingValue = "true")
-public class JlamaRuntime {
+public class JlamaRuntime implements AiTextGenerationClient {
 
-    private final AppProperties.AiModerationMachine machine;
+    private final AppProperties.AiGenerationMachine machine;
     private final Semaphore inferencePermits;
     private final ReentrantReadWriteLock lifecycleLock =
             new ReentrantReadWriteLock();
@@ -41,8 +45,8 @@ public class JlamaRuntime {
     private volatile AbstractModel model;
 
     public JlamaRuntime(AppProperties appProperties) {
-        this.machine = appProperties.getPost()
-                .getAiModeration()
+        this.machine = appProperties.getAi()
+                .getGeneration()
                 .getMachine();
         this.inferencePermits = new Semaphore(
                 machine.getMaxConcurrency(),
@@ -75,8 +79,7 @@ public class JlamaRuntime {
             model = null;
             log.error(
                     "Unable to initialize Jlama model [{}]. "
-                            + "AI remains unavailable and manual moderation "
-                            + "can continue.",
+                            + "AI text generation remains unavailable.",
                     machine.getModelId(),
                     exception);
         } finally {
@@ -84,31 +87,19 @@ public class JlamaRuntime {
         }
     }
 
+    @Override
     public boolean isReady() {
         return model != null;
     }
 
+    @Override
     public String getModelId() {
         return machine.getModelId();
     }
 
-    public String generate(
-            String systemPrompt,
-            String userPrompt,
-            float temperature,
-            int maxTokens) {
-        return generateWithMetrics(
-                systemPrompt,
-                userPrompt,
-                temperature,
-                maxTokens).responseText();
-    }
-
-    public JlamaGenerationResult generateWithMetrics(
-            String systemPrompt,
-            String userPrompt,
-            float temperature,
-            int maxTokens) {
+    @Override
+    public AiTextGenerationResult generate(
+            AiTextGenerationRequest request) {
         acquireInferencePermit();
         lifecycleLock.readLock().lock();
 
@@ -121,16 +112,16 @@ public class JlamaRuntime {
 
             PromptContext promptContext = buildPromptContext(
                     currentModel,
-                    systemPrompt,
-                    userPrompt);
+                    request.systemPrompt(),
+                    request.userPrompt());
             int totalTokenLimit = resolveTotalTokenLimit(
                     currentModel,
                     promptContext,
-                    maxTokens);
+                    request.maxOutputTokens());
             Generator.Response response = currentModel.generate(
                     UUID.randomUUID(),
                     promptContext,
-                    temperature,
+                    request.temperature(),
                     totalTokenLimit);
 
             log.info(
@@ -143,7 +134,7 @@ public class JlamaRuntime {
                     response.generateTimeMs,
                     response.finishReason);
 
-            return new JlamaGenerationResult(
+            return new AiTextGenerationResult(
                     response.responseText,
                     response.promptTokens,
                     response.generatedTokens,

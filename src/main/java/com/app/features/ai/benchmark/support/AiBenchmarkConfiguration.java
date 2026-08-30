@@ -115,33 +115,29 @@ public final class AiBenchmarkConfiguration {
                 "AI_VISION_EXECUTION_PROVIDER",
                 value -> visionMachine.setExecutionProvider(value));
 
-        AppProperties.AiModerationMachine jlamaMachine = properties.getPost()
-                .getAiModeration()
+        AppProperties.AiGenerationMachine jlamaMachine = properties.getAi()
+                .getGeneration()
                 .getMachine();
         apply(
                 environment,
-                "POST_AI_MODERATION_MODEL_ID",
-                jlamaMachine::setModelId);
+                "AI_GENERATION_MODEL_ID",
+                value -> jlamaMachine.setModelId(value));
         apply(
                 environment,
-                "POST_AI_MODERATION_MODEL_DIRECTORY",
-                jlamaMachine::setModelDirectory);
+                "AI_GENERATION_MODEL_DIRECTORY",
+                value -> jlamaMachine.setModelDirectory(value));
         applyPositiveInt(
                 environment,
-                "POST_AI_MODERATION_THREADS",
-                jlamaMachine::setThreads);
+                "AI_GENERATION_THREADS",
+                value -> jlamaMachine.setThreads(value));
         applyPositiveInt(
                 environment,
-                "POST_AI_MODERATION_MAX_CONCURRENCY",
-                jlamaMachine::setMaxConcurrency);
-        applyPositiveInt(
-                environment,
-                "POST_AI_MODERATION_MAX_TOKENS",
-                jlamaMachine::setMaxTokens);
+                "AI_GENERATION_MAX_CONCURRENCY",
+                value -> jlamaMachine.setMaxConcurrency(value));
         applyDuration(
                 environment,
-                "POST_AI_MODERATION_TIMEOUT",
-                jlamaMachine::setTimeout);
+                "AI_GENERATION_TIMEOUT",
+                value -> jlamaMachine.setTimeout(value));
         return properties;
     }
 

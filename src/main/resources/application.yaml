@@ -15,6 +15,14 @@ app:
             cuda:
                 device-id: ${AI_ONNX_CUDA_DEVICE_ID:0}
                 memory-limit-mb: ${AI_ONNX_CUDA_MEMORY_LIMIT_MB:2048}
+        generation:
+            enabled: ${AI_GENERATION_ENABLED:false}
+            machine:
+                model-id: ${AI_GENERATION_MODEL_ID:tjake/Llama-3.2-1B-Instruct-JQ4}
+                model-directory: ${AI_GENERATION_MODEL_DIRECTORY:./data/ai-models/jlama}
+                threads: ${AI_GENERATION_THREADS:4}
+                max-concurrency: ${AI_GENERATION_MAX_CONCURRENCY:1}
+                timeout: ${AI_GENERATION_TIMEOUT:120s}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:
@@ -197,11 +205,6 @@ app:
             enabled: ${POST_AI_MODERATION_ENABLED:false}
             machine:
                 media-base-url: ${POST_AI_MODERATION_MEDIA_BASE_URL:http://127.0.0.1:8080}
-                model-id: ${POST_AI_MODERATION_MODEL_ID:tjake/Llama-3.2-1B-Instruct-JQ4}
-                model-directory: ${POST_AI_MODERATION_MODEL_DIRECTORY:./data/ai-models/jlama}
-                threads: ${POST_AI_MODERATION_THREADS:4}
-                max-concurrency: ${POST_AI_MODERATION_MAX_CONCURRENCY:1}
-                timeout: ${POST_AI_MODERATION_TIMEOUT:120s}
                 max-images: ${POST_AI_MODERATION_MAX_IMAGES:1}
                 max-tokens: ${POST_AI_MODERATION_MAX_TOKENS:128}
     security:

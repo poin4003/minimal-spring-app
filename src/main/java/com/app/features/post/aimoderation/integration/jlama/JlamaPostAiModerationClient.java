@@ -1,12 +1,14 @@
 package com.app.features.post.aimoderation.integration.jlama;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.app.config.settings.AppProperties;
-import com.app.features.ai.exceptions.JlamaRuntimeException;
-import com.app.features.ai.runtime.JlamaRuntime;
+import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
+import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
+import com.app.features.ai.generation.service.AiTextGenerationClient;
 import com.app.features.post.aimoderation.enums.PostAiModerationOutcome;
 import com.app.features.post.aimoderation.exceptions.PostAiModerationClientException;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationClientResult;
@@ -43,50 +45,53 @@ public class JlamaPostAiModerationClient
             Do not include markdown, code fences, or any text outside the JSON.
             """;
 
-    private final JlamaRuntime jlamaRuntime;
+    private final ObjectProvider<AiTextGenerationClient>
+            aiTextGenerationClientProvider;
     private final AppProperties appProperties;
     private final ObjectMapper objectMapper;
 
     @Override
     public PostAiModerationClientResult moderate(
             PostAiModerationRequest request) {
-        if (!jlamaRuntime.isReady()) {
+        AiTextGenerationClient generationClient =
+                aiTextGenerationClientProvider.getIfAvailable();
+        if (generationClient == null || !generationClient.isReady()) {
             throw new PostAiModerationClientException(
                     "Jlama moderation runtime is unavailable.");
         }
 
         try {
-            String rawResponse = jlamaRuntime.generate(
-                    request.systemPrompt() + RUNTIME_INSTRUCTIONS,
-                    request.userPrompt() + OUTPUT_INSTRUCTIONS,
-                    TEMPERATURE,
-                    appProperties.getPost()
-                            .getAiModeration()
-                            .getMachine()
-                            .getMaxTokens());
+            AiTextGenerationResult generation = generationClient.generate(
+                    new AiTextGenerationRequest(
+                            request.systemPrompt() + RUNTIME_INSTRUCTIONS,
+                            request.userPrompt() + OUTPUT_INSTRUCTIONS,
+                            TEMPERATURE,
+                            appProperties.getPost()
+                                    .getAiModeration()
+                                    .getMachine()
+                                    .getMaxTokens()));
+            String rawResponse = generation.responseText();
             PostAiModerationStructuredOutput output = parse(rawResponse);
 
             return new PostAiModerationClientResult(
                     output.outcome(),
                     output.reason().trim(),
                     rawResponse,
-                    jlamaRuntime.getModelId());
+                    generationClient.getModelId());
         } catch (PostAiModerationClientException exception) {
             throw exception;
-        } catch (JlamaRuntimeException exception) {
-            throw new PostAiModerationClientException(
-                    "Jlama moderation inference failed.",
-                    exception);
         } catch (RuntimeException exception) {
             throw new PostAiModerationClientException(
-                    "Unable to process the Jlama moderation response.",
+                    "Jlama moderation inference failed.",
                     exception);
         }
     }
 
     @Override
     public boolean isReady() {
-        return jlamaRuntime.isReady();
+        AiTextGenerationClient generationClient =
+                aiTextGenerationClientProvider.getIfAvailable();
+        return generationClient != null && generationClient.isReady();
     }
 
     private PostAiModerationStructuredOutput parse(String rawResponse) {

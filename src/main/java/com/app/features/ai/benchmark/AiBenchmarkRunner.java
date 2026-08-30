@@ -20,12 +20,13 @@ import com.app.features.ai.benchmark.support.AiBenchmarkConfiguration;
 import com.app.features.ai.benchmark.support.AiBenchmarkMeasurement;
 import com.app.features.ai.benchmark.support.AiBenchmarkMeasurement.MeasuredCase;
 import com.app.features.ai.embedding.integration.onnx.MultilingualE5OnnxRuntime;
+import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
+import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
 import com.app.features.ai.onnx.schema.model.OnnxModelArtifact;
 import com.app.features.ai.onnx.runtime.OnnxSessionResource;
 import com.app.features.ai.onnx.support.OnnxModelFiles;
 import com.app.features.ai.onnx.support.OnnxSessionFactory;
 import com.app.features.ai.runtime.JlamaRuntime;
-import com.app.features.ai.schema.model.JlamaGenerationResult;
 import com.app.features.ai.vision.support.ClipVisionModelContract;
 import ai.onnxruntime.OrtEnvironment;
 import ai.onnxruntime.OrtSession;
@@ -238,8 +239,8 @@ public final class AiBenchmarkRunner {
     private static AiBenchmarkReport benchmarkJlama(
             AppProperties properties,
             BenchmarkOptions options) {
-        AppProperties.AiModerationMachine machine = properties.getPost()
-                .getAiModeration()
+        AppProperties.AiGenerationMachine machine = properties.getAi()
+                .getGeneration()
                 .getMachine();
         JlamaRuntime runtime = new JlamaRuntime(properties);
         double loadDurationMs = 0.0;
@@ -262,11 +263,12 @@ public final class AiBenchmarkRunner {
                     "jlama-generation-end-to-end",
                     options.warmupIterations(),
                     options.measuredIterations(),
-                    () -> jlamaMetrics(runtime.generateWithMetrics(
-                            JLAMA_SYSTEM_PROMPT,
-                            JLAMA_USER_PROMPT,
-                            JLAMA_TEMPERATURE,
-                            options.jlamaMaxTokens())));
+                    () -> jlamaMetrics(runtime.generate(
+                            new AiTextGenerationRequest(
+                                    JLAMA_SYSTEM_PROMPT,
+                                    JLAMA_USER_PROMPT,
+                                    JLAMA_TEMPERATURE,
+                                    options.jlamaMaxTokens()))));
             double generatedTokens = measured.total("generatedTokens");
             double generationTimeMs = measured.total("generationTimeMs");
             Map<String, Double> derivedMetrics = new LinkedHashMap<>();
@@ -315,7 +317,7 @@ public final class AiBenchmarkRunner {
     }
 
     private static Map<String, Double> jlamaMetrics(
-            JlamaGenerationResult result) {
+            AiTextGenerationResult result) {
         return Map.of(
                 "promptTokens",
                 (double) result.promptTokens(),
@@ -385,7 +387,7 @@ public final class AiBenchmarkRunner {
     }
 
     private static Map<String, Object> jlamaConfiguration(
-            AppProperties.AiModerationMachine machine,
+            AppProperties.AiGenerationMachine machine,
             BenchmarkOptions options) {
         Map<String, Object> configuration = new LinkedHashMap<>();
         configuration.put("threads", machine.getThreads());

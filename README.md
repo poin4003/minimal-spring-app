@@ -118,7 +118,7 @@ hãy chạy `make build` trước.
 make ai-setup
 ```
 
-`make ai-setup` gọi Jlama setup khi `POST_AI_MODERATION_ENABLED=true`, embedding
+`make ai-setup` gọi Jlama setup khi `AI_GENERATION_ENABLED=true`, embedding
 setup khi `AI_EMBEDDING_ENABLED=true`, sau đó gọi vision setup khi
 `AI_VISION_ENABLED=true`. Có thể chủ động setup từng model bằng
 `make jlama-setup`, `make embedding-setup` hoặc `make vision-setup` mà không cần
@@ -203,12 +203,13 @@ không được commit vào Git.
 `make dev`, `make build` và `make run` không tự tải model. Vì vậy cùng một source
 và JAR vẫn chạy được trên máy không có model khi các capability tương ứng tắt.
 
-Khi `POST_AI_MODERATION_ENABLED=true`, Spring sẽ load model local trong lúc
-khởi động và đóng model khi ứng dụng dừng. Nếu model bị thiếu hoặc không load
-được, ứng dụng vẫn khởi động nhưng AI được đánh dấu `UNAVAILABLE`; moderation
-thủ công tiếp tục hoạt động. V1 chỉ đưa text vào Jlama, còn thumbnail URL được
-giữ làm reference trong moderation request và log chứ chưa được model phân
-tích hình ảnh.
+Khi `AI_GENERATION_ENABLED=true`, Spring sẽ load model Jlama local trong lúc
+khởi động và đóng model khi ứng dụng dừng. Generation là capability dùng chung,
+không phụ thuộc vào việc post moderation đang bật hay tắt. Nếu model bị thiếu
+hoặc không load được, ứng dụng vẫn khởi động; moderation tự động được đánh dấu
+`UNAVAILABLE` còn moderation thủ công tiếp tục hoạt động. V1 chỉ đưa text vào
+Jlama, còn thumbnail URL được giữ làm reference trong moderation request và log
+chứ chưa được model phân tích hình ảnh.
 
 ## Kiểm thử
 

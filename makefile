@@ -41,10 +41,10 @@ dev-gpu:
 	$(MAKE) dev ONNX_MAVEN_PROFILE=-Ponnx-gpu ONNX_RUNTIME_LABEL=GPU AI_EMBEDDING_EXECUTION_PROVIDER=CUDA AI_VISION_EXECUTION_PROVIDER=CUDA
 
 ai-setup:
-ifneq ($(filter true TRUE 1 yes YES,$(POST_AI_MODERATION_ENABLED)),)
+ifneq ($(filter true TRUE 1 yes YES,$(AI_GENERATION_ENABLED)),)
 	$(MAKE) jlama-setup
 else
-	@echo "Skipping Jlama setup because POST_AI_MODERATION_ENABLED is not true."
+	@echo "Skipping Jlama setup because AI_GENERATION_ENABLED is not true."
 endif
 ifneq ($(filter true TRUE 1 yes YES,$(AI_EMBEDDING_ENABLED)),)
 	$(MAKE) embedding-setup

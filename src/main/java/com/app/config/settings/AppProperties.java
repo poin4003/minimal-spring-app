@@ -56,6 +56,10 @@ public class AppProperties {
         private final OnnxSettings onnx = new OnnxSettings();
 
         @Valid
+        private final AiGenerationSettings generation =
+                new AiGenerationSettings();
+
+        @Valid
         private final EmbeddingSettings embedding = new EmbeddingSettings();
 
         @Valid
@@ -63,6 +67,40 @@ public class AppProperties {
 
         @Valid
         private final VisionSettings vision = new VisionSettings();
+    }
+
+    @Data
+    public static class AiGenerationSettings {
+        private boolean enabled;
+
+        @Valid
+        private final AiGenerationMachine machine =
+                new AiGenerationMachine();
+    }
+
+    @Data
+    public static class AiGenerationMachine {
+        @NotBlank
+        private String modelId = "tjake/Llama-3.2-1B-Instruct-JQ4";
+
+        @NotBlank
+        private String modelDirectory = "./data/ai-models/jlama";
+
+        @Positive
+        private int threads = 4;
+
+        @Positive
+        private int maxConcurrency = 1;
+
+        @NotNull
+        private Duration timeout = Duration.ofSeconds(120);
+
+        @AssertTrue(message = "AI generation timeout must be positive.")
+        public boolean isTimeoutValid() {
+            return timeout != null
+                    && !timeout.isZero()
+                    && !timeout.isNegative();
+        }
     }
 
     @Data
@@ -717,35 +755,11 @@ public class AppProperties {
         @NotBlank
         private String mediaBaseUrl = "http://127.0.0.1:8080";
 
-        @NotBlank
-        private String modelId = "tjake/Llama-3.2-1B-Instruct-JQ4";
-
-        @NotBlank
-        private String modelDirectory = "./data/ai-models/jlama";
-
-        @Positive
-        private int threads = 4;
-
-        @Positive
-        private int maxConcurrency = 1;
-
-        @NotNull
-        private Duration timeout = Duration.ofSeconds(30);
-
         @Min(0)
         private int maxImages = 1;
 
         @Positive
         private int maxTokens = 128;
-
-        @AssertTrue(message = "Post AI moderation machine configuration is invalid.")
-        public boolean isMachineConfigurationValid() {
-            return isPositive(timeout);
-        }
-
-        private boolean isPositive(Duration value) {
-            return value != null && !value.isZero() && !value.isNegative();
-        }
     }
 
     @Data
