@@ -115,6 +115,14 @@ public class AppProperties {
         @Min(100)
         @Max(50000)
         private int maxContextCharacters = 6000;
+
+        @DecimalMin("0.0")
+        @DecimalMax("2.0")
+        private float temperature = 0.1f;
+
+        @Positive
+        @Max(2048)
+        private int maxOutputTokens = 256;
     }
 
     @Data

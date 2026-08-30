@@ -26,6 +26,8 @@ app:
         rag:
             retrieval-limit: ${AI_RAG_RETRIEVAL_LIMIT:3}
             max-context-characters: ${AI_RAG_MAX_CONTEXT_CHARACTERS:6000}
+            temperature: ${AI_RAG_TEMPERATURE:0.1}
+            max-output-tokens: ${AI_RAG_MAX_OUTPUT_TOKENS:256}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:
