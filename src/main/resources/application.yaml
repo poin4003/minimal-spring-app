@@ -249,6 +249,9 @@ app:
             registration-complete-ip:
                 capacity: ${REGISTRATION_COMPLETE_IP_RATE_CAPACITY:30}
                 period: ${REGISTRATION_COMPLETE_IP_RATE_PERIOD:10m}
+            rag-query:
+                capacity: ${RAG_QUERY_RATE_CAPACITY:10}
+                period: ${RAG_QUERY_RATE_PERIOD:1m}
             media-direct-upload: { capacity: 30, period: 1m }
             media-upload-session: { capacity: 120, period: 1m }
             media-upload-chunk: { capacity: 300, period: 1m }
