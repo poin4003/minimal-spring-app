@@ -42,16 +42,8 @@ app:
             index-directory: ${AI_SEARCH_INDEX_DIRECTORY:./data/search/post-index}
             default-limit: ${AI_SEARCH_DEFAULT_LIMIT:10}
             max-limit: ${AI_SEARCH_MAX_LIMIT:50}
+            minimum-score: ${AI_SEARCH_MIN_SCORE:0.0}
             reconciliation-batch-size: ${AI_SEARCH_RECONCILIATION_BATCH_SIZE:100}
-            summary:
-                max-context-characters: ${AI_SEARCH_SUMMARY_MAX_CONTEXT_CHARACTERS:6000}
-                temperature: ${AI_SEARCH_SUMMARY_TEMPERATURE:0.1}
-                max-output-tokens: ${AI_SEARCH_SUMMARY_MAX_OUTPUT_TOKENS:256}
-                stream:
-                    timeout: ${AI_SEARCH_SUMMARY_STREAM_TIMEOUT:30m}
-                    heartbeat-interval: ${AI_SEARCH_SUMMARY_STREAM_HEARTBEAT_INTERVAL:15s}
-                    workers: ${AI_SEARCH_SUMMARY_STREAM_WORKERS:2}
-                    queue-capacity: ${AI_SEARCH_SUMMARY_STREAM_QUEUE_CAPACITY:8}
         vision:
             enabled: ${AI_VISION_ENABLED:false}
             model:

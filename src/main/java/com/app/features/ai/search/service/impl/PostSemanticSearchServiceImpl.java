@@ -69,11 +69,17 @@ public class PostSemanticSearchServiceImpl
     private List<PostVectorSearchHit> keepCurrentlyVisiblePosts(
             List<PostVectorSearchHit> candidates,
             int limit) {
-        if (candidates.isEmpty()) {
+        float minimumScore = appProperties.getAi()
+                .getSearch()
+                .getMinimumScore();
+        List<PostVectorSearchHit> qualifiedCandidates = candidates.stream()
+                .filter(candidate -> candidate.score() >= minimumScore)
+                .toList();
+        if (qualifiedCandidates.isEmpty()) {
             return List.of();
         }
 
-        List<UUID> postIds = candidates.stream()
+        List<UUID> postIds = qualifiedCandidates.stream()
                 .map(candidate -> candidate.postId())
                 .toList();
         Map<UUID, PostType> visiblePostTypes = postRepo
@@ -88,7 +94,7 @@ public class PostSemanticSearchServiceImpl
                         (existingPostType, ignoredPostType) ->
                                 existingPostType));
 
-        return candidates.stream()
+        return qualifiedCandidates.stream()
                 .filter(candidate -> candidate.postType()
                         == visiblePostTypes.get(candidate.postId()))
                 .limit(limit)

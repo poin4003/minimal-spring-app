@@ -1,5 +1,7 @@
 package com.app.features.ai.search.web.view;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -7,8 +9,8 @@ import lombok.Getter;
 @Builder
 public class PostSearchItemView {
 
-    private final int rank;
-    private final String postTypeLabel;
     private final String content;
     private final String detailPath;
+    private final int relevancePercent;
+    private final List<PostSearchMediaView> media;
 }

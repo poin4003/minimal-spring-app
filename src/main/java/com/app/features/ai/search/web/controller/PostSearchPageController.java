@@ -42,8 +42,6 @@ public class PostSearchPageController {
                 .searchPath(appProperties.getUi().getSearchPath())
                 .resultsPath(appProperties.getUi().getSearchPath()
                         + "/results")
-                .summaryStreamPath(appProperties.getUi().getSearchPath()
-                        + "/summary/stream")
                 .query(query.trim())
                 .shell(socialShellFactory.build(
                         currentUser,

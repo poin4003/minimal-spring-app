@@ -14,7 +14,6 @@ public class PostSearchPageView {
     private final String title;
     private final String searchPath;
     private final String resultsPath;
-    private final String summaryStreamPath;
     private final String query;
     private final SocialShellView shell;
 }

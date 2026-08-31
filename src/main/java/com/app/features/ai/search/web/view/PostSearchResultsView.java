@@ -12,6 +12,5 @@ import lombok.Getter;
 public class PostSearchResultsView {
 
     private final AiAvailability retrievalAvailability;
-    private final AiAvailability summaryAvailability;
-    private final List<PostSearchItemView> items;
+    private final List<PostSearchSectionView> sections;
 }

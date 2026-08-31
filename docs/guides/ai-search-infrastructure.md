@@ -25,9 +25,9 @@ toàn bộ DB hay đọc toàn bộ document trong Lucene.
 
 Giao diện độc lập của hạ tầng này là khu vực semantic search, không giả lập một
 chatbot đa dụng. User nhập truy vấn ở thanh tìm kiếm và nhận danh sách content
-liên quan. Nếu text generation đang sẵn sàng, RAG có thể tạo một phần tóm tắt
-ngắn có citation từ chính kết quả tìm kiếm; khi generation bị tắt, semantic
-search vẫn hoạt động đầy đủ.
+liên quan được chia theo bài viết standard, short và video. Search chỉ dùng
+embedding ONNX và Lucene retrieval; nó không gọi LLM generation hoặc mở kết nối
+SSE.
 
 Lucene vector index và embedding không phụ thuộc vào giao diện chat. Chúng được
 giữ làm nền tảng cho các chức năng sau:
@@ -40,8 +40,13 @@ giữ làm nền tảng cho các chức năng sau:
 
 Không hiển thị Lucene KNN score như xác suất liên quan. Ngưỡng loại kết quả yếu
 phải được hiệu chỉnh bằng benchmark positive/negative query thay vì chọn một
-con số tùy ý. RAG không được bắt buộc chạy cho mọi truy vấn và không được tạo
-nguồn khi retrieval không có kết quả đủ tốt.
+con số tùy ý.
+
+`AI_SEARCH_MIN_SCORE` áp dụng cho kết quả semantic search. Giá trị mặc định
+`0.0` tắt lọc để tránh loại nhầm kết quả trước khi corpus có bộ
+positive/negative query đủ đại diện. Score hợp lệ của index `DOT_PRODUCT` hiện
+tại nằm trong khoảng `0.0-1.0`, nhưng vẫn không được diễn giải hoặc hiển thị như
+xác suất.
 
 Sau khi comment lifecycle hoàn thiện, hệ thống có thể dành riêng mention
 `@VibeAI`. Mention tạo một background job lấy post, nhánh comment hiện tại và
@@ -64,7 +69,7 @@ structured user memory. History do browser tự gửi không được xem là ng
 thật. Context cho `@VibeAI` cũng phải được dựng từ post và comment thread trong
 DB, không tái sử dụng browser chat history.
 
-## Kế Hoạch Chuyển AI Chat Thành Search
+## Trạng Thái Triển Khai Search
 
 ### Đợt 1 - Search Contract
 
@@ -74,32 +79,27 @@ DB, không tái sử dụng browser chat history.
 - Chat/RAG cũ chỉ tồn tại đến đợt thay thế UI kế tiếp rồi được xóa, không trở
   thành compatibility contract lâu dài.
 
-### Đợt 2 - Optional RAG Summary
-
-- Tách generation thành search summary nhận query và sources đã retrieve.
-- Loại conversation history khỏi payload, prompt và retrieval query.
-- Xóa conversation window, history token config và các model chỉ phục vụ chat.
-- Giữ SSE để stream phần summary khi generation sẵn sàng.
-
-### Đợt 3 - Search UI
+### Đợt 2 - Search UI
 
 - Thay chat bubbles bằng thanh search và danh sách content results.
 - Đưa query lên URL để refresh, back và chia sẻ được.
-- Hiển thị kết quả semantic trước; AI summary là khu vực tùy chọn chạy sau.
+- Chia kết quả thành các khu vực standard, short và video có media preview.
 - Bỏ chat session, interrupted message và browser conversation history.
 
-Đã triển khai tại `/search`. Kết quả KNN được tải bằng HTTP request ngắn; SSE
-chỉ được mở khi user chủ động yêu cầu tóm tắt và capability generation đang sẵn
-sàng. Route, controller, view, JavaScript, CSS và message key của `/ai-chat` đã
-được xóa thay vì duy trì hai giao diện song song.
+Đã triển khai tại `/search`. Kết quả KNN được tải bằng một HTTP request ngắn.
+Search summary, endpoint SSE, heartbeat, worker queue và cấu hình generation
+riêng của search đã được xóa vì không tạo đủ giá trị cho trải nghiệm tìm kiếm.
+Route, controller, view, JavaScript, CSS và message key của `/ai-chat` cũng không
+được giữ như compatibility layer.
 
-### Đợt 4 - Cleanup Và Retrieval Quality
+### Đợt 3 - Cleanup Và Retrieval Quality
 
 - API `/api/v1/ai/rag/ask` và các adapter `PostRag*` cũ đã được xóa.
-- Cấu hình summary và rate limit đã được chuyển hoàn toàn sang namespace search.
+- Search chỉ giữ cấu hình retrieval, index, threshold và reconciliation.
 - Không giữ redirect hoặc compatibility alias cho route và biến môi trường cũ.
 - Không hiển thị KNN score như phần trăm xác suất.
-- Thêm relevance threshold sau khi có benchmark positive/negative query.
+- Đã thêm relevance threshold cấu hình được; mặc định tắt cho đến khi có
+  benchmark positive/negative query.
 - Giữ BM25 hybrid search là đợt mở rộng riêng sau khi semantic search ổn định.
 
 ## Quyết định PostgreSQL
