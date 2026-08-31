@@ -1,199 +1,150 @@
 package com.app.features.ai.rag.service.impl;
 
+import java.util.List;
 import java.util.concurrent.CancellationException;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 
 import com.app.config.settings.AppProperties;
+import com.app.core.enums.AppLanguage;
 import com.app.features.ai.enums.AiAvailability;
-import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
-import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
-import com.app.features.ai.generation.service.AiTextGenerationClient;
-import com.app.features.ai.generation.service.AiTextTokenCounter;
-import com.app.features.ai.rag.schema.model.PostRagConversationRequest;
-import com.app.features.ai.rag.schema.model.PostRagContext;
 import com.app.features.ai.rag.schema.model.PostRagGeneratedAnswer;
-import com.app.features.ai.rag.schema.model.PostRagPrompt;
 import com.app.features.ai.rag.schema.model.PostRagResult;
+import com.app.features.ai.rag.schema.model.PostRagSource;
 import com.app.features.ai.rag.schema.model.PostRagStreamMetadata;
 import com.app.features.ai.rag.service.PostRagService;
 import com.app.features.ai.rag.service.PostRagStreamObserver;
-import com.app.features.ai.rag.support.PostRagConversationWindowFactory;
-import com.app.features.ai.rag.support.PostRagContextFactory;
-import com.app.features.ai.rag.support.PostRagPromptBuilder;
+import com.app.features.ai.search.schema.model.PostSearchGeneratedSummary;
+import com.app.features.ai.search.schema.model.PostSearchItem;
+import com.app.features.ai.search.schema.model.PostSearchRequest;
+import com.app.features.ai.search.schema.model.PostSearchResult;
+import com.app.features.ai.search.schema.model.PostSearchSummaryRequest;
+import com.app.features.ai.search.schema.model.PostSearchSummaryResult;
+import com.app.features.ai.search.service.PostSearchService;
+import com.app.features.ai.search.service.PostSearchSummaryService;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
 @Service
 @Validated
 @RequiredArgsConstructor
 public class PostRagServiceImpl implements PostRagService {
 
     private final AppProperties appProperties;
-    private final PostRagContextFactory postRagContextFactory;
-    private final PostRagPromptBuilder postRagPromptBuilder;
-    private final PostRagConversationWindowFactory
-            postRagConversationWindowFactory;
-    private final ObjectProvider<AiTextGenerationClient>
-            aiTextGenerationClientProvider;
-    private final ObjectProvider<AiTextTokenCounter>
-            aiTextTokenCounterProvider;
+    private final PostSearchService postSearchSvc;
+    private final PostSearchSummaryService postSearchSummarySvc;
 
     @Override
     public PostRagResult answer(String question) {
         return answer(
-                PostRagConversationRequest.withoutHistory(question),
+                question,
+                AppLanguage.EN,
                 NoOpPostRagStreamObserver.INSTANCE);
     }
 
     @Override
     public PostRagResult answer(
             String question,
-            PostRagStreamObserver streamObserver) {
+            AppLanguage responseLanguage) {
         return answer(
-                PostRagConversationRequest.withoutHistory(question),
-                streamObserver);
-    }
-
-    @Override
-    public PostRagResult answer(PostRagConversationRequest request) {
-        return answer(request, NoOpPostRagStreamObserver.INSTANCE);
+                question,
+                responseLanguage,
+                NoOpPostRagStreamObserver.INSTANCE);
     }
 
     @Override
     public PostRagResult answer(
-            PostRagConversationRequest request,
+            String question,
+            AppLanguage responseLanguage,
             PostRagStreamObserver streamObserver) {
         ensureActive(streamObserver);
-        GenerationRuntime generationRuntime = resolveGenerationRuntime(
-                !request.history().isEmpty());
-        PostRagConversationRequest conversation =
-                postRagConversationWindowFactory.create(
-                        request,
-                        generationRuntime.tokenCounter());
-        PostRagContext context = postRagContextFactory.create(conversation);
+        PostSearchResult searchResult = postSearchSvc.search(
+                new PostSearchRequest(
+                        question,
+                        null,
+                        appProperties.getAi().getRag()
+                                .getRetrievalLimit()));
+        List<PostRagSource> sources = toSources(searchResult.items());
+        AiAvailability generationAvailability =
+                postSearchSummarySvc.resolveAvailability();
         streamObserver.onMetadata(new PostRagStreamMetadata(
-                context.retrievalAvailability(),
-                generationRuntime.availability(),
-                context.sources()));
+                searchResult.availability(),
+                generationAvailability,
+                sources));
         ensureActive(streamObserver);
 
-        if (context.retrievalAvailability() != AiAvailability.READY
-                || context.sources().isEmpty()
-                || generationRuntime.availability()
-                        != AiAvailability.READY) {
-            return retrievalOnly(context, generationRuntime.availability());
+        if (searchResult.availability() != AiAvailability.READY
+                || searchResult.items().isEmpty()
+                || generationAvailability != AiAvailability.READY) {
+            return withoutSummary(
+                    searchResult,
+                    generationAvailability,
+                    sources);
         }
 
-        PostRagPrompt prompt = postRagPromptBuilder.build(
-                context,
-                conversation.history(),
-                conversation.responseLanguage());
-        try {
-            AiTextGenerationResult generation = generationRuntime.client()
-                    .generate(new AiTextGenerationRequest(
-                            prompt.systemPrompt(),
-                            prompt.userPrompt(),
-                            appProperties.getAi().getRag()
-                                    .getTemperature(),
-                            appProperties.getAi().getRag()
-                                    .getMaxOutputTokens()),
-                            new PostRagAiTextGenerationStreamObserver(
-                                    streamObserver));
-            if (!StringUtils.hasText(generation.responseText())) {
-                log.warn(
-                        "RAG generation returned an empty response; "
-                                + "falling back to retrieved sources.");
-                return retrievalOnly(
-                        context,
-                        AiAvailability.UNAVAILABLE);
-            }
-
-            PostRagGeneratedAnswer generatedAnswer =
-                    new PostRagGeneratedAnswer(
-                            generation.responseText(),
-                            generationRuntime.client().getModelId(),
-                            generation.promptTokens(),
-                            generation.generatedTokens(),
-                            generation.promptTimeMs(),
-                            generation.generationTimeMs(),
-                            generation.finishReason());
-            return new PostRagResult(
-                    context.question(),
-                    context.retrievalAvailability(),
-                    AiAvailability.READY,
-                    prompt.sources(),
-                    generatedAnswer);
-        } catch (CancellationException exception) {
-            throw exception;
-        } catch (RuntimeException exception) {
-            log.warn(
-                    "RAG generation failed; falling back to retrieved sources.",
-                    exception);
-            return retrievalOnly(context, AiAvailability.UNAVAILABLE);
+        PostSearchSummaryResult summaryResult =
+                postSearchSummarySvc.summarize(
+                        new PostSearchSummaryRequest(
+                                searchResult,
+                                responseLanguage),
+                        new PostRagAiTextGenerationStreamObserver(
+                                streamObserver));
+        if (!summaryResult.isGenerated()) {
+            return withoutSummary(
+                    searchResult,
+                    summaryResult.availability(),
+                    sources);
         }
+
+        PostSearchGeneratedSummary summary =
+                summaryResult.generatedSummary();
+        PostRagGeneratedAnswer generatedAnswer =
+                new PostRagGeneratedAnswer(
+                        summary.text(),
+                        summary.modelId(),
+                        summary.promptTokens(),
+                        summary.generatedTokens(),
+                        summary.promptTimeMs(),
+                        summary.generationTimeMs(),
+                        summary.finishReason());
+        return new PostRagResult(
+                searchResult.query(),
+                searchResult.availability(),
+                summaryResult.availability(),
+                sources,
+                generatedAnswer);
     }
 
     private void ensureActive(PostRagStreamObserver streamObserver) {
         if (streamObserver.isCancelled()) {
             throw new CancellationException(
-                    "RAG stream was cancelled by the client.");
+                    "Search summary stream was cancelled by the client.");
         }
     }
 
-    private GenerationRuntime resolveGenerationRuntime(
-            boolean tokenCounterRequired) {
-        if (!appProperties.getAi().getGeneration().isEnabled()) {
-            return new GenerationRuntime(
-                    AiAvailability.DISABLED,
-                    null,
-                    null);
-        }
-
-        AiTextGenerationClient generationClient =
-                aiTextGenerationClientProvider.getIfAvailable();
-        if (generationClient == null || !generationClient.isReady()) {
-            return new GenerationRuntime(
-                    AiAvailability.UNAVAILABLE,
-                    null,
-                    null);
-        }
-
-        AiTextTokenCounter tokenCounter =
-                aiTextTokenCounterProvider.getIfAvailable();
-        if (tokenCounterRequired
-                && (tokenCounter == null || !tokenCounter.isReady())) {
-            return new GenerationRuntime(
-                    AiAvailability.UNAVAILABLE,
-                    null,
-                    null);
-        }
-
-        return new GenerationRuntime(
-                AiAvailability.READY,
-                generationClient,
-                tokenCounter);
+    private List<PostRagSource> toSources(
+            List<PostSearchItem> items) {
+        return items.stream()
+                .map(item -> new PostRagSource(
+                        item.rank(),
+                        item.postId(),
+                        item.postType(),
+                        item.score(),
+                        item.sourceUpdatedAt(),
+                        item.content()))
+                .toList();
     }
 
-    private PostRagResult retrievalOnly(
-            PostRagContext context,
-            AiAvailability generationAvailability) {
+    private PostRagResult withoutSummary(
+            PostSearchResult searchResult,
+            AiAvailability generationAvailability,
+            List<PostRagSource> sources) {
         return new PostRagResult(
-                context.question(),
-                context.retrievalAvailability(),
+                searchResult.query(),
+                searchResult.availability(),
                 generationAvailability,
-                context.sources(),
+                sources,
                 null);
-    }
-
-    private record GenerationRuntime(
-            AiAvailability availability,
-            AiTextGenerationClient client,
-            AiTextTokenCounter tokenCounter) {
     }
 }

@@ -28,9 +28,6 @@ app:
             max-context-characters: ${AI_RAG_MAX_CONTEXT_CHARACTERS:6000}
             temperature: ${AI_RAG_TEMPERATURE:0.1}
             max-output-tokens: ${AI_RAG_MAX_OUTPUT_TOKENS:256}
-            conversation:
-                max-history-messages: ${AI_RAG_MAX_HISTORY_MESSAGES:6}
-                max-history-tokens: ${AI_RAG_MAX_HISTORY_TOKENS:1024}
             stream:
                 timeout: ${AI_RAG_STREAM_TIMEOUT:30m}
                 heartbeat-interval: ${AI_RAG_STREAM_HEARTBEAT_INTERVAL:15s}

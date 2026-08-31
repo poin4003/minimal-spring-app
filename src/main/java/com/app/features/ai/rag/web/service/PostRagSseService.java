@@ -2,12 +2,15 @@ package com.app.features.ai.rag.web.service;
 
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.app.features.ai.rag.schema.model.PostRagConversationRequest;
+import com.app.core.enums.AppLanguage;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 public interface PostRagSseService {
 
     SseEmitter stream(
-            @NotNull PostRagConversationRequest request);
+            @NotBlank @Size(max = 2000) String question,
+            @NotNull AppLanguage responseLanguage);
 }

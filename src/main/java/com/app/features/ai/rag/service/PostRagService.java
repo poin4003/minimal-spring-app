@@ -1,6 +1,6 @@
 package com.app.features.ai.rag.service;
 
-import com.app.features.ai.rag.schema.model.PostRagConversationRequest;
+import com.app.core.enums.AppLanguage;
 import com.app.features.ai.rag.schema.model.PostRagResult;
 
 import jakarta.validation.constraints.NotBlank;
@@ -14,12 +14,10 @@ public interface PostRagService {
 
     PostRagResult answer(
             @NotBlank @Size(max = 2000) String question,
-            @NotNull PostRagStreamObserver streamObserver);
+            @NotNull AppLanguage responseLanguage);
 
     PostRagResult answer(
-            @NotNull PostRagConversationRequest request);
-
-    PostRagResult answer(
-            @NotNull PostRagConversationRequest request,
+            @NotBlank @Size(max = 2000) String question,
+            @NotNull AppLanguage responseLanguage,
             @NotNull PostRagStreamObserver streamObserver);
 }

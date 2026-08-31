@@ -14,6 +14,5 @@ public class PostRagChatPageView {
     private final String title;
     private final String askPath;
     private final String sessionStorageKey;
-    private final int maxHistoryMessages;
     private final SocialShellView shell;
 }

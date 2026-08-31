@@ -15,10 +15,10 @@ import com.app.config.ratelimit.RateLimited;
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.security.UserPrincipal;
-import com.app.features.ai.rag.mapper.PostRagConversationRequestMapper;
 import com.app.features.ai.rag.schema.model.PostRagResult;
 import com.app.features.ai.rag.schema.payload.PostRagQuestionPayload;
 import com.app.features.ai.rag.service.PostRagService;
+import com.app.features.ai.rag.support.PostRagLanguageResolver;
 import com.app.features.ai.rag.web.support.PostRagChatMessageViewFactory;
 import com.app.features.ai.rag.web.view.PostRagChatMessageView;
 import com.app.features.ai.rag.web.view.PostRagChatPageView;
@@ -37,8 +37,7 @@ public class PostRagChatPageController {
     private final AppMessageResolver messageResolver;
     private final SocialShellFactory socialShellFactory;
     private final PostRagService postRagSvc;
-    private final PostRagConversationRequestMapper
-            postRagConversationRequestMapper;
+    private final PostRagLanguageResolver postRagLanguageResolver;
     private final PostRagChatMessageViewFactory chatMessageViewFactory;
 
     @GetMapping
@@ -54,10 +53,6 @@ public class PostRagChatPageController {
                         + (currentUser == null
                                 ? "guest"
                                 : currentUser.getUserId()))
-                .maxHistoryMessages(appProperties.getAi()
-                        .getRag()
-                        .getConversation()
-                        .getMaxHistoryMessages())
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
@@ -74,9 +69,8 @@ public class PostRagChatPageController {
             Locale locale,
             Model model) {
         PostRagResult result = postRagSvc.answer(
-                postRagConversationRequestMapper.toModel(
-                        question,
-                        locale));
+                question.getQuestion(),
+                postRagLanguageResolver.resolve(locale));
         model.addAttribute(
                 PostRagChatMessageView.ATTRIBUTE,
                 chatMessageViewFactory.build(result));

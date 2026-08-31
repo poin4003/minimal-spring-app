@@ -19,7 +19,6 @@ import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
 import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
 import com.app.features.ai.generation.service.AiTextGenerationClient;
 import com.app.features.ai.generation.service.AiTextGenerationStreamObserver;
-import com.app.features.ai.generation.service.AiTextTokenCounter;
 import com.app.features.ai.generation.service.impl.NoOpAiTextGenerationStreamObserver;
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.ModelSupport;
@@ -39,8 +38,7 @@ import lombok.extern.slf4j.Slf4j;
         prefix = "app.ai.generation",
         name = "enabled",
         havingValue = "true")
-public class JlamaRuntime
-        implements AiTextGenerationClient, AiTextTokenCounter {
+public class JlamaRuntime implements AiTextGenerationClient {
 
     private final AppProperties.AiGenerationMachine machine;
     private final Semaphore inferencePermits;
@@ -100,27 +98,6 @@ public class JlamaRuntime
     @Override
     public String getModelId() {
         return machine.getModelId();
-    }
-
-    @Override
-    public int countTokens(String text) {
-        lifecycleLock.readLock().lock();
-        try {
-            AbstractModel currentModel = model;
-            if (currentModel == null) {
-                throw new JlamaRuntimeException(
-                        "Jlama runtime is not ready.");
-            }
-            return currentModel.getTokenizer().encode(text).length;
-        } catch (JlamaRuntimeException exception) {
-            throw exception;
-        } catch (RuntimeException exception) {
-            throw new JlamaRuntimeException(
-                    "Jlama token counting failed.",
-                    exception);
-        } finally {
-            lifecycleLock.readLock().unlock();
-        }
     }
 
     @Override

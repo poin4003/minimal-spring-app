@@ -70,7 +70,9 @@ DB, không tái sử dụng browser chat history.
 
 - Thêm application contract chỉ nhận query và filter tối thiểu.
 - Trả semantic search results độc lập với text generation.
-- Giữ RAG endpoint hiện tại trong lúc chuyển đổi để không làm gãy UI giữa đợt.
+- Search contract mới không phụ thuộc vào RAG hoặc conversation model cũ.
+- Chat/RAG cũ chỉ tồn tại đến đợt thay thế UI kế tiếp rồi được xóa, không trở
+  thành compatibility contract lâu dài.
 
 ### Đợt 2 - Optional RAG Summary
 

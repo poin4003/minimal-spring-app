@@ -12,8 +12,8 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
-import com.app.features.ai.rag.mapper.PostRagConversationRequestMapper;
 import com.app.features.ai.rag.schema.payload.PostRagQuestionPayload;
+import com.app.features.ai.rag.support.PostRagLanguageResolver;
 import com.app.features.ai.rag.web.service.PostRagSseService;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,8 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class PostRagChatSseController {
 
     private final PostRagSseService postRagSseSvc;
-    private final PostRagConversationRequestMapper
-            postRagConversationRequestMapper;
+    private final PostRagLanguageResolver postRagLanguageResolver;
 
     @RateLimited(RateLimitPolicy.RAG_QUERY)
     @PostMapping(
@@ -43,8 +42,7 @@ public class PostRagChatSseController {
         response.setHeader("X-Accel-Buffering", "no");
 
         return postRagSseSvc.stream(
-                postRagConversationRequestMapper.toModel(
-                        question,
-                        locale));
+                question.getQuestion(),
+                postRagLanguageResolver.resolve(locale));
     }
 }

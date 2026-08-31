@@ -109,10 +109,6 @@ public class AppProperties {
     @Data
     public static class RagSettings {
         @Valid
-        private final RagConversationSettings conversation =
-                new RagConversationSettings();
-
-        @Valid
         private final RagStreamSettings stream =
                 new RagStreamSettings();
 
@@ -131,17 +127,6 @@ public class AppProperties {
         @Positive
         @Max(2048)
         private int maxOutputTokens = 256;
-    }
-
-    @Data
-    public static class RagConversationSettings {
-        @Positive
-        @Max(6)
-        private int maxHistoryMessages = 6;
-
-        @Min(800)
-        @Max(1200)
-        private int maxHistoryTokens = 1024;
     }
 
     @Data

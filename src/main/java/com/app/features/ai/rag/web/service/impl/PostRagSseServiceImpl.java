@@ -11,8 +11,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.app.config.settings.AppProperties;
+import com.app.core.enums.AppLanguage;
 import com.app.core.i18n.AppMessageResolver;
-import com.app.features.ai.rag.schema.model.PostRagConversationRequest;
 import com.app.features.ai.rag.schema.model.PostRagResult;
 import com.app.features.ai.rag.service.PostRagService;
 import com.app.features.ai.rag.web.service.PostRagSseService;
@@ -43,7 +43,9 @@ public class PostRagSseServiceImpl implements PostRagSseService {
     private final PostRagSseTaskExecutor taskExecutor;
 
     @Override
-    public SseEmitter stream(PostRagConversationRequest request) {
+    public SseEmitter stream(
+            String question,
+            AppLanguage responseLanguage) {
         long timeout = appProperties.getAi()
                 .getRag()
                 .getStream()
@@ -66,7 +68,10 @@ public class PostRagSseServiceImpl implements PostRagSseService {
         }
 
         try {
-            taskExecutor.execute(() -> process(request, session));
+            taskExecutor.execute(() -> process(
+                    question,
+                    responseLanguage,
+                    session));
         } catch (TaskRejectedException exception) {
             activeSessions.remove(session);
             session.sendError(messageResolver.get("ai.chat.error.busy"));
@@ -88,10 +93,14 @@ public class PostRagSseServiceImpl implements PostRagSseService {
     }
 
     private void process(
-            PostRagConversationRequest request,
+            String question,
+            AppLanguage responseLanguage,
             PostRagSseSession session) {
         try {
-            PostRagResult result = postRagSvc.answer(request, session);
+            PostRagResult result = postRagSvc.answer(
+                    question,
+                    responseLanguage,
+                    session);
             if (session.isCancelled()) {
                 return;
             }

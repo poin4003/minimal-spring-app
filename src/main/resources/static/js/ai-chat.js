@@ -157,26 +157,6 @@
             return normalized;
         }
 
-        buildHistory(maxMessages) {
-            const history = this.messages
-                .filter(message => message.content.trim() !== "")
-                .filter(message => message.role === ROLE_USER
-                    || (message.status === STATUS_COMPLETED
-                        && message.generated))
-                .map(message => ({
-                    role: message.role,
-                    content: asText(
-                        message.content,
-                        message.role === ROLE_USER ? 2000 : 8000)
-                }))
-                .slice(-maxMessages);
-
-            while (history[0]?.role === ROLE_ASSISTANT) {
-                history.shift();
-            }
-            return history;
-        }
-
         markStreamingInterrupted(defaultMessage) {
             let changed = false;
             this.messages.forEach(message => {
@@ -343,12 +323,6 @@
             "[data-ai-chat-assistant-template]");
         const sourceTemplate = chat.querySelector(
             "[data-ai-chat-source-template]");
-        const configuredHistoryLimit = Number.parseInt(
-            chat.dataset.maxHistoryMessages,
-            10);
-        const maxHistoryMessages = Number.isFinite(configuredHistoryLimit)
-            ? Math.max(1, configuredHistoryLimit)
-            : 6;
         const store = new ChatSessionStore(
             chat.dataset.sessionStorageKey,
             MAX_STORED_MESSAGES);
@@ -572,7 +546,6 @@
                 return;
             }
 
-            const history = store.buildHistory(maxHistoryMessages);
             welcome?.remove();
             appendUserMessage(question);
             store.append({
@@ -590,14 +563,6 @@
 
             const formData = new FormData(form);
             formData.set("question", question);
-            history.forEach((message, index) => {
-                formData.set(
-                    `history[${index}].role`,
-                    message.role);
-                formData.set(
-                    `history[${index}].content`,
-                    message.content);
-            });
 
             const csrfToken = readCookie(CSRF_COOKIE_NAME);
             const requestController = new AbortController();
