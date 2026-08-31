@@ -275,8 +275,8 @@ app:
             - "${app.ui.shorts-path}/**"
             - "${app.ui.videos-path}"
             - "${app.ui.videos-path}/**"
-            - "${app.ui.ai-chat-path}"
-            - "${app.ui.ai-chat-path}/**"
+            - "${app.ui.search-path}"
+            - "${app.ui.search-path}/**"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -304,7 +304,7 @@ app:
         feed-path: ${UI_FEED_PATH:/posts}
         shorts-path: ${UI_SHORTS_PATH:/shorts}
         videos-path: ${UI_VIDEOS_PATH:/videos}
-        ai-chat-path: ${UI_AI_CHAT_PATH:/ai-chat}
+        search-path: ${UI_SEARCH_PATH:/search}
         my-posts-path: ${UI_MY_POSTS_PATH:/my/posts}
         my-shorts-path: ${UI_MY_SHORTS_PATH:/my/shorts}
         my-videos-path: ${UI_MY_VIDEOS_PATH:/my/videos}

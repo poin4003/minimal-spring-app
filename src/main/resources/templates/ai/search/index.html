@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">Semantic search</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/post-search.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/js/post-search.js}"></script>
+</head>
+<body class="bg-body-tertiary post-search-page">
+    <div th:replace="~{fragments/social-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <main class="post-search-workspace"
+                  data-post-search
+                  th:data-query="${page.query}"
+                  th:data-stream-path="${page.streamPath}"
+                  th:data-error-message="#{ai.search.error.request}"
+                  th:data-rate-limit-message="#{ai.search.error.rateLimit}"
+                  th:data-auth-message="#{ai.search.error.auth}"
+                  th:data-unavailable-message="#{ai.search.status.unavailable}"
+                  th:data-no-results-message="#{ai.search.status.noResults}">
+                <div class="post-search-inner">
+                    <header class="post-search-header">
+                        <span class="post-search-eyebrow"
+                              th:text="#{ai.search.eyebrow}">
+                            Discover
+                        </span>
+                        <h1 class="display-6 fw-semibold mb-2"
+                            th:text="#{ai.search.heading}">
+                            Search by meaning
+                        </h1>
+                        <p class="lead text-body-secondary mb-4"
+                           th:text="#{ai.search.description}">
+                            Describe what you want to find in your own words.
+                        </p>
+
+                        <form class="post-search-form"
+                              method="get"
+                              th:action="${page.searchPath}"
+                              data-post-search-form>
+                            <label class="visually-hidden"
+                                   for="post-search-query"
+                                   th:text="#{ai.search.query.label}">
+                                Search query
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-body border-end-0">
+                                    <i class="bi bi-search" aria-hidden="true"></i>
+                                </span>
+                                <input id="post-search-query"
+                                       class="form-control border-start-0 ps-0"
+                                       type="search"
+                                       name="q"
+                                       maxlength="2000"
+                                       required
+                                       autocomplete="off"
+                                       th:value="${page.query}"
+                                       th:placeholder="#{ai.search.query.placeholder}">
+                                <button class="btn btn-primary px-4"
+                                        type="submit"
+                                        th:text="#{ai.search.submit}">
+                                    Search
+                                </button>
+                            </div>
+                        </form>
+                    </header>
+
+                    <section class="post-search-empty text-center"
+                             data-post-search-empty
+                             th:hidden="${!#strings.isEmpty(page.query)}">
+                        <div class="post-search-empty-icon" aria-hidden="true">
+                            <i class="bi bi-compass"></i>
+                        </div>
+                        <h2 class="h4" th:text="#{ai.search.empty.title}">
+                            Explore the network
+                        </h2>
+                        <p class="text-body-secondary mb-0"
+                           th:text="#{ai.search.empty.description}">
+                            Search for a topic, scene, idea, or description.
+                        </p>
+                    </section>
+
+                    <section class="post-search-state"
+                             data-post-search-state
+                             th:hidden="${#strings.isEmpty(page.query)}">
+                        <div class="post-search-loading text-body-secondary"
+                             data-post-search-loading>
+                            <span class="spinner-border spinner-border-sm"
+                                  aria-hidden="true"></span>
+                            <span th:text="#{ai.search.loading}">
+                                Finding related posts...
+                            </span>
+                        </div>
+
+                        <div class="alert alert-secondary"
+                             role="status"
+                             data-post-search-status
+                             hidden></div>
+
+                        <section class="card post-search-summary mb-4"
+                                 data-post-search-summary
+                                 hidden>
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="text-primary" aria-hidden="true">
+                                        <i class="bi bi-stars"></i>
+                                    </span>
+                                    <h2 class="h5 mb-0"
+                                        th:text="#{ai.search.summary.title}">
+                                        Summary
+                                    </h2>
+                                    <span class="spinner-border spinner-border-sm
+                                                 text-body-secondary ms-auto"
+                                          data-post-search-summary-loading
+                                          aria-hidden="true"></span>
+                                </div>
+                                <p class="post-search-summary-text mb-0"
+                                   data-post-search-summary-text></p>
+                            </div>
+                        </section>
+
+                        <section data-post-search-results hidden>
+                            <div class="d-flex align-items-center
+                                        justify-content-between gap-3 mb-3">
+                                <h2 class="h4 mb-0"
+                                    th:text="#{ai.search.results.title}">
+                                    Search results
+                                </h2>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            type="button"
+                                            data-post-search-summary-trigger
+                                            hidden>
+                                        <i class="bi bi-stars me-1"
+                                           aria-hidden="true"></i>
+                                        <span th:text="#{ai.search.summary.action}">
+                                            Summarize results
+                                        </span>
+                                    </button>
+                                    <span class="badge text-bg-secondary"
+                                          data-post-search-result-count>0</span>
+                                </div>
+                            </div>
+                            <div class="post-search-results"
+                                 data-post-search-result-list></div>
+                        </section>
+                    </section>
+                </div>
+
+                <template data-post-search-item-template>
+                    <a class="card post-search-result text-decoration-none"
+                       data-post-search-item>
+                        <div class="card-body p-4 d-flex gap-3">
+                            <span class="post-search-rank"
+                                  data-post-search-rank></span>
+                            <span class="min-w-0 flex-grow-1">
+                                <span class="badge text-bg-light border mb-2"
+                                      data-post-search-type></span>
+                                <span class="post-search-content d-block
+                                             text-body"
+                                      data-post-search-content></span>
+                            </span>
+                            <i class="bi bi-arrow-up-right
+                                      text-body-secondary ms-auto"
+                               data-post-search-link-icon
+                               aria-hidden="true"></i>
+                        </div>
+                    </a>
+                </template>
+            </main>
+        </th:block>
+    </div>
+</body>
+</html>

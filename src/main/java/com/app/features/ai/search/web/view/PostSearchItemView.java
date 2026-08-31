@@ -1,15 +1,14 @@
-package com.app.features.ai.rag.web.view;
+package com.app.features.ai.search.web.view;
 
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class PostRagChatSourceView {
+public class PostSearchItemView {
 
     private final int rank;
     private final String postTypeLabel;
-    private final int relevancePercent;
     private final String content;
     private final String detailPath;
 }

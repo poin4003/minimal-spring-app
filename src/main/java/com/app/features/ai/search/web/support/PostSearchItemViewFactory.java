@@ -1,30 +1,29 @@
-package com.app.features.ai.rag.web.support;
+package com.app.features.ai.search.web.support;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
-import com.app.features.ai.rag.schema.model.PostRagSource;
-import com.app.features.ai.rag.web.view.PostRagChatSourceView;
+import com.app.features.ai.search.schema.model.PostSearchItem;
+import com.app.features.ai.search.web.view.PostSearchItemView;
 import com.app.features.post.enums.PostType;
 
 import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class PostRagChatSourceViewFactory {
+public class PostSearchItemViewFactory {
 
     private final AppProperties appProperties;
     private final AppMessageResolver messageResolver;
 
-    public PostRagChatSourceView build(PostRagSource source) {
-        return PostRagChatSourceView.builder()
-                .rank(source.rank())
-                .postTypeLabel(resolvePostTypeLabel(source.postType()))
-                .relevancePercent(toRelevancePercent(source.score()))
-                .content(source.content())
-                .detailPath(buildDetailPath(source))
+    public PostSearchItemView build(PostSearchItem item) {
+        return PostSearchItemView.builder()
+                .rank(item.rank())
+                .postTypeLabel(resolvePostTypeLabel(item.postType()))
+                .content(item.content())
+                .detailPath(buildDetailPath(item))
                 .build();
     }
 
@@ -40,8 +39,8 @@ public class PostRagChatSourceViewFactory {
         return messageResolver.get(messageCode);
     }
 
-    private String buildDetailPath(PostRagSource source) {
-        String basePath = switch (source.postType()) {
+    private String buildDetailPath(PostSearchItem item) {
+        String basePath = switch (item.postType()) {
             case STANDARD -> appProperties.getUi().getFeedPath();
             case SHORT -> appProperties.getUi().getShortsPath();
             case VIDEO -> appProperties.getUi().getVideosPath();
@@ -52,14 +51,9 @@ public class PostRagChatSourceViewFactory {
         }
 
         return UriComponentsBuilder.fromPath(basePath)
-                .pathSegment(source.postId().toString())
+                .pathSegment(item.postId().toString())
                 .build()
                 .encode()
                 .toUriString();
-    }
-
-    private int toRelevancePercent(float score) {
-        float boundedScore = Math.max(0.0f, Math.min(1.0f, score));
-        return Math.round(boundedScore * 100.0f);
     }
 }

@@ -1,7 +1,6 @@
 package com.app.features.ai.rag.service.impl;
 
 import java.util.List;
-import java.util.concurrent.CancellationException;
 
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -9,12 +8,11 @@ import org.springframework.validation.annotation.Validated;
 import com.app.config.settings.AppProperties;
 import com.app.core.enums.AppLanguage;
 import com.app.features.ai.enums.AiAvailability;
+import com.app.features.ai.generation.service.impl.NoOpAiTextGenerationStreamObserver;
 import com.app.features.ai.rag.schema.model.PostRagGeneratedAnswer;
 import com.app.features.ai.rag.schema.model.PostRagResult;
 import com.app.features.ai.rag.schema.model.PostRagSource;
-import com.app.features.ai.rag.schema.model.PostRagStreamMetadata;
 import com.app.features.ai.rag.service.PostRagService;
-import com.app.features.ai.rag.service.PostRagStreamObserver;
 import com.app.features.ai.search.schema.model.PostSearchGeneratedSummary;
 import com.app.features.ai.search.schema.model.PostSearchItem;
 import com.app.features.ai.search.schema.model.PostSearchRequest;
@@ -37,28 +35,13 @@ public class PostRagServiceImpl implements PostRagService {
 
     @Override
     public PostRagResult answer(String question) {
-        return answer(
-                question,
-                AppLanguage.EN,
-                NoOpPostRagStreamObserver.INSTANCE);
+        return answer(question, AppLanguage.EN);
     }
 
     @Override
     public PostRagResult answer(
             String question,
             AppLanguage responseLanguage) {
-        return answer(
-                question,
-                responseLanguage,
-                NoOpPostRagStreamObserver.INSTANCE);
-    }
-
-    @Override
-    public PostRagResult answer(
-            String question,
-            AppLanguage responseLanguage,
-            PostRagStreamObserver streamObserver) {
-        ensureActive(streamObserver);
         PostSearchResult searchResult = postSearchSvc.search(
                 new PostSearchRequest(
                         question,
@@ -68,11 +51,6 @@ public class PostRagServiceImpl implements PostRagService {
         List<PostRagSource> sources = toSources(searchResult.items());
         AiAvailability generationAvailability =
                 postSearchSummarySvc.resolveAvailability();
-        streamObserver.onMetadata(new PostRagStreamMetadata(
-                searchResult.availability(),
-                generationAvailability,
-                sources));
-        ensureActive(streamObserver);
 
         if (searchResult.availability() != AiAvailability.READY
                 || searchResult.items().isEmpty()
@@ -88,8 +66,7 @@ public class PostRagServiceImpl implements PostRagService {
                         new PostSearchSummaryRequest(
                                 searchResult,
                                 responseLanguage),
-                        new PostRagAiTextGenerationStreamObserver(
-                                streamObserver));
+                        NoOpAiTextGenerationStreamObserver.INSTANCE);
         if (!summaryResult.isGenerated()) {
             return withoutSummary(
                     searchResult,
@@ -114,13 +91,6 @@ public class PostRagServiceImpl implements PostRagService {
                 summaryResult.availability(),
                 sources,
                 generatedAnswer);
-    }
-
-    private void ensureActive(PostRagStreamObserver streamObserver) {
-        if (streamObserver.isCancelled()) {
-            throw new CancellationException(
-                    "Search summary stream was cancelled by the client.");
-        }
     }
 
     private List<PostRagSource> toSources(

@@ -1,4 +1,4 @@
-package com.app.features.ai.rag.web.support;
+package com.app.features.ai.search.web.support;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -6,30 +6,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import com.app.features.ai.rag.schema.model.PostRagStreamMetadata;
-import com.app.features.ai.rag.service.PostRagStreamObserver;
-import com.app.features.ai.rag.web.view.PostRagStreamCompletionView;
-import com.app.features.ai.rag.web.view.PostRagStreamErrorView;
-import com.app.features.ai.rag.web.view.PostRagStreamSourcesView;
-import com.app.features.ai.rag.web.view.PostRagStreamTokenView;
+import com.app.features.ai.generation.service.AiTextGenerationStreamObserver;
+import com.app.features.ai.search.web.view.PostSearchStreamCompletionView;
+import com.app.features.ai.search.web.view.PostSearchStreamErrorView;
+import com.app.features.ai.search.web.view.PostSearchStreamResultsView;
+import com.app.features.ai.search.web.view.PostSearchStreamTokenView;
 
-public final class PostRagSseSession implements PostRagStreamObserver {
+public final class PostSearchSseSession
+        implements AiTextGenerationStreamObserver {
 
     private static final String CONNECTED_EVENT = "connected";
-    private static final String SOURCES_EVENT = "sources";
+    private static final String RESULTS_EVENT = "results";
     private static final String TOKEN_EVENT = "token";
     private static final String COMPLETE_EVENT = "complete";
     private static final String ERROR_EVENT = "error";
 
     private final SseEmitter emitter;
-    private final PostRagChatSourceViewFactory chatSourceViewFactory;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public PostRagSseSession(
-            SseEmitter emitter,
-            PostRagChatSourceViewFactory chatSourceViewFactory) {
+    public PostSearchSseSession(SseEmitter emitter) {
         this.emitter = emitter;
-        this.chatSourceViewFactory = chatSourceViewFactory;
     }
 
     public void sendConnected() {
@@ -38,19 +34,10 @@ public final class PostRagSseSession implements PostRagStreamObserver {
                 .data(CONNECTED_EVENT));
     }
 
-    @Override
-    public void onMetadata(PostRagStreamMetadata metadata) {
-        PostRagStreamSourcesView sources = PostRagStreamSourcesView.builder()
-                .retrievalAvailability(metadata.retrievalAvailability())
-                .generationAvailability(metadata.generationAvailability())
-                .sources(metadata.sources().stream()
-                        .map(source -> chatSourceViewFactory.build(source))
-                        .toList())
-                .build();
-
+    public void sendResults(PostSearchStreamResultsView results) {
         send(SseEmitter.event()
-                .name(SOURCES_EVENT)
-                .data(sources, MediaType.APPLICATION_JSON));
+                .name(RESULTS_EVENT)
+                .data(results, MediaType.APPLICATION_JSON));
     }
 
     @Override
@@ -61,12 +48,12 @@ public final class PostRagSseSession implements PostRagStreamObserver {
 
         send(SseEmitter.event()
                 .name(TOKEN_EVENT)
-                .data(PostRagStreamTokenView.builder()
+                .data(PostSearchStreamTokenView.builder()
                         .text(token)
                         .build(), MediaType.APPLICATION_JSON));
     }
 
-    public void sendCompletion(PostRagStreamCompletionView completion) {
+    public void sendCompletion(PostSearchStreamCompletionView completion) {
         finish(SseEmitter.event()
                 .name(COMPLETE_EVENT)
                 .data(completion, MediaType.APPLICATION_JSON));
@@ -75,7 +62,7 @@ public final class PostRagSseSession implements PostRagStreamObserver {
     public void sendError(String message) {
         finish(SseEmitter.event()
                 .name(ERROR_EVENT)
-                .data(PostRagStreamErrorView.builder()
+                .data(PostSearchStreamErrorView.builder()
                         .message(message)
                         .build(), MediaType.APPLICATION_JSON));
     }
@@ -86,7 +73,7 @@ public final class PostRagSseSession implements PostRagStreamObserver {
 
     @Override
     public boolean isCancelled() {
-        return closed.get();
+        return closed.get() || Thread.currentThread().isInterrupted();
     }
 
     public void disconnect() {
@@ -113,7 +100,7 @@ public final class PostRagSseSession implements PostRagStreamObserver {
         try {
             emitter.send(event);
         } catch (IOException | IllegalStateException exception) {
-            // The client has already disconnected; cancellation is enough.
+            // The client has already disconnected.
         } finally {
             closed.set(true);
             try {

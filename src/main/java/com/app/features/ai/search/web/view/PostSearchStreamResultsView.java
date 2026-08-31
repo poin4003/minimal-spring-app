@@ -1,4 +1,4 @@
-package com.app.features.ai.rag.web.view;
+package com.app.features.ai.search.web.view;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PostRagStreamSourcesView {
+public class PostSearchStreamResultsView {
 
     private final AiAvailability retrievalAvailability;
-    private final AiAvailability generationAvailability;
-    private final List<PostRagChatSourceView> sources;
+    private final AiAvailability summaryAvailability;
+    private final List<PostSearchItemView> items;
 }

@@ -88,6 +88,11 @@ DB, không tái sử dụng browser chat history.
 - Hiển thị kết quả semantic trước; AI summary là khu vực tùy chọn chạy sau.
 - Bỏ chat session, interrupted message và browser conversation history.
 
+Đã triển khai tại `/search`. Web flow nhận danh sách KNN trước; text generation
+chỉ chạy khi user chủ động yêu cầu tóm tắt và capability đang sẵn sàng. Route,
+controller, view, JavaScript, CSS và message key của `/ai-chat` đã được xóa thay
+vì duy trì hai giao diện song song.
+
 ### Đợt 4 - Cleanup Và Retrieval Quality
 
 - Đổi tên controller, view, message key và asset còn mang nghĩa chat.

@@ -86,12 +86,12 @@ public class SocialShellFactory {
                 .build();
         List<SocialNavigationItemView> navigation =
                 new ArrayList<>(List.of(feed, shorts, videos));
-        String aiChatPath = appProperties.getUi().getAiChatPath();
+        String searchPath = appProperties.getUi().getSearchPath();
         navigation.add(SocialNavigationItemView.builder()
-                .label(messageResolver.get("social.navigation.aiChat"))
-                .icon("stars")
-                .path(aiChatPath)
-                .active(matchesPath(aiChatPath, requestPath))
+                .label(messageResolver.get("social.navigation.search"))
+                .icon("search")
+                .path(searchPath)
+                .active(matchesPath(searchPath, requestPath))
                 .build());
 
         return List.copyOf(navigation);

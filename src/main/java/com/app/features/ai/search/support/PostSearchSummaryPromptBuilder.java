@@ -9,11 +9,11 @@ import org.springframework.validation.annotation.Validated;
 
 import com.app.config.settings.AppProperties;
 import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
-import com.app.features.ai.rag.support.PostRagLanguageResolver;
 import com.app.features.ai.search.exceptions.AiSearchRuntimeException;
 import com.app.features.ai.search.schema.model.PostSearchItem;
 import com.app.features.ai.search.schema.model.PostSearchResult;
 import com.app.features.ai.search.schema.model.PostSearchSummaryRequest;
+import com.app.features.ai.support.AiResponseLanguageResolver;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -40,7 +40,7 @@ public class PostSearchSummaryPromptBuilder {
             """;
 
     private final AppProperties appProperties;
-    private final PostRagLanguageResolver postRagLanguageResolver;
+    private final AiResponseLanguageResolver aiResponseLanguageResolver;
 
     public AiTextGenerationRequest build(
             @NotNull @Valid PostSearchSummaryRequest request) {
@@ -67,7 +67,7 @@ public class PostSearchSummaryPromptBuilder {
                 formatSources(boundedItems));
         return new AiTextGenerationRequest(
                 SYSTEM_PROMPT_TEMPLATE.formatted(
-                        postRagLanguageResolver
+                        aiResponseLanguageResolver
                                 .getResponseLanguageName(
                                         request.responseLanguage())),
                 userPrompt,

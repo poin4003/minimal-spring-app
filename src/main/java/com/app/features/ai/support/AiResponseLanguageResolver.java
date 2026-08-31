@@ -1,4 +1,4 @@
-package com.app.features.ai.rag.support;
+package com.app.features.ai.support;
 
 import java.util.Locale;
 
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 import com.app.core.enums.AppLanguage;
 
 @Component
-public class PostRagLanguageResolver {
+public class AiResponseLanguageResolver {
 
     public AppLanguage resolve(Locale locale) {
         return AppLanguage.fromLocale(locale)

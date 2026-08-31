@@ -1,4 +1,4 @@
-package com.app.features.ai.rag.web.controller;
+package com.app.features.ai.search.web.controller;
 
 import java.util.Locale;
 
@@ -12,9 +12,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
-import com.app.features.ai.rag.schema.payload.PostRagQuestionPayload;
-import com.app.features.ai.rag.support.PostRagLanguageResolver;
-import com.app.features.ai.rag.web.service.PostRagSseService;
+import com.app.features.ai.search.schema.payload.PostSearchPayload;
+import com.app.features.ai.search.web.service.PostSearchSseService;
+import com.app.features.ai.support.AiResponseLanguageResolver;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -22,18 +22,18 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${app.ui.ai-chat-path:/ai-chat}")
-public class PostRagChatSseController {
+@RequestMapping("${app.ui.search-path:/search}")
+public class PostSearchSseController {
 
-    private final PostRagSseService postRagSseSvc;
-    private final PostRagLanguageResolver postRagLanguageResolver;
+    private final PostSearchSseService postSearchSseSvc;
+    private final AiResponseLanguageResolver aiResponseLanguageResolver;
 
     @RateLimited(RateLimitPolicy.RAG_QUERY)
     @PostMapping(
-            path = "/ask/stream",
+            path = "/stream",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(
-            @Valid @ModelAttribute PostRagQuestionPayload question,
+            @Valid @ModelAttribute PostSearchPayload payload,
             Locale locale,
             HttpServletResponse response) {
         response.setHeader(
@@ -41,8 +41,9 @@ public class PostRagChatSseController {
                 "no-cache, no-transform");
         response.setHeader("X-Accel-Buffering", "no");
 
-        return postRagSseSvc.stream(
-                question.getQuestion(),
-                postRagLanguageResolver.resolve(locale));
+        return postSearchSseSvc.stream(
+                payload.getQuery(),
+                aiResponseLanguageResolver.resolve(locale),
+                payload.isSummarize());
     }
 }

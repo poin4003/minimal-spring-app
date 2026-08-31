@@ -16,8 +16,4 @@ public interface PostRagService {
             @NotBlank @Size(max = 2000) String question,
             @NotNull AppLanguage responseLanguage);
 
-    PostRagResult answer(
-            @NotBlank @Size(max = 2000) String question,
-            @NotNull AppLanguage responseLanguage,
-            @NotNull PostRagStreamObserver streamObserver);
 }

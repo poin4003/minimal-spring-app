@@ -892,7 +892,7 @@ public class AppProperties {
         private String videosPath = "/videos";
 
         @NotBlank
-        private String aiChatPath = "/ai-chat";
+        private String searchPath = "/search";
 
         @NotBlank
         private String myPostsPath = "/my/posts";
