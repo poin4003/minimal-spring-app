@@ -94,8 +94,7 @@ public class RateLimitServiceImpl implements RateLimitService {
             RateLimitPolicy policy,
             HttpServletRequest request) {
         if (policy.getSubject() == RateLimitSubject.CLIENT_IP) {
-            String remoteAddress = request.getRemoteAddr();
-            return "ip:" + (remoteAddress == null ? UNKNOWN_CLIENT : remoteAddress);
+            return resolveClientIpSubject(request);
         }
 
         if (policy.getSubject() == RateLimitSubject.EXPLICIT) {
@@ -106,11 +105,32 @@ public class RateLimitServiceImpl implements RateLimitService {
 
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null
-                || !(authentication.getPrincipal() instanceof UserPrincipal principal)) {
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal()
+                        instanceof UserPrincipal principal) {
+            return "user:" + principal.getUserId();
+        }
+
+        if (policy.getSubject()
+                == RateLimitSubject.AUTHENTICATED_USER_OR_IP) {
+            return resolveClientIpSubject(request);
+        }
+
+        if (policy.getSubject() == RateLimitSubject.AUTHENTICATED_USER) {
             throw ExceptionFactory.tokenInvalid("error.auth.required");
         }
 
-        return "user:" + principal.getUserId();
+        throw new IllegalArgumentException(
+                "Unsupported HTTP rate-limit subject: "
+                        + policy.getSubject());
+    }
+
+    private String resolveClientIpSubject(HttpServletRequest request) {
+        String remoteAddress = request.getRemoteAddr();
+        return "ip:"
+                + (remoteAddress == null
+                        ? UNKNOWN_CLIENT
+                        : remoteAddress);
     }
 }

@@ -1,5 +1,6 @@
 package com.app.features.ui.web.support;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -43,7 +44,7 @@ public class SocialShellFactory {
                         ? ui.getHomePath()
                         : null)
                 .currentUser(authenticated ? toCurrentUser(currentUser) : null)
-                .navigation(buildNavigation(requestPath))
+                .navigation(buildNavigation(requestPath, authenticated))
                 .notificationWidget(authenticated
                         ? buildNotificationWidget()
                         : null)
@@ -60,7 +61,8 @@ public class SocialShellFactory {
     }
 
     private List<SocialNavigationItemView> buildNavigation(
-            String requestPath) {
+            String requestPath,
+            boolean authenticated) {
         String feedPath = appProperties.getUi().getFeedPath();
         String shortsPath = appProperties.getUi().getShortsPath();
         String videosPath = appProperties.getUi().getVideosPath();
@@ -82,7 +84,17 @@ public class SocialShellFactory {
                 .path(videosPath)
                 .active(matchesPath(videosPath, requestPath))
                 .build();
-        return List.of(feed, shorts, videos);
+        List<SocialNavigationItemView> navigation =
+                new ArrayList<>(List.of(feed, shorts, videos));
+        String aiChatPath = appProperties.getUi().getAiChatPath();
+        navigation.add(SocialNavigationItemView.builder()
+                .label(messageResolver.get("social.navigation.aiChat"))
+                .icon("stars")
+                .path(aiChatPath)
+                .active(matchesPath(aiChatPath, requestPath))
+                .build());
+
+        return List.copyOf(navigation);
     }
 
     private NotificationWidgetView buildNotificationWidget() {

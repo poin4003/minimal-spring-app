@@ -18,7 +18,7 @@ app:
         generation:
             enabled: ${AI_GENERATION_ENABLED:false}
             machine:
-                model-id: ${AI_GENERATION_MODEL_ID:tjake/Llama-3.2-1B-Instruct-JQ4}
+                model-id: ${AI_GENERATION_MODEL_ID:tjake/Qwen2.5-0.5B-Instruct-JQ4}
                 model-directory: ${AI_GENERATION_MODEL_DIRECTORY:./data/ai-models/jlama}
                 threads: ${AI_GENERATION_THREADS:4}
                 max-concurrency: ${AI_GENERATION_MAX_CONCURRENCY:1}
@@ -28,6 +28,14 @@ app:
             max-context-characters: ${AI_RAG_MAX_CONTEXT_CHARACTERS:6000}
             temperature: ${AI_RAG_TEMPERATURE:0.1}
             max-output-tokens: ${AI_RAG_MAX_OUTPUT_TOKENS:256}
+            conversation:
+                max-history-messages: ${AI_RAG_MAX_HISTORY_MESSAGES:6}
+                max-history-tokens: ${AI_RAG_MAX_HISTORY_TOKENS:1024}
+            stream:
+                timeout: ${AI_RAG_STREAM_TIMEOUT:30m}
+                heartbeat-interval: ${AI_RAG_STREAM_HEARTBEAT_INTERVAL:15s}
+                workers: ${AI_RAG_STREAM_WORKERS:2}
+                queue-capacity: ${AI_RAG_STREAM_QUEUE_CAPACITY:8}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:
@@ -270,6 +278,8 @@ app:
             - "${app.ui.shorts-path}/**"
             - "${app.ui.videos-path}"
             - "${app.ui.videos-path}/**"
+            - "${app.ui.ai-chat-path}"
+            - "${app.ui.ai-chat-path}/**"
             - /login
             - "${app.ui.registration-path}"
             - "${app.ui.registration-path}/**"
@@ -297,6 +307,7 @@ app:
         feed-path: ${UI_FEED_PATH:/posts}
         shorts-path: ${UI_SHORTS_PATH:/shorts}
         videos-path: ${UI_VIDEOS_PATH:/videos}
+        ai-chat-path: ${UI_AI_CHAT_PATH:/ai-chat}
         my-posts-path: ${UI_MY_POSTS_PATH:/my/posts}
         my-shorts-path: ${UI_MY_SHORTS_PATH:/my/shorts}
         my-videos-path: ${UI_MY_VIDEOS_PATH:/my/videos}

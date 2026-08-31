@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${page.title}">AI chat</title>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script th:src="@{/js/app-ui.js}"></script>
+    <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+    <link rel="stylesheet" th:href="@{/css/ai-chat.css}">
+    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+    <script defer th:src="@{/js/ai-chat.js}"></script>
+</head>
+<body class="bg-body-tertiary ai-chat-page">
+    <div th:replace="~{fragments/social-shell
+            :: layout(${page.shell}, ~{::pageContent})}">
+        <th:block th:fragment="pageContent">
+            <section class="ai-chat-stage"
+                     data-ai-chat
+                     th:data-error-message="#{ai.chat.error.request}"
+                     th:data-rate-limit-message="#{ai.chat.error.rateLimit}"
+                     th:data-auth-message="#{ai.chat.error.auth}"
+                     th:data-interrupted-message="#{ai.chat.response.interrupted}"
+                     th:data-session-storage-key="${page.sessionStorageKey}"
+                     th:data-max-history-messages="${page.maxHistoryMessages}"
+                     th:data-relevance-template="#{ai.chat.sources.relevance(0)}">
+                <div class="card ai-chat-panel">
+                    <div class="card-body ai-chat-messages"
+                         data-ai-chat-messages
+                         role="log"
+                         aria-live="polite"
+                         th:aria-label="#{ai.chat.history.label}">
+                        <section class="ai-chat-welcome text-center m-auto"
+                                 data-ai-chat-welcome>
+                            <div class="fs-1 text-body-secondary mb-3"
+                                 aria-hidden="true">
+                                <i class="bi bi-compass"></i>
+                            </div>
+                            <h2 class="h4"
+                                th:text="#{ai.chat.welcome.title}">
+                                Explore what people are sharing
+                            </h2>
+                            <p class="text-body-secondary mb-0"
+                               th:text="#{ai.chat.welcome.description}">
+                                Ask naturally. Vibe AI will search published posts
+                                before answering.
+                            </p>
+                        </section>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 px-3 pb-2
+                                text-body-secondary small"
+                         data-ai-chat-thinking
+                         hidden>
+                        <span class="spinner-border spinner-border-sm"
+                              aria-hidden="true"></span>
+                        <span th:text="#{ai.chat.thinking}">
+                            Searching the network and preparing an answer...
+                        </span>
+                    </div>
+
+                    <div class="card-footer bg-body p-3">
+                        <form class="input-group align-items-end"
+                              method="post"
+                              th:action="${page.askPath}"
+                              hx-boost="false"
+                              data-app-loader="manual"
+                              data-ai-chat-form>
+                            <label class="visually-hidden"
+                                   for="ai-chat-question"
+                                   th:text="#{ai.chat.question.label}">
+                                Your question
+                            </label>
+                            <textarea id="ai-chat-question"
+                                      class="form-control ai-chat-input"
+                                      name="question"
+                                      rows="1"
+                                      maxlength="2000"
+                                      required
+                                      data-ai-chat-input
+                                      th:placeholder="#{ai.chat.question.placeholder}"></textarea>
+                            <button type="submit"
+                                    class="btn btn-primary ai-chat-send"
+                                    data-ai-chat-send
+                                    th:aria-label="#{ai.chat.send}">
+                                <i class="bi bi-arrow-up" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                        <div class="form-text text-center mt-2"
+                             th:text="#{ai.chat.hint}">
+                            Enter to send, Shift + Enter for a new line.
+                        </div>
+                    </div>
+                </div>
+
+                <template data-ai-chat-user-template>
+                    <article class="ai-chat-message ai-chat-message-user
+                                    bg-primary text-white rounded-3 p-3">
+                        <div class="small fw-semibold opacity-75 mb-1"
+                             th:text="#{ai.chat.you}">You</div>
+                        <p class="mb-0" data-ai-chat-user-content></p>
+                    </article>
+                </template>
+
+                <template data-ai-chat-assistant-template>
+                    <th:block th:replace="~{ai/rag/fragments/chat-message
+                            :: assistantStreamMessage}"></th:block>
+                </template>
+
+                <template data-ai-chat-source-template>
+                    <th:block th:replace="~{ai/rag/fragments/chat-message
+                            :: streamSource}"></th:block>
+                </template>
+            </section>
+        </th:block>
+    </div>
+</body>
+</html>

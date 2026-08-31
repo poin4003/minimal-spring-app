@@ -230,7 +230,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <jvmArguments>--add-modules jdk.incubator.vector --enable-preview</jvmArguments>
+                    <jvmArguments>--add-modules jdk.incubator.vector --enable-preview -XX:ErrorFile=./logs/crash/hs_err_pid%p.log</jvmArguments>
                 </configuration>
             </plugin>
 

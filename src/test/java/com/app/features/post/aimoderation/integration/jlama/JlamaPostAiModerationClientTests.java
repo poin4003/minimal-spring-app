@@ -2,8 +2,7 @@ package com.app.features.post.aimoderation.integration.jlama;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
@@ -15,9 +14,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.app.config.settings.AppProperties;
-import com.app.features.ai.runtime.JlamaRuntime;
+import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
+import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
+import com.app.features.ai.generation.service.AiTextGenerationClient;
 import com.app.features.post.aimoderation.enums.PostAiModerationOutcome;
 import com.app.features.post.aimoderation.exceptions.PostAiModerationClientException;
 import com.app.features.post.aimoderation.schema.model.PostAiModerationClientResult;
@@ -29,7 +31,11 @@ import tools.jackson.databind.ObjectMapper;
 class JlamaPostAiModerationClientTests {
 
     @Mock
-    private JlamaRuntime jlamaRuntime;
+    private ObjectProvider<AiTextGenerationClient>
+            aiTextGenerationClientProvider;
+
+    @Mock
+    private AiTextGenerationClient aiTextGenerationClient;
 
     private JlamaPostAiModerationClient client;
 
@@ -41,62 +47,69 @@ class JlamaPostAiModerationClientTests {
                 .getMachine()
                 .setMaxTokens(64);
         client = new JlamaPostAiModerationClient(
-                jlamaRuntime,
+                aiTextGenerationClientProvider,
                 appProperties,
                 new ObjectMapper());
 
-        given(jlamaRuntime.isReady()).willReturn(true);
+        given(aiTextGenerationClientProvider.getIfAvailable())
+                .willReturn(aiTextGenerationClient);
+        given(aiTextGenerationClient.isReady()).willReturn(true);
     }
 
     @Test
     void placesOutputFormatAfterUntrustedUserContent() {
-        given(jlamaRuntime.generate(
-                anyString(),
-                anyString(),
-                eq(0.0f),
-                eq(64)))
-                .willReturn("""
+        given(aiTextGenerationClient.getModelId())
+                .willReturn("test/model");
+        given(aiTextGenerationClient.generate(
+                any(AiTextGenerationRequest.class)))
+                .willReturn(generation("""
                         {"outcome":"REJECT","reason":"Racial attack"}
-                        """);
+                        """));
 
         PostAiModerationClientResult result = client.moderate(request());
 
         assertThat(result.outcome())
                 .isEqualTo(PostAiModerationOutcome.REJECT);
 
-        ArgumentCaptor<String> systemPrompt =
-                ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> userPrompt =
-                ArgumentCaptor.forClass(String.class);
-        verify(jlamaRuntime).generate(
-                systemPrompt.capture(),
-                userPrompt.capture(),
-                eq(0.0f),
-                eq(64));
+        ArgumentCaptor<AiTextGenerationRequest> generationRequest =
+                ArgumentCaptor.forClass(AiTextGenerationRequest.class);
+        verify(aiTextGenerationClient).generate(
+                generationRequest.capture());
 
-        assertThat(systemPrompt.getValue())
+        assertThat(generationRequest.getValue().systemPrompt())
                 .contains("This runtime is text-only")
                 .doesNotContain("Return exactly one JSON object");
-        assertThat(userPrompt.getValue())
+        assertThat(generationRequest.getValue().userPrompt())
                 .startsWith("Post text:")
                 .contains("Return exactly one JSON object")
                 .endsWith("Do not include markdown, code fences, or any text outside the JSON.\n");
+        assertThat(generationRequest.getValue().temperature())
+                .isEqualTo(0.0f);
+        assertThat(generationRequest.getValue().maxOutputTokens())
+                .isEqualTo(64);
     }
 
     @Test
     void preservesRawResponseWhenModelDoesNotReturnJson() {
         String rawResponse = "REJECT because the post contains a racial slur.";
-        given(jlamaRuntime.generate(
-                anyString(),
-                anyString(),
-                eq(0.0f),
-                eq(64)))
-                .willReturn(rawResponse);
+        given(aiTextGenerationClient.generate(
+                any(AiTextGenerationRequest.class)))
+                .willReturn(generation(rawResponse));
 
         assertThatExceptionOfType(PostAiModerationClientException.class)
                 .isThrownBy(() -> client.moderate(request()))
                 .satisfies(exception -> assertThat(exception.getRawResponse())
                         .isEqualTo(rawResponse));
+    }
+
+    private AiTextGenerationResult generation(String responseText) {
+        return new AiTextGenerationResult(
+                responseText,
+                10,
+                5,
+                1,
+                2,
+                "STOP");
     }
 
     private PostAiModerationRequest request() {

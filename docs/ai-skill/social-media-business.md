@@ -218,6 +218,10 @@ Allowed transitions:
 - Replies to replies are rejected, keeping the comment tree at exactly two levels.
 - Comments and replies become visible immediately after creation.
 - Anonymous users can read comments but cannot create them.
+- A later phase may reserve `@VibeAI` as a system mention after the regular
+  comment lifecycle is complete. Its generated reply is public, visibly marked
+  as AI-generated, rate-limited, moderated, and cannot recursively mention
+  itself.
 
 ## Feed
 - The public feed contains only `PUBLISHED` posts.
@@ -245,7 +249,7 @@ Allowed transitions:
 - Personalized feeds
 - Likes and reactions
 - Direct messages
-- Hashtags and mentions
+- General hashtags and user-to-user mentions
 - Automatic translation of user-generated content
 - Standalone public media galleries
 - Product commerce and inventory workflows
@@ -262,3 +266,4 @@ Allowed transitions:
 9. [ ] Wikis and blogs with sanitized Markdown.
 10. [ ] Public profiles and typed content galleries.
 11. [ ] Two-level text comments and replies.
+12. [ ] Public `@VibeAI` comment replies built on the completed comment flow.

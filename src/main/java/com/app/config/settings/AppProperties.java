@@ -84,7 +84,7 @@ public class AppProperties {
     @Data
     public static class AiGenerationMachine {
         @NotBlank
-        private String modelId = "tjake/Llama-3.2-1B-Instruct-JQ4";
+        private String modelId = "tjake/Qwen2.5-0.5B-Instruct-JQ4";
 
         @NotBlank
         private String modelDirectory = "./data/ai-models/jlama";
@@ -108,6 +108,14 @@ public class AppProperties {
 
     @Data
     public static class RagSettings {
+        @Valid
+        private final RagConversationSettings conversation =
+                new RagConversationSettings();
+
+        @Valid
+        private final RagStreamSettings stream =
+                new RagStreamSettings();
+
         @Positive
         @Max(10)
         private int retrievalLimit = 3;
@@ -123,6 +131,46 @@ public class AppProperties {
         @Positive
         @Max(2048)
         private int maxOutputTokens = 256;
+    }
+
+    @Data
+    public static class RagConversationSettings {
+        @Positive
+        @Max(6)
+        private int maxHistoryMessages = 6;
+
+        @Min(800)
+        @Max(1200)
+        private int maxHistoryTokens = 1024;
+    }
+
+    @Data
+    public static class RagStreamSettings {
+        @NotNull
+        private Duration timeout = Duration.ofMinutes(30);
+
+        @NotNull
+        private Duration heartbeatInterval = Duration.ofSeconds(15);
+
+        @Positive
+        @Max(16)
+        private int workers = 2;
+
+        @Min(0)
+        @Max(100)
+        private int queueCapacity = 8;
+
+        @AssertTrue(
+                message = "RAG stream timeout and heartbeat interval must be positive, and heartbeat must be shorter than timeout.")
+        public boolean isTimingValid() {
+            return timeout != null
+                    && !timeout.isZero()
+                    && !timeout.isNegative()
+                    && heartbeatInterval != null
+                    && !heartbeatInterval.isZero()
+                    && !heartbeatInterval.isNegative()
+                    && heartbeatInterval.compareTo(timeout) < 0;
+        }
     }
 
     @Data
@@ -857,6 +905,9 @@ public class AppProperties {
 
         @NotBlank
         private String videosPath = "/videos";
+
+        @NotBlank
+        private String aiChatPath = "/ai-chat";
 
         @NotBlank
         private String myPostsPath = "/my/posts";

@@ -21,6 +21,79 @@ state cần recovery. Dung lượng còn lại của batch mới được dùng 
 backfill cho post public chưa từng được index. Vì vậy tác vụ định kỳ không quét
 toàn bộ DB hay đọc toàn bộ document trong Lucene.
 
+## Định Hướng Sản Phẩm
+
+Giao diện độc lập của hạ tầng này là khu vực semantic search, không giả lập một
+chatbot đa dụng. User nhập truy vấn ở thanh tìm kiếm và nhận danh sách content
+liên quan. Nếu text generation đang sẵn sàng, RAG có thể tạo một phần tóm tắt
+ngắn có citation từ chính kết quả tìm kiếm; khi generation bị tắt, semantic
+search vẫn hoạt động đầy đủ.
+
+Lucene vector index và embedding không phụ thuộc vào giao diện chat. Chúng được
+giữ làm nền tảng cho các chức năng sau:
+
+- Tìm kiếm theo ý nghĩa, đa ngôn ngữ và chịu được khác biệt từ khóa.
+- Tìm content tương tự để hiển thị `Related posts` hoặc `More like this`.
+- Tạo candidate cho recommendation từ các post user đã xem hoặc tương tác.
+- Gom nhóm content gần nhau, hỗ trợ phát hiện chủ đề và nội dung trùng lặp.
+- Bổ sung nguồn nội bộ cho các thao tác AI ngay tại post hoặc comment.
+
+Không hiển thị Lucene KNN score như xác suất liên quan. Ngưỡng loại kết quả yếu
+phải được hiệu chỉnh bằng benchmark positive/negative query thay vì chọn một
+con số tùy ý. RAG không được bắt buộc chạy cho mọi truy vấn và không được tạo
+nguồn khi retrieval không có kết quả đủ tốt.
+
+Sau khi comment lifecycle hoàn thiện, hệ thống có thể dành riêng mention
+`@VibeAI`. Mention tạo một background job lấy post, nhánh comment hiện tại và
+các nguồn semantic search phù hợp làm context, sau đó đăng câu trả lời bằng
+system AI identity. Câu trả lời phải hiển thị công khai trong thread, có nhãn
+AI, chịu rate limit và moderation, đồng thời không được tự kích hoạt thêm một
+AI mention khác.
+
+## Quyết Định Conversation History
+
+Search request không nhận conversation history. Recent searches có thể được UI
+lưu để hỗ trợ trải nghiệm, nhưng không được gửi như context cho retrieval hoặc
+generation. Việc lấy một số message gần nhất rồi nối vào prompt không phải
+memory lifecycle phù hợp cho sản phẩm search và có thể làm sai retrieval query.
+
+Chỉ quay lại conversational AI sau khi backend có domain `Conversation` và
+`Message` làm nguồn sự thật phía server. Khi đó context builder phải có token
+budget, recent window, conversation summary, semantic memory retrieval và
+structured user memory. History do browser tự gửi không được xem là nguồn sự
+thật. Context cho `@VibeAI` cũng phải được dựng từ post và comment thread trong
+DB, không tái sử dụng browser chat history.
+
+## Kế Hoạch Chuyển AI Chat Thành Search
+
+### Đợt 1 - Search Contract
+
+- Thêm application contract chỉ nhận query và filter tối thiểu.
+- Trả semantic search results độc lập với text generation.
+- Giữ RAG endpoint hiện tại trong lúc chuyển đổi để không làm gãy UI giữa đợt.
+
+### Đợt 2 - Optional RAG Summary
+
+- Tách generation thành search summary nhận query và sources đã retrieve.
+- Loại conversation history khỏi payload, prompt và retrieval query.
+- Xóa conversation window, history token config và các model chỉ phục vụ chat.
+- Giữ SSE để stream phần summary khi generation sẵn sàng.
+
+### Đợt 3 - Search UI
+
+- Thay chat bubbles bằng thanh search và danh sách content results.
+- Đưa query lên URL để refresh, back và chia sẻ được.
+- Hiển thị kết quả semantic trước; AI summary là khu vực tùy chọn chạy sau.
+- Bỏ chat session, interrupted message và browser conversation history.
+
+### Đợt 4 - Cleanup Và Retrieval Quality
+
+- Đổi tên controller, view, message key và asset còn mang nghĩa chat.
+- Giữ redirect tạm thời từ route AI chat cũ nếu cần tương thích bookmark.
+- Không hiển thị KNN score như phần trăm xác suất.
+- Thêm relevance threshold sau khi có benchmark positive/negative query.
+- Giữ BM25 hybrid search là đợt mở rộng riêng sau khi semantic search ổn định.
+
 ## Quyết định PostgreSQL
 
 Nếu sau này chủ động chuyển hạ tầng sang PostgreSQL, lựa chọn ưu tiên cho vector

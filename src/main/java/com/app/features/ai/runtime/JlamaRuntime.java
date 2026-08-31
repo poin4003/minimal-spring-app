@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -17,6 +18,9 @@ import com.app.features.ai.exceptions.JlamaRuntimeException;
 import com.app.features.ai.generation.schema.model.AiTextGenerationRequest;
 import com.app.features.ai.generation.schema.model.AiTextGenerationResult;
 import com.app.features.ai.generation.service.AiTextGenerationClient;
+import com.app.features.ai.generation.service.AiTextGenerationStreamObserver;
+import com.app.features.ai.generation.service.AiTextTokenCounter;
+import com.app.features.ai.generation.service.impl.NoOpAiTextGenerationStreamObserver;
 import com.github.tjake.jlama.model.AbstractModel;
 import com.github.tjake.jlama.model.ModelSupport;
 import com.github.tjake.jlama.model.functions.Generator;
@@ -35,7 +39,8 @@ import lombok.extern.slf4j.Slf4j;
         prefix = "app.ai.generation",
         name = "enabled",
         havingValue = "true")
-public class JlamaRuntime implements AiTextGenerationClient {
+public class JlamaRuntime
+        implements AiTextGenerationClient, AiTextTokenCounter {
 
     private final AppProperties.AiGenerationMachine machine;
     private final Semaphore inferencePermits;
@@ -98,12 +103,44 @@ public class JlamaRuntime implements AiTextGenerationClient {
     }
 
     @Override
+    public int countTokens(String text) {
+        lifecycleLock.readLock().lock();
+        try {
+            AbstractModel currentModel = model;
+            if (currentModel == null) {
+                throw new JlamaRuntimeException(
+                        "Jlama runtime is not ready.");
+            }
+            return currentModel.getTokenizer().encode(text).length;
+        } catch (JlamaRuntimeException exception) {
+            throw exception;
+        } catch (RuntimeException exception) {
+            throw new JlamaRuntimeException(
+                    "Jlama token counting failed.",
+                    exception);
+        } finally {
+            lifecycleLock.readLock().unlock();
+        }
+    }
+
+    @Override
     public AiTextGenerationResult generate(
             AiTextGenerationRequest request) {
+        return generate(
+                request,
+                NoOpAiTextGenerationStreamObserver.INSTANCE);
+    }
+
+    @Override
+    public AiTextGenerationResult generate(
+            AiTextGenerationRequest request,
+            AiTextGenerationStreamObserver streamObserver) {
+        ensureNotCancelled(streamObserver);
         acquireInferencePermit();
         lifecycleLock.readLock().lock();
 
         try {
+            ensureNotCancelled(streamObserver);
             AbstractModel currentModel = model;
             if (currentModel == null) {
                 throw new JlamaRuntimeException(
@@ -122,7 +159,10 @@ public class JlamaRuntime implements AiTextGenerationClient {
                     UUID.randomUUID(),
                     promptContext,
                     request.temperature(),
-                    totalTokenLimit);
+                    totalTokenLimit,
+                    (token, probability) -> emitToken(
+                            streamObserver,
+                            token));
 
             log.info(
                     "Jlama generation completed with [{}] prompt tokens and "
@@ -141,7 +181,7 @@ public class JlamaRuntime implements AiTextGenerationClient {
                     response.promptTimeMs,
                     response.generateTimeMs,
                     response.finishReason.name());
-        } catch (JlamaRuntimeException exception) {
+        } catch (CancellationException | JlamaRuntimeException exception) {
             throw exception;
         } catch (RuntimeException exception) {
             throw new JlamaRuntimeException(
@@ -184,6 +224,23 @@ public class JlamaRuntime implements AiTextGenerationClient {
             throw new JlamaRuntimeException(
                     "Interrupted while waiting for Jlama inference.",
                     exception);
+        }
+    }
+
+    private void emitToken(
+            AiTextGenerationStreamObserver streamObserver,
+            String token) {
+        ensureNotCancelled(streamObserver);
+        if (token != null && !token.isEmpty()) {
+            streamObserver.onToken(token);
+        }
+    }
+
+    private void ensureNotCancelled(
+            AiTextGenerationStreamObserver streamObserver) {
+        if (streamObserver.isCancelled()) {
+            throw new CancellationException(
+                    "AI text generation was cancelled.");
         }
     }
 

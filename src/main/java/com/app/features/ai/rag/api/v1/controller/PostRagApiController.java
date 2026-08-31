@@ -1,5 +1,7 @@
 package com.app.features.ai.rag.api.v1.controller;
 
+import java.util.Locale;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +11,7 @@ import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.response.ApiResult;
+import com.app.features.ai.rag.mapper.PostRagConversationRequestMapper;
 import com.app.features.ai.rag.mapper.PostRagResultMapper;
 import com.app.features.ai.rag.schema.model.PostRagResult;
 import com.app.features.ai.rag.schema.payload.PostRagQuestionPayload;
@@ -24,14 +27,20 @@ import lombok.RequiredArgsConstructor;
 public class PostRagApiController {
 
     private final PostRagService postRagSvc;
+    private final PostRagConversationRequestMapper
+            postRagConversationRequestMapper;
     private final PostRagResultMapper postRagResultMapper;
     private final AppMessageResolver messageResolver;
 
     @RateLimited(RateLimitPolicy.RAG_QUERY)
     @PostMapping("/ask")
     public ApiResult<PostRagAnswerResult> answer(
-            @Valid @RequestBody PostRagQuestionPayload payload) {
-        PostRagResult result = postRagSvc.answer(payload.getQuestion());
+            @Valid @RequestBody PostRagQuestionPayload payload,
+            Locale locale) {
+        PostRagResult result = postRagSvc.answer(
+                postRagConversationRequestMapper.toModel(
+                        payload,
+                        locale));
         return ApiResult.ok(
                 postRagResultMapper.toResult(result),
                 messageResolver.get("api.ai.rag.answer.success"));

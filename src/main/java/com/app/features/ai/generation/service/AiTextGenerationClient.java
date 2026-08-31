@@ -14,4 +14,8 @@ public interface AiTextGenerationClient {
 
     AiTextGenerationResult generate(
             @NotNull @Valid AiTextGenerationRequest request);
+
+    AiTextGenerationResult generate(
+            @NotNull @Valid AiTextGenerationRequest request,
+            @NotNull AiTextGenerationStreamObserver streamObserver);
 }
