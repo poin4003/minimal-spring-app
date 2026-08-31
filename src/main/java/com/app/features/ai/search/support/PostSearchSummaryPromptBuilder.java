@@ -52,7 +52,7 @@ public class PostSearchSummaryPromptBuilder {
 
         List<PostSearchItem> boundedItems = limitSourceContent(
                 searchResult.items(),
-                appProperties.getAi().getRag()
+                appProperties.getAi().getSearch().getSummary()
                         .getMaxContextCharacters());
         String userPrompt = """
                 SEARCH QUERY:
@@ -71,8 +71,10 @@ public class PostSearchSummaryPromptBuilder {
                                 .getResponseLanguageName(
                                         request.responseLanguage())),
                 userPrompt,
-                appProperties.getAi().getRag().getTemperature(),
-                appProperties.getAi().getRag().getMaxOutputTokens());
+                appProperties.getAi().getSearch().getSummary()
+                        .getTemperature(),
+                appProperties.getAi().getSearch().getSummary()
+                        .getMaxOutputTokens());
     }
 
     private String formatSources(List<PostSearchItem> items) {

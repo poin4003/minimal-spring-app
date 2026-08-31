@@ -11,8 +11,8 @@ import com.app.config.settings.AppProperties;
 public class PostSearchSseTaskExecutor extends ThreadPoolTaskExecutor {
 
     public PostSearchSseTaskExecutor(AppProperties appProperties) {
-        AppProperties.RagStreamSettings streamSettings =
-                appProperties.getAi().getRag().getStream();
+        AppProperties.SearchSummaryStreamSettings streamSettings =
+                appProperties.getAi().getSearch().getSummary().getStream();
 
         setCorePoolSize(streamSettings.getWorkers());
         setMaxPoolSize(streamSettings.getWorkers());

@@ -95,8 +95,9 @@ vì duy trì hai giao diện song song.
 
 ### Đợt 4 - Cleanup Và Retrieval Quality
 
-- Đổi tên controller, view, message key và asset còn mang nghĩa chat.
-- Giữ redirect tạm thời từ route AI chat cũ nếu cần tương thích bookmark.
+- API `/api/v1/ai/rag/ask` và các adapter `PostRag*` cũ đã được xóa.
+- Cấu hình summary và rate limit đã được chuyển hoàn toàn sang namespace search.
+- Không giữ redirect hoặc compatibility alias cho route và biến môi trường cũ.
 - Không hiển thị KNN score như phần trăm xác suất.
 - Thêm relevance threshold sau khi có benchmark positive/negative query.
 - Giữ BM25 hybrid search là đợt mở rộng riêng sau khi semantic search ổn định.

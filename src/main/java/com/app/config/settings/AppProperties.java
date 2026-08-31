@@ -60,9 +60,6 @@ public class AppProperties {
                 new AiGenerationSettings();
 
         @Valid
-        private final RagSettings rag = new RagSettings();
-
-        @Valid
         private final EmbeddingSettings embedding = new EmbeddingSettings();
 
         @Valid
@@ -103,58 +100,6 @@ public class AppProperties {
             return timeout != null
                     && !timeout.isZero()
                     && !timeout.isNegative();
-        }
-    }
-
-    @Data
-    public static class RagSettings {
-        @Valid
-        private final RagStreamSettings stream =
-                new RagStreamSettings();
-
-        @Positive
-        @Max(10)
-        private int retrievalLimit = 3;
-
-        @Min(100)
-        @Max(50000)
-        private int maxContextCharacters = 6000;
-
-        @DecimalMin("0.0")
-        @DecimalMax("2.0")
-        private float temperature = 0.1f;
-
-        @Positive
-        @Max(2048)
-        private int maxOutputTokens = 256;
-    }
-
-    @Data
-    public static class RagStreamSettings {
-        @NotNull
-        private Duration timeout = Duration.ofMinutes(30);
-
-        @NotNull
-        private Duration heartbeatInterval = Duration.ofSeconds(15);
-
-        @Positive
-        @Max(16)
-        private int workers = 2;
-
-        @Min(0)
-        @Max(100)
-        private int queueCapacity = 8;
-
-        @AssertTrue(
-                message = "RAG stream timeout and heartbeat interval must be positive, and heartbeat must be shorter than timeout.")
-        public boolean isTimingValid() {
-            return timeout != null
-                    && !timeout.isZero()
-                    && !timeout.isNegative()
-                    && heartbeatInterval != null
-                    && !heartbeatInterval.isZero()
-                    && !heartbeatInterval.isNegative()
-                    && heartbeatInterval.compareTo(timeout) < 0;
         }
     }
 
@@ -233,6 +178,10 @@ public class AppProperties {
     public static class SearchSettings {
         private boolean enabled;
 
+        @Valid
+        private final SearchSummarySettings summary =
+                new SearchSummarySettings();
+
         @NotBlank
         private String indexDirectory = "./data/search/post-index";
 
@@ -250,6 +199,54 @@ public class AppProperties {
         @AssertTrue(message = "AI search default limit must not exceed its maximum limit.")
         public boolean isDefaultLimitValid() {
             return defaultLimit <= maxLimit;
+        }
+    }
+
+    @Data
+    public static class SearchSummarySettings {
+        @Valid
+        private final SearchSummaryStreamSettings stream =
+                new SearchSummaryStreamSettings();
+
+        @Min(100)
+        @Max(50000)
+        private int maxContextCharacters = 6000;
+
+        @DecimalMin("0.0")
+        @DecimalMax("2.0")
+        private float temperature = 0.1f;
+
+        @Positive
+        @Max(2048)
+        private int maxOutputTokens = 256;
+    }
+
+    @Data
+    public static class SearchSummaryStreamSettings {
+        @NotNull
+        private Duration timeout = Duration.ofMinutes(30);
+
+        @NotNull
+        private Duration heartbeatInterval = Duration.ofSeconds(15);
+
+        @Positive
+        @Max(16)
+        private int workers = 2;
+
+        @Min(0)
+        @Max(100)
+        private int queueCapacity = 8;
+
+        @AssertTrue(
+                message = "Search summary stream timeout and heartbeat interval must be positive, and heartbeat must be shorter than timeout.")
+        public boolean isTimingValid() {
+            return timeout != null
+                    && !timeout.isZero()
+                    && !timeout.isNegative()
+                    && heartbeatInterval != null
+                    && !heartbeatInterval.isZero()
+                    && !heartbeatInterval.isNegative()
+                    && heartbeatInterval.compareTo(timeout) < 0;
         }
     }
 

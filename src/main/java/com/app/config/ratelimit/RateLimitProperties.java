@@ -73,7 +73,7 @@ public class RateLimitProperties {
             new Rule(30, Duration.ofMinutes(10));
 
     @Valid
-    private final Rule ragQuery = new Rule(10, Duration.ofMinutes(1));
+    private final Rule searchQuery = new Rule(10, Duration.ofMinutes(1));
 
     @Valid
     private final Rule mediaDirectUpload = new Rule(30, Duration.ofMinutes(1));
@@ -98,7 +98,7 @@ public class RateLimitProperties {
             case PASSWORD_RESET_VERIFY_IP -> passwordResetVerifyIp;
             case PASSWORD_RESET_VERIFY_EMAIL -> passwordResetVerifyEmail;
             case PASSWORD_RESET_COMPLETE_IP -> passwordResetCompleteIp;
-            case RAG_QUERY -> ragQuery;
+            case SEARCH_QUERY -> searchQuery;
             case MEDIA_DIRECT_UPLOAD -> mediaDirectUpload;
             case MEDIA_UPLOAD_SESSION -> mediaUploadSession;
             case MEDIA_UPLOAD_CHUNK -> mediaUploadChunk;

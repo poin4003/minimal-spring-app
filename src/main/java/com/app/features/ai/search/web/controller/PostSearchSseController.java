@@ -28,7 +28,7 @@ public class PostSearchSseController {
     private final PostSearchSseService postSearchSseSvc;
     private final AiResponseLanguageResolver aiResponseLanguageResolver;
 
-    @RateLimited(RateLimitPolicy.RAG_QUERY)
+    @RateLimited(RateLimitPolicy.SEARCH_QUERY)
     @PostMapping(
             path = "/stream",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)

@@ -23,16 +23,6 @@ app:
                 threads: ${AI_GENERATION_THREADS:4}
                 max-concurrency: ${AI_GENERATION_MAX_CONCURRENCY:1}
                 timeout: ${AI_GENERATION_TIMEOUT:120s}
-        rag:
-            retrieval-limit: ${AI_RAG_RETRIEVAL_LIMIT:3}
-            max-context-characters: ${AI_RAG_MAX_CONTEXT_CHARACTERS:6000}
-            temperature: ${AI_RAG_TEMPERATURE:0.1}
-            max-output-tokens: ${AI_RAG_MAX_OUTPUT_TOKENS:256}
-            stream:
-                timeout: ${AI_RAG_STREAM_TIMEOUT:30m}
-                heartbeat-interval: ${AI_RAG_STREAM_HEARTBEAT_INTERVAL:15s}
-                workers: ${AI_RAG_STREAM_WORKERS:2}
-                queue-capacity: ${AI_RAG_STREAM_QUEUE_CAPACITY:8}
         embedding:
             enabled: ${AI_EMBEDDING_ENABLED:false}
             model:
@@ -53,6 +43,15 @@ app:
             default-limit: ${AI_SEARCH_DEFAULT_LIMIT:10}
             max-limit: ${AI_SEARCH_MAX_LIMIT:50}
             reconciliation-batch-size: ${AI_SEARCH_RECONCILIATION_BATCH_SIZE:100}
+            summary:
+                max-context-characters: ${AI_SEARCH_SUMMARY_MAX_CONTEXT_CHARACTERS:6000}
+                temperature: ${AI_SEARCH_SUMMARY_TEMPERATURE:0.1}
+                max-output-tokens: ${AI_SEARCH_SUMMARY_MAX_OUTPUT_TOKENS:256}
+                stream:
+                    timeout: ${AI_SEARCH_SUMMARY_STREAM_TIMEOUT:30m}
+                    heartbeat-interval: ${AI_SEARCH_SUMMARY_STREAM_HEARTBEAT_INTERVAL:15s}
+                    workers: ${AI_SEARCH_SUMMARY_STREAM_WORKERS:2}
+                    queue-capacity: ${AI_SEARCH_SUMMARY_STREAM_QUEUE_CAPACITY:8}
         vision:
             enabled: ${AI_VISION_ENABLED:false}
             model:
@@ -254,9 +253,9 @@ app:
             registration-complete-ip:
                 capacity: ${REGISTRATION_COMPLETE_IP_RATE_CAPACITY:30}
                 period: ${REGISTRATION_COMPLETE_IP_RATE_PERIOD:10m}
-            rag-query:
-                capacity: ${RAG_QUERY_RATE_CAPACITY:10}
-                period: ${RAG_QUERY_RATE_PERIOD:1m}
+            search-query:
+                capacity: ${SEARCH_QUERY_RATE_CAPACITY:10}
+                period: ${SEARCH_QUERY_RATE_PERIOD:1m}
             media-direct-upload: { capacity: 30, period: 1m }
             media-upload-session: { capacity: 120, period: 1m }
             media-upload-chunk: { capacity: 300, period: 1m }

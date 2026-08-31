@@ -54,7 +54,8 @@ public class PostSearchSseServiceImpl implements PostSearchSseService {
             AppLanguage responseLanguage,
             boolean summarize) {
         long timeout = appProperties.getAi()
-                .getRag()
+                .getSearch()
+                .getSummary()
                 .getStream()
                 .getTimeout()
                 .toMillis();
@@ -88,7 +89,7 @@ public class PostSearchSseServiceImpl implements PostSearchSseService {
 
     @Scheduled(
             fixedDelayString =
-                    "${app.ai.rag.stream.heartbeat-interval:15s}")
+                    "${app.ai.search.summary.stream.heartbeat-interval:15s}")
     public void heartbeat() {
         activeSessions.forEach(session -> {
             session.sendHeartbeat();
