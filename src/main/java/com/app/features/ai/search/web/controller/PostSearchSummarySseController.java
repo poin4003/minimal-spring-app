@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.app.config.ratelimit.RateLimitPolicy;
 import com.app.config.ratelimit.RateLimited;
 import com.app.features.ai.search.schema.payload.PostSearchPayload;
-import com.app.features.ai.search.web.service.PostSearchSseService;
+import com.app.features.ai.search.web.service.PostSearchSummarySseService;
 import com.app.features.ai.support.AiResponseLanguageResolver;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,14 +23,14 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${app.ui.search-path:/search}")
-public class PostSearchSseController {
+public class PostSearchSummarySseController {
 
-    private final PostSearchSseService postSearchSseSvc;
+    private final PostSearchSummarySseService postSearchSummarySseSvc;
     private final AiResponseLanguageResolver aiResponseLanguageResolver;
 
     @RateLimited(RateLimitPolicy.SEARCH_QUERY)
     @PostMapping(
-            path = "/stream",
+            path = "/summary/stream",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(
             @Valid @ModelAttribute PostSearchPayload payload,
@@ -41,9 +41,8 @@ public class PostSearchSseController {
                 "no-cache, no-transform");
         response.setHeader("X-Accel-Buffering", "no");
 
-        return postSearchSseSvc.stream(
+        return postSearchSummarySseSvc.stream(
                 payload.getQuery(),
-                aiResponseLanguageResolver.resolve(locale),
-                payload.isSummarize());
+                aiResponseLanguageResolver.resolve(locale));
     }
 }

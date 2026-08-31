@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PostSearchStreamCompletionView {
+public class PostSearchSummaryCompletionView {
 
     private final boolean summarized;
 }

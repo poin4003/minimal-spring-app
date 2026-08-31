@@ -7,16 +7,14 @@ import org.springframework.http.MediaType;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.app.features.ai.generation.service.AiTextGenerationStreamObserver;
-import com.app.features.ai.search.web.view.PostSearchStreamCompletionView;
-import com.app.features.ai.search.web.view.PostSearchStreamErrorView;
-import com.app.features.ai.search.web.view.PostSearchStreamResultsView;
-import com.app.features.ai.search.web.view.PostSearchStreamTokenView;
+import com.app.features.ai.search.web.view.PostSearchSummaryCompletionView;
+import com.app.features.ai.search.web.view.PostSearchSummaryErrorView;
+import com.app.features.ai.search.web.view.PostSearchSummaryTokenView;
 
-public final class PostSearchSseSession
+public final class PostSearchSummarySseSession
         implements AiTextGenerationStreamObserver {
 
     private static final String CONNECTED_EVENT = "connected";
-    private static final String RESULTS_EVENT = "results";
     private static final String TOKEN_EVENT = "token";
     private static final String COMPLETE_EVENT = "complete";
     private static final String ERROR_EVENT = "error";
@@ -24,7 +22,7 @@ public final class PostSearchSseSession
     private final SseEmitter emitter;
     private final AtomicBoolean closed = new AtomicBoolean();
 
-    public PostSearchSseSession(SseEmitter emitter) {
+    public PostSearchSummarySseSession(SseEmitter emitter) {
         this.emitter = emitter;
     }
 
@@ -32,12 +30,6 @@ public final class PostSearchSseSession
         send(SseEmitter.event()
                 .name(CONNECTED_EVENT)
                 .data(CONNECTED_EVENT));
-    }
-
-    public void sendResults(PostSearchStreamResultsView results) {
-        send(SseEmitter.event()
-                .name(RESULTS_EVENT)
-                .data(results, MediaType.APPLICATION_JSON));
     }
 
     @Override
@@ -48,12 +40,13 @@ public final class PostSearchSseSession
 
         send(SseEmitter.event()
                 .name(TOKEN_EVENT)
-                .data(PostSearchStreamTokenView.builder()
+                .data(PostSearchSummaryTokenView.builder()
                         .text(token)
                         .build(), MediaType.APPLICATION_JSON));
     }
 
-    public void sendCompletion(PostSearchStreamCompletionView completion) {
+    public void sendCompletion(
+            PostSearchSummaryCompletionView completion) {
         finish(SseEmitter.event()
                 .name(COMPLETE_EVENT)
                 .data(completion, MediaType.APPLICATION_JSON));
@@ -62,7 +55,7 @@ public final class PostSearchSseSession
     public void sendError(String message) {
         finish(SseEmitter.event()
                 .name(ERROR_EVENT)
-                .data(PostSearchStreamErrorView.builder()
+                .data(PostSearchSummaryErrorView.builder()
                         .message(message)
                         .build(), MediaType.APPLICATION_JSON));
     }

@@ -22,7 +22,8 @@
             <main class="post-search-workspace"
                   data-post-search
                   th:data-query="${page.query}"
-                  th:data-stream-path="${page.streamPath}"
+                  th:data-results-path="${page.resultsPath}"
+                  th:data-summary-stream-path="${page.summaryStreamPath}"
                   th:data-error-message="#{ai.search.error.request}"
                   th:data-rate-limit-message="#{ai.search.error.rateLimit}"
                   th:data-auth-message="#{ai.search.error.auth}"

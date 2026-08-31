@@ -8,16 +8,18 @@ import org.springframework.stereotype.Component;
 import com.app.config.settings.AppProperties;
 
 @Component
-public class PostSearchSseTaskExecutor extends ThreadPoolTaskExecutor {
+public class PostSearchSummarySseTaskExecutor
+        extends ThreadPoolTaskExecutor {
 
-    public PostSearchSseTaskExecutor(AppProperties appProperties) {
+    public PostSearchSummarySseTaskExecutor(
+            AppProperties appProperties) {
         AppProperties.SearchSummaryStreamSettings streamSettings =
                 appProperties.getAi().getSearch().getSummary().getStream();
 
         setCorePoolSize(streamSettings.getWorkers());
         setMaxPoolSize(streamSettings.getWorkers());
         setQueueCapacity(streamSettings.getQueueCapacity());
-        setThreadNamePrefix("post-search-sse-");
+        setThreadNamePrefix("post-search-summary-sse-");
         setWaitForTasksToCompleteOnShutdown(false);
         setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
     }

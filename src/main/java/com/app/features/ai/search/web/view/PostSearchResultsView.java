@@ -9,7 +9,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PostSearchStreamResultsView {
+public class PostSearchResultsView {
 
     private final AiAvailability retrievalAvailability;
     private final AiAvailability summaryAvailability;

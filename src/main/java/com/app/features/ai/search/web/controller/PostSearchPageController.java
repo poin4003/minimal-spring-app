@@ -40,8 +40,10 @@ public class PostSearchPageController {
         PostSearchPageView page = PostSearchPageView.builder()
                 .title(messageResolver.get("ai.search.page.title"))
                 .searchPath(appProperties.getUi().getSearchPath())
-                .streamPath(appProperties.getUi().getSearchPath()
-                        + "/stream")
+                .resultsPath(appProperties.getUi().getSearchPath()
+                        + "/results")
+                .summaryStreamPath(appProperties.getUi().getSearchPath()
+                        + "/summary/stream")
                 .query(query.trim())
                 .shell(socialShellFactory.build(
                         currentUser,

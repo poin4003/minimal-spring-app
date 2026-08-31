@@ -8,10 +8,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public interface PostSearchSseService {
+public interface PostSearchSummarySseService {
 
     SseEmitter stream(
             @NotBlank @Size(max = 2000) String query,
-            @NotNull AppLanguage responseLanguage,
-            boolean summarize);
+            @NotNull AppLanguage responseLanguage);
 }

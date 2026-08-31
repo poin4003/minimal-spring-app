@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class PostSearchStreamErrorView {
+public class PostSearchSummaryTokenView {
 
-    private final String message;
+    private final String text;
 }

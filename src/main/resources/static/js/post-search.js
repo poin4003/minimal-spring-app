@@ -157,7 +157,9 @@
             "[data-post-search-summary-text]");
         const summaryTrigger = search.querySelector(
             "[data-post-search-summary-trigger]");
-        let requestController = null;
+        let searchController = null;
+        let summaryController = null;
+        let summaryAvailable = false;
 
         form.addEventListener("submit", event => {
             if (input.value.trim() === "") {
@@ -184,15 +186,27 @@
             return search.dataset.errorMessage;
         }
 
+        function requestHeaders(accept) {
+            const csrfToken = readCookie(CSRF_COOKIE_NAME);
+            return {
+                Accept: accept,
+                "Content-Type":
+                    "application/x-www-form-urlencoded;charset=UTF-8",
+                ...(csrfToken
+                    ? { [CSRF_HEADER_NAME]: csrfToken }
+                    : {})
+            };
+        }
+
+        function requestBody() {
+            return new URLSearchParams({ query });
+        }
+
         function showStatus(message, danger = false) {
             status.textContent = message;
             status.classList.toggle("alert-danger", danger);
             status.classList.toggle("alert-secondary", !danger);
             status.hidden = false;
-        }
-
-        function hideLoading() {
-            loading.hidden = true;
         }
 
         function renderItems(value) {
@@ -225,10 +239,12 @@
             return items;
         }
 
-        function renderResults(payload, summarize) {
-            hideLoading();
-            const items = renderItems(payload.items);
-            if (payload.retrievalAvailability !== "READY") {
+        function renderResults(payload) {
+            loading.hidden = true;
+            const items = renderItems(payload?.items);
+            summaryAvailable = payload?.summaryAvailability === "READY";
+
+            if (payload?.retrievalAvailability !== "READY") {
                 summaryTrigger.hidden = true;
                 showStatus(search.dataset.unavailableMessage, true);
                 return;
@@ -240,13 +256,8 @@
             }
 
             status.hidden = true;
-            const summaryReady = payload.summaryAvailability === "READY";
-            summaryTrigger.hidden = !summaryReady || summarize;
-            summaryTrigger.disabled = requestController != null;
-            if (summaryReady && summarize) {
-                summary.hidden = false;
-                summaryLoading.hidden = false;
-            }
+            summaryTrigger.hidden = !summaryAvailable;
+            summaryTrigger.disabled = summaryController != null;
         }
 
         function appendToken(token) {
@@ -255,53 +266,90 @@
             summaryText.append(document.createTextNode(token));
         }
 
-        function renderCompletion(payload, summarize) {
-            hideLoading();
+        function renderSummaryCompletion(payload) {
             summaryLoading.hidden = true;
-            if (payload.summarized !== true) {
-                summary.hidden = true;
-                summaryText.replaceChildren();
-                if (summarize) {
-                    summaryTrigger.hidden = false;
-                }
-            }
-        }
-
-        async function runSearch(summarize) {
-            if (requestController != null) {
+            if (payload.summarized === true) {
+                summaryTrigger.hidden = true;
                 return;
             }
 
-            requestController = new AbortController();
-            let receivedResults = false;
-            let completed = false;
-            const csrfToken = readCookie(CSRF_COOKIE_NAME);
-            const body = new URLSearchParams({
-                query,
-                summarize: String(summarize)
-            });
-            if (summarize) {
-                summary.hidden = false;
-                summaryLoading.hidden = false;
-                summaryText.replaceChildren();
-                summaryTrigger.hidden = true;
+            summary.hidden = true;
+            summaryText.replaceChildren();
+            summaryTrigger.hidden = !summaryAvailable;
+        }
+
+        async function runSearch() {
+            if (searchController != null) {
+                return;
             }
 
+            searchController = new AbortController();
+            loading.hidden = false;
+            status.hidden = true;
+            results.hidden = true;
+            summary.hidden = true;
+            summaryTrigger.hidden = true;
+
             try {
-                const response = await fetch(search.dataset.streamPath, {
+                const response = await fetch(search.dataset.resultsPath, {
                     method: "POST",
                     credentials: "same-origin",
-                    signal: requestController.signal,
-                    headers: {
-                        Accept: "text/event-stream",
-                        "Content-Type":
-                            "application/x-www-form-urlencoded;charset=UTF-8",
-                        ...(csrfToken
-                            ? { [CSRF_HEADER_NAME]: csrfToken }
-                            : {})
-                    },
-                    body
+                    signal: searchController.signal,
+                    headers: requestHeaders("application/json"),
+                    body: requestBody()
                 });
+                if (response.redirected || !response.ok) {
+                    throw new SearchRequestError(
+                        resolveErrorMessage(response));
+                }
+                if (!response.headers.get("Content-Type")
+                    ?.includes("application/json")) {
+                    throw new SearchRequestError(search.dataset.errorMessage);
+                }
+
+                renderResults(await response.json());
+            } catch (error) {
+                if (error?.name === "AbortError") {
+                    return;
+                }
+                loading.hidden = true;
+                results.hidden = true;
+                summary.hidden = true;
+                summaryTrigger.hidden = true;
+                showStatus(
+                    error instanceof SearchRequestError && error.message
+                        ? error.message
+                        : search.dataset.errorMessage,
+                    true);
+            } finally {
+                searchController = null;
+            }
+        }
+
+        async function runSummary() {
+            if (summaryController != null || !summaryAvailable) {
+                return;
+            }
+
+            summaryController = new AbortController();
+            let completed = false;
+            status.hidden = true;
+            summary.hidden = false;
+            summaryLoading.hidden = false;
+            summaryText.replaceChildren();
+            summaryTrigger.hidden = true;
+            summaryTrigger.disabled = true;
+
+            try {
+                const response = await fetch(
+                    search.dataset.summaryStreamPath,
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        signal: summaryController.signal,
+                        headers: requestHeaders("text/event-stream"),
+                        body: requestBody()
+                    });
                 if (response.redirected || !response.ok) {
                     throw new SearchRequestError(
                         resolveErrorMessage(response));
@@ -315,18 +363,13 @@
                     if (event.name === "connected") {
                         return;
                     }
-                    if (event.name === "results") {
-                        receivedResults = true;
-                        renderResults(parseJsonEvent(event), summarize);
-                        return;
-                    }
                     if (event.name === "token") {
                         appendToken(parseJsonEvent(event).text || "");
                         return;
                     }
                     if (event.name === "complete") {
                         completed = true;
-                        renderCompletion(parseJsonEvent(event), summarize);
+                        renderSummaryCompletion(parseJsonEvent(event));
                         return;
                     }
                     if (event.name === "error") {
@@ -343,37 +386,32 @@
                 if (error?.name === "AbortError") {
                     return;
                 }
-                hideLoading();
                 summary.hidden = true;
                 summaryLoading.hidden = true;
-                if (summarize && receivedResults) {
-                    summaryTrigger.hidden = false;
-                }
+                summaryText.replaceChildren();
+                summaryTrigger.hidden = !summaryAvailable;
                 showStatus(
                     error instanceof SearchRequestError && error.message
                         ? error.message
                         : search.dataset.errorMessage,
                     true);
-                if (!receivedResults) {
-                    results.hidden = true;
-                }
             } finally {
-                requestController = null;
+                summaryController = null;
                 summaryTrigger.disabled = false;
             }
         }
 
-        summaryTrigger.addEventListener("click", () => {
-            runSearch(true);
-        });
+        summaryTrigger.addEventListener("click", runSummary);
 
         search.postSearchTeardown = () => {
-            requestController?.abort();
-            requestController = null;
+            searchController?.abort();
+            summaryController?.abort();
+            searchController = null;
+            summaryController = null;
         };
 
         if (query !== "") {
-            runSearch(false);
+            runSearch();
         } else {
             input.focus();
         }

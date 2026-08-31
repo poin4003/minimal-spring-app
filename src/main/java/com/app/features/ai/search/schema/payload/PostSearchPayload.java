@@ -12,6 +12,4 @@ public class PostSearchPayload {
             max = 2000,
             message = "{validation.ai.search.query.max}")
     private String query;
-
-    private boolean summarize;
 }
