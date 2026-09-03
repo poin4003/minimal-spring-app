@@ -73,6 +73,8 @@
     <div th:fragment="modalHost" id="app-modal-host"></div>
 
     <th:block th:fragment="htmxScripts">
+        <meta name="htmx-config"
+              content='{"historyCacheSize":3,"refreshOnHistoryMiss":true}'>
         <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
         <script defer th:src="@{/vendor/htmx/extensions/head-support.min.js}"></script>
         <script defer th:src="@{/vendor/htmx/extensions/sse.min.js}"></script>

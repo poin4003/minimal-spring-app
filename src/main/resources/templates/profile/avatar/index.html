@@ -30,9 +30,10 @@
                                    th:href="${page.listPath}"
                                    th:text="#{profile.avatar.upload}"
                                    th:attr="hx-get=${page.uploadPartialPath},
-                                            hx-target='#app-modal-host',
-                                            hx-swap='innerHTML',
-                                            hx-disabled-elt='this',
+                                             hx-target='#app-modal-host',
+                                             hx-swap='innerHTML',
+                                             hx-push-url='false',
+                                             hx-disabled-elt='this',
                                             data-app-modal-request='true'">
                                     Upload Avatar Image
                                 </a>

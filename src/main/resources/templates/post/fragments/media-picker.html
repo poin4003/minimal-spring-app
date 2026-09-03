@@ -6,10 +6,11 @@
          th:id="${picker.id}"
          class="d-grid gap-3"
          th:attr="hx-get=${picker.refreshPath},
-                  hx-trigger='media:uploaded from:body delay:200ms, sse:media',
-                  hx-target=${'#' + picker.id},
-                  hx-select=${'#' + picker.id},
-                  hx-swap='outerHTML'">
+                   hx-trigger='media:uploaded from:body delay:200ms, sse:media',
+                   hx-target=${'#' + picker.id},
+                   hx-select=${'#' + picker.id},
+                   hx-swap='outerHTML',
+                   hx-push-url='false'">
         <div class="row g-2">
             <div class="col-12 col-md">
                 <label class="visually-hidden"
@@ -30,9 +31,10 @@
                 <a th:href="${picker.searchPath}"
                    class="btn btn-outline-secondary"
                    th:attr="hx-get=${picker.searchPath},
-                            hx-target=${'#' + picker.id},
-                            hx-select=${'#' + picker.id},
-                            hx-swap='outerHTML'"
+                             hx-target=${'#' + picker.id},
+                             hx-select=${'#' + picker.id},
+                             hx-swap='outerHTML',
+                             hx-push-url='false'"
                    th:text="#{action.clear}">
                     Clear
                 </a>
@@ -41,10 +43,11 @@
                         data-post-media-search-submit
                         th:attr="hx-get=${picker.searchPath},
                                  hx-include=${'#' + picker.id + '-name'},
-                                 hx-target=${'#' + picker.id},
-                                 hx-select=${'#' + picker.id},
-                                 hx-swap='outerHTML',
-                                 hx-disabled-elt='this'"
+                                  hx-target=${'#' + picker.id},
+                                  hx-select=${'#' + picker.id},
+                                  hx-swap='outerHTML',
+                                  hx-push-url='false',
+                                  hx-disabled-elt='this'"
                         th:text="#{action.search}">
                     Search
                 </button>

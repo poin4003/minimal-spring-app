@@ -20,15 +20,18 @@ public class UiHtmxNavigationView {
             UiHtmxHistoryMode.REPLACE;
 
     public Boolean getPushUrl() {
-        return historyMode == UiHtmxHistoryMode.PUSH
-                ? Boolean.TRUE
-                : null;
+        return switch (historyMode) {
+            case PUSH -> Boolean.TRUE;
+            case NONE -> Boolean.FALSE;
+            case REPLACE -> null;
+        };
     }
 
     public Boolean getReplaceUrl() {
-        return historyMode == UiHtmxHistoryMode.REPLACE
-                ? Boolean.TRUE
-                : null;
+        return switch (historyMode) {
+            case REPLACE -> Boolean.TRUE;
+            case NONE, PUSH -> Boolean.FALSE;
+        };
     }
 
     public static UiHtmxNavigationView forComponent(String componentId) {

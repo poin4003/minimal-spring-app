@@ -6,10 +6,11 @@
          class="d-grid gap-4"
          hx-disinherit="hx-target hx-select hx-swap"
          th:attr="hx-get=${page.searchPath},
-                  hx-trigger='ownerVideosChanged from:body',
-                  hx-target='#owner-video-results',
-                  hx-select='#owner-video-results',
-                  hx-swap='outerHTML'">
+                   hx-trigger='ownerVideosChanged from:body',
+                   hx-target='#owner-video-results',
+                   hx-select='#owner-video-results',
+                   hx-swap='outerHTML',
+                   hx-push-url='false'">
     <div th:if="${page.activeTab.name() == 'VIDEOS' and #lists.isEmpty(page.videos)}"
          class="app-empty-state app-surface-panel"
          th:text="#{video.owner.empty}">No videos.</div>

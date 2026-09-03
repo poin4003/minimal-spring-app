@@ -53,9 +53,10 @@
                     <a th:href="${page.actionPath}"
                        class="btn btn-sm btn-outline-primary"
                        th:attr="hx-get=${page.uploadPartialPath},
-                                hx-target='#app-modal-host',
-                                hx-swap='innerHTML',
-                                hx-disabled-elt='this',
+                                 hx-target='#app-modal-host',
+                                 hx-swap='innerHTML',
+                                 hx-push-url='false',
+                                 hx-disabled-elt='this',
                                 data-app-modal-request='true'">
                         <i class="bi bi-cloud-arrow-up me-2" aria-hidden="true"></i>
                         <span th:text="#{post.composer.uploadMedia}">Upload</span>

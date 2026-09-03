@@ -123,10 +123,10 @@
                                 <a th:href="${page.listPath}"
                                    class="btn btn-outline-secondary"
                                    th:attr="hx-get=${page.listPath},
-                                            hx-target='#post-moderation-page-content',
-                                            hx-select='#post-moderation-page-content',
-                                            hx-swap='outerHTML',
-                                            hx-push-url='true'"
+                                             hx-target='#post-moderation-page-content',
+                                             hx-select='#post-moderation-page-content',
+                                             hx-swap='outerHTML',
+                                             hx-replace-url='true'"
                                    th:text="#{action.clear}">
                                     Clear
                                 </a>

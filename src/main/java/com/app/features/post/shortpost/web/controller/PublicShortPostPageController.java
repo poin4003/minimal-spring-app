@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
@@ -36,6 +37,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -100,6 +102,7 @@ public class PublicShortPostPageController {
     @GetMapping("/gallery-stream")
     public String galleryStream(
             HttpServletRequest request,
+            HttpServletResponse response,
             @Valid @ModelAttribute("filter")
             PublicShortPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -113,6 +116,7 @@ public class PublicShortPostPageController {
         model.addAttribute(
                 PublicShortGalleryView.ATTRIBUTE,
                 buildGallery(request, shortPage, query));
+        HtmxRequestSupport.disableHistory(response);
         return "post/short/public/fragments/gallery"
                 + " :: items (gallery=${gallery})";
     }
@@ -169,6 +173,7 @@ public class PublicShortPostPageController {
     public String stream(
             @PathVariable UUID postId,
             HttpServletRequest request,
+            HttpServletResponse response,
             @Valid @ModelAttribute("filter")
             PublicShortPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -191,6 +196,7 @@ public class PublicShortPostPageController {
                         cards,
                         query,
                         true));
+        HtmxRequestSupport.disableHistory(response);
         return "post/short/public/fragments/detail-feed"
                 + " :: items (feed=${feed})";
     }

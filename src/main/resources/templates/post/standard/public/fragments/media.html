@@ -77,9 +77,10 @@
            th:data-media-count="${visibleCount}"
            th:aria-label="#{post.public.mediaGallery}"
            th:attr="hx-get=${galleryPartialPath},
-                    hx-target=${galleryPartialPath != null ? '#app-modal-host' : null},
-                    hx-swap=${galleryPartialPath != null ? 'innerHTML' : null},
-                    hx-disabled-elt=${galleryPartialPath != null ? 'this' : null},
+                     hx-target=${galleryPartialPath != null ? '#app-modal-host' : null},
+                     hx-swap=${galleryPartialPath != null ? 'innerHTML' : null},
+                     hx-push-url=${galleryPartialPath != null ? 'false' : null},
+                     hx-disabled-elt=${galleryPartialPath != null ? 'this' : null},
                     data-app-modal-request=${galleryPartialPath != null ? 'true' : null}">
             <th:block th:each="attachment, state : ${media}">
                 <span th:if="${state.index < 4}"
@@ -153,6 +154,7 @@
            th:attr="hx-get=${galleryPartialPath}"
            hx-target="#app-modal-host"
            hx-swap="innerHTML"
+           hx-push-url="false"
            hx-disabled-elt="this"
            data-app-modal-request="true">
             <th:block th:switch="${asset.kind.name()}">

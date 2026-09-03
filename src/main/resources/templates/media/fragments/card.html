@@ -42,9 +42,10 @@
                th:href="${item.previewPath}"
                th:text="${item.originalName}"
                th:attr="hx-get=${item.previewPartialPath},
-                        hx-target='#app-modal-host',
-                        hx-swap='innerHTML',
-                        hx-disabled-elt='this',
+                         hx-target='#app-modal-host',
+                         hx-swap='innerHTML',
+                         hx-push-url='false',
+                         hx-disabled-elt='this',
                         data-app-modal-request='true'">
                 image.jpg
             </a>
@@ -99,9 +100,10 @@
             <a class="btn btn-outline-secondary app-icon-button"
                th:href="${item.metadataPath}"
                th:attr="hx-get=${item.metadataPartialPath},
-                        hx-target='#app-modal-host',
-                        hx-swap='innerHTML',
-                        hx-disabled-elt='this',
+                         hx-target='#app-modal-host',
+                         hx-swap='innerHTML',
+                         hx-push-url='false',
+                         hx-disabled-elt='this',
                         data-app-modal-request='true',
                         title=#{action.metadata},
                         aria-label=#{action.metadata}">
@@ -145,9 +147,10 @@
                class="btn btn-outline-warning app-icon-button"
                th:href="${item.retryPath}"
                th:attr="hx-get=${item.retryPartialPath},
-                        hx-target='#app-modal-host',
-                        hx-swap='innerHTML',
-                        hx-disabled-elt='this',
+                         hx-target='#app-modal-host',
+                         hx-swap='innerHTML',
+                         hx-push-url='false',
+                         hx-disabled-elt='this',
                         data-app-modal-request='true',
                         title=#{media.retry.confirm},
                         aria-label=#{media.retry.confirm}">
@@ -159,9 +162,10 @@
             <a class="btn btn-outline-danger app-icon-button"
                th:href="${item.deletePath}"
                th:attr="hx-get=${item.deletePartialPath},
-                        hx-target='#app-modal-host',
-                        hx-swap='innerHTML',
-                        hx-disabled-elt='this',
+                         hx-target='#app-modal-host',
+                         hx-swap='innerHTML',
+                         hx-push-url='false',
+                         hx-disabled-elt='this',
                         data-app-modal-request='true',
                         title=#{action.delete},
                         aria-label=#{action.delete}">

@@ -29,10 +29,10 @@
                  class="app-page-stack"
                  th:attr="hx-get=${page.queuePath},
                           hx-trigger=${page.refreshEvent + ' from:body'},
-                          hx-target='#app-page-content',
-                          hx-select='#post-moderation-page-content',
-                          hx-swap='innerHTML',
-                          hx-push-url='true'">
+                           hx-target='#app-page-content',
+                           hx-select='#post-moderation-page-content',
+                           hx-swap='innerHTML',
+                           hx-replace-url='true'">
                 <div th:replace="~{fragments/components/breadcrumb
                         :: breadcrumb(${page.breadcrumb})}"></div>
 

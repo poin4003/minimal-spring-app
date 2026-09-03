@@ -43,9 +43,10 @@
                             <button type="button" class="btn btn-sm btn-outline-primary"
                                     th:attr="hx-get=${page.searchPath},
                                              hx-include='previous input',
-                                             hx-target='#available-series-videos',
-                                             hx-select='#available-series-videos',
-                                             hx-swap='outerHTML'">
+                                              hx-target='#available-series-videos',
+                                              hx-select='#available-series-videos',
+                                              hx-swap='outerHTML',
+                                              hx-push-url='false'">
                                 <i class="bi bi-search" aria-hidden="true"></i>
                             </button>
                         </div>

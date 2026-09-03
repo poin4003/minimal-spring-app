@@ -17,7 +17,6 @@
         <div th:each="card, iteration : ${feed.shorts}"
              class="short-detail-feed-item"
              th:attr="data-short-active=${card.post.post.id.equals(feed.activePostId)},
-                      data-short-detail-path=${card.detailPath},
                       hx-get=${iteration.index == loadTriggerIndex
                               ? feed.nextPagePath : null},
                       hx-trigger=${iteration.index == loadTriggerIndex
@@ -36,7 +35,8 @@
                       hx-indicator=${iteration.index == loadTriggerIndex
                               and feed.nextPagePath != null
                               ? 'find .short-detail-feed-loader'
-                              : null}">
+                              : null}"
+             hx-push-url="false">
             <div th:replace="~{post/short/public/fragments/player
                     :: player(${card})}"></div>
 

@@ -128,19 +128,6 @@
         window.htmx.trigger(trigger, "short:load-more");
     }
 
-    function updateDetailLocation(item) {
-        const detailPath = item?.dataset.shortDetailPath;
-        if (!detailPath
-                || detailPath === window.location.pathname
-                        + window.location.search) {
-            return;
-        }
-        window.history.replaceState(
-                window.history.state,
-                "",
-                detailPath);
-    }
-
     function setActiveItem(item) {
         if (!item || activeItem === item) {
             updatePreloadWindow(item);
@@ -155,7 +142,6 @@
         item.dataset.shortActive = "true";
         activeItem = item;
         updatePreloadWindow(item);
-        updateDetailLocation(item);
         requestNextPageIfNeeded(item);
     }
 

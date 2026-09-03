@@ -9,20 +9,22 @@
                 data-bs-auto-close="outside"
                 data-app-loader="manual"
                 aria-expanded="false"
-                th:attr="aria-label=#{notification.open},
-                         title=#{notification.title},
-                         hx-get=${widget.inboxPath}"
-                hx-target="#notification-inbox-body"
-                hx-swap="innerHTML">
+                 th:attr="aria-label=#{notification.open},
+                          title=#{notification.title},
+                          hx-get=${widget.inboxPath}"
+                 hx-target="#notification-inbox-body"
+                 hx-swap="innerHTML"
+                 hx-push-url="false">
             <i class="bi bi-bell" aria-hidden="true"></i>
 
             <span id="notification-unread-count"
                   class="d-none position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger"
                   data-app-loader="manual"
                   th:attr="hx-get=${widget.unreadCountPath}"
-                  hx-trigger="load"
-                  hx-target="this"
-                  hx-swap="outerHTML">
+                   hx-trigger="load"
+                   hx-target="this"
+                   hx-swap="outerHTML"
+                   hx-push-url="false">
             </span>
         </button>
 
@@ -30,9 +32,10 @@
             <div id="notification-inbox-body"
                  data-app-loader="manual"
                  th:attr="hx-get=${widget.inboxPath}"
-                 hx-trigger="sse:notification"
-                 hx-target="this"
-                 hx-swap="innerHTML"
+                  hx-trigger="sse:notification"
+                  hx-target="this"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
                  aria-live="polite">
                 <div class="d-flex justify-content-center p-4">
                     <div class="spinner-border spinner-border-sm text-primary"
@@ -54,9 +57,10 @@
           data-app-loader="manual"
           th:attr="hx-get=${count.refreshPath},
                    aria-label=#{notification.unreadCount(${count.count})}"
-          hx-trigger="notification:changed from:body, sse:notification"
-          hx-target="this"
-          hx-swap="outerHTML"
+           hx-trigger="notification:changed from:body, sse:notification"
+           hx-target="this"
+           hx-swap="outerHTML"
+           hx-push-url="false"
           th:text="${count.count > 99 ? '99+' : count.count}">
         0
     </span>

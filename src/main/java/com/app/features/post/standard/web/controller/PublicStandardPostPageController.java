@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.app.config.security.web.HtmxRequestSupport;
 import com.app.config.settings.AppProperties;
 import com.app.core.i18n.AppMessageResolver;
 import com.app.core.schema.query.UiPageDefaults;
@@ -39,6 +40,7 @@ import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -97,6 +99,7 @@ public class PublicStandardPostPageController {
     @GetMapping("/stream")
     public String stream(
             HttpServletRequest request,
+            HttpServletResponse response,
             @Valid @ModelAttribute("filter")
             PublicStandardPostFilterCriteria filter,
             @Valid @ModelAttribute("query") UiPageQuery query,
@@ -109,6 +112,7 @@ public class PublicStandardPostPageController {
         model.addAttribute(
                 PublicPostFeedView.ATTRIBUTE,
                 buildFeed(request, postPage, query));
+        HtmxRequestSupport.disableHistory(response);
         return "post/standard/public/fragments/feed"
                 + " :: items (feed=${feed})";
     }
