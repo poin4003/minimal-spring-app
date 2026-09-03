@@ -15,7 +15,7 @@
 
         const fallbackPath = element.getAttribute("href");
         if (fallbackPath) {
-            window.location.assign(fallbackPath);
+            window.location.replace(fallbackPath);
         }
     }
 

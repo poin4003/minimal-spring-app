@@ -8,7 +8,8 @@
        hx-target="#app-social-workspace"
        hx-select="#app-social-workspace"
        hx-swap="outerHTML show:top"
-       hx-push-url="true">
+       hx-push-url="false"
+       hx-replace-url="false">
         <img th:if="${card.series.coverMedia != null and card.series.coverMedia.thumbnailUrl != null}"
              th:src="${card.series.coverMedia.thumbnailUrl}"
              th:alt="${card.series.title}"
@@ -26,7 +27,8 @@
                hx-target="#app-social-workspace"
                hx-select="#app-social-workspace"
                hx-swap="outerHTML show:top"
-               hx-push-url="true">
+               hx-push-url="false"
+               hx-replace-url="false">
                 <h2 class="h6 text-truncate mb-0" th:text="${card.series.title}">Series</h2>
             </a>
             <span class="badge rounded-pill"

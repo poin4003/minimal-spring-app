@@ -36,7 +36,8 @@
                               and feed.nextPagePath != null
                               ? 'find .short-detail-feed-loader'
                               : null}"
-             hx-push-url="false">
+             hx-push-url="false"
+             hx-replace-url="false">
             <div th:replace="~{post/short/public/fragments/player
                     :: player(${card})}"></div>
 

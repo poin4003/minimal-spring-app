@@ -14,7 +14,8 @@
                           hx-get=${widget.inboxPath}"
                  hx-target="#notification-inbox-body"
                  hx-swap="innerHTML"
-                 hx-push-url="false">
+                 hx-push-url="false"
+                 hx-replace-url="false">
             <i class="bi bi-bell" aria-hidden="true"></i>
 
             <span id="notification-unread-count"
@@ -24,7 +25,8 @@
                    hx-trigger="load"
                    hx-target="this"
                    hx-swap="outerHTML"
-                   hx-push-url="false">
+                   hx-push-url="false"
+                   hx-replace-url="false">
             </span>
         </button>
 
@@ -36,7 +38,8 @@
                   hx-target="this"
                   hx-swap="innerHTML"
                   hx-push-url="false"
-                 aria-live="polite">
+                  hx-replace-url="false"
+                  aria-live="polite">
                 <div class="d-flex justify-content-center p-4">
                     <div class="spinner-border spinner-border-sm text-primary"
                          role="status">
@@ -61,7 +64,8 @@
            hx-target="this"
            hx-swap="outerHTML"
            hx-push-url="false"
-          th:text="${count.count > 99 ? '99+' : count.count}">
+           hx-replace-url="false"
+           th:text="${count.count > 99 ? '99+' : count.count}">
         0
     </span>
 

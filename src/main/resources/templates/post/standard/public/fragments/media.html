@@ -80,6 +80,7 @@
                      hx-target=${galleryPartialPath != null ? '#app-modal-host' : null},
                      hx-swap=${galleryPartialPath != null ? 'innerHTML' : null},
                      hx-push-url=${galleryPartialPath != null ? 'false' : null},
+                     hx-replace-url=${galleryPartialPath != null ? 'false' : null},
                      hx-disabled-elt=${galleryPartialPath != null ? 'this' : null},
                     data-app-modal-request=${galleryPartialPath != null ? 'true' : null}">
             <th:block th:each="attachment, state : ${media}">
@@ -155,6 +156,7 @@
            hx-target="#app-modal-host"
            hx-swap="innerHTML"
            hx-push-url="false"
+           hx-replace-url="false"
            hx-disabled-elt="this"
            data-app-modal-request="true">
             <th:block th:switch="${asset.kind.name()}">

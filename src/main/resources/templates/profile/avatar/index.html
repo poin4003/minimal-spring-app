@@ -33,6 +33,7 @@
                                              hx-target='#app-modal-host',
                                              hx-swap='innerHTML',
                                              hx-push-url='false',
+                                             hx-replace-url='false',
                                              hx-disabled-elt='this',
                                             data-app-modal-request='true'">
                                     Upload Avatar Image
@@ -49,7 +50,7 @@
                                                        hx-target='#profile-avatar-workspace',
                                                        hx-select='#profile-avatar-workspace',
                                                        hx-swap='outerHTML',
-                                                       hx-replace-url='true',
+                                                       hx-replace-url='false',
                                                        hx-disabled-elt='button[type=submit]'"
                                               class="row g-3 align-items-end">
                                             <input type="hidden" name="page" value="0">
@@ -77,7 +78,7 @@
                                                             hx-target='#profile-avatar-workspace',
                                                             hx-select='#profile-avatar-workspace',
                                                             hx-swap='outerHTML',
-                                                            hx-replace-url='true',
+                                                            hx-replace-url='false',
                                                             hx-disabled-elt='this'">
                                                     Clear
                                                 </a>

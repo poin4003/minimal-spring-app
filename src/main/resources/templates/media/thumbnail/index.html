@@ -42,6 +42,7 @@
                                                  hx-target='#app-modal-host',
                                                  hx-swap='innerHTML',
                                                  hx-push-url='false',
+                                                 hx-replace-url='false',
                                                  hx-disabled-elt='this',
                                                 data-app-modal-request='true'">
                                         <span th:text="#{media.thumbnail.upload.trigger}">
@@ -65,7 +66,7 @@
                                                    hx-target='#media-thumbnail-workspace',
                                                    hx-select='#media-thumbnail-workspace',
                                                    hx-swap='outerHTML',
-                                                   hx-replace-url='true',
+                                                   hx-replace-url='false',
                                                    hx-disabled-elt='button[type=submit]'"
                                           class="row g-3 align-items-end">
                                         <input type="hidden" name="page" value="0">
@@ -92,7 +93,7 @@
                                                         hx-target='#media-thumbnail-workspace',
                                                         hx-select='#media-thumbnail-workspace',
                                                         hx-swap='outerHTML',
-                                                        hx-replace-url='true',
+                                                        hx-replace-url='false',
                                                         hx-disabled-elt='this'">
                                                 <span th:text="#{action.clear}">Clear</span>
                                             </a>

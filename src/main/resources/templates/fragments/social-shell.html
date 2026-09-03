@@ -5,6 +5,8 @@
     <div th:fragment="layout(shell, content)"
          class="social-shell-layout min-vh-100"
          hx-boost="true"
+         hx-push-url="false"
+         hx-replace-url="false"
          hx-ext="head-support">
         <div th:replace="~{fragments/social-header
                 :: header(${shell})}"></div>

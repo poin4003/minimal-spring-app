@@ -8,7 +8,7 @@
         <a th:each="item : ${items}"
            th:href="${item.path}"
            class="nav-link d-flex align-items-center gap-2 text-nowrap"
-           hx-replace-url="true"
+           hx-replace-url="false"
            th:classappend="${item.active} ? ' active' : ''"
            th:attr="aria-current=${item.active ? 'page' : null},
                     aria-label=${item.label},

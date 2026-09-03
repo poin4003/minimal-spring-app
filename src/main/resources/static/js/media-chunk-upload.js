@@ -187,7 +187,7 @@ export class MediaChunkUploader {
 
         const redirectPath = response.headers.get("HX-Redirect");
         if (redirectPath) {
-            window.location.assign(redirectPath);
+            window.location.replace(redirectPath);
             throw new MediaChunkUploadError(this.messages.authRequired, {
                 status: response.status,
                 error: "AUTHENTICATION_REQUIRED"

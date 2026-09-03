@@ -9,6 +9,15 @@ import com.app.features.ui.web.enums.UiHtmxHistoryMode;
 class UiHtmxNavigationViewTests {
 
     @Test
+    void disablesHistoryByDefault() {
+        UiHtmxNavigationView navigation =
+                UiHtmxNavigationView.builder().build();
+
+        assertThat(navigation.getPushUrl()).isFalse();
+        assertThat(navigation.getReplaceUrl()).isFalse();
+    }
+
+    @Test
     void disablesBothHistoryStrategiesForComponentRefreshes() {
         UiHtmxNavigationView navigation = navigation(
                 UiHtmxHistoryMode.NONE);

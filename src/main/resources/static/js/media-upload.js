@@ -450,7 +450,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
             try {
                 const response = await operation.result;
                 if (response.redirectPath) {
-                    window.location.assign(response.redirectPath);
+                    window.location.replace(response.redirectPath);
                     return;
                 }
 

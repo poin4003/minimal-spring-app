@@ -251,6 +251,16 @@
             showLoader();
         }
     });
+    document.addEventListener("htmx:beforeOnLoad", function (event) {
+        const redirectPath = event.detail.xhr?.getResponseHeader(
+            "HX-Redirect");
+        if (!redirectPath) {
+            return;
+        }
+
+        event.preventDefault();
+        window.location.replace(redirectPath);
+    });
     document.addEventListener("htmx:beforeSwap", syncBodyClassFromResponse);
     document.addEventListener("htmx:removingHeadElement", function (event) {
         if (event.detail.headElement instanceof HTMLScriptElement) {

@@ -17,7 +17,7 @@ public class UiHtmxNavigationView {
 
     @Builder.Default
     private final UiHtmxHistoryMode historyMode =
-            UiHtmxHistoryMode.REPLACE;
+            UiHtmxHistoryMode.NONE;
 
     public Boolean getPushUrl() {
         return switch (historyMode) {

@@ -10,7 +10,8 @@
                    hx-target='#owner-video-results',
                    hx-select='#owner-video-results',
                    hx-swap='outerHTML',
-                   hx-push-url='false'">
+                   hx-push-url='false',
+                   hx-replace-url='false'">
     <div th:if="${page.activeTab.name() == 'VIDEOS' and #lists.isEmpty(page.videos)}"
          class="app-empty-state app-surface-panel"
          th:text="#{video.owner.empty}">No videos.</div>
