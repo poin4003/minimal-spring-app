@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.features.ai.search.entity.PostSearchIndexStateEntity;
@@ -66,7 +67,7 @@ public class PostSearchIndexStateServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean prepareEnqueue(
             UUID postId,
             UUID indexGeneration) {
@@ -88,7 +89,7 @@ public class PostSearchIndexStateServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void markEnqueueFailed(UUID postId) {
         postSearchIndexStateRepo.findForUpdateByPostId(postId)
                 .filter(state -> state.getStatus()

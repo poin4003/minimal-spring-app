@@ -139,11 +139,11 @@ app:
               content-types: [image/png]
             - extension: mp4
               kind: VIDEO
-              max-file-size-bytes: 1073741824
+              max-file-size-bytes: ${MEDIA_VIDEO_MAX_FILE_SIZE_BYTES:2147483648}
               content-types: [video/mp4, video/quicktime, application/mp4, video/x-m4v, video/3gpp]
             - extension: mov
               kind: VIDEO
-              max-file-size-bytes: 1073741824
+              max-file-size-bytes: ${MEDIA_VIDEO_MAX_FILE_SIZE_BYTES:2147483648}
               content-types: [video/quicktime, video/mp4, application/mp4]
             - extension: mp3
               kind: AUDIO
