@@ -23,6 +23,9 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-sm btn-outline-primary position-relative z-2"
+                       hx-target="#app-social-workspace"
+                       hx-select="#app-social-workspace"
+                       hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false"
                        th:title="#{post.owner.edit}"
@@ -37,6 +40,7 @@
                        th:classappend="${action.buttonClass}"
                        th:attr="hx-get=${action.modalPath},
                                 hx-target='#app-modal-host',
+                                hx-select='unset',
                                 hx-swap='innerHTML',
                                 hx-push-url='false',
                                 hx-replace-url='false',
@@ -131,6 +135,9 @@
         <a th:unless="${detailMode}"
            th:href="${card.detailPath}"
            class="stretched-link"
+           hx-target="#app-social-workspace"
+           hx-select="#app-social-workspace"
+           hx-swap="outerHTML show:top"
            hx-push-url="true"
            hx-replace-url="false"
            th:attr="aria-label=#{post.owner.viewDetail}">

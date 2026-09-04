@@ -18,6 +18,9 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-outline-primary"
+                       hx-target="#app-social-workspace"
+                       hx-select="#app-social-workspace"
+                       hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false"
                        th:title="#{post.owner.edit}"
@@ -32,6 +35,7 @@
                        th:classappend="${action.buttonClass}"
                        th:attr="hx-get=${action.modalPath},
                                 hx-target='#app-modal-host',
+                                hx-select='unset',
                                 hx-swap='innerHTML',
                                 hx-push-url='false',
                                 hx-replace-url='false',
@@ -72,6 +76,9 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none"
+               hx-target="#app-social-workspace"
+               hx-select="#app-social-workspace"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false">
                 <img th:if="${card.post.media.media.thumbnailUrl != null}"
@@ -90,6 +97,9 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="text-body text-decoration-none"
+               hx-target="#app-social-workspace"
+               hx-select="#app-social-workspace"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false">
                 <p th:if="${card.post.caption != null and !card.post.caption.isBlank()}"

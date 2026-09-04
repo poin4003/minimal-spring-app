@@ -26,6 +26,7 @@
                th:title="${action.label}"
                th:attr="hx-get=${action.modalPath},
                          hx-target='#app-modal-host',
+                         hx-select='unset',
                          hx-swap='innerHTML',
                          hx-push-url='false',
                          hx-replace-url='false',

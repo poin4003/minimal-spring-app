@@ -77,8 +77,12 @@
            th:data-media-count="${visibleCount}"
            th:aria-label="#{post.public.mediaGallery}"
            th:attr="hx-get=${galleryPartialPath},
-                     hx-target=${galleryPartialPath != null ? '#app-modal-host' : null},
-                     hx-swap=${galleryPartialPath != null ? 'innerHTML' : null},
+                     hx-target=${galleryPartialPath != null
+                             ? '#app-modal-host' : '#app-social-workspace'},
+                     hx-select=${galleryPartialPath != null
+                             ? 'unset' : '#app-social-workspace'},
+                     hx-swap=${galleryPartialPath != null
+                             ? 'innerHTML' : 'outerHTML show:top'},
                      hx-push-url=${galleryPartialPath != null ? 'false' : 'true'},
                      hx-replace-url='false',
                      hx-disabled-elt=${galleryPartialPath != null ? 'this' : null},
@@ -154,6 +158,7 @@
            th:aria-label="${asset.originalName}"
            th:attr="hx-get=${galleryPartialPath}"
            hx-target="#app-modal-host"
+           hx-select="unset"
            hx-swap="innerHTML"
            hx-push-url="false"
            hx-replace-url="false"

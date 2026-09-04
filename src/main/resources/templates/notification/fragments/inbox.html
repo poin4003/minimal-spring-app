@@ -2,7 +2,9 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
-    <div th:fragment="trigger(widget)" class="dropdown">
+    <div th:fragment="trigger(widget)"
+         class="dropdown"
+         hx-disinherit="hx-target hx-select hx-swap">
         <button type="button"
                 class="btn btn-outline-secondary app-header-action position-relative"
                 data-bs-toggle="dropdown"

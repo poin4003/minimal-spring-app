@@ -70,7 +70,9 @@
                 th:attr="aria-label=#{action.close}"></button>
     </div>
 
-    <div th:fragment="modalHost" id="app-modal-host"></div>
+    <div th:fragment="modalHost"
+         id="app-modal-host"
+         hx-disinherit="hx-target hx-select hx-swap"></div>
 
     <th:block th:fragment="htmxScripts">
         <meta name="htmx-config"

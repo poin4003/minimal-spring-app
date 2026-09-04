@@ -10,6 +10,7 @@
     <form th:object="${form}" method="post" th:action="${page.actionPath}"
           th:attr="hx-post=${page.actionPath},
                    hx-target='#video-series-composer',
+                   hx-select='unset',
                    hx-swap='outerHTML',
                    hx-disabled-elt='button[type=submit]'">
         <header class="app-section-header">
@@ -49,6 +50,7 @@
                     <a th:href="${page.actionPath}" class="btn btn-sm btn-outline-primary"
                        th:attr="hx-get=${page.uploadPartialPath},
                                  hx-target='#app-modal-host',
+                                 hx-select='unset',
                                  hx-swap='innerHTML',
                                  hx-push-url='false',
                                  hx-replace-url='false',
@@ -62,7 +64,14 @@
             </section>
         </div>
         <footer class="app-component-footer">
-            <a th:href="${page.backPath}" class="btn btn-sm btn-outline-secondary" th:text="#{action.cancel}">Cancel</a>
+            <a th:href="${page.backPath}"
+               class="btn btn-sm btn-outline-secondary"
+               hx-target="#app-social-workspace"
+               hx-select="#app-social-workspace"
+               hx-swap="outerHTML show:top"
+               hx-push-url="false"
+               hx-replace-url="true"
+               th:text="#{action.cancel}">Cancel</a>
             <button type="submit" class="btn btn-sm btn-primary">
                 <i class="bi bi-floppy me-2" aria-hidden="true"></i>
                 <span th:text="${page.submitLabel}">Save</span>

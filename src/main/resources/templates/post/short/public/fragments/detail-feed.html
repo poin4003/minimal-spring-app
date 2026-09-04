@@ -37,7 +37,8 @@
                               ? 'find .short-detail-feed-loader'
                               : null}"
              hx-push-url="false"
-             hx-replace-url="false">
+             hx-replace-url="false"
+             hx-select="unset">
             <div th:replace="~{post/short/public/fragments/player
                     :: player(${card})}"></div>
 

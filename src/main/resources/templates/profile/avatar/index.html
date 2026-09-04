@@ -31,6 +31,7 @@
                                    th:text="#{profile.avatar.upload}"
                                    th:attr="hx-get=${page.uploadPartialPath},
                                              hx-target='#app-modal-host',
+                                             hx-select='unset',
                                              hx-swap='innerHTML',
                                              hx-push-url='false',
                                              hx-replace-url='false',
