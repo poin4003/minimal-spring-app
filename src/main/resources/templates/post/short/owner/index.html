@@ -51,12 +51,16 @@
 
                             <div class="app-action-group justify-content-center post-owner-actions">
                                 <a th:href="${page.editProfilePath}"
-                                   class="btn btn-sm btn-outline-secondary">
+                                   class="btn btn-sm btn-outline-secondary"
+                                   hx-push-url="true"
+                                   hx-replace-url="false">
                                     <i class="bi bi-pencil me-2" aria-hidden="true"></i>
                                     <span th:text="#{profile.edit}">Edit profile</span>
                                 </a>
                                 <a th:href="${page.createPath}"
-                                   class="btn btn-sm btn-primary">
+                                   class="btn btn-sm btn-primary"
+                                   hx-push-url="true"
+                                   hx-replace-url="false">
                                     <i class="bi bi-plus-lg me-2" aria-hidden="true"></i>
                                     <span th:text="#{short.owner.create}">Create short</span>
                                 </a>
@@ -73,17 +77,23 @@
                          th:aria-label="#{post.owner.contentTypes}">
                         <a class="nav-link"
                            th:href="${page.standardPostsPath}"
+                           hx-push-url="false"
+                           hx-replace-url="true"
                            th:text="#{post.owner.type.standard}">
                             Posts
                         </a>
                         <a class="nav-link active"
                            aria-current="page"
                            th:href="${page.shortsPath}"
+                           hx-push-url="false"
+                           hx-replace-url="true"
                            th:text="#{post.owner.type.short}">
                             Shorts
                         </a>
                         <a class="nav-link"
                            th:href="${page.videosPath}"
+                           hx-push-url="false"
+                           hx-replace-url="true"
                            th:text="#{post.owner.type.video}">
                             Videos
                         </a>

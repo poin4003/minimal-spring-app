@@ -5,6 +5,8 @@
     <a th:fragment="card(card)"
        th:href="${card.detailPath}"
        class="card h-100 border-0 bg-transparent text-body text-decoration-none short-gallery-card"
+       hx-push-url="true"
+       hx-replace-url="false"
        data-media-gallery-card>
         <div class="ratio rounded overflow-hidden bg-black position-relative short-gallery-cover">
             <img th:if="${card.post.media.media.thumbnailUrl != null}"

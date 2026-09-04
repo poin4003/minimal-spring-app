@@ -14,6 +14,7 @@
             <div class="container-fluid social-container flex-nowrap gap-2 px-3 px-lg-4">
                 <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold mb-0"
                    th:href="${shell.socialPath}"
+                   hx-push-url="true"
                    hx-replace-url="false">
                     <img th:src="@{/favicon.ico}"
                          class="social-brand-logo flex-shrink-0"
@@ -40,6 +41,7 @@
 
                     <a th:if="${shell.currentUser != null}"
                        th:href="${shell.myPostsPath}"
+                       hx-push-url="true"
                        hx-replace-url="false"
                        class="btn btn-outline-secondary app-header-action app-icon-button social-header-personal-action"
                        th:attr="aria-label=#{profile.personal.title},
@@ -49,6 +51,7 @@
 
                     <a th:if="${shell.currentUser != null}"
                        th:href="${shell.profilePath}"
+                       hx-push-url="true"
                        hx-replace-url="false"
                        class="btn btn-outline-secondary app-header-action app-icon-button social-header-profile-action"
                        th:attr="aria-label=#{profile.title},

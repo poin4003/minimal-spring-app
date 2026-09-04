@@ -13,6 +13,7 @@
             <span th:if="${item.active}" th:text="${item.label}">Current</span>
             <a th:unless="${item.active}"
                th:href="${item.path}"
+               hx-push-url="true"
                hx-replace-url="false"
                th:text="${item.label}">
                 Parent

@@ -39,6 +39,7 @@ public class UiHtmxNavigationView {
         return UiHtmxNavigationView.builder()
                 .target(selector)
                 .select(selector)
+                .historyMode(UiHtmxHistoryMode.REPLACE)
                 .build();
     }
 }

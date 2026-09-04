@@ -23,6 +23,8 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-sm btn-outline-primary position-relative z-2"
+                       hx-push-url="true"
+                       hx-replace-url="false"
                        th:title="#{post.owner.edit}"
                        th:aria-label="#{post.owner.edit}">
                         <i class="bi bi-pencil" aria-hidden="true"></i>
@@ -129,6 +131,8 @@
         <a th:unless="${detailMode}"
            th:href="${card.detailPath}"
            class="stretched-link"
+           hx-push-url="true"
+           hx-replace-url="false"
            th:attr="aria-label=#{post.owner.viewDetail}">
             <span class="visually-hidden"
                   th:text="#{post.owner.viewDetail}">

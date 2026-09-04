@@ -18,6 +18,8 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-outline-primary"
+                       hx-push-url="true"
+                       hx-replace-url="false"
                        th:title="#{post.owner.edit}"
                        th:aria-label="#{post.owner.edit}">
                         <i class="bi bi-pencil" aria-hidden="true"></i>
@@ -69,7 +71,9 @@
 
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
-               class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none">
+               class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none"
+               hx-push-url="true"
+               hx-replace-url="false">
                 <img th:if="${card.post.media.media.thumbnailUrl != null}"
                      th:src="${card.post.media.media.thumbnailUrl}"
                      th:alt="${card.post.media.media.originalName}"
@@ -85,7 +89,9 @@
 
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
-               class="text-body text-decoration-none">
+               class="text-body text-decoration-none"
+               hx-push-url="true"
+               hx-replace-url="false">
                 <p th:if="${card.post.caption != null and !card.post.caption.isBlank()}"
                    class="post-content post-content-clamped mb-2"
                    th:text="${card.post.caption}">

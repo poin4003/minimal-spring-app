@@ -13,6 +13,8 @@
             <a th:if="${card.editable}"
                th:href="${card.editPath}"
                class="btn btn-outline-primary"
+               hx-push-url="true"
+               hx-replace-url="false"
                th:title="#{post.owner.edit}">
                 <i class="bi bi-pencil" aria-hidden="true"></i>
                 <span class="visually-hidden" th:text="#{post.owner.edit}">Edit</span>
@@ -41,7 +43,7 @@
        hx-target="#app-social-workspace"
        hx-select="#app-social-workspace"
        hx-swap="outerHTML show:top"
-       hx-push-url="false"
+       hx-push-url="true"
        hx-replace-url="false"
        data-media-gallery-card>
         <img th:if="${card.video.content.media.thumbnailUrl != null}"
@@ -73,7 +75,7 @@
            hx-target="#app-social-workspace"
            hx-select="#app-social-workspace"
            hx-swap="outerHTML show:top"
-           hx-push-url="false"
+           hx-push-url="true"
            hx-replace-url="false">
             <h2 class="h6 text-truncate mb-2" th:text="${card.video.title}">Title</h2>
         </a>

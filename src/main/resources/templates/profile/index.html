@@ -24,6 +24,8 @@
                                             <div class="text-center">
                                                 <a th:href="${page.avatarSelectionPath}"
                                                    class="position-relative d-inline-block rounded-circle"
+                                                   hx-push-url="true"
+                                                   hx-replace-url="false"
                                                    th:attr="aria-label=#{profile.avatar.change},
                                                             title=#{profile.avatar.change}">
                                                     <img th:if="${page.profile.avatar != null

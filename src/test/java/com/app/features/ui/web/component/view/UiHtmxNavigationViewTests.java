@@ -28,9 +28,11 @@ class UiHtmxNavigationViewTests {
 
     @Test
     void replacesHistoryForPaginationAndFilters() {
-        UiHtmxNavigationView navigation = navigation(
-                UiHtmxHistoryMode.REPLACE);
+        UiHtmxNavigationView navigation =
+                UiHtmxNavigationView.forComponent("results");
 
+        assertThat(navigation.getTarget()).isEqualTo("#results");
+        assertThat(navigation.getSelect()).isEqualTo("#results");
         assertThat(navigation.getPushUrl()).isNull();
         assertThat(navigation.getReplaceUrl()).isTrue();
     }

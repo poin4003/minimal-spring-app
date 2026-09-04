@@ -43,6 +43,8 @@
                                       th:text="${page.card.statusLabel}">Status</span>
                                 <div class="btn-group btn-group-sm">
                                     <a th:href="${page.card.editPath}" class="btn btn-outline-primary"
+                                       hx-push-url="true"
+                                       hx-replace-url="false"
                                        th:title="#{post.owner.edit}">
                                         <i class="bi bi-pencil" aria-hidden="true"></i>
                                     </a>
@@ -76,11 +78,15 @@
                 <header class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                     <h2 class="h5 mb-0" th:text="#{video.series.items}">Videos</h2>
                     <div class="d-flex gap-2">
-                        <a th:href="${page.addItemsPath}" class="btn btn-sm btn-outline-primary">
+                        <a th:href="${page.addItemsPath}" class="btn btn-sm btn-outline-primary"
+                           hx-push-url="true"
+                           hx-replace-url="false">
                             <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
                             <span th:text="#{video.series.items.addExisting}">Add existing</span>
                         </a>
-                        <a th:href="${page.createVideoPath}" class="btn btn-sm btn-primary">
+                        <a th:href="${page.createVideoPath}" class="btn btn-sm btn-primary"
+                           hx-push-url="true"
+                           hx-replace-url="false">
                             <i class="bi bi-camera-video me-1" aria-hidden="true"></i>
                             <span th:text="#{video.series.items.createVideo}">Create video</span>
                         </a>
