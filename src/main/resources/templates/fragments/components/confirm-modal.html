@@ -13,7 +13,10 @@
                   th:action="${modal.actionPath}"
                   data-app-modal-form="true"
                   th:attr="hx-post=${modal.actionPath},
+                           hx-select='unset',
                            hx-swap='none',
+                           hx-push-url='false',
+                           hx-replace-url='false',
                            hx-disabled-elt='button[type=submit]'">
                 <input type="hidden"
                        th:if="${_csrf != null}"

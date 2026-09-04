@@ -40,6 +40,7 @@
                                        th:href="${page.uploadFallbackPath}"
                                        th:attr="hx-get=${page.uploadPartialPath},
                                                  hx-target='#app-modal-host',
+                                                 hx-select='unset',
                                                  hx-swap='innerHTML',
                                                  hx-push-url='false',
                                                  hx-replace-url='false',
@@ -51,6 +52,8 @@
                                     </a>
                                     <a th:href="${page.backPath}"
                                        class="btn btn-sm btn-outline-secondary"
+                                       hx-push-url="true"
+                                       hx-replace-url="false"
                                        th:text="#{action.back}">
                                         Back
                                     </a>
@@ -66,7 +69,8 @@
                                                    hx-target='#media-thumbnail-workspace',
                                                    hx-select='#media-thumbnail-workspace',
                                                    hx-swap='outerHTML',
-                                                   hx-replace-url='false',
+                                                   hx-push-url='false',
+                                                   hx-replace-url='true',
                                                    hx-disabled-elt='button[type=submit]'"
                                           class="row g-3 align-items-end">
                                         <input type="hidden" name="page" value="0">
@@ -93,7 +97,8 @@
                                                         hx-target='#media-thumbnail-workspace',
                                                         hx-select='#media-thumbnail-workspace',
                                                         hx-swap='outerHTML',
-                                                        hx-replace-url='false',
+                                                        hx-push-url='false',
+                                                        hx-replace-url='true',
                                                         hx-disabled-elt='this'">
                                                 <span th:text="#{action.clear}">Clear</span>
                                             </a>

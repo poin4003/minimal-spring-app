@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:replace="~{fragments/app-shell
+            :: layout(${shell}, ~{::pageContent})}">
+        <section th:fragment="pageContent">Admin content</section>
+    </div>
+</body>
+</html>

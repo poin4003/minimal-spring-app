@@ -2,39 +2,50 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
-    <div th:fragment="layout(shell, content)"
-         class="social-shell-layout min-vh-100"
-         hx-boost="true"
-         hx-target="#app-social-workspace"
-         hx-select="#app-social-workspace"
-         hx-swap="outerHTML show:top"
-         hx-push-url="false"
-         hx-replace-url="false"
-         hx-ext="head-support">
-        <div th:replace="~{fragments/social-header
-                :: header(${shell})}"></div>
+    <th:block th:fragment="layout(shell, content)">
+        <div th:unless="${htmxRequest == true}"
+             class="social-shell-layout min-vh-100"
+             hx-boost="true"
+             hx-target="#app-social-workspace"
+             hx-select="#app-social-workspace"
+             hx-swap="outerHTML show:top"
+             hx-push-url="false"
+             hx-replace-url="false"
+             hx-ext="head-support">
+            <div th:replace="~{fragments/social-header
+                    :: header(${shell})}"></div>
 
-        <main id="app-social-workspace"
-              class="container-fluid social-container px-0">
-            <div class="row g-0 align-items-start social-workspace">
-                <aside class="col-12 col-lg-3 col-xl-2 social-navigation-column border-end">
-                    <div class="social-navigation-panel">
-                        <div class="social-navigation-body">
-                            <div th:replace="~{fragments/social-navigation
-                                    :: navigation(${shell.navigation})}"></div>
-                        </div>
+            <th:block th:replace="~{fragments/social-shell
+                    :: workspace(${shell}, ${content})}"></th:block>
+
+            <div th:replace="~{fragments/app-tools :: modalHost}"></div>
+            <div th:replace="~{fragments/app-tools :: loader}"></div>
+            <div th:replace="~{fragments/app-tools :: htmxError}"></div>
+        </div>
+
+        <th:block th:if="${htmxRequest == true}"
+                  th:replace="~{fragments/social-shell
+                          :: workspace(${shell}, ${content})}"></th:block>
+    </th:block>
+
+    <main th:fragment="workspace(shell, content)"
+          id="app-social-workspace"
+          class="container-fluid social-container px-0"
+          hx-history-elt>
+        <div class="row g-0 align-items-start social-workspace">
+            <aside class="col-12 col-lg-3 col-xl-2 social-navigation-column border-end">
+                <div class="social-navigation-panel">
+                    <div class="social-navigation-body">
+                        <div th:replace="~{fragments/social-navigation
+                                :: navigation(${shell.navigation})}"></div>
                     </div>
-                </aside>
+                </div>
+            </aside>
 
-                <section class="col-12 col-lg-9 col-xl-10 min-w-0 social-content-column">
-                    <th:block th:replace="${content}"></th:block>
-                </section>
-            </div>
-        </main>
-
-        <div th:replace="~{fragments/app-tools :: modalHost}"></div>
-        <div th:replace="~{fragments/app-tools :: loader}"></div>
-        <div th:replace="~{fragments/app-tools :: htmxError}"></div>
-    </div>
+            <section class="col-12 col-lg-9 col-xl-10 min-w-0 social-content-column">
+                <th:block th:replace="${content}"></th:block>
+            </section>
+        </div>
+    </main>
 </body>
 </html>

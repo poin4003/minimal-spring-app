@@ -8,6 +8,7 @@
          aria-live="polite"
          th:attr="hx-get=${gallery.refreshPath},
                    hx-trigger='media:uploaded from:body delay:200ms, sse:media',
+                   hx-select='unset',
                    hx-swap='outerHTML',
                    hx-push-url='false',
                    hx-replace-url='false',

@@ -20,7 +20,10 @@
                                method=${modal.method},
                                hx-post=${#strings.equalsIgnoreCase(modal.method, 'post') ? modal.actionPath : null},
                                hx-target=${#strings.equalsIgnoreCase(modal.method, 'post') ? '#app-modal-host' : null},
+                               hx-select=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'unset' : null},
                                hx-swap=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'innerHTML' : null},
+                               hx-push-url=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'false' : null},
+                               hx-replace-url=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'false' : null},
                                hx-disabled-elt=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'button[type=submit]' : null},
                                data-app-modal-form=${#strings.equalsIgnoreCase(modal.method, 'post') ? 'true' : null}">
                     <input type="hidden"

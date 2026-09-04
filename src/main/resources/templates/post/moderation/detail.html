@@ -39,6 +39,8 @@
                 <div class="app-page-toolbar">
                     <a th:href="${page.queuePath}"
                        class="btn btn-sm btn-outline-secondary"
+                       hx-push-url="true"
+                       hx-replace-url="false"
                        th:text="#{post.moderation.backToQueue}">
                         Back to queue
                     </a>

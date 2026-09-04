@@ -39,6 +39,8 @@
                                 <div class="app-action-group">
                                     <a th:href="${page.backPath}"
                                        class="btn btn-sm btn-outline-secondary"
+                                       hx-push-url="true"
+                                       hx-replace-url="false"
                                        th:text="#{action.back}">
                                         Back
                                     </a>
@@ -48,7 +50,8 @@
                                                 hx-target='#role-permission-assignment-workspace',
                                                 hx-select='#role-permission-assignment-workspace',
                                                 hx-swap='outerHTML',
-                                                hx-replace-url='false',
+                                                hx-push-url='false',
+                                                hx-replace-url='true',
                                                 hx-disabled-elt='this'"
                                        th:classappend="${page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
                                         Assigned
@@ -59,7 +62,8 @@
                                                 hx-target='#role-permission-assignment-workspace',
                                                 hx-select='#role-permission-assignment-workspace',
                                                 hx-swap='outerHTML',
-                                                hx-replace-url='false',
+                                                hx-push-url='false',
+                                                hx-replace-url='true',
                                                 hx-disabled-elt='this'"
                                        th:classappend="${!page.assignedMode ? ' btn-primary' : ' btn-outline-primary'}">
                                         Available

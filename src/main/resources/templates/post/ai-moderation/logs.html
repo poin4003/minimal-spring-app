@@ -25,7 +25,9 @@
 
                 <div class="app-page-toolbar">
                     <a th:href="${page.moderationPath}"
-                       class="btn btn-sm btn-outline-secondary">
+                       class="btn btn-sm btn-outline-secondary"
+                       hx-push-url="true"
+                       hx-replace-url="false">
                         <i class="bi bi-arrow-left me-2" aria-hidden="true"></i>
                         <span th:text="#{post.aiModeration.log.backToQueue}">
                             Back to moderation queue

@@ -57,9 +57,10 @@
                                    th:attr="aria-disabled=${action.disabled},
                                             hx-get=${!action.disabled and action.loadsModal() ? action.partialPath : null},
                                              hx-target=${action.loadsModal() ? '#app-modal-host' : null},
+                                             hx-select=${action.loadsModal() ? 'unset' : null},
                                              hx-swap=${action.loadsModal() ? 'innerHTML' : null},
-                                             hx-push-url=${action.loadsModal() ? 'false' : null},
-                                             hx-replace-url=${action.loadsModal() ? 'false' : null},
+                                             hx-push-url=${action.loadsModal() ? 'false' : (!action.disabled and action.path != null ? 'true' : 'false')},
+                                             hx-replace-url='false',
                                              hx-disabled-elt=${action.loadsModal() ? 'this' : null},
                                             data-app-modal-request=${action.loadsModal() ? 'true' : null}">
                                     <span th:text="${action.label}">View</span>

@@ -41,7 +41,11 @@
                       th:action="${row.action.path}"
                       class="mb-0 app-assignment-action"
                       th:attr="hx-post=${row.action.path},
+                               hx-target='this',
+                               hx-select='unset',
                                hx-swap='none',
+                               hx-push-url='false',
+                               hx-replace-url='false',
                                hx-disabled-elt='button[type=submit]'">
                     <input type="hidden"
                            th:name="${_csrf.parameterName}"

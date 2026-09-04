@@ -43,6 +43,7 @@
                th:text="${item.originalName}"
                th:attr="hx-get=${item.previewPartialPath},
                          hx-target='#app-modal-host',
+                         hx-select='unset',
                          hx-swap='innerHTML',
                          hx-push-url='false',
                          hx-replace-url='false',
@@ -102,6 +103,7 @@
                th:href="${item.metadataPath}"
                th:attr="hx-get=${item.metadataPartialPath},
                          hx-target='#app-modal-host',
+                         hx-select='unset',
                          hx-swap='innerHTML',
                          hx-push-url='false',
                          hx-replace-url='false',
@@ -117,6 +119,8 @@
             <a th:if="${item.canSelectThumbnail()}"
                class="btn btn-outline-primary app-icon-button"
                th:href="${item.thumbnailSelectionPath}"
+               hx-push-url="true"
+               hx-replace-url="false"
                th:title="#{media.thumbnail.select}"
                th:aria-label="#{media.thumbnail.select}">
                 <i class="bi bi-image" aria-hidden="true"></i>
@@ -150,6 +154,7 @@
                th:href="${item.retryPath}"
                th:attr="hx-get=${item.retryPartialPath},
                          hx-target='#app-modal-host',
+                         hx-select='unset',
                          hx-swap='innerHTML',
                          hx-push-url='false',
                          hx-replace-url='false',
@@ -166,6 +171,7 @@
                th:href="${item.deletePath}"
                th:attr="hx-get=${item.deletePartialPath},
                          hx-target='#app-modal-host',
+                         hx-select='unset',
                          hx-swap='innerHTML',
                          hx-push-url='false',
                          hx-replace-url='false',

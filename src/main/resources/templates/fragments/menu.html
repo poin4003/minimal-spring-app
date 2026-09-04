@@ -10,8 +10,12 @@
            th:classappend="${item.active} ? ' active' : ''"
            data-app-menu-tooltip
            th:attr="aria-disabled=${item.disabled},
+                    aria-current=${item.active ? 'page' : null},
                     aria-label=${item.label},
-                    data-bs-title=${item.label}">
+                    data-bs-title=${item.label},
+                    data-app-menu-path=${!item.disabled ? item.path : null},
+                    hx-push-url=${!item.disabled and item.path != null ? 'true' : 'false'},
+                    hx-replace-url='false'">
             <i th:if="${item.icon != null}"
                class="app-menu-icon bi"
                th:classappend="${' bi-' + item.icon}"
@@ -19,7 +23,8 @@
             <span class="app-menu-label" th:text="${item.label}">Dashboard</span>
         </a>
 
-        <div th:unless="${#lists.isEmpty(item.children)}">
+        <div th:unless="${#lists.isEmpty(item.children)}"
+             data-app-menu-branch>
             <div class="app-menu-group d-flex align-items-center gap-2"
                  th:classappend="${item.open} ? ' active' : ''"
                  data-app-menu-tooltip

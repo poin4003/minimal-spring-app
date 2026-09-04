@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:replace="~{fragments/social-shell
+            :: layout(${shell}, ~{::pageContent})}">
+        <section th:fragment="pageContent">Social content</section>
+    </div>
+</body>
+</html>

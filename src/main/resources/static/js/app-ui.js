@@ -125,6 +125,64 @@
         }
     }
 
+    function normalizeNavigationPath(path) {
+        if (path == null || path === "") {
+            return "/";
+        }
+
+        const normalized = path.split("?")[0].replace(/\/+$/, "");
+        return normalized === "" ? "/" : normalized;
+    }
+
+    function syncAdminMenu() {
+        const currentPath = normalizeNavigationPath(window.location.pathname);
+        const links = Array.from(document.querySelectorAll(
+            "[data-app-menu-path]"));
+        let activeLink = null;
+        let activePathLength = -1;
+
+        links.forEach(link => {
+            const itemPath = normalizeNavigationPath(
+                link.dataset.appMenuPath);
+            const matches = currentPath === itemPath
+                || currentPath.startsWith(itemPath + "/");
+            if (matches && itemPath.length > activePathLength) {
+                activeLink = link;
+                activePathLength = itemPath.length;
+            }
+        });
+
+        links.forEach(link => {
+            const active = link === activeLink;
+            link.classList.toggle("active", active);
+            if (active) {
+                link.setAttribute("aria-current", "page");
+            } else {
+                link.removeAttribute("aria-current");
+            }
+        });
+
+        document.querySelectorAll("[data-app-menu-branch]")
+            .forEach(branch => {
+                branch.querySelector(":scope > .app-menu-group")
+                    ?.classList.toggle(
+                        "active",
+                        branch.querySelector(".app-menu-link.active") != null);
+            });
+    }
+
+    function closeMobileSidebar() {
+        if (desktopViewport.matches || typeof bootstrap === "undefined") {
+            return;
+        }
+
+        const sidebar = document.getElementById("app-sidebar");
+        const offcanvas = sidebar == null
+            ? null
+            : bootstrap.Offcanvas.getInstance(sidebar);
+        offcanvas?.hide();
+    }
+
     function hideHtmxError() {
         document.getElementById("app-htmx-error")
             ?.setAttribute("hidden", "");
@@ -286,14 +344,19 @@
         hideLoader();
         showHtmxError("request");
     });
-    document.addEventListener("htmx:historyRestore", restoreBodyClass);
+    document.addEventListener("htmx:historyRestore", function () {
+        restoreBodyClass();
+        syncAdminMenu();
+    });
     document.addEventListener("htmx:afterSwap", function (event) {
         if (!event.detail.boosted) {
             return;
         }
 
         updateThemeButtons(getTheme());
+        syncAdminMenu();
         applySidebarState(isSidebarCollapsed());
+        closeMobileSidebar();
     });
 
     document.addEventListener("DOMContentLoaded", function () {
@@ -301,6 +364,7 @@
             window.location.pathname + window.location.search,
             document.body.className);
         updateThemeButtons(getTheme());
+        syncAdminMenu();
         applySidebarState(isSidebarCollapsed());
 
         document.querySelectorAll("[data-app-theme-toggle]")

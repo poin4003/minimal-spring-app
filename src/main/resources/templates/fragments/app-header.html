@@ -53,6 +53,7 @@
             <div th:replace="~{notification/fragments/inbox :: trigger(${shell.notificationWidget})}"></div>
             <a th:href="${shell.profilePath}"
                class="btn btn-outline-secondary app-header-action app-icon-button"
+               hx-boost="false"
                th:attr="aria-label=#{profile.title},
                         title=#{profile.title}">
                 <i class="bi bi-person-circle" aria-hidden="true"></i>
@@ -64,7 +65,10 @@
             <div th:replace="~{fragments/app-tools
                     :: themeToggle(${shell.themeUpdatePath})}"></div>
 
-            <form method="post" th:attr="action=${shell.logoutPath}" class="mb-0">
+            <form method="post"
+                  th:attr="action=${shell.logoutPath}"
+                  hx-boost="false"
+                  class="mb-0">
                 <input type="hidden"
                        th:name="${_csrf.parameterName}"
                        th:value="${_csrf.token}">

@@ -48,6 +48,7 @@
                       class="row g-3"
                       th:attr="hx-post=${aiModeration.updatePath},
                                hx-target=${'#' + aiModeration.id},
+                               hx-select='unset',
                                hx-swap='outerHTML',
                                hx-disabled-elt='button, select, textarea'">
                     <div class="col-12 col-lg-4">
