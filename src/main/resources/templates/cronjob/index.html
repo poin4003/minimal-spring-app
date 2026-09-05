@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
     <link rel="stylesheet" th:href="@{/css/shell.css}">
-    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/js/app-modal.js}"></script>
 </head>
@@ -37,16 +37,11 @@
         </th:block>
     </div>
 
-    <script th:if="${page.openMetadataModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("cronjob-metadata-modal")).show();
-        });
-    </script>
-
-    <script th:if="${page.openDetailModal}">
-        document.addEventListener("DOMContentLoaded", function () {
-            bootstrap.Modal.getOrCreateInstance(document.getElementById("cronjob-detail-modal")).show();
-        });
-    </script>
+    <div th:if="${page.openMetadataModal}"
+         th:replace="~{fragments/app-tools
+                :: autoModal('cronjob-metadata-modal')}"></div>
+    <div th:if="${page.openDetailModal}"
+         th:replace="~{fragments/app-tools
+                :: autoModal('cronjob-detail-modal')}"></div>
 </body>
 </html>

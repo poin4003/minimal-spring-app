@@ -1,6 +1,11 @@
 (function () {
     "use strict";
 
+    if (window.AppModalInitialized === true) {
+        return;
+    }
+    window.AppModalInitialized = true;
+
     const MODAL_HOST_ID = "app-modal-host";
 
     function isModalRequest(element) {
@@ -27,7 +32,7 @@
 
         const modalElement = target.querySelector(".modal");
         if (modalElement) {
-            bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            window.AppUi.showModal(modalElement);
         }
     });
 

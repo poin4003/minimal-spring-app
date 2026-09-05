@@ -4,33 +4,34 @@
 <body>
     <form th:fragment="themeToggle(themeUpdatePath)"
           class="mb-0"
+          x-data="themeToggle"
           data-app-theme-form
           data-app-loader="manual"
           th:data-app-theme-persist="${themeUpdatePath != null}"
           th:attr="hx-post=${themeUpdatePath},
                    hx-swap='none',
-                   hx-disabled-elt='button'">
+                   hx-disabled-elt='button',
+                   data-dark-label=#{theme.dark},
+                   data-light-label=#{theme.light},
+                   data-switch-dark-label=#{theme.switchDark},
+                   data-switch-light-label=#{theme.switchLight}">
         <input th:if="${themeUpdatePath != null}"
                type="hidden"
                th:name="${_csrf.parameterName}"
                th:value="${_csrf.token}">
         <input type="hidden"
                name="darkThemeEnabled"
-               data-app-theme-value>
+               x-ref="themeValue">
         <button type="button"
                 class="btn btn-outline-secondary app-header-action app-icon-button"
-                data-app-theme-toggle
-                th:attr="aria-label=#{theme.switchDark},
-                         title=#{theme.switch},
-                         data-dark-label=#{theme.dark},
-                         data-light-label=#{theme.light},
-                         data-switch-dark-label=#{theme.switchDark},
-                         data-switch-light-label=#{theme.switchLight}">
-            <i class="bi bi-moon-stars"
-               data-app-theme-icon
+                x-on:click="toggle"
+                x-bind:aria-label="toggleLabel"
+                th:title="#{theme.switch}">
+            <i class="bi"
+               x-bind:class="dark ? 'bi-sun' : 'bi-moon-stars'"
                aria-hidden="true"></i>
             <span class="visually-hidden"
-                  data-app-theme-label
+                  x-text="themeLabel"
                   th:text="#{theme.dark}">
                 Dark theme
             </span>
@@ -40,7 +41,9 @@
     <div th:fragment="loader"
          id="app-loader"
          class="app-loader"
-         hidden
+         x-data
+         x-show="$store.loading.visible"
+         x-cloak
          aria-live="polite"
          aria-busy="true">
         <div class="spinner-border text-primary" role="status">
@@ -54,32 +57,43 @@
     <div th:fragment="htmxError"
          id="app-htmx-error"
          class="alert alert-danger alert-dismissible position-fixed bottom-0 end-0 m-3 z-3 app-htmx-error"
+         x-data="requestError"
+         x-show="visible"
+         x-on:app-request-start.window="hide"
+         x-on:app-request-error.window="show($event.detail.type)"
+         x-cloak
          role="alert"
-         hidden
          th:attr="data-request-message=#{htmx.error.request},
                   data-connection-message=#{htmx.error.connection}">
         <div class="pe-3">
-            <span data-app-htmx-error-message
+            <span x-text="message"
                   th:text="#{htmx.error.request}">
                 The request could not be completed. Please try again.
             </span>
         </div>
         <button type="button"
                 class="btn-close"
-                data-app-htmx-error-dismiss
+                x-on:click="hide"
                 th:attr="aria-label=#{action.close}"></button>
     </div>
+
+    <div th:fragment="autoModal(modalId)"
+         x-data="autoModal"
+         th:data-modal-id="${modalId}"
+         hidden></div>
 
     <div th:fragment="modalHost"
          id="app-modal-host"
          hx-disinherit="hx-target hx-select hx-swap"></div>
 
-    <th:block th:fragment="htmxScripts">
+    <th:block th:fragment="frontendScripts">
         <meta name="htmx-config"
               content='{"historyEnabled":true,"historyCacheSize":10,"refreshOnHistoryMiss":true}'>
+        <script defer th:src="@{/vendor/alpine/alpine.min.js}"></script>
         <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
         <script defer th:src="@{/vendor/htmx/extensions/head-support.min.js}"></script>
         <script defer th:src="@{/vendor/htmx/extensions/sse.min.js}"></script>
+        <script defer th:src="@{/js/app-htmx.js}"></script>
     </th:block>
 </body>
 </html>

@@ -64,6 +64,18 @@ class UiShellTemplateTests {
                 .contains("id=\"app-social-workspace\"");
     }
 
+    @Test
+    void rendersDeclarativeAutoModalLauncher() {
+        String html = templateEngine.process(
+                "test/auto-modal",
+                context(false));
+
+        assertThat(html)
+                .contains("x-data=\"autoModal\"")
+                .contains("data-modal-id=\"sample-modal\"")
+                .doesNotContain("DOMContentLoaded");
+    }
+
     private String renderAdminShell() {
         Context context = context(true);
         context.setVariable("shell", UiShellView.builder()

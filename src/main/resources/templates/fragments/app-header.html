@@ -16,13 +16,19 @@
 
             <button type="button"
                     class="btn btn-outline-secondary app-header-action app-icon-button d-none d-lg-inline-grid"
-                    data-app-sidebar-toggle
-                    aria-expanded="true"
+                    x-data
+                    x-on:click="$store.sidebar.toggle()"
+                    x-bind:aria-expanded="(!$store.sidebar.collapsed).toString()"
+                    x-bind:aria-label="$store.sidebar.collapsed
+                            ? $el.dataset.expandLabel
+                            : $el.dataset.collapseLabel"
                     th:attr="aria-label=#{shell.collapseMenu},
                              data-expand-label=#{shell.expandMenu},
                              data-collapse-label=#{shell.collapseMenu}">
-                <i class="bi bi-layout-sidebar-inset"
-                   data-app-sidebar-toggle-icon
+                <i class="bi"
+                   x-bind:class="$store.sidebar.collapsed
+                           ? 'bi-layout-sidebar'
+                           : 'bi-layout-sidebar-inset'"
                    aria-hidden="true"></i>
             </button>
 

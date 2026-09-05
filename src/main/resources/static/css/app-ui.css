@@ -1,5 +1,9 @@
 @import url("../vendor/bootstrap-icons/font/bootstrap-icons.min.css");
 
+[x-cloak] {
+    display: none !important;
+}
+
 :root {
     --app-surface-canvas: var(--bs-tertiary-bg);
     --app-surface-panel: var(--bs-body-bg);

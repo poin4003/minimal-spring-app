@@ -467,11 +467,6 @@
         initializeLazyPlayers(event.detail.target);
     });
 
-    document.addEventListener("htmx:load", function (event) {
-        initializeAutoPlayers(event.detail.elt);
-        initializeLazyPlayers(event.detail.elt);
-    });
-
     document.addEventListener("htmx:beforeCleanupElement", function (event) {
         destroyPlayers(event.detail.elt);
     });

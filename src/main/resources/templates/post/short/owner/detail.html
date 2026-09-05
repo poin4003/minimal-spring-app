@@ -13,7 +13,7 @@
     <link rel="stylesheet" th:href="@{/css/social-shell.css}">
     <link rel="stylesheet" th:href="@{/css/post-public.css}">
     <link rel="stylesheet" th:href="@{/css/short-post.css}">
-    <th:block th:replace="~{fragments/app-tools :: htmxScripts}"></th:block>
+    <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
     <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
     <script defer th:src="@{/vendor/video.js/video.min.js}"></script>
     <script defer th:src="@{/vendor/video.js/videojs-contrib-quality-levels.min.js}"></script>
@@ -39,16 +39,9 @@
                         :: modal(${page.actionModal})}"></div>
             </div>
 
-            <script th:if="${page.openModalId != null}"
-                    th:inline="javascript">
-                document.addEventListener("DOMContentLoaded", function () {
-                    const modalElement = document.getElementById(
-                            /*[[${page.openModalId}]]*/ "owner-post-action-modal");
-                    if (modalElement) {
-                        bootstrap.Modal.getOrCreateInstance(modalElement).show();
-                    }
-                });
-            </script>
+            <div th:if="${page.openModalId != null}"
+                 th:replace="~{fragments/app-tools
+                        :: autoModal(${page.openModalId})}"></div>
         </th:block>
     </div>
 </body>
