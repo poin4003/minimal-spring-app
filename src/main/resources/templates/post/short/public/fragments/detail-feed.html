@@ -5,7 +5,8 @@
     <section th:fragment="feed(feed)"
              th:id="${feed.id}"
              class="short-detail-feed"
-             data-short-detail-feed>
+             data-short-detail-feed
+             x-data="shortFeed">
         <th:block th:replace="~{post/short/public/fragments/detail-feed
                 :: items(${feed})}"></th:block>
     </section>

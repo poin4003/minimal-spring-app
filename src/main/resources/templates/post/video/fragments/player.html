@@ -5,6 +5,7 @@
     <div th:fragment="player(asset, trackProgress)"
          class="app-media-preview-player video-post-player bg-black"
          data-media-preview
+         x-data="mediaPlayer"
          th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
          th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
          th:data-message-stream-failed="#{media.preview.streamFailed}">

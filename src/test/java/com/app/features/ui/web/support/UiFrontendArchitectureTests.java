@@ -17,7 +17,10 @@ class UiFrontendArchitectureTests {
 
         assertThat(uiScript)
                 .contains("Alpine.store(\"theme\"")
+                .contains("Alpine.store(\"navigation\"")
                 .contains("Alpine.data(\"postComposer\"")
+                .contains("Alpine.data(\"serverModalHost\"")
+                .contains("Alpine.data(\"searchForm\"")
                 .doesNotContain("addEventListener(\"htmx:");
         assertThat(htmxScript)
                 .contains("addEventListener(\"htmx:")
@@ -35,7 +38,26 @@ class UiFrontendArchitectureTests {
                 .isLessThan(toolsTemplate.indexOf("/js/app-htmx.js"));
         assertThat(toolsTemplate)
                 .contains("th:fragment=\"frontendScripts\"")
+                .contains("/js/media-preview.js")
+                .contains("/js/media-upload.js")
+                .doesNotContain("head-support")
                 .doesNotContain("th:fragment=\"htmxScripts\"");
+    }
+
+    @Test
+    void keepsFeatureLifecycleOutOfHtmxEvents() throws IOException {
+        assertThat(resource("/static/js/media-preview.js"))
+                .contains("Alpine.data(\"mediaPlayer\"")
+                .doesNotContain("addEventListener(\"htmx:");
+        assertThat(resource("/static/js/media-gallery.js"))
+                .contains("Alpine.data(\"mediaHoverPreview\"")
+                .doesNotContain("addEventListener(\"htmx:");
+        assertThat(resource("/static/js/media-upload.js"))
+                .contains("Alpine.data(\"mediaUpload\"")
+                .doesNotContain("addEventListener(\"htmx:");
+        assertThat(resource("/static/js/short-detail-feed.js"))
+                .contains("Alpine.data(\"shortFeed\"")
+                .doesNotContain("addEventListener(\"htmx:");
     }
 
     private String resource(String path) throws IOException {

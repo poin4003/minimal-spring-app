@@ -1,11 +1,12 @@
-import { MediaChunkUploadError, MediaChunkUploader } from "./media-chunk-upload.js";
-import { MediaDirectUploader } from "./media-direct-upload.js";
-
 (function () {
     "use strict";
 
-    const CSRF_COOKIE_NAME = "XSRF-TOKEN";
+    if (window.AppMediaUploadInitialized === true) {
+        return;
+    }
+    window.AppMediaUploadInitialized = true;
 
+    const CSRF_COOKIE_NAME = "XSRF-TOKEN";
     const STATUS = Object.freeze({
         QUEUED: "QUEUED",
         UPLOADING: "UPLOADING",
@@ -13,7 +14,6 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         FAILED: "FAILED",
         CANCELLED: "CANCELLED"
     });
-
     const STATUS_CLASS = Object.freeze({
         QUEUED: "text-bg-secondary",
         UPLOADING: "text-bg-primary",
@@ -33,7 +33,6 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                 if (value == null) {
                     return null;
                 }
-
                 const session = JSON.parse(value);
                 if (session.originalName !== file.name
                         || session.fileSize !== file.size
@@ -43,7 +42,7 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                     return null;
                 }
                 return session.uploadId;
-            } catch {
+            } catch (_error) {
                 this.remove(file);
                 return null;
             }
@@ -57,16 +56,16 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
                     fileSize: file.size,
                     lastModified: file.lastModified
                 }));
-            } catch {
-                // Upload continues without cross-page resume when storage is unavailable.
+            } catch (_error) {
+                // Upload can continue without cross-page resume.
             }
         }
 
         remove(file) {
             try {
                 localStorage.removeItem(this.key(file));
-            } catch {
-                // Nothing else is required when browser storage is unavailable.
+            } catch (_error) {
+                // Browser storage is optional.
             }
         }
 
@@ -80,626 +79,449 @@ import { MediaDirectUploader } from "./media-direct-upload.js";
         }
     }
 
-    class MediaUploadQueue {
-        constructor(root) {
-            this.root = root;
-            this.form = root.querySelector("[data-media-upload-form]");
-            this.input = root.querySelector("[data-media-upload-input]");
-            this.dropzone = root.querySelector("[data-media-upload-dropzone]");
-            this.queue = root.querySelector("[data-media-upload-queue]");
-            this.emptyState = root.querySelector("[data-media-upload-empty]");
-            this.itemTemplate = root.querySelector("[data-media-upload-item-template]");
-            this.startButton = root.querySelector("[data-media-upload-start]");
-            this.clearButton = root.querySelector("[data-media-upload-clear]");
-            this.messages = this.readMessages();
-            this.rules = this.readRules();
-            this.transport = this.readTransport();
-            this.resumeStore = new MediaUploadResumeStore();
-            this.directUploader = this.createDirectUploader();
-            this.chunkUploader = this.createChunkUploader();
-            this.items = new Map();
-            this.uploading = false;
+    document.addEventListener("alpine:init", function () {
+        Alpine.data("mediaUpload", () => ({
+            items: [],
+            uploading: false,
+            dragging: false,
+            rules: new Map(),
+            messages: null,
+            transport: null,
+            resumeStore: new MediaUploadResumeStore(),
+            directUploader: null,
+            chunkUploader: null,
 
-            this.bindEvents();
-            this.updateControls();
-        }
-
-        readRules() {
-            return new Map(
-                Array.from(this.root.querySelectorAll("[data-media-upload-rule]"))
-                    .map(element => [
-                        element.dataset.extension.toLowerCase(),
-                        Number(element.dataset.maxFileSize)
-                    ])
-            );
-        }
-
-        readMessages() {
-            return {
-                status: {
-                    QUEUED: this.root.dataset.messageStatusQueued,
-                    UPLOADING: this.root.dataset.messageStatusUploading,
-                    SUCCESS: this.root.dataset.messageStatusUploaded,
-                    FAILED: this.root.dataset.messageStatusFailed,
-                    CANCELLED: this.root.dataset.messageStatusCancelled
-                },
-                transportChunked: this.root.dataset.messageTransportChunked,
-                transportResumable: this.root.dataset.messageTransportResumable,
-                transportDirect: this.root.dataset.messageTransportDirect,
-                fileEmpty: this.root.dataset.messageFileEmpty,
-                extensionNotAllowed: this.root.dataset.messageExtensionNotAllowed,
-                fileTooLarge: this.root.dataset.messageFileTooLarge,
-                uploadCancelled: this.root.dataset.messageUploadCancelled,
-                sessionCancelFailed: this.root.dataset.messageSessionCancelFailed,
-                chunkFailed: this.root.dataset.messageChunkFailed,
-                uploadSuccess: this.root.dataset.messageUploadSuccess,
-                authExpired: this.root.dataset.messageAuthExpired,
-                uploadFailed: this.root.dataset.messageUploadFailed,
-                requestFailed: this.root.dataset.messageRequestFailed,
-                authRequired: this.root.dataset.messageAuthRequired,
-                sessionNotResumable: this.root.dataset.messageSessionNotResumable,
-                fileMismatch: this.root.dataset.messageFileMismatch
-            };
-        }
-
-        readTransport() {
-            return {
-                directUploadThresholdBytes: Number(
-                    this.form.dataset.directUploadThreshold
-                ),
-                chunkUploadPath: this.form.dataset.chunkUploadPath,
-                parallelChunks: Number(this.form.dataset.parallelChunks)
-            };
-        }
-
-        createDirectUploader() {
-            return new MediaDirectUploader({
-                uploadUrl: this.form.action,
-                requestHeadersProvider: () => this.requestHeaders("text/html"),
-                messages: {
-                    requestFailed: this.messages.requestFailed,
-                    cancelled: this.messages.uploadCancelled
-                }
-            });
-        }
-
-        createChunkUploader() {
-            return new MediaChunkUploader({
-                baseUrl: this.transport.chunkUploadPath,
-                concurrency: this.transport.parallelChunks,
-                requestHeadersProvider: () => this.requestHeaders("application/json"),
-                messages: {
-                    authRequired: this.messages.authRequired,
-                    requestFailed: this.messages.uploadFailed,
-                    sessionNotResumable: this.messages.sessionNotResumable,
-                    fileMismatch: this.messages.fileMismatch
-                }
-            });
-        }
-
-        requestHeaders(accept) {
-            const headers = {
-                Accept: accept,
-                "HX-Request": "true"
-            };
-            const csrfHeader = this.form.dataset.csrfHeader;
-            const csrfToken = this.readCookie(CSRF_COOKIE_NAME)
-                    || this.form.dataset.csrfToken;
-            if (csrfHeader && csrfToken) {
-                headers[csrfHeader] = csrfToken;
-            }
-            return headers;
-        }
-
-        readCookie(name) {
-            const prefix = `${encodeURIComponent(name)}=`;
-            const cookie = document.cookie
-                .split("; ")
-                .find(value => value.startsWith(prefix));
-
-            return cookie == null
-                ? null
-                : decodeURIComponent(cookie.slice(prefix.length));
-        }
-
-        bindEvents() {
-            this.input.addEventListener("change", () => {
-                this.addFiles(this.input.files);
-                this.input.value = "";
-            });
-
-            this.dropzone.addEventListener("keydown", event => {
-                if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    this.input.click();
-                }
-            });
-
-            ["dragenter", "dragover"].forEach(eventName => {
-                this.dropzone.addEventListener(eventName, event => {
-                    event.preventDefault();
-                    this.dropzone.classList.add("is-dragging");
-                });
-            });
-
-            ["dragleave", "drop"].forEach(eventName => {
-                this.dropzone.addEventListener(eventName, event => {
-                    event.preventDefault();
-                    this.dropzone.classList.remove("is-dragging");
-                });
-            });
-
-            this.dropzone.addEventListener("drop", event => {
-                this.addFiles(event.dataTransfer.files);
-            });
-
-            this.form.addEventListener("submit", event => {
-                event.preventDefault();
-                this.uploadQueued();
-            });
-
-            this.queue.addEventListener("click", event => {
-                const button = event.target.closest("[data-upload-action]");
-                if (button == null) {
-                    return;
-                }
-
-                const itemElement = button.closest("[data-upload-item]");
-                const item = this.items.get(itemElement?.dataset.uploadId);
-                if (item == null) {
-                    return;
-                }
-
-                this.handleAction(button.dataset.uploadAction, item);
-            });
-
-            this.clearButton.addEventListener("click", () => {
-                Array.from(this.items.values())
-                    .filter(item => item.status === STATUS.SUCCESS
-                            || item.status === STATUS.CANCELLED)
-                    .forEach(item => this.removeItem(item));
-            });
-        }
-
-        addFiles(fileList) {
-            Array.from(fileList).forEach(file => {
-                const item = this.createItem(file);
-                this.items.set(item.id, item);
-                this.queue.append(item.element);
-
-                const validationMessage = this.validate(file);
-                if (validationMessage != null) {
-                    this.setStatus(item, STATUS.FAILED);
-                    this.showLocalError(item, validationMessage);
-                }
-            });
-
-            this.updateControls();
-        }
-
-        createItem(file) {
-            const element = this.itemTemplate.content.firstElementChild.cloneNode(true);
-            const id = crypto.randomUUID();
-            const chunked = file.size > this.transport.directUploadThresholdBytes;
-            const uploadSessionId = chunked
-                ? this.resumeStore.find(file)
-                : null;
-            const transportLabel = chunked
-                ? uploadSessionId == null
-                    ? this.messages.transportChunked
-                    : this.messages.transportResumable
-                : this.messages.transportDirect;
-
-            element.dataset.uploadId = id;
-            element.querySelector("[data-upload-name]").textContent = file.name;
-            element.querySelector("[data-upload-size]").textContent =
-                `${this.formatBytes(file.size)} | ${transportLabel}`;
-
-            return {
-                id,
-                file,
-                element,
-                chunked,
-                uploadSessionId,
-                status: STATUS.QUEUED,
-                cancelOperation: null,
-                cancelRequested: false
-            };
-        }
-
-        validate(file) {
-            if (file.size <= 0) {
-                return this.messages.fileEmpty;
-            }
-
-            const extension = this.getExtension(file.name);
-            const maxFileSize = this.rules.get(extension);
-            if (maxFileSize == null) {
-                return this.messages.extensionNotAllowed;
-            }
-            if (file.size > maxFileSize) {
-                return this.formatMessage(
-                    this.messages.fileTooLarge,
-                    this.formatBytes(maxFileSize)
-                );
-            }
-            return null;
-        }
-
-        getExtension(fileName) {
-            const separatorIndex = fileName.lastIndexOf(".");
-            return separatorIndex < 0
-                ? ""
-                : fileName.slice(separatorIndex + 1).toLowerCase();
-        }
-
-        handleAction(action, item) {
-            if (action === "cancel") {
-                this.cancelItem(item);
-                return;
-            }
-            if (action === "retry") {
-                this.retryItem(item);
-                return;
-            }
-            if (action === "remove") {
-                this.removeItem(item);
-            }
-        }
-
-        cancelItem(item) {
-            item.cancelRequested = true;
-            item.cancelOperation?.();
-
-            if (item.chunked && item.uploadSessionId != null) {
-                this.discardChunkSession(item);
-            }
-
-            if (item.status === STATUS.QUEUED) {
-                this.setStatus(item, STATUS.CANCELLED);
-                this.showLocalError(item, this.messages.uploadCancelled);
-                this.updateControls();
-            }
-        }
-
-        retryItem(item) {
-            const validationMessage = this.validate(item.file);
-            if (validationMessage != null) {
-                this.showLocalError(item, validationMessage);
-                return;
-            }
-
-            item.cancelRequested = false;
-            this.clearResult(item);
-            this.setProgress(item, 0);
-            this.setStatus(item, STATUS.QUEUED);
-            this.updateControls();
-            this.uploadQueued();
-        }
-
-        removeItem(item) {
-            item.cancelRequested = true;
-            item.cancelOperation?.();
-            if (item.chunked && item.uploadSessionId != null) {
-                this.discardChunkSession(item, false);
-            }
-
-            item.element.remove();
-            this.items.delete(item.id);
-            this.updateControls();
-        }
-
-        async discardChunkSession(item, showError = true) {
-            const uploadSessionId = item.uploadSessionId;
-            item.uploadSessionId = null;
-            this.resumeStore.remove(item.file);
-
-            try {
-                await this.chunkUploader.cancel(uploadSessionId);
-            } catch (error) {
-                if (showError
-                        && !(error instanceof MediaChunkUploadError
-                            && error.error === "RESOURCE_NOT_FOUND")) {
-                    this.showLocalError(
-                        item,
-                        error.message || this.messages.sessionCancelFailed
-                    );
-                }
-            }
-        }
-
-        async uploadQueued() {
-            if (this.uploading) {
-                return;
-            }
-
-            this.uploading = true;
-            this.updateControls();
-            try {
-                const queuedItems = Array.from(this.items.values())
-                    .filter(item => item.status === STATUS.QUEUED);
-
-                for (const item of queuedItems) {
-                    if (item.status === STATUS.QUEUED) {
-                        await this.uploadItem(item);
+            init() {
+                this.messages = this.readMessages();
+                this.rules = new Map(Array.from(this.$root.querySelectorAll(
+                    "[data-media-upload-rule]"
+                )).map(element => [
+                    element.dataset.extension.toLowerCase(),
+                    Number(element.dataset.maxFileSize)
+                ]));
+                this.transport = {
+                    directUploadThresholdBytes: Number(
+                        this.$refs.form.dataset.directUploadThreshold),
+                    chunkUploadPath:
+                        this.$refs.form.dataset.chunkUploadPath,
+                    parallelChunks: Number(
+                        this.$refs.form.dataset.parallelChunks)
+                };
+                this.directUploader = new window.MediaDirectUploader({
+                    uploadUrl: this.$refs.form.action,
+                    requestHeadersProvider: () =>
+                        this.requestHeaders("text/html"),
+                    messages: {
+                        requestFailed: this.messages.requestFailed,
+                        cancelled: this.messages.uploadCancelled
                     }
+                });
+                this.chunkUploader = new window.MediaChunkUploader({
+                    baseUrl: this.transport.chunkUploadPath,
+                    concurrency: this.transport.parallelChunks,
+                    requestHeadersProvider: () =>
+                        this.requestHeaders("application/json"),
+                    messages: {
+                        authRequired: this.messages.authRequired,
+                        requestFailed: this.messages.uploadFailed,
+                        sessionNotResumable:
+                            this.messages.sessionNotResumable,
+                        fileMismatch: this.messages.fileMismatch
+                    }
+                });
+            },
+
+            readMessages() {
+                return {
+                    status: {
+                        QUEUED: this.$root.dataset.messageStatusQueued,
+                        UPLOADING:
+                            this.$root.dataset.messageStatusUploading,
+                        SUCCESS: this.$root.dataset.messageStatusUploaded,
+                        FAILED: this.$root.dataset.messageStatusFailed,
+                        CANCELLED:
+                            this.$root.dataset.messageStatusCancelled
+                    },
+                    transportChunked:
+                        this.$root.dataset.messageTransportChunked,
+                    transportResumable:
+                        this.$root.dataset.messageTransportResumable,
+                    transportDirect:
+                        this.$root.dataset.messageTransportDirect,
+                    fileEmpty: this.$root.dataset.messageFileEmpty,
+                    extensionNotAllowed:
+                        this.$root.dataset.messageExtensionNotAllowed,
+                    fileTooLarge: this.$root.dataset.messageFileTooLarge,
+                    uploadCancelled:
+                        this.$root.dataset.messageUploadCancelled,
+                    sessionCancelFailed:
+                        this.$root.dataset.messageSessionCancelFailed,
+                    chunkFailed: this.$root.dataset.messageChunkFailed,
+                    uploadSuccess: this.$root.dataset.messageUploadSuccess,
+                    authExpired: this.$root.dataset.messageAuthExpired,
+                    uploadFailed: this.$root.dataset.messageUploadFailed,
+                    requestFailed: this.$root.dataset.messageRequestFailed,
+                    authRequired: this.$root.dataset.messageAuthRequired,
+                    sessionNotResumable:
+                        this.$root.dataset.messageSessionNotResumable,
+                    fileMismatch: this.$root.dataset.messageFileMismatch
+                };
+            },
+
+            get hasQueued() {
+                return this.items.some(item => item.status === STATUS.QUEUED);
+            },
+
+            get hasCompleted() {
+                return this.items.some(item => item.status === STATUS.SUCCESS
+                    || item.status === STATUS.CANCELLED);
+            },
+
+            statusClass(item) {
+                return STATUS_CLASS[item.status];
+            },
+
+            statusLabel(item) {
+                return this.messages.status[item.status];
+            },
+
+            requestHeaders(accept) {
+                const headers = { Accept: accept, "HX-Request": "true" };
+                const csrfHeader = this.$refs.form.dataset.csrfHeader;
+                const csrfToken = window.AppUi.readCookie(CSRF_COOKIE_NAME)
+                    || this.$refs.form.dataset.csrfToken;
+                if (csrfHeader && csrfToken) {
+                    headers[csrfHeader] = csrfToken;
                 }
-            } finally {
-                this.uploading = false;
-                this.updateControls();
-            }
-        }
+                return headers;
+            },
 
-        uploadItem(item) {
-            return item.chunked
-                ? this.uploadChunked(item)
-                : this.uploadDirect(item);
-        }
+            selectFiles(event) {
+                this.addFiles(event.target.files);
+                event.target.value = "";
+            },
 
-        async uploadDirect(item) {
-            item.cancelRequested = false;
-            this.clearResult(item);
-            this.setProgress(item, 0);
-            this.setStatus(item, STATUS.UPLOADING);
+            dropFiles(event) {
+                this.dragging = false;
+                this.addFiles(event.dataTransfer.files);
+            },
 
-            const operation = this.directUploader.upload(item.file, {
-                onProgress: progress => this.setProgress(item, progress.percent)
-            });
-            item.cancelOperation = operation.cancel;
+            addFiles(fileList) {
+                Array.from(fileList).forEach(file => {
+                    const chunked = file.size
+                        > this.transport.directUploadThresholdBytes;
+                    const uploadSessionId = chunked
+                        ? this.resumeStore.find(file)
+                        : null;
+                    const transportLabel = chunked
+                        ? uploadSessionId == null
+                            ? this.messages.transportChunked
+                            : this.messages.transportResumable
+                        : this.messages.transportDirect;
+                    const item = {
+                        id: crypto.randomUUID(),
+                        file,
+                        name: file.name,
+                        sizeLabel: `${this.formatBytes(file.size)} | `
+                            + transportLabel,
+                        chunked,
+                        uploadSessionId,
+                        status: STATUS.QUEUED,
+                        progress: 0,
+                        resultHtml: "",
+                        resultMessage: "",
+                        resultDanger: false,
+                        cancelOperation: null,
+                        cancelRequested: false
+                    };
+                    const validationMessage = this.validate(file);
+                    if (validationMessage != null) {
+                        item.status = STATUS.FAILED;
+                        this.showLocalResult(
+                            item,
+                            validationMessage,
+                            true);
+                    }
+                    this.items.push(item);
+                });
+            },
 
-            try {
-                const response = await operation.result;
-                if (response.redirectPath) {
-                    window.location.replace(response.redirectPath);
+            validate(file) {
+                if (file.size <= 0) {
+                    return this.messages.fileEmpty;
+                }
+                const extension = file.name.includes(".")
+                    ? file.name.slice(file.name.lastIndexOf(".") + 1)
+                        .toLowerCase()
+                    : "";
+                const maxFileSize = this.rules.get(extension);
+                if (maxFileSize == null) {
+                    return this.messages.extensionNotAllowed;
+                }
+                return file.size > maxFileSize
+                    ? this.formatMessage(
+                        this.messages.fileTooLarge,
+                        this.formatBytes(maxFileSize))
+                    : null;
+            },
+
+            async uploadQueued() {
+                if (this.uploading) {
                     return;
                 }
-
-                if (response.ok) {
-                    this.showServerResult(item, response.html);
-                    this.setProgress(item, 100);
-                    this.setStatus(item, STATUS.SUCCESS);
-                    this.dispatchUploaded(item);
-                } else {
-                    this.setStatus(item, STATUS.FAILED);
-                    this.showRequestFailure(item, response);
+                this.uploading = true;
+                try {
+                    const queuedItems = this.items.filter(
+                        item => item.status === STATUS.QUEUED);
+                    for (const item of queuedItems) {
+                        if (item.status === STATUS.QUEUED) {
+                            await (item.chunked
+                                ? this.uploadChunked(item)
+                                : this.uploadDirect(item));
+                        }
+                    }
+                } finally {
+                    this.uploading = false;
                 }
-            } catch (error) {
-                if (error.name === "AbortError" || item.cancelRequested) {
-                    this.setStatus(item, STATUS.CANCELLED);
-                    this.showLocalError(item, this.messages.uploadCancelled);
-                } else {
-                    this.setStatus(item, STATUS.FAILED);
-                    this.showLocalError(item, error.message);
-                }
-            } finally {
-                item.cancelOperation = null;
-            }
-        }
+            },
 
-        async uploadChunked(item) {
-            item.cancelRequested = false;
-            this.clearResult(item);
-            this.setProgress(item, 0);
-            this.setStatus(item, STATUS.UPLOADING);
+            resetForUpload(item) {
+                item.cancelRequested = false;
+                item.progress = 0;
+                item.resultHtml = "";
+                item.resultMessage = "";
+                item.resultDanger = false;
+                item.status = STATUS.UPLOADING;
+            },
 
-            const abortController = new AbortController();
-            item.cancelOperation = () => abortController.abort();
-
-            try {
-                const media = await this.chunkUploader.upload(item.file, {
-                    uploadId: item.uploadSessionId,
-                    signal: abortController.signal,
-                    onSession: session => {
-                        item.uploadSessionId = session.id;
-                        this.resumeStore.save(item.file, session.id);
-                    },
-                    onProgress: progress => this.setProgress(item, progress.percent)
+            async uploadDirect(item) {
+                this.resetForUpload(item);
+                const operation = this.directUploader.upload(item.file, {
+                    onProgress: progress => {
+                        item.progress = progress.percent;
+                    }
                 });
+                item.cancelOperation = operation.cancel;
+                try {
+                    const response = await operation.result;
+                    if (response.redirectPath) {
+                        window.location.replace(response.redirectPath);
+                        return;
+                    }
+                    if (!response.ok) {
+                        item.status = STATUS.FAILED;
+                        this.showRequestFailure(item, response);
+                        return;
+                    }
+                    item.resultHtml = response.html;
+                    item.progress = 100;
+                    item.status = STATUS.SUCCESS;
+                    this.dispatchUploaded(
+                        this.mediaFromServerHtml(response.html));
+                } catch (error) {
+                    this.handleUploadError(item, error);
+                } finally {
+                    item.cancelOperation = null;
+                }
+            },
 
-                item.uploadSessionId = null;
-                this.resumeStore.remove(item.file);
-                this.showChunkSuccess(item, media);
-                this.setProgress(item, 100);
-                this.setStatus(item, STATUS.SUCCESS);
-                this.dispatchUploaded(item, media);
-            } catch (error) {
-                if (error.name === "AbortError" || item.cancelRequested) {
-                    this.setStatus(item, STATUS.CANCELLED);
-                    this.showLocalError(item, this.messages.uploadCancelled);
-                } else {
-                    if (error instanceof MediaChunkUploadError
+            async uploadChunked(item) {
+                this.resetForUpload(item);
+                const abortController = new AbortController();
+                item.cancelOperation = () => abortController.abort();
+                try {
+                    const media = await this.chunkUploader.upload(item.file, {
+                        uploadId: item.uploadSessionId,
+                        signal: abortController.signal,
+                        onSession: session => {
+                            item.uploadSessionId = session.id;
+                            this.resumeStore.save(item.file, session.id);
+                        },
+                        onProgress: progress => {
+                            item.progress = progress.percent;
+                        }
+                    });
+                    item.uploadSessionId = null;
+                    this.resumeStore.remove(item.file);
+                    item.progress = 100;
+                    item.status = STATUS.SUCCESS;
+                    this.showLocalResult(
+                        item,
+                        `${this.messages.uploadSuccess} ${media.originalName}`,
+                        false);
+                    this.dispatchUploaded(media);
+                } catch (error) {
+                    if (error instanceof window.MediaChunkUploadError
                             && (error.error === "UPLOAD_FILE_MISMATCH"
-                                || error.error === "UPLOAD_SESSION_NOT_RESUMABLE")) {
+                                || error.error
+                                    === "UPLOAD_SESSION_NOT_RESUMABLE")) {
                         await this.discardChunkSession(item, false);
                     }
-                    this.setStatus(item, STATUS.FAILED);
-                    this.showLocalError(
-                        item,
-                        error.message || this.messages.chunkFailed
-                    );
+                    this.handleUploadError(item, error);
+                } finally {
+                    item.cancelOperation = null;
                 }
-            } finally {
-                item.cancelOperation = null;
-            }
-        }
+            },
 
-        dispatchUploaded(item, media = null) {
-            const result = item.element.querySelector("[data-media-upload-result]");
-            if (media == null && result == null) {
-                return;
-            }
+            handleUploadError(item, error) {
+                if (error?.name === "AbortError" || item.cancelRequested) {
+                    item.status = STATUS.CANCELLED;
+                    this.showLocalResult(
+                        item,
+                        this.messages.uploadCancelled,
+                        true);
+                    return;
+                }
+                item.status = STATUS.FAILED;
+                this.showLocalResult(
+                    item,
+                    error?.message || this.messages.chunkFailed,
+                    true);
+            },
 
-            this.root.dispatchEvent(new CustomEvent("media:uploaded", {
-                bubbles: true,
-                detail: media == null
-                    ? {
-                        mediaId: result.dataset.mediaId,
-                        originalName: result.dataset.originalName,
-                        processingStatus: result.dataset.processingStatus,
-                        thumbnailUrl: result.dataset.thumbnailUrl || null
-                    }
-                    : {
+            showRequestFailure(item, response) {
+                const template = document.createElement("template");
+                template.innerHTML = response.html.trim();
+                const alert = template.content.querySelector(
+                    "[data-ui-error-alert]");
+                if (alert != null) {
+                    item.resultHtml = alert.outerHTML;
+                    return;
+                }
+                this.showLocalResult(
+                    item,
+                    response.status === 403
+                        ? this.messages.authExpired
+                        : this.messages.uploadFailed,
+                    true);
+            },
+
+            mediaFromServerHtml(html) {
+                const template = document.createElement("template");
+                template.innerHTML = html.trim();
+                const result = template.content.querySelector(
+                    "[data-media-upload-result]");
+                return result == null ? null : {
+                    mediaId: result.dataset.mediaId,
+                    originalName: result.dataset.originalName,
+                    processingStatus: result.dataset.processingStatus,
+                    thumbnailUrl: result.dataset.thumbnailUrl || null
+                };
+            },
+
+            dispatchUploaded(media) {
+                if (media == null) {
+                    return;
+                }
+                this.$root.dispatchEvent(new CustomEvent("media:uploaded", {
+                    bubbles: true,
+                    detail: media.id == null ? media : {
                         mediaId: media.id,
                         originalName: media.originalName,
                         processingStatus: media.processingStatus,
                         thumbnailUrl: media.thumbnailUrl || null
                     }
-            }));
-        }
+                }));
+            },
 
-        showChunkSuccess(item, media) {
-            const result = item.element.querySelector("[data-upload-result]");
-            const alert = document.createElement("div");
-            const title = document.createElement("div");
-            const fileName = document.createElement("div");
+            showLocalResult(item, message, danger) {
+                item.resultHtml = "";
+                item.resultMessage = message;
+                item.resultDanger = danger;
+            },
 
-            alert.className = "alert alert-success mb-0";
-            alert.setAttribute("role", "status");
-            alert.setAttribute("data-media-upload-result", "");
-            alert.dataset.mediaId = media.id;
-            alert.dataset.originalName = media.originalName;
-            alert.dataset.processingStatus = media.processingStatus;
-            if (media.thumbnailUrl) {
-                alert.dataset.thumbnailUrl = media.thumbnailUrl;
+            cancelItem(item) {
+                item.cancelRequested = true;
+                item.cancelOperation?.();
+                if (item.chunked && item.uploadSessionId != null) {
+                    this.discardChunkSession(item);
+                }
+                if (item.status === STATUS.QUEUED) {
+                    item.status = STATUS.CANCELLED;
+                    this.showLocalResult(
+                        item,
+                        this.messages.uploadCancelled,
+                        true);
+                }
+            },
+
+            retryItem(item) {
+                const validationMessage = this.validate(item.file);
+                if (validationMessage != null) {
+                    this.showLocalResult(item, validationMessage, true);
+                    return;
+                }
+                item.cancelRequested = false;
+                item.progress = 0;
+                item.resultHtml = "";
+                item.resultMessage = "";
+                item.status = STATUS.QUEUED;
+                this.uploadQueued();
+            },
+
+            removeItem(item) {
+                item.cancelRequested = true;
+                item.cancelOperation?.();
+                if (item.chunked && item.uploadSessionId != null) {
+                    this.discardChunkSession(item, false);
+                }
+                this.items = this.items.filter(current => current !== item);
+            },
+
+            clearCompleted() {
+                this.items.filter(item => item.status === STATUS.SUCCESS
+                    || item.status === STATUS.CANCELLED)
+                    .forEach(item => this.removeItem(item));
+            },
+
+            async discardChunkSession(item, showError = true) {
+                const uploadSessionId = item.uploadSessionId;
+                item.uploadSessionId = null;
+                this.resumeStore.remove(item.file);
+                if (uploadSessionId == null) {
+                    return;
+                }
+                try {
+                    await this.chunkUploader.cancel(uploadSessionId);
+                } catch (error) {
+                    if (showError
+                            && !(error
+                                instanceof window.MediaChunkUploadError
+                                && error.error === "RESOURCE_NOT_FOUND")) {
+                        this.showLocalResult(
+                            item,
+                            error.message
+                                || this.messages.sessionCancelFailed,
+                            true);
+                    }
+                }
+            },
+
+            formatBytes(bytes) {
+                if (bytes < 1024) {
+                    return `${bytes} B`;
+                }
+                const units = ["KB", "MB", "GB", "TB"];
+                let value = bytes;
+                let unitIndex = -1;
+                while (value >= 1024 && unitIndex < units.length - 1) {
+                    value /= 1024;
+                    unitIndex += 1;
+                }
+                return `${value.toFixed(1)} ${units[unitIndex]}`;
+            },
+
+            formatMessage(template, ...values) {
+                return values.reduce((message, value, index) =>
+                    message.replace(`{${index}}`, String(value)), template);
+            },
+
+            destroy() {
+                this.items.forEach(item => {
+                    item.cancelRequested = true;
+                    item.cancelOperation?.();
+                });
             }
-
-            title.className = "fw-semibold";
-            title.textContent = this.messages.uploadSuccess;
-            fileName.className = "small mt-1 text-break";
-            fileName.textContent = media.originalName;
-            alert.append(title, fileName);
-
-            result.replaceChildren(alert);
-            result.hidden = false;
-        }
-
-        showServerResult(item, html) {
-            const result = item.element.querySelector("[data-upload-result]");
-            result.innerHTML = html;
-            result.hidden = false;
-        }
-
-        showRequestFailure(item, response) {
-            const template = document.createElement("template");
-            template.innerHTML = response.html.trim();
-            const serverAlert = template.content.querySelector("[data-ui-error-alert]");
-
-            if (serverAlert != null) {
-                const result = item.element.querySelector("[data-upload-result]");
-                result.replaceChildren(serverAlert);
-                result.hidden = false;
-                return;
-            }
-
-            const message = response.status === 403
-                ? this.messages.authExpired
-                : this.messages.uploadFailed;
-            this.showLocalError(item, message);
-        }
-
-        showLocalError(item, message) {
-            const result = item.element.querySelector("[data-upload-result]");
-            const alert = document.createElement("div");
-            alert.className = "alert alert-danger mb-0";
-            alert.setAttribute("role", "alert");
-            alert.textContent = message;
-            result.replaceChildren(alert);
-            result.hidden = false;
-        }
-
-        clearResult(item) {
-            const result = item.element.querySelector("[data-upload-result]");
-            result.replaceChildren();
-            result.hidden = true;
-        }
-
-        setProgress(item, percent) {
-            const normalizedPercent = Math.max(0, Math.min(100, percent));
-            const progress = item.element.querySelector("[role='progressbar']");
-            const progressBar = item.element.querySelector("[data-upload-progress]");
-            progress.setAttribute("aria-valuenow", String(normalizedPercent));
-            progressBar.style.width = `${normalizedPercent}%`;
-        }
-
-        setStatus(item, status) {
-            item.status = status;
-
-            const badge = item.element.querySelector("[data-upload-status]");
-            badge.className = `badge ${STATUS_CLASS[status]}`;
-            badge.textContent = this.messages.status[status];
-
-            const cancelButton = item.element.querySelector("[data-upload-action='cancel']");
-            const retryButton = item.element.querySelector("[data-upload-action='retry']");
-            const removeButton = item.element.querySelector("[data-upload-action='remove']");
-
-            cancelButton.hidden = status !== STATUS.QUEUED
-                    && status !== STATUS.UPLOADING;
-            retryButton.hidden = status !== STATUS.FAILED
-                    && status !== STATUS.CANCELLED;
-            removeButton.hidden = status === STATUS.UPLOADING;
-        }
-
-        updateControls() {
-            const items = Array.from(this.items.values());
-            const hasQueued = items.some(item => item.status === STATUS.QUEUED);
-            const hasCompleted = items.some(item => item.status === STATUS.SUCCESS
-                    || item.status === STATUS.CANCELLED);
-
-            this.emptyState.hidden = items.length > 0;
-            this.startButton.disabled = this.uploading || !hasQueued;
-            this.clearButton.disabled = this.uploading || !hasCompleted;
-        }
-
-        formatBytes(bytes) {
-            if (bytes < 1024) {
-                return `${bytes} B`;
-            }
-
-            const units = ["KB", "MB", "GB", "TB"];
-            let value = bytes;
-            let unitIndex = -1;
-            while (value >= 1024 && unitIndex < units.length - 1) {
-                value /= 1024;
-                unitIndex++;
-            }
-            return `${value.toFixed(1)} ${units[unitIndex]}`;
-        }
-
-        formatMessage(template, ...arguments_) {
-            return arguments_.reduce(
-                (message, value, index) => message.replace(
-                    `{${index}}`,
-                    String(value)
-                ),
-                template
-            );
-        }
-    }
-
-    function initializeUploads(scope) {
-        const roots = [];
-        if (scope instanceof Element && scope.matches("[data-media-upload]")) {
-            roots.push(scope);
-        }
-        if (scope instanceof Document || scope instanceof Element) {
-            roots.push(...scope.querySelectorAll("[data-media-upload]"));
-        }
-
-        roots.forEach(root => {
-            if (root.dataset.mediaUploadInitialized === "true") {
-                return;
-            }
-
-            root.dataset.mediaUploadInitialized = "true";
-            new MediaUploadQueue(root);
-        });
-    }
-
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeUploads(document);
-    });
-
-    document.addEventListener("htmx:load", function (event) {
-        initializeUploads(event.detail.elt);
+        }));
     });
 })();

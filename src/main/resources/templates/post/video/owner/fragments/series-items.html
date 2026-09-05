@@ -14,7 +14,8 @@
         <div class="row g-0 align-items-center">
             <div class="col-5 col-md-4 col-xl-3">
                 <div class="ratio ratio-16x9 bg-black"
-                     data-media-gallery-card>
+                     data-media-gallery-card
+                     x-data="mediaHoverPreview">
                     <img th:if="${item.video.content.media.thumbnailUrl != null}"
                          th:src="${item.video.content.media.thumbnailUrl}"
                          th:alt="${item.video.title}"

@@ -1,129 +1,127 @@
 (function () {
+    "use strict";
+
+    if (window.AppMediaGalleryInitialized === true) {
+        return;
+    }
+    window.AppMediaGalleryInitialized = true;
+
     const hoverMediaQuery = window.matchMedia(
         "(hover: hover) and (pointer: fine)");
     let activePreview = null;
 
-    function stopPreview(card) {
-        if (!activePreview
-                || (card && activePreview.card !== card)) {
+    function stopActivePreview(component = null) {
+        if (activePreview == null
+                || component != null && activePreview !== component) {
             return;
         }
 
         const preview = activePreview;
         activePreview = null;
-        preview.card.classList.remove("is-media-previewing");
-        preview.mount.classList.add("d-none");
-        preview.player.dispose();
-        preview.mount.replaceChildren();
+        preview.stop();
     }
 
-    function startPreview(card) {
-        if (!hoverMediaQuery.matches
-                || typeof window.videojs !== "function"
-                || activePreview?.card === card) {
-            return;
-        }
+    document.addEventListener("alpine:init", function () {
+        Alpine.data("mediaHoverPreview", () => ({
+            player: null,
+            mount: null,
+            entering: null,
+            leaving: null,
 
-        const mount = card.querySelector("[data-media-hover-preview]");
-        if (!mount) {
-            return;
-        }
+            init() {
+                this.mount = this.$root.querySelector(
+                    "[data-media-hover-preview]");
+                this.entering = () => this.start();
+                this.leaving = () => stopActivePreview(this);
+                this.$root.addEventListener("pointerenter", this.entering);
+                this.$root.addEventListener("pointerleave", this.leaving);
+            },
 
-        stopPreview();
-
-        const video = document.createElement("video");
-        video.className = "video-js";
-        video.muted = true;
-        video.loop = true;
-        video.playsInline = true;
-        mount.replaceChildren(video);
-
-        const player = window.videojs(video, {
-            autoplay: true,
-            controls: false,
-            loop: true,
-            muted: true,
-            preload: "auto",
-            sources: [{
-                src: mount.dataset.mediaHoverPreview,
-                type: "application/x-mpegURL"
-            }],
-            html5: {
-                vhs: {
-                    enableLowInitialPlaylist: true
+            start() {
+                if (!hoverMediaQuery.matches
+                        || this.mount == null
+                        || typeof window.videojs !== "function"
+                        || activePreview === this) {
+                    return;
                 }
-            }
-        });
 
-        activePreview = {
-            card,
-            mount,
-            player
-        };
+                stopActivePreview();
 
-        player.one("playing", function () {
-            if (activePreview?.player === player) {
-                card.classList.add("is-media-previewing");
-                mount.classList.remove("d-none");
-            }
-        });
+                const video = document.createElement("video");
+                video.className = "video-js";
+                video.muted = true;
+                video.loop = true;
+                video.playsInline = true;
+                this.mount.replaceChildren(video);
 
-        player.ready(function () {
-            if (activePreview?.player !== player) {
-                return;
-            }
-
-            const playRequest = player.play();
-            if (playRequest && typeof playRequest.catch === "function") {
-                playRequest.catch(function () {
-                    stopPreview(card);
+                this.player = window.videojs(video, {
+                    autoplay: true,
+                    controls: false,
+                    loop: true,
+                    muted: true,
+                    preload: "auto",
+                    sources: [{
+                        src: this.mount.dataset.mediaHoverPreview,
+                        type: "application/x-mpegURL"
+                    }],
+                    html5: {
+                        vhs: { enableLowInitialPlaylist: true }
+                    }
                 });
+                activePreview = this;
+
+                this.player.one("playing", () => {
+                    if (activePreview !== this) {
+                        return;
+                    }
+                    this.$root.classList.add("is-media-previewing");
+                    this.mount.classList.remove("d-none");
+                });
+
+                this.player.ready(() => {
+                    if (activePreview !== this) {
+                        return;
+                    }
+                    const playRequest = this.player.play();
+                    playRequest?.catch?.(() => stopActivePreview(this));
+                });
+            },
+
+            stop() {
+                this.$root.classList.remove("is-media-previewing");
+                this.mount?.classList.add("d-none");
+                if (this.player != null && !this.player.isDisposed()) {
+                    this.player.dispose();
+                }
+                this.player = null;
+                this.mount?.replaceChildren();
+            },
+
+            destroy() {
+                if (activePreview === this) {
+                    activePreview = null;
+                }
+                this.stop();
+                this.$root.removeEventListener(
+                    "pointerenter",
+                    this.entering);
+                this.$root.removeEventListener(
+                    "pointerleave",
+                    this.leaving);
             }
-        });
-    }
-
-    document.addEventListener("pointerover", function (event) {
-        if (!(event.target instanceof Element)) {
-            return;
-        }
-
-        const card = event.target.closest("[data-media-gallery-card]");
-        if (!card
-                || (event.relatedTarget instanceof Node
-                    && card.contains(event.relatedTarget))) {
-            return;
-        }
-
-        startPreview(card);
-    });
-
-    document.addEventListener("pointerout", function (event) {
-        if (!(event.target instanceof Element)) {
-            return;
-        }
-
-        const card = event.target.closest("[data-media-gallery-card]");
-        if (!card
-                || (event.relatedTarget instanceof Node
-                    && card.contains(event.relatedTarget))) {
-            return;
-        }
-
-        stopPreview(card);
+        }));
     });
 
     hoverMediaQuery.addEventListener("change", function (event) {
         if (!event.matches) {
-            stopPreview();
+            stopActivePreview();
         }
     });
 
     document.addEventListener("error", function (event) {
-        if (!(event.target instanceof HTMLImageElement)
-                || !event.target.matches("[data-media-thumbnail]")) {
-            return;
+        if (event.target instanceof HTMLImageElement
+                && event.target.matches("[data-media-thumbnail]")) {
+            event.target.classList.add("d-none");
         }
-
-        event.target.classList.add("d-none");
     }, true);
 })();

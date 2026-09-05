@@ -1,4 +1,11 @@
-export class MediaChunkUploadError extends Error {
+(function () {
+"use strict";
+
+if (window.MediaChunkUploader != null) {
+    return;
+}
+
+class MediaChunkUploadError extends Error {
     constructor(message, {
         status = 0,
         error = null
@@ -10,7 +17,7 @@ export class MediaChunkUploadError extends Error {
     }
 }
 
-export class MediaChunkUploader {
+class MediaChunkUploader {
     constructor({
         baseUrl = "/api/v1/media/uploads",
         concurrency = 3,
@@ -211,3 +218,7 @@ export class MediaChunkUploader {
         return payload.result;
     }
 }
+
+window.MediaChunkUploadError = MediaChunkUploadError;
+window.MediaChunkUploader = MediaChunkUploader;
+})();

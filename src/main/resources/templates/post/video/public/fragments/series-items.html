@@ -6,8 +6,8 @@
        th:href="${card.detailPath}"
        class="card app-surface-panel text-decoration-none text-body overflow-hidden"
        th:classappend="${card.active} ? ' border-primary border-2' : ''"
-       hx-target="#app-social-workspace"
-       hx-select="#app-social-workspace"
+       hx-target="#app-social-page-content"
+       hx-select="#app-social-page-content"
        hx-swap="outerHTML show:top"
        hx-push-url="true"
        hx-replace-url="false"
@@ -15,7 +15,8 @@
         <div class="row g-0 align-items-center">
             <div class="col-5 col-md-4 col-xl-3">
                 <div class="ratio ratio-16x9 bg-black"
-                     data-media-gallery-card>
+                     data-media-gallery-card
+                     x-data="mediaHoverPreview">
                     <img th:if="${card.item.video.content.media.thumbnailUrl != null}"
                          th:src="${card.item.video.content.media.thumbnailUrl}"
                          th:alt="${card.item.video.title}"

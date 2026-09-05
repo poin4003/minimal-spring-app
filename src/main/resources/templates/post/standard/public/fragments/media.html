@@ -7,6 +7,7 @@
          class="position-relative z-2"
          data-feed-playback
          data-media-preview
+         x-data="mediaPlayer"
          th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
          th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
          th:data-message-stream-failed="#{media.preview.streamFailed}">
@@ -78,9 +79,9 @@
            th:aria-label="#{post.public.mediaGallery}"
            th:attr="hx-get=${galleryPartialPath},
                      hx-target=${galleryPartialPath != null
-                             ? '#app-modal-host' : '#app-social-workspace'},
+                             ? '#app-modal-host' : '#app-social-page-content'},
                      hx-select=${galleryPartialPath != null
-                             ? 'unset' : '#app-social-workspace'},
+                             ? 'unset' : '#app-social-page-content'},
                      hx-swap=${galleryPartialPath != null
                              ? 'innerHTML' : 'outerHTML show:top'},
                      hx-push-url=${galleryPartialPath != null ? 'false' : 'true'},
@@ -222,6 +223,7 @@
             <div th:case="'VIDEO'"
                  class="app-media-preview-player"
                  data-media-preview
+                 x-data="mediaPlayer"
                  th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
                  th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
                  th:data-message-stream-failed="#{media.preview.streamFailed}">
@@ -242,6 +244,7 @@
             <div th:case="'AUDIO'"
                  class="card border p-3 app-media-preview-player"
                  data-media-preview
+                 x-data="mediaPlayer"
                  th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
                  th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
                  th:data-message-stream-failed="#{media.preview.streamFailed}">

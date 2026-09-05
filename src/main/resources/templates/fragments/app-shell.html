@@ -5,14 +5,15 @@
     <th:block th:fragment="layout(shell, content)">
         <div th:unless="${htmxRequest == true}"
              class="app-shell-layout"
+             x-data="navigationShell"
+             x-on:app-navigation-changed.window="update($event.detail.path)"
              hx-boost="true"
              hx-target="#app-page-content"
              hx-select="#app-page-content"
-             hx-select-oob="#app-sidebar-navigation"
              hx-swap="outerHTML show:top"
              hx-push-url="false"
              hx-replace-url="false"
-             hx-ext="sse, head-support"
+             hx-ext="sse"
              th:attr="sse-connect=${shell.notificationWidget.streamPath}">
             <div th:replace="~{fragments/app-header :: header(${shell})}"></div>
 
@@ -52,8 +53,6 @@
         <th:block th:if="${htmxRequest == true}">
             <th:block th:replace="~{fragments/app-shell
                     :: pageContent(${content})}"></th:block>
-            <th:block th:replace="~{fragments/app-shell
-                    :: navigation(${shell})}"></th:block>
         </th:block>
     </th:block>
 

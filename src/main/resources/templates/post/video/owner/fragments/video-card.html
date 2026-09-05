@@ -41,12 +41,13 @@
     <a th:unless="${detailMode}"
        th:href="${card.detailPath}"
        class="ratio ratio-16x9 bg-black text-decoration-none"
-       hx-target="#app-social-workspace"
-       hx-select="#app-social-workspace"
+       hx-target="#app-social-page-content"
+       hx-select="#app-social-page-content"
        hx-swap="outerHTML show:top"
        hx-push-url="true"
        hx-replace-url="false"
-       data-media-gallery-card>
+       data-media-gallery-card
+       x-data="mediaHoverPreview">
         <img th:if="${card.video.content.media.thumbnailUrl != null}"
              th:src="${card.video.content.media.thumbnailUrl}"
              th:alt="${card.video.title}"
@@ -73,8 +74,8 @@
         <a th:unless="${detailMode}"
            th:href="${card.detailPath}"
            class="text-body text-decoration-none stretched-link"
-           hx-target="#app-social-workspace"
-           hx-select="#app-social-workspace"
+           hx-target="#app-social-page-content"
+           hx-select="#app-social-page-content"
            hx-swap="outerHTML show:top"
            hx-push-url="true"
            hx-replace-url="false">

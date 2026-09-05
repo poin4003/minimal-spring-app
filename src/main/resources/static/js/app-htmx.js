@@ -45,8 +45,16 @@
             className);
     }
 
+    function isPageSwap(event) {
+        const targetId = event.detail.target?.id;
+        return event.detail.boosted
+            || targetId === "app-page-content"
+            || targetId === "app-social-page-content";
+    }
+
     function syncBodyClassFromResponse(event) {
-        if (!event.detail.boosted || event.detail.xhr?.responseText == null) {
+        if (!isPageSwap(event)
+                || event.detail.xhr?.responseText == null) {
             return;
         }
 
@@ -59,6 +67,9 @@
         }
 
         document.body.className = responseBody.className;
+        if (responseDocument.title) {
+            document.title = responseDocument.title;
+        }
         const responseUrl = new URL(
             event.detail.xhr.responseURL || window.location.href,
             window.location.href);
@@ -76,51 +87,6 @@
         if (className != null) {
             document.body.className = className;
         }
-    }
-
-    function normalizeNavigationPath(path) {
-        if (path == null || path === "") {
-            return "/";
-        }
-
-        const normalized = path.split("?")[0].replace(/\/+$/, "");
-        return normalized === "" ? "/" : normalized;
-    }
-
-    function syncAdminMenu() {
-        const currentPath = normalizeNavigationPath(window.location.pathname);
-        const links = Array.from(document.querySelectorAll(
-            "[data-app-menu-path]"));
-        let activeLink = null;
-        let activePathLength = -1;
-
-        links.forEach(link => {
-            const itemPath = normalizeNavigationPath(link.dataset.appMenuPath);
-            const matches = currentPath === itemPath
-                || currentPath.startsWith(itemPath + "/");
-            if (matches && itemPath.length > activePathLength) {
-                activeLink = link;
-                activePathLength = itemPath.length;
-            }
-        });
-
-        links.forEach(link => {
-            const active = link === activeLink;
-            link.classList.toggle("active", active);
-            if (active) {
-                link.setAttribute("aria-current", "page");
-            } else {
-                link.removeAttribute("aria-current");
-            }
-        });
-
-        document.querySelectorAll("[data-app-menu-branch]")
-            .forEach(branch => {
-                branch.querySelector(":scope > .app-menu-group")
-                    ?.classList.toggle(
-                        "active",
-                        branch.querySelector(".app-menu-link.active") != null);
-            });
     }
 
     function closeMobileSidebar() {
@@ -169,15 +135,19 @@
     });
 
     document.addEventListener("htmx:beforeSwap", syncBodyClassFromResponse);
-    document.addEventListener("htmx:removingHeadElement", function (event) {
-        if (event.detail.headElement instanceof HTMLScriptElement) {
-            event.preventDefault();
-        }
-    });
 
     document.addEventListener("htmx:afterRequest", function (event) {
         setRequestTargetBusy(event.detail.target, false);
         window.AppUi.hideLoader();
+
+        const element = event.detail.elt;
+        if (element instanceof HTMLFormElement
+                && element.matches("[data-app-modal-form]")) {
+            dispatchUiEvent("app-modal-request-complete", {
+                element,
+                successful: event.detail.successful
+            });
+        }
     });
 
     ["htmx:sendError", "htmx:timeout"].forEach(eventName => {
@@ -185,6 +155,9 @@
             setRequestTargetBusy(event.detail.target, false);
             window.AppUi.hideLoader();
             dispatchUiEvent("app-request-error", { type: "connection" });
+            dispatchUiEvent("app-modal-request-failed", {
+                element: event.detail.elt
+            });
         });
     });
 
@@ -192,20 +165,34 @@
         setRequestTargetBusy(event.detail.target, false);
         window.AppUi.hideLoader();
         dispatchUiEvent("app-request-error", { type: "request" });
+        dispatchUiEvent("app-modal-request-failed", {
+            element: event.detail.elt
+        });
     });
 
     document.addEventListener("htmx:historyRestore", function () {
         restoreBodyClass();
-        syncAdminMenu();
+        dispatchUiEvent("app-navigation-changed", {
+            path: window.location.pathname
+        });
         window.AppUi.refreshSidebar();
     });
 
     document.addEventListener("htmx:afterSwap", function (event) {
-        if (!event.detail.boosted) {
+        if (event.detail.target instanceof Element
+                && event.detail.target.id === "app-modal-host") {
+            dispatchUiEvent("app-modal-loaded", {
+                target: event.detail.target
+            });
+        }
+
+        if (!isPageSwap(event)) {
             return;
         }
 
-        syncAdminMenu();
+        dispatchUiEvent("app-navigation-changed", {
+            path: window.location.pathname
+        });
         window.AppUi.refreshSidebar();
         closeMobileSidebar();
     });
@@ -214,6 +201,8 @@
         storeBodyClass(
             window.location.pathname + window.location.search,
             document.body.className);
-        syncAdminMenu();
+        dispatchUiEvent("app-navigation-changed", {
+            path: window.location.pathname
+        });
     });
 })();

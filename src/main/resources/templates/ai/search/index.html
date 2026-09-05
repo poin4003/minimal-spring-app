@@ -12,30 +12,29 @@
           th:href="@{/vendor/bootstrap-icons/font/bootstrap-icons.min.css}">
     <link rel="stylesheet" th:href="@{/css/app-ui.css}">
     <link rel="stylesheet" th:href="@{/css/social-shell.css}">
-    <link rel="stylesheet" th:href="@{/css/post-search.css}">
     <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
-    <script defer th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
-    <script defer th:src="@{/js/post-search.js}"></script>
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <main data-post-search
-                  th:data-query="${page.query}"
-                  th:data-results-path="${page.resultsPath}"
-                  th:data-error-message="#{ai.search.error.request}"
-                  th:data-rate-limit-message="#{ai.search.error.rateLimit}"
-                  th:data-auth-message="#{ai.search.error.auth}"
-                  th:data-unavailable-message="#{ai.search.status.unavailable}"
-                  th:data-no-results-message="#{ai.search.status.noResults}"
-                  th:data-relevance-label="#{ai.search.relevance}">
+            <main x-data="searchForm"
+                  th:data-initial-query="${page.query}">
                 <div class="row justify-content-center">
                     <div class="col-12 col-xxl-10">
                         <form class="post-search-form mb-4"
                               method="get"
                               th:action="${page.searchPath}"
-                              data-post-search-form>
+                              th:hx-post="${page.resultsPath}"
+                              hx-target="#post-search-results"
+                              hx-swap="innerHTML"
+                              hx-indicator="#post-search-loading"
+                              hx-disabled-elt="find button"
+                              hx-params="query"
+                              hx-push-url="false"
+                              hx-replace-url="false"
+                              x-ref="form"
+                              x-on:submit="submit($event)">
                             <label class="visually-hidden"
                                    for="post-search-query"
                                    th:text="#{ai.search.query.label}">
@@ -53,8 +52,12 @@
                                        maxlength="2000"
                                        required
                                        autocomplete="off"
-                                       th:value="${page.query}"
+                                       x-ref="query"
+                                       x-model="query"
                                        th:placeholder="#{ai.search.query.placeholder}">
+                                <input type="hidden"
+                                       name="query"
+                                       x-bind:value="query">
                                 <button class="btn btn-primary px-3 px-md-4"
                                         type="submit"
                                         th:attr="aria-label=#{ai.search.submit}">
@@ -64,132 +67,20 @@
                             </div>
                         </form>
 
-                        <section data-post-search-state
-                                 th:hidden="${#strings.isEmpty(page.query)}">
-                            <div class="d-flex align-items-center gap-2
-                                        text-body-secondary py-3"
-                                 data-post-search-loading>
-                                <span class="spinner-border spinner-border-sm"
-                                      aria-hidden="true"></span>
-                                <span th:text="#{ai.search.loading}">
-                                    Finding related posts...
-                                </span>
-                            </div>
+                        <div id="post-search-loading"
+                             class="htmx-indicator d-flex align-items-center gap-2
+                                    text-body-secondary py-3">
+                            <span class="spinner-border spinner-border-sm"
+                                  aria-hidden="true"></span>
+                            <span th:text="#{ai.search.loading}">
+                                Finding related posts...
+                            </span>
+                        </div>
 
-                            <div class="alert alert-secondary"
-                                 role="status"
-                                 data-post-search-status
-                                 hidden></div>
-
-                            <section data-post-search-results hidden>
-                                <div data-post-search-section-list></div>
-                            </section>
-                        </section>
+                        <section id="post-search-results"
+                                 aria-live="polite"></section>
                     </div>
                 </div>
-
-                <template data-post-search-section-template>
-                    <section class="post-search-section">
-                        <header class="d-flex align-items-center gap-2 mb-3">
-                            <h2 class="h4 mb-0"
-                                data-post-search-section-title></h2>
-                            <span class="badge text-bg-secondary"
-                                  data-post-search-section-count></span>
-                        </header>
-                        <div class="post-search-horizontal-list d-flex
-                                    gap-3 overflow-x-auto pb-3"
-                             data-post-search-section-grid></div>
-                    </section>
-                </template>
-
-                <template data-post-search-standard-template>
-                    <div class="post-search-standard-item flex-shrink-0">
-                        <a class="card app-surface-panel h-100 overflow-hidden
-                                  text-decoration-none text-body
-                                  post-search-result-card"
-                           data-post-search-item>
-                            <div class="post-search-standard-media
-                                        border-bottom"
-                                 data-post-search-standard-media
-                                 hidden></div>
-                            <div class="card-body p-3 p-md-4">
-                                <p class="post-search-content mb-3"
-                                   data-post-search-content></p>
-                                <span class="small text-body-secondary"
-                                      data-post-search-relevance></span>
-                            </div>
-                        </a>
-                    </div>
-                </template>
-
-                <template data-post-search-short-template>
-                    <div class="post-search-short-item flex-shrink-0">
-                        <a class="card app-surface-panel h-100 overflow-hidden
-                                  text-decoration-none text-body
-                                  post-search-result-card"
-                           data-post-search-item>
-                            <div class="post-search-short-media
-                                        bg-body-secondary border-bottom"
-                                 data-post-search-media-stage>
-                                <img class="w-100 h-100 object-fit-cover"
-                                     alt=""
-                                     loading="lazy"
-                                     data-post-search-media-image
-                                     hidden>
-                                <span class="post-search-media-fallback"
-                                      data-post-search-media-fallback>
-                                    <i class="bi bi-play-circle"
-                                       aria-hidden="true"></i>
-                                </span>
-                                <span class="post-search-play-badge">
-                                    <i class="bi bi-play-fill"
-                                       aria-hidden="true"></i>
-                                </span>
-                            </div>
-                            <div class="card-body p-3">
-                                <p class="post-search-content
-                                          post-search-content-short mb-2"
-                                   data-post-search-content></p>
-                                <span class="small text-body-secondary"
-                                      data-post-search-relevance></span>
-                            </div>
-                        </a>
-                    </div>
-                </template>
-
-                <template data-post-search-video-template>
-                    <div class="post-search-video-item flex-shrink-0">
-                        <a class="card app-surface-panel h-100 overflow-hidden
-                                  text-decoration-none text-body
-                                  post-search-result-card"
-                           data-post-search-item>
-                            <div class="post-search-video-media
-                                        bg-body-secondary border-bottom"
-                                 data-post-search-media-stage>
-                                <img class="w-100 h-100 object-fit-cover"
-                                     alt=""
-                                     loading="lazy"
-                                     data-post-search-media-image
-                                     hidden>
-                                <span class="post-search-media-fallback"
-                                      data-post-search-media-fallback>
-                                    <i class="bi bi-film"
-                                       aria-hidden="true"></i>
-                                </span>
-                                <span class="post-search-play-badge">
-                                    <i class="bi bi-play-fill"
-                                       aria-hidden="true"></i>
-                                </span>
-                            </div>
-                            <div class="card-body p-3 p-md-4">
-                                <p class="post-search-content mb-2"
-                                   data-post-search-content></p>
-                                <span class="small text-body-secondary"
-                                      data-post-search-relevance></span>
-                            </div>
-                        </a>
-                    </div>
-                </template>
             </main>
         </th:block>
     </div>

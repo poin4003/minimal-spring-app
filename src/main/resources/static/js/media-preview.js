@@ -1,6 +1,11 @@
 (function () {
     "use strict";
 
+    if (window.AppMediaPreviewInitialized === true) {
+        return;
+    }
+    window.AppMediaPreviewInitialized = true;
+
     const WATCH_PROGRESS_PREFIX = "media-watch-progress:";
     const SAVE_INTERVAL_SECONDS = 5;
     const INITIAL_HLS_BANDWIDTH = 10_000_000;
@@ -457,18 +462,17 @@
         });
     });
 
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeAutoPlayers(document);
-        initializeLazyPlayers(document);
-    });
+    document.addEventListener("alpine:init", function () {
+        Alpine.data("mediaPlayer", () => ({
+            init() {
+                initializeAutoPlayers(this.$root);
+                initializeLazyPlayers(this.$root);
+            },
 
-    document.addEventListener("htmx:afterSwap", function (event) {
-        initializeAutoPlayers(event.detail.target);
-        initializeLazyPlayers(event.detail.target);
-    });
-
-    document.addEventListener("htmx:beforeCleanupElement", function (event) {
-        destroyPlayers(event.detail.elt);
+            destroy() {
+                destroyPlayers(this.$root);
+            }
+        }));
     });
 
     document.addEventListener(PLAYER_PRELOAD_EVENT, function (event) {

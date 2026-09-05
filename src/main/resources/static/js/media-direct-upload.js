@@ -1,4 +1,11 @@
-export class MediaDirectUploader {
+(function () {
+"use strict";
+
+if (window.MediaDirectUploader != null) {
+    return;
+}
+
+class MediaDirectUploader {
     constructor({
         uploadUrl,
         requestHeadersProvider = null,
@@ -65,3 +72,6 @@ export class MediaDirectUploader {
         };
     }
 }
+
+window.MediaDirectUploader = MediaDirectUploader;
+})();

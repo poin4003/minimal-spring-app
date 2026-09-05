@@ -8,6 +8,9 @@
            th:href="${item.disabled or item.path == null ? '#' : item.path}"
            class="app-menu-link d-flex align-items-center gap-2 text-decoration-none"
            th:classappend="${item.active} ? ' active' : ''"
+           x-data="navigationItem"
+           x-bind:class="{ 'active': active }"
+           x-bind:aria-current="active ? 'page' : null"
            data-app-menu-tooltip
            th:attr="aria-disabled=${item.disabled},
                     aria-current=${item.active ? 'page' : null},
@@ -24,9 +27,11 @@
         </a>
 
         <div th:unless="${#lists.isEmpty(item.children)}"
+             x-data="navigationBranch"
              data-app-menu-branch>
             <div class="app-menu-group d-flex align-items-center gap-2"
                  th:classappend="${item.open} ? ' active' : ''"
+                 x-bind:class="{ 'active': active }"
                  data-app-menu-tooltip
                  th:attr="aria-label=${item.label},
                           data-bs-title=${item.label}">

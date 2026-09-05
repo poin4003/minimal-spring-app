@@ -1,6 +1,11 @@
 (function () {
     "use strict";
 
+    if (window.AppFeedPlaybackInitialized === true) {
+        return;
+    }
+    window.AppFeedPlaybackInitialized = true;
+
     const PLAYER_READY_EVENT = "app:media-player-ready";
     const PLAYER_DESTROYING_EVENT = "app:media-player-destroying";
     const FEED_SOUND_ENABLED_KEY = "feed-sound-enabled";

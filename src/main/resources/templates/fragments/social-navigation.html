@@ -8,12 +8,16 @@
         <a th:each="item : ${items}"
            th:href="${item.path}"
            class="nav-link d-flex align-items-center gap-2 text-nowrap"
+           x-data="navigationItem"
+           x-bind:class="{ 'active': active }"
+           x-bind:aria-current="active ? 'page' : null"
            hx-push-url="true"
            hx-replace-url="false"
            th:classappend="${item.active} ? ' active' : ''"
            th:attr="aria-current=${item.active ? 'page' : null},
                     aria-label=${item.label},
-                    title=${item.label}">
+                    title=${item.label},
+                    data-app-menu-path=${item.path}">
             <i class="bi"
                th:classappend="${' bi-' + item.icon}"
                aria-hidden="true"></i>

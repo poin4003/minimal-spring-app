@@ -18,8 +18,8 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-outline-primary"
-                       hx-target="#app-social-workspace"
-                       hx-select="#app-social-workspace"
+                       hx-target="#app-social-page-content"
+                       hx-select="#app-social-page-content"
                        hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false"
@@ -53,6 +53,7 @@
             <div th:if="${detailMode}"
                  class="short-video-stage bg-black"
                  data-media-preview
+                 x-data="mediaPlayer"
                  th:data-message-source-unavailable="#{media.preview.sourceUnavailable}"
                  th:data-message-player-unavailable="#{media.preview.playerUnavailable}"
                  th:data-message-stream-failed="#{media.preview.streamFailed}">
@@ -76,8 +77,8 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none"
-               hx-target="#app-social-workspace"
-               hx-select="#app-social-workspace"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false">
@@ -97,8 +98,8 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="text-body text-decoration-none"
-               hx-target="#app-social-workspace"
-               hx-select="#app-social-workspace"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false">

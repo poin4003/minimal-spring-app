@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <th:block th:fragment="results(results)">
+        <div th:if="${results.retrievalAvailability.name() != 'READY'}"
+             class="alert alert-danger"
+             role="status"
+             th:text="#{ai.search.status.unavailable}">
+            Search is temporarily unavailable.
+        </div>
+
+        <div th:if="${results.retrievalAvailability.name() == 'READY'
+                and #lists.isEmpty(results.sections)}"
+             class="alert alert-secondary"
+             role="status"
+             th:text="#{ai.search.status.noResults}">
+            No matching posts were found.
+        </div>
+
+        <section th:each="section : ${results.sections}"
+                 class="post-search-section">
+            <header class="d-flex align-items-center gap-2 mb-3">
+                <h2 class="h4 mb-0" th:text="${section.title}">
+                    Posts
+                </h2>
+                <span class="badge text-bg-secondary"
+                      th:text="${#lists.size(section.items)}">0</span>
+            </header>
+
+            <div class="post-search-horizontal-list d-flex gap-3
+                        overflow-x-auto pb-3">
+                <div th:each="item : ${section.items}"
+                     th:class="${section.postType.name() == 'SHORT'
+                             ? 'post-search-short-item flex-shrink-0'
+                             : section.postType.name() == 'VIDEO'
+                             ? 'post-search-video-item flex-shrink-0'
+                             : 'post-search-standard-item flex-shrink-0'}">
+                    <a class="card app-surface-panel h-100 overflow-hidden
+                              text-decoration-none text-body
+                              post-search-result-card"
+                       th:classappend="${item.detailPath == null}
+                               ? ' disabled' : ''"
+                       th:href="${item.detailPath != null
+                               ? item.detailPath : '#'}"
+                       th:attr="aria-disabled=${item.detailPath == null
+                               ? 'true' : null}"
+                       hx-push-url="true">
+                        <div th:if="${section.postType.name() == 'STANDARD'
+                                and !#lists.isEmpty(item.media)}"
+                             class="post-search-standard-media border-bottom"
+                             th:data-media-count="${#lists.size(item.media) > 4
+                                     ? 4 : #lists.size(item.media)}">
+                            <span th:each="asset, iteration : ${item.media}"
+                                  th:if="${iteration.index < 4}"
+                                  class="post-search-standard-media-item">
+                                <img th:if="${asset.previewUrl != null}"
+                                     th:src="${asset.previewUrl}"
+                                     alt=""
+                                     loading="lazy">
+                                <span th:unless="${asset.previewUrl != null}"
+                                      class="d-grid h-100 text-body-secondary
+                                             align-items-center
+                                             justify-content-center">
+                                    <i class="bi"
+                                       th:classappend="${asset.kind.name() == 'VIDEO'
+                                               ? ' bi-film'
+                                               : asset.kind.name() == 'AUDIO'
+                                               ? ' bi-music-note-beamed'
+                                               : asset.kind.name() == 'IMAGE'
+                                               ? ' bi-image'
+                                               : ' bi-file-earmark'}"
+                                       aria-hidden="true"></i>
+                                </span>
+                                <span th:if="${iteration.index == 3
+                                        and #lists.size(item.media) > 4}"
+                                      class="post-search-standard-media-more"
+                                      th:text="${'+'
+                                              + (#lists.size(item.media) - 4)}">
+                                    +1
+                                </span>
+                            </span>
+                        </div>
+
+                        <th:block th:if="${section.postType.name() != 'STANDARD'}"
+                                  th:with="primary=${#lists.isEmpty(item.media)
+                                          ? null : item.media[0]}">
+                            <div th:class="${section.postType.name() == 'SHORT'
+                                    ? 'post-search-short-media bg-body-secondary border-bottom'
+                                    : 'post-search-video-media bg-body-secondary border-bottom'}">
+                                <img th:if="${primary != null
+                                        and primary.previewUrl != null}"
+                                     class="w-100 h-100 object-fit-cover"
+                                     th:src="${primary.previewUrl}"
+                                     alt=""
+                                     loading="lazy">
+                                <span th:unless="${primary != null
+                                        and primary.previewUrl != null}"
+                                      class="post-search-media-fallback">
+                                    <i class="bi"
+                                       th:classappend="${section.postType.name() == 'SHORT'
+                                               ? ' bi-play-circle' : ' bi-film'}"
+                                       aria-hidden="true"></i>
+                                </span>
+                                <span class="post-search-play-badge">
+                                    <i class="bi bi-play-fill"
+                                       aria-hidden="true"></i>
+                                </span>
+                            </div>
+                        </th:block>
+
+                        <div class="card-body p-3 p-md-4">
+                            <p class="post-search-content mb-2"
+                               th:classappend="${section.postType.name() == 'SHORT'}
+                                       ? ' post-search-content-short' : ''"
+                               th:text="${item.content}">
+                                Post content
+                            </p>
+                            <span class="small text-body-secondary"
+                                  th:text="${#messages.msg('ai.search.relevance')
+                                          + ' ' + item.relevancePercent + '%'}">
+                                Relevance 90%
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </th:block>
+</body>
+</html>

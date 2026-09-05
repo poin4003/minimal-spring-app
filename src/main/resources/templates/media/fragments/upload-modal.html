@@ -6,6 +6,7 @@
      tabindex="-1"
      aria-hidden="true"
      data-media-upload
+     x-data="mediaUpload"
      th:data-message-status-queued="#{media.upload.status.queued}"
      th:data-message-status-uploading="#{media.upload.status.uploading}"
      th:data-message-status-uploaded="#{media.upload.status.uploaded}"
@@ -33,6 +34,8 @@
               method="POST"
               enctype="multipart/form-data"
               data-media-upload-form
+              x-ref="form"
+              x-on:submit.prevent="uploadQueued"
               data-app-loader="manual"
               th:action="${upload.transport.directUploadPath}"
               th:data-chunk-upload-path="${upload.transport.chunkUploadPath}"
@@ -59,6 +62,13 @@
             <div class="modal-body d-grid gap-3">
                 <label class="app-media-upload-dropzone rounded p-4 text-center"
                        data-media-upload-dropzone
+                       x-bind:class="{ 'is-dragging': dragging }"
+                       x-on:dragenter.prevent="dragging = true"
+                       x-on:dragover.prevent="dragging = true"
+                       x-on:dragleave.prevent="dragging = false"
+                       x-on:drop.prevent="dropFiles($event)"
+                       x-on:keydown.enter.prevent="$refs.fileInput.click()"
+                       x-on:keydown.space.prevent="$refs.fileInput.click()"
                        tabindex="0"
                        th:for="${upload.id + '-file'}">
                     <span class="d-block fw-semibold"
@@ -75,6 +85,8 @@
                        type="file"
                        name="file"
                        data-media-upload-input
+                       x-ref="fileInput"
+                       x-on:change="selectFiles($event)"
                        th:id="${upload.id + '-file'}"
                        th:accept="${upload.accept}"
                        th:multiple="${upload.multiple}">
@@ -97,69 +109,86 @@
                 <div class="border rounded">
                     <div class="p-3 text-secondary text-center"
                          data-media-upload-empty
+                         x-show="items.length === 0"
                          th:text="#{media.upload.emptyQueue}">
                         No files selected.
                     </div>
                     <div class="list-group list-group-flush"
-                         data-media-upload-queue></div>
-                </div>
+                         data-media-upload-queue>
+                        <template x-for="item in items" :key="item.id">
+                            <div class="list-group-item p-3">
+                                <div class="d-flex align-items-start
+                                            justify-content-between gap-3">
+                                    <div class="flex-grow-1 overflow-hidden">
+                                        <div class="fw-semibold text-break"
+                                             x-text="item.name"></div>
+                                        <div class="small text-secondary"
+                                             x-text="item.sizeLabel"></div>
+                                    </div>
+                                    <span class="badge"
+                                          x-bind:class="statusClass(item)"
+                                          x-text="statusLabel(item)"></span>
+                                </div>
 
-                <template data-media-upload-item-template>
-                    <div class="list-group-item p-3" data-upload-item>
-                        <div class="d-flex align-items-start justify-content-between gap-3">
-                            <div class="flex-grow-1 overflow-hidden">
-                                <div class="fw-semibold text-break" data-upload-name></div>
-                                <div class="small text-secondary" data-upload-size></div>
+                                <div class="progress mt-3"
+                                     role="progressbar"
+                                     th:aria-label="#{media.upload.progress}"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100"
+                                     x-bind:aria-valuenow="item.progress">
+                                    <div class="progress-bar"
+                                         x-bind:style="`width: ${item.progress}%`"></div>
+                                </div>
+
+                                <div class="mt-3"
+                                     x-show="item.resultHtml !== ''"
+                                     x-html="item.resultHtml"></div>
+                                <div class="alert mb-0 mt-3"
+                                     role="status"
+                                     x-show="item.resultMessage !== ''"
+                                     x-bind:class="item.resultDanger
+                                             ? 'alert-danger'
+                                             : 'alert-success'"
+                                     x-text="item.resultMessage"></div>
+
+                                <div class="d-flex flex-wrap
+                                            justify-content-end gap-2 mt-3">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-secondary"
+                                            x-show="item.status === 'QUEUED'
+                                                    || item.status === 'UPLOADING'"
+                                            x-on:click="cancelItem(item)"
+                                            th:text="#{action.cancel}">
+                                        Cancel
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            x-show="item.status === 'FAILED'
+                                                    || item.status === 'CANCELLED'"
+                                            x-on:click="retryItem(item)"
+                                            th:text="#{action.retry}">
+                                        Retry
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            x-show="item.status !== 'UPLOADING'"
+                                            x-on:click="removeItem(item)"
+                                            th:text="#{action.remove}">
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
-                            <span class="badge text-bg-secondary" data-upload-status>
-                                <span th:text="#{media.upload.status.queued}">
-                                    Queued
-                                </span>
-                            </span>
-                        </div>
-
-                        <div class="progress mt-3"
-                             role="progressbar"
-                             th:aria-label="#{media.upload.progress}"
-                             aria-valuemin="0"
-                             aria-valuemax="100"
-                             aria-valuenow="0">
-                            <div class="progress-bar"
-                                 data-upload-progress
-                                 style="width: 0%"></div>
-                        </div>
-
-                        <div class="mt-3" data-upload-result hidden></div>
-
-                        <div class="d-flex flex-wrap justify-content-end gap-2 mt-3">
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-secondary"
-                                    data-upload-action="cancel"
-                                    th:text="#{action.cancel}">
-                                Cancel
-                            </button>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-primary"
-                                    data-upload-action="retry"
-                                    hidden
-                                    th:text="#{action.retry}">
-                                Retry
-                            </button>
-                            <button type="button"
-                                    class="btn btn-sm btn-outline-danger"
-                                    data-upload-action="remove"
-                                    th:text="#{action.remove}">
-                                Remove
-                            </button>
-                        </div>
+                        </template>
                     </div>
-                </template>
+                </div>
             </div>
 
             <div class="modal-footer">
                 <button type="button"
                         class="btn btn-outline-secondary me-auto"
                         data-media-upload-clear
+                        x-on:click="clearCompleted"
+                        x-bind:disabled="uploading || !hasCompleted"
                         th:text="#{media.upload.clearCompleted}">
                     Clear completed
                 </button>
@@ -172,6 +201,7 @@
                 <button type="submit"
                         class="btn btn-primary"
                         data-media-upload-start
+                        x-bind:disabled="uploading || !hasQueued"
                         th:text="${upload.submitLabel}">
                     Upload queued
                 </button>

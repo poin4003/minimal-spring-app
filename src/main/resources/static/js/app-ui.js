@@ -121,6 +121,27 @@
             && boostRoot.getAttribute("hx-boost") !== "false";
     }
 
+    function normalizeNavigationPath(path) {
+        if (path == null || path === "") {
+            return "/";
+        }
+
+        const normalized = path.split("?")[0].replace(/\/+$/, "");
+        return normalized === "" ? "/" : normalized;
+    }
+
+    function modalRequestFallback(element) {
+        if (!(element instanceof Element)
+                || !element.matches("[data-app-modal-request]")) {
+            return;
+        }
+
+        const fallbackPath = element.getAttribute("href");
+        if (fallbackPath) {
+            window.location.replace(fallbackPath);
+        }
+    }
+
     applyTheme(resolveTheme());
     root.dataset.appSidebar = resolveSidebarCollapsed()
         ? "collapsed"
@@ -160,6 +181,61 @@
                 this.visible = false;
             }
         });
+
+        Alpine.store("navigation", {
+            currentPath: normalizeNavigationPath(window.location.pathname),
+
+            setPath(path) {
+                this.currentPath = normalizeNavigationPath(path);
+            },
+
+            matches(path) {
+                const itemPath = normalizeNavigationPath(path);
+                return this.currentPath === itemPath
+                    || this.currentPath.startsWith(itemPath + "/");
+            }
+        });
+
+        Alpine.data("navigationShell", () => ({
+            init() {
+                this.update(window.location.pathname);
+            },
+
+            update(path) {
+                Alpine.store("navigation").setPath(path);
+            }
+        }));
+
+        Alpine.data("navigationItem", () => ({
+            get active() {
+                const itemPath = this.$root.dataset.appMenuPath;
+                if (itemPath == null) {
+                    return false;
+                }
+
+                const navigation = Alpine.store("navigation");
+                if (!navigation.matches(itemPath)) {
+                    return false;
+                }
+                const longestMatch = Array.from(document.querySelectorAll(
+                    "[data-app-menu-path]"
+                )).map(link => normalizeNavigationPath(
+                    link.dataset.appMenuPath
+                ))
+                    .filter(path => navigation.matches(path))
+                    .sort((left, right) => right.length - left.length)[0];
+                return normalizeNavigationPath(itemPath) === longestMatch;
+            }
+        }));
+
+        Alpine.data("navigationBranch", () => ({
+            get active() {
+                return Array.from(this.$root.querySelectorAll(
+                    "[data-app-menu-path]"
+                )).some(link => Alpine.store("navigation").matches(
+                    link.dataset.appMenuPath));
+            }
+        }));
 
         Alpine.data("themeToggle", () => ({
             get dark() {
@@ -279,6 +355,78 @@
                 if (modalId != null) {
                     showModal(document.getElementById(modalId));
                 }
+            }
+        }));
+
+        Alpine.data("serverModalHost", () => ({
+            hiddenHandler: null,
+
+            init() {
+                this.hiddenHandler = event => {
+                    const modalElement = event.target;
+                    if (!(modalElement instanceof Element)
+                            || !this.$root.contains(modalElement)) {
+                        return;
+                    }
+
+                    bootstrap.Modal.getInstance(modalElement)?.dispose();
+                    this.$root.replaceChildren();
+                };
+                this.$root.addEventListener(
+                    "hidden.bs.modal",
+                    this.hiddenHandler);
+            },
+
+            loaded(event) {
+                if (event.detail.target !== this.$root) {
+                    return;
+                }
+                showModal(this.$root.querySelector(".modal"));
+            },
+
+            requestComplete(event) {
+                const form = event.detail.element;
+                if (!(form instanceof HTMLFormElement)
+                        || !this.$root.contains(form)
+                        || !event.detail.successful) {
+                    return;
+                }
+
+                const modalElement = form.closest(".modal");
+                if (modalElement) {
+                    bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+                }
+            },
+
+            requestFailed(event) {
+                modalRequestFallback(event.detail.element);
+            },
+
+            destroy() {
+                this.$root.removeEventListener(
+                    "hidden.bs.modal",
+                    this.hiddenHandler);
+            }
+        }));
+
+        Alpine.data("searchForm", () => ({
+            query: "",
+
+            init() {
+                this.query = this.$root.dataset.initialQuery || "";
+                if (this.query.trim() !== "") {
+                    this.$nextTick(() => this.$refs.form.requestSubmit());
+                }
+            },
+
+            submit(event) {
+                this.query = this.query.trim();
+                if (this.query !== "") {
+                    return;
+                }
+
+                event.preventDefault();
+                this.$refs.query.focus();
             }
         }));
     });
