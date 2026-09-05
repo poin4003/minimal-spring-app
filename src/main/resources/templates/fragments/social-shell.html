@@ -2,22 +2,16 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
-    <th:block th:fragment="layout(shell, content)">
+    <th:block th:fragment="layout(shell, bodyClass, content)">
         <div th:unless="${htmxRequest == true}"
              class="social-shell-layout min-vh-100"
              x-data="navigationShell"
-             x-on:app-navigation-changed.window="update($event.detail.path)"
-             hx-boost="true"
-             hx-target="#app-social-page-content"
-             hx-select="#app-social-page-content"
-             hx-swap="outerHTML show:top"
-             hx-push-url="false"
-             hx-replace-url="false">
+             x-on:app-navigation-changed.window="update($event.detail.path)">
             <div th:replace="~{fragments/social-header
                     :: header(${shell})}"></div>
 
             <th:block th:replace="~{fragments/social-shell
-                    :: workspace(${shell}, ${content})}"></th:block>
+                    :: workspace(${shell}, ${bodyClass}, ${content})}"></th:block>
 
             <div th:replace="~{fragments/app-tools :: modalHost}"></div>
             <div th:replace="~{fragments/app-tools :: loader}"></div>
@@ -26,10 +20,10 @@
 
         <th:block th:if="${htmxRequest == true}"
                   th:replace="~{fragments/social-shell
-                          :: pageContent(${content})}"></th:block>
+                          :: pageContent(${bodyClass}, ${content})}"></th:block>
     </th:block>
 
-    <main th:fragment="workspace(shell, content)"
+    <main th:fragment="workspace(shell, bodyClass, content)"
           id="app-social-workspace"
           class="container-fluid social-container px-0">
         <div class="row g-0 align-items-start social-workspace">
@@ -42,10 +36,12 @@
                 </div>
             </aside>
 
-            <section th:fragment="pageContent(content)"
+            <section th:fragment="pageContent(bodyClass, content)"
                      id="app-social-page-content"
                      class="col-12 col-lg-9 col-xl-10 min-w-0 social-content-column"
-                     hx-history-elt>
+                     hx-history-elt
+                     hx-history="false"
+                     th:attr="data-app-body-class=${bodyClass}">
                 <th:block th:replace="${content}"></th:block>
             </section>
         </div>

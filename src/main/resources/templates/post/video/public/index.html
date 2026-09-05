@@ -15,7 +15,7 @@
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div id="video-library-workspace"
                  class="video-library-page mx-auto d-grid gap-4">
@@ -79,6 +79,8 @@
                         <div th:each="card : ${page.videos}" class="col">
                             <a th:href="${card.detailPath}"
                                class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body"
+                               data-app-page-navigation
+                               hx-boost="true"
                                hx-target="#app-social-page-content"
                                hx-select="#app-social-page-content"
                                hx-swap="outerHTML show:top"
@@ -119,6 +121,8 @@
                         <div th:each="card : ${page.series}" class="col">
                             <a th:href="${card.detailPath}"
                                class="card app-surface-panel video-library-card h-100 overflow-hidden text-decoration-none text-body"
+                               data-app-page-navigation
+                               hx-boost="true"
                                hx-target="#app-social-page-content"
                                hx-select="#app-social-page-content"
                                hx-swap="outerHTML show:top"

@@ -1,11 +1,15 @@
 package com.app.config.security.web;
 
+import org.springframework.http.HttpHeaders;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public final class HtmxRequestSupport {
 
     private static final String REQUEST_HEADER = "HX-Request";
+    private static final String HISTORY_RESTORE_REQUEST_HEADER =
+            "HX-History-Restore-Request";
     private static final String REDIRECT_HEADER = "HX-Redirect";
     private static final String PUSH_URL_HEADER = "HX-Push-Url";
     private static final String REPLACE_URL_HEADER = "HX-Replace-Url";
@@ -19,6 +23,13 @@ public final class HtmxRequestSupport {
 
     public static boolean isHtmxRequest(HttpServletRequest request) {
         return Boolean.parseBoolean(request.getHeader(REQUEST_HEADER));
+    }
+
+    public static void varyByRequestType(HttpServletResponse response) {
+        response.addHeader(HttpHeaders.VARY, REQUEST_HEADER);
+        response.addHeader(
+                HttpHeaders.VARY,
+                HISTORY_RESTORE_REQUEST_HEADER);
     }
 
     public static void redirect(HttpServletResponse response, String path) {

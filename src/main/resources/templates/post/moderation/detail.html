@@ -15,7 +15,7 @@
 </head>
 <body class="app-shell bg-body-tertiary">
     <div th:replace="~{fragments/app-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div id="post-moderation-detail-workspace"
                  class="app-page-stack"
@@ -31,6 +31,11 @@
                 <div class="app-page-toolbar">
                     <a th:href="${page.queuePath}"
                        class="btn btn-sm btn-outline-secondary"
+                       data-app-page-navigation
+                       hx-boost="true"
+                       hx-target="#app-page-content"
+                       hx-select="#app-page-content"
+                       hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false"
                        th:text="#{post.moderation.backToQueue}">

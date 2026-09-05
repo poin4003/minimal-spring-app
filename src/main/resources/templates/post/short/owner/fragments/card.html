@@ -18,6 +18,8 @@
                     <a th:if="${card.editable}"
                        th:href="${card.editPath}"
                        class="btn btn-outline-primary"
+                       data-app-page-navigation
+                       hx-boost="true"
                        hx-target="#app-social-page-content"
                        hx-select="#app-social-page-content"
                        hx-swap="outerHTML show:top"
@@ -77,6 +79,8 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="ratio short-owner-cover rounded overflow-hidden bg-black text-decoration-none"
+               data-app-page-navigation
+               hx-boost="true"
                hx-target="#app-social-page-content"
                hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"
@@ -98,6 +102,8 @@
             <a th:unless="${detailMode}"
                th:href="${card.detailPath}"
                class="text-body text-decoration-none"
+               data-app-page-navigation
+               hx-boost="true"
                hx-target="#app-social-page-content"
                hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"

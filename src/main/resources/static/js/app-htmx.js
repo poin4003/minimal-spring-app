@@ -11,6 +11,10 @@
     const BODY_CLASS_STORAGE_PREFIX = "app-body-class:";
     const desktopViewport = window.matchMedia("(min-width: 992px)");
     const busyTargetCounts = new WeakMap();
+    const requestContexts = new WeakMap();
+    const activeRequests = new Set();
+    let pageEpoch = 0;
+    let latestPageRequest = 0;
 
     function setRequestTargetBusy(target, busy) {
         if (!(target instanceof Element)) {
@@ -45,11 +49,86 @@
             className);
     }
 
+    function isPageTarget(target) {
+        return target instanceof Element
+            && (target.id === "app-page-content"
+                || target.id === "app-social-page-content");
+    }
+
     function isPageSwap(event) {
-        const targetId = event.detail.target?.id;
-        return event.detail.boosted
-            || targetId === "app-page-content"
-            || targetId === "app-social-page-content";
+        return isPageTarget(event.detail.target);
+    }
+
+    function abortActiveRequests() {
+        Array.from(activeRequests).forEach(xhr => {
+            if (xhr.readyState !== XMLHttpRequest.DONE) {
+                xhr.abort();
+            }
+        });
+        activeRequests.clear();
+    }
+
+    function registerRequest(event) {
+        const xhr = event.detail.xhr;
+        if (!(xhr instanceof XMLHttpRequest)) {
+            return;
+        }
+
+        if (isPageTarget(event.detail.target)) {
+            abortActiveRequests();
+            const sequence = ++latestPageRequest;
+            requestContexts.set(xhr, {
+                page: true,
+                sequence: sequence
+            });
+        } else {
+            requestContexts.set(xhr, {
+                page: false,
+                epoch: pageEpoch
+            });
+        }
+        activeRequests.add(xhr);
+    }
+
+    function requestCanSwap(event) {
+        const context = requestContexts.get(event.detail.xhr);
+        if (context == null) {
+            return true;
+        }
+        if (context.page) {
+            return context.sequence === latestPageRequest;
+        }
+        return context.epoch === pageEpoch
+            && event.detail.target instanceof Element
+            && event.detail.target.isConnected;
+    }
+
+    function rejectStaleSwap(event) {
+        if (requestCanSwap(event)) {
+            return false;
+        }
+
+        event.detail.shouldSwap = false;
+        event.preventDefault();
+        return true;
+    }
+
+    function responseBodyClass(responseDocument, targetId) {
+        const responseTarget = targetId == null
+            ? null
+            : responseDocument.getElementById(targetId);
+        if (responseTarget?.hasAttribute("data-app-body-class")) {
+            return responseTarget.dataset.appBodyClass ?? "";
+        }
+        return responseDocument.body?.getAttribute("class");
+    }
+
+    function applyCurrentPageBodyClass() {
+        const pageTarget = document.getElementById("app-social-page-content")
+            ?? document.getElementById("app-page-content");
+        if (pageTarget?.hasAttribute("data-app-body-class")) {
+            document.body.className = pageTarget.dataset.appBodyClass ?? "";
+        }
     }
 
     function syncBodyClassFromResponse(event) {
@@ -61,12 +140,12 @@
         const responseDocument = new DOMParser().parseFromString(
             event.detail.xhr.responseText,
             "text/html");
-        const responseBody = responseDocument.body;
-        if (responseBody == null) {
-            return;
+        const className = responseBodyClass(
+            responseDocument,
+            event.detail.target?.id);
+        if (className != null) {
+            document.body.className = className;
         }
-
-        document.body.className = responseBody.className;
         if (responseDocument.title) {
             document.title = responseDocument.title;
         }
@@ -75,7 +154,7 @@
             window.location.href);
         storeBodyClass(
             responseUrl.pathname + responseUrl.search,
-            responseBody.className);
+            document.body.className);
     }
 
     function restoreBodyClass() {
@@ -86,6 +165,31 @@
                 window.location.pathname));
         if (className != null) {
             document.body.className = className;
+        }
+    }
+
+    function syncHistoryBodyClass(event) {
+        const pageTarget = document.getElementById("app-social-page-content")
+            ?? document.getElementById("app-page-content");
+        const responseText = event.detail.serverResponse;
+        let className = null;
+        if (pageTarget != null && typeof responseText === "string") {
+            const responseDocument = new DOMParser().parseFromString(
+                responseText,
+                "text/html");
+            className = responseBodyClass(responseDocument, pageTarget.id);
+        }
+        if (className == null) {
+            restoreBodyClass();
+            className = document.body.className;
+        } else {
+            document.body.className = className;
+            storeBodyClass(
+                window.location.pathname + window.location.search,
+                className);
+        }
+        if (pageTarget != null) {
+            pageTarget.dataset.appBodyClass = className;
         }
     }
 
@@ -113,6 +217,7 @@
     });
 
     document.addEventListener("htmx:beforeRequest", function (event) {
+        registerRequest(event);
         dispatchUiEvent("app-request-start");
         if (event.detail.elt.closest("[data-app-loader='manual']") != null) {
             return;
@@ -134,9 +239,17 @@
         window.location.replace(redirectPath);
     });
 
-    document.addEventListener("htmx:beforeSwap", syncBodyClassFromResponse);
+    document.addEventListener("htmx:beforeSwap", function (event) {
+        if (rejectStaleSwap(event)) {
+            return;
+        }
+        if (event.detail.shouldSwap) {
+            syncBodyClassFromResponse(event);
+        }
+    });
 
     document.addEventListener("htmx:afterRequest", function (event) {
+        activeRequests.delete(event.detail.xhr);
         setRequestTargetBusy(event.detail.target, false);
         window.AppUi.hideLoader();
 
@@ -170,8 +283,20 @@
         });
     });
 
-    document.addEventListener("htmx:historyRestore", function () {
-        restoreBodyClass();
+    document.addEventListener("htmx:historyCacheMiss", function (event) {
+        pageEpoch += 1;
+        latestPageRequest += 1;
+        abortActiveRequests();
+        if (event.detail.xhr instanceof XMLHttpRequest) {
+            activeRequests.add(event.detail.xhr);
+        }
+    });
+
+    document.addEventListener("htmx:historyRestore", function (event) {
+        pageEpoch += 1;
+        latestPageRequest += 1;
+        abortActiveRequests();
+        syncHistoryBodyClass(event);
         dispatchUiEvent("app-navigation-changed", {
             path: window.location.pathname
         });
@@ -190,6 +315,8 @@
             return;
         }
 
+        pageEpoch += 1;
+        applyCurrentPageBodyClass();
         dispatchUiEvent("app-navigation-changed", {
             path: window.location.pathname
         });
@@ -198,6 +325,7 @@
     });
 
     document.addEventListener("DOMContentLoaded", function () {
+        applyCurrentPageBodyClass();
         storeBodyClass(
             window.location.pathname + window.location.search,
             document.body.className);

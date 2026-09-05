@@ -15,7 +15,7 @@
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="video-detail-page mx-auto d-grid gap-3">
                 <div th:replace="~{fragments/components/breadcrumb

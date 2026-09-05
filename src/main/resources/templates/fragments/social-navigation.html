@@ -4,6 +4,12 @@
 <body>
     <nav th:fragment="navigation(items)"
          class="nav flex-nowrap flex-lg-column overflow-x-auto social-navigation"
+         data-app-page-navigation
+         hx-boost="true"
+         hx-target="#app-social-page-content"
+         hx-select="#app-social-page-content"
+         hx-swap="outerHTML show:top"
+         hx-sync="#app-social-page-content:replace"
          th:attr="aria-label=#{shell.mainNavigation}">
         <a th:each="item : ${items}"
            th:href="${item.path}"

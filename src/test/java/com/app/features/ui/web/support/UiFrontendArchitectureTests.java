@@ -24,6 +24,12 @@ class UiFrontendArchitectureTests {
                 .doesNotContain("addEventListener(\"htmx:");
         assertThat(htmxScript)
                 .contains("addEventListener(\"htmx:")
+                .contains("requestContexts")
+                .contains("rejectStaleSwap")
+                .contains("htmx:historyCacheMiss")
+                .contains("syncHistoryBodyClass")
+                .contains("data-app-body-class")
+                .doesNotContain("event.detail.boosted")
                 .doesNotContain("Alpine.data(")
                 .doesNotContain("Alpine.store(");
     }
@@ -38,6 +44,8 @@ class UiFrontendArchitectureTests {
                 .isLessThan(toolsTemplate.indexOf("/js/app-htmx.js"));
         assertThat(toolsTemplate)
                 .contains("th:fragment=\"frontendScripts\"")
+                .contains("\"historyCacheSize\":0")
+                .contains("\"refreshOnHistoryMiss\":true")
                 .contains("/js/media-preview.js")
                 .contains("/js/media-upload.js")
                 .doesNotContain("head-support")

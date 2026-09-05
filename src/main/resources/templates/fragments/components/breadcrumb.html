@@ -13,6 +13,11 @@
             <span th:if="${item.active}" th:text="${item.label}">Current</span>
             <a th:unless="${item.active}"
                th:href="${item.path}"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-social-page-content, #app-page-content"
+               hx-select="#app-social-page-content, #app-page-content"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false"
                th:text="${item.label}">

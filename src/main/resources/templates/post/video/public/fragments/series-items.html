@@ -6,6 +6,8 @@
        th:href="${card.detailPath}"
        class="card app-surface-panel text-decoration-none text-body overflow-hidden"
        th:classappend="${card.active} ? ' border-primary border-2' : ''"
+       data-app-page-navigation
+       hx-boost="true"
        hx-target="#app-social-page-content"
        hx-select="#app-social-page-content"
        hx-swap="outerHTML show:top"

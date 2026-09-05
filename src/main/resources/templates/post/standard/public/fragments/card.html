@@ -62,6 +62,11 @@
         <a th:unless="${detailMode}"
            th:href="${card.detailPath}"
            class="stretched-link"
+           data-app-page-navigation
+           hx-boost="true"
+           hx-target="#app-social-page-content"
+           hx-select="#app-social-page-content"
+           hx-swap="outerHTML show:top"
            hx-push-url="true"
            hx-replace-url="false"
            th:attr="aria-label=#{post.public.viewDetail}">

@@ -16,7 +16,7 @@
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <main x-data="searchForm"
                   th:data-initial-query="${page.query}">

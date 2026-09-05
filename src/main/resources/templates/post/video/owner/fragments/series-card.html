@@ -5,6 +5,8 @@
          class="card app-surface-panel video-library-card h-100 overflow-hidden">
     <a th:href="${card.detailPath}"
        class="ratio ratio-16x9 bg-body-tertiary text-decoration-none"
+       data-app-page-navigation
+       hx-boost="true"
        hx-target="#app-social-page-content"
        hx-select="#app-social-page-content"
        hx-swap="outerHTML show:top"
@@ -24,6 +26,8 @@
         <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
             <a th:href="${card.detailPath}"
                class="text-body text-decoration-none flex-grow-1 min-w-0"
+               data-app-page-navigation
+               hx-boost="true"
                hx-target="#app-social-page-content"
                hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"
@@ -39,6 +43,11 @@
            th:text="#{video.series.videoCount(${card.series.videoCount})}">0 videos</p>
         <a th:href="${card.editPath}"
            class="btn btn-sm btn-outline-primary"
+           data-app-page-navigation
+           hx-boost="true"
+           hx-target="#app-social-page-content"
+           hx-select="#app-social-page-content"
+           hx-swap="outerHTML show:top"
            hx-push-url="true"
            hx-replace-url="false"
            th:title="#{post.owner.edit}">

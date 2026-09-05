@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <div th:replace="~{fragments/social-shell
-            :: layout(${shell}, ~{::pageContent})}">
+            :: layout(${shell}, 'bg-body-tertiary short-public-page', ~{::pageContent})}">
         <section th:fragment="pageContent">Social content</section>
     </div>
 </body>

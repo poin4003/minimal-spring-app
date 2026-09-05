@@ -43,6 +43,11 @@
                                ? ' disabled' : ''"
                        th:href="${item.detailPath != null
                                ? item.detailPath : '#'}"
+                       data-app-page-navigation
+                       hx-boost="true"
+                       hx-target="#app-social-page-content"
+                       hx-select="#app-social-page-content"
+                       hx-swap="outerHTML show:top"
                        th:attr="aria-disabled=${item.detailPath == null
                                ? 'true' : null}"
                        hx-push-url="true">

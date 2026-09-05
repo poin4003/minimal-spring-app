@@ -14,7 +14,7 @@
 </head>
 <body class="bg-body-tertiary profile-page">
     <div th:replace="~{fragments/social-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'bg-body-tertiary profile-page', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row g-3 app-profile-layout">
                                 <div class="col-12 col-lg-4 app-profile-summary-column">
@@ -23,6 +23,11 @@
                                             <div class="text-center">
                                                 <a th:href="${page.avatarSelectionPath}"
                                                    class="position-relative d-inline-block rounded-circle"
+                                                   data-app-page-navigation
+                                                   hx-boost="true"
+                                                   hx-target="#app-social-page-content"
+                                                   hx-select="#app-social-page-content"
+                                                   hx-swap="outerHTML show:top"
                                                    hx-push-url="true"
                                                    hx-replace-url="false"
                                                    th:attr="aria-label=#{profile.avatar.change},

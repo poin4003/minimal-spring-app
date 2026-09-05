@@ -15,7 +15,7 @@
 </head>
 <body class="app-shell bg-body-tertiary">
     <div th:replace="~{fragments/app-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="app-page-stack">
                 <div th:replace="~{post/ai-moderation/fragments/config

@@ -10,7 +10,13 @@
                      sse-connect=${shell.notificationWidget != null
                              ? shell.notificationWidget.streamPath
                              : null}">
-        <nav class="navbar p-0">
+        <nav class="navbar p-0"
+             data-app-page-navigation
+             hx-boost="true"
+             hx-target="#app-social-page-content"
+             hx-select="#app-social-page-content"
+             hx-swap="outerHTML show:top"
+             hx-sync="#app-social-page-content:replace">
             <div class="container-fluid social-container flex-nowrap gap-2 px-3 px-lg-4">
                 <a class="navbar-brand d-flex align-items-center gap-2 fw-semibold mb-0"
                    th:href="${shell.socialPath}"

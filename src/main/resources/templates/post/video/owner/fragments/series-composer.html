@@ -70,6 +70,8 @@
         <footer class="app-component-footer">
             <a th:href="${page.backPath}"
                class="btn btn-sm btn-outline-secondary"
+               data-app-page-navigation
+               hx-boost="true"
                hx-target="#app-social-page-content"
                hx-select="#app-social-page-content"
                hx-swap="outerHTML show:top"

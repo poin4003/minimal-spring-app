@@ -51,6 +51,8 @@ class UiShellTemplateTests {
                 .doesNotContain("class=\"app-shell-layout\"")
                 .doesNotContain("id=\"app-sidebar\"")
                 .contains("id=\"app-page-content\"")
+                .contains("data-app-body-class=\"app-shell bg-body-tertiary\"")
+                .contains("hx-history=\"false\"")
                 .doesNotContain("id=\"app-sidebar-navigation\"");
     }
 
@@ -73,7 +75,9 @@ class UiShellTemplateTests {
         assertThat(html)
                 .doesNotContain("class=\"social-shell-layout min-vh-100\"")
                 .doesNotContain("id=\"app-social-workspace\"")
-                .contains("id=\"app-social-page-content\"");
+                .contains("id=\"app-social-page-content\"")
+                .contains("data-app-body-class=\"bg-body-tertiary short-public-page\"")
+                .contains("hx-history=\"false\"");
     }
 
     @Test

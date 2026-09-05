@@ -12,7 +12,7 @@
     <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
 </head>
 <body class="bg-body-tertiary">
-<div th:replace="~{fragments/social-shell :: layout(${page.shell}, ~{::pageContent})}">
+<div th:replace="~{fragments/social-shell :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
     <th:block th:fragment="pageContent">
         <div class="video-owner-page mx-auto d-grid gap-4">
             <header class="d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom pb-3">
@@ -34,6 +34,11 @@
                     <a th:if="${page.activeTab.name() == 'VIDEOS'}"
                        th:href="${page.createVideoPath}"
                        class="btn btn-sm btn-primary"
+                       data-app-page-navigation
+                       hx-boost="true"
+                       hx-target="#app-social-page-content"
+                       hx-select="#app-social-page-content"
+                       hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false">
                         <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>
@@ -42,6 +47,11 @@
                     <a th:if="${page.activeTab.name() == 'SERIES'}"
                        th:href="${page.createSeriesPath}"
                        class="btn btn-sm btn-primary"
+                       data-app-page-navigation
+                       hx-boost="true"
+                       hx-target="#app-social-page-content"
+                       hx-select="#app-social-page-content"
+                       hx-swap="outerHTML show:top"
                        hx-push-url="true"
                        hx-replace-url="false">
                         <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>

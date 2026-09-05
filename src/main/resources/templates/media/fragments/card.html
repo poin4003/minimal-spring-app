@@ -120,6 +120,11 @@
             <a th:if="${item.canSelectThumbnail()}"
                class="btn btn-outline-primary app-icon-button"
                th:href="${item.thumbnailSelectionPath}"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-page-content"
+               hx-select="#app-page-content"
+               hx-swap="outerHTML show:top"
                hx-push-url="true"
                hx-replace-url="false"
                th:title="#{media.thumbnail.select}"

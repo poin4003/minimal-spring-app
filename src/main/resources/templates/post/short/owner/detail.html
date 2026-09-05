@@ -14,7 +14,7 @@
 </head>
 <body class="bg-body-tertiary">
     <div th:replace="~{fragments/social-shell
-            :: layout(${page.shell}, ~{::pageContent})}">
+            :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
                 <div class="col-12 col-xl-9 col-xxl-7 d-grid gap-3">

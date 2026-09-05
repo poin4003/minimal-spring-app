@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
     <div th:replace="~{fragments/app-shell
-            :: layout(${shell}, ~{::pageContent})}">
+            :: layout(${shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
         <section th:fragment="pageContent">Admin content</section>
     </div>
 </body>
