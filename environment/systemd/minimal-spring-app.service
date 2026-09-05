@@ -1,5 +1,5 @@
 [Unit]
-Description=Minimal Spring App
+Description=Motumo
 Wants=network-online.target
 After=network-online.target
 

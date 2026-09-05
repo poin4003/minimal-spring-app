@@ -58,7 +58,7 @@ class UiShellTemplateTests {
     void rendersOnlySocialPageContentForHtmxRequest() {
         Context context = context(true);
         context.setVariable("shell", SocialShellView.builder()
-                .socialTitle("Vibe")
+                .socialTitle("Motumo")
                 .socialPath("/posts")
                 .loginPath("/login")
                 .registrationPath("/register")
@@ -161,7 +161,7 @@ class UiShellTemplateTests {
     private String renderAdminShell() {
         Context context = context(true);
         context.setVariable("shell", UiShellView.builder()
-                .title("Vibe")
+                .title("Motumo")
                 .logoutPath("/logout")
                 .profilePath("/profile")
                 .themeUpdatePath(null)

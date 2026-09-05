@@ -877,9 +877,9 @@ public class AppProperties {
         private String logoutPath = "/logout";
 
         @NotBlank
-        private String applicationTitle = "Vibe";
+        private String applicationTitle = "Motumo";
 
         @NotBlank
-        private String socialTitle = "Vibe";
+        private String socialTitle = "Motumo";
     }
 }

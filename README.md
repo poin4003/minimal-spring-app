@@ -1,6 +1,6 @@
-# Vibe
+# Motumo
 
-Vibe là một ứng dụng mạng xã hội xây dựng bằng Spring Boot. Hệ thống hỗ trợ
+Motumo là một ứng dụng mạng xã hội xây dựng bằng Spring Boot. Hệ thống hỗ trợ
 bài viết thường, Short, video HLS, quản lý media, thông báo, phân quyền và kiểm
 duyệt bài viết thủ công hoặc bằng AI local.
 
