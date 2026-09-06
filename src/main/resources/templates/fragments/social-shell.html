@@ -18,9 +18,10 @@
             <div th:replace="~{fragments/app-tools :: htmxError}"></div>
         </div>
 
-        <th:block th:if="${htmxRequest == true}"
-                  th:replace="~{fragments/social-shell
-                          :: pageContent(${bodyClass}, ${content})}"></th:block>
+        <th:block th:if="${htmxRequest == true}">
+            <th:block th:replace="~{fragments/social-shell
+                    :: pageContent(${bodyClass}, ${content})}"></th:block>
+        </th:block>
     </th:block>
 
     <main th:fragment="workspace(shell, bodyClass, content)"

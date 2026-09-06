@@ -7,10 +7,14 @@ import java.util.Locale;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.mock.web.MockServletContext;
 import org.springframework.security.web.csrf.DefaultCsrfToken;
-import org.thymeleaf.context.Context;
+import org.thymeleaf.context.WebContext;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import com.app.features.notification.web.view.NotificationWidgetView;
 import com.app.features.ai.enums.AiAvailability;
@@ -45,7 +49,7 @@ class UiShellTemplateTests {
 
     @Test
     void rendersOnlyAdminContentForHtmxRequest() {
-        String html = renderAdminShell();
+        String html = renderAdminShell(true);
 
         assertThat(html)
                 .doesNotContain("class=\"app-shell-layout\"")
@@ -57,20 +61,18 @@ class UiShellTemplateTests {
     }
 
     @Test
-    void rendersOnlySocialPageContentForHtmxRequest() {
-        Context context = context(true);
-        context.setVariable("shell", SocialShellView.builder()
-                .socialTitle("Motumo")
-                .socialPath("/posts")
-                .loginPath("/login")
-                .registrationPath("/register")
-                .themeUpdatePath(null)
-                .navigation(List.of())
-                .build());
+    void rendersAdminPageContentOnlyOnceForRegularRequest() {
+        String html = renderAdminShell(false);
 
-        String html = templateEngine.process(
-                "test/social-shell",
-                context);
+        assertThat(html)
+                .contains("class=\"app-shell-layout\"")
+                .contains("id=\"app-sidebar\"")
+                .containsOnlyOnce("id=\"app-page-content\"");
+    }
+
+    @Test
+    void rendersOnlySocialPageContentForHtmxRequest() {
+        String html = renderSocialShell(true);
 
         assertThat(html)
                 .doesNotContain("class=\"social-shell-layout min-vh-100\"")
@@ -78,6 +80,16 @@ class UiShellTemplateTests {
                 .contains("id=\"app-social-page-content\"")
                 .contains("data-app-body-class=\"bg-body-tertiary short-public-page\"")
                 .contains("hx-history=\"false\"");
+    }
+
+    @Test
+    void rendersSocialPageContentOnlyOnceForRegularRequest() {
+        String html = renderSocialShell(false);
+
+        assertThat(html)
+                .contains("class=\"social-shell-layout min-vh-100\"")
+                .contains("id=\"app-social-workspace\"")
+                .containsOnlyOnce("id=\"app-social-page-content\"");
     }
 
     @Test
@@ -94,7 +106,7 @@ class UiShellTemplateTests {
 
     @Test
     void rendersSearchResultsOnTheServer() {
-        Context context = context(false);
+        WebContext context = context(false);
         context.setVariable("results", PostSearchResultsView.builder()
                 .retrievalAvailability(AiAvailability.READY)
                 .sections(List.of(PostSearchSectionView.builder()
@@ -125,7 +137,7 @@ class UiShellTemplateTests {
 
     @Test
     void rendersReactiveMediaUploadQueue() {
-        Context context = context(false);
+        WebContext context = context(false);
         context.setVariable("_csrf", new DefaultCsrfToken(
                 "X-XSRF-TOKEN",
                 "_csrf",
@@ -162,8 +174,12 @@ class UiShellTemplateTests {
                 .doesNotContain("data-media-upload-item-template");
     }
 
-    private String renderAdminShell() {
-        Context context = context(true);
+    private String renderAdminShell(boolean htmxRequest) {
+        WebContext context = context(htmxRequest);
+        context.setVariable("_csrf", new DefaultCsrfToken(
+                "X-XSRF-TOKEN",
+                "_csrf",
+                "token"));
         context.setVariable("shell", UiShellView.builder()
                 .title("Motumo")
                 .logoutPath("/logout")
@@ -180,8 +196,30 @@ class UiShellTemplateTests {
         return templateEngine.process("test/admin-shell", context);
     }
 
-    private Context context(boolean htmxRequest) {
-        Context context = new Context(Locale.ENGLISH);
+    private String renderSocialShell(boolean htmxRequest) {
+        WebContext context = context(htmxRequest);
+        context.setVariable("shell", SocialShellView.builder()
+                .socialTitle("Motumo")
+                .socialPath("/posts")
+                .loginPath("/login")
+                .registrationPath("/register")
+                .themeUpdatePath(null)
+                .navigation(List.of())
+                .build());
+
+        return templateEngine.process("test/social-shell", context);
+    }
+
+    private WebContext context(boolean htmxRequest) {
+        MockServletContext servletContext = new MockServletContext();
+        MockHttpServletRequest request = new MockHttpServletRequest(
+                servletContext);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        WebContext context = new WebContext(
+                JakartaServletWebApplication
+                        .buildApplication(servletContext)
+                        .buildExchange(request, response),
+                Locale.ENGLISH);
         context.setVariable("htmxRequest", htmxRequest);
         return context;
     }

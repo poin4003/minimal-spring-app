@@ -17,9 +17,10 @@
             </div>
         </div>
 
-        <th:block th:unless="${#lists.isEmpty(feed.posts)}"
-                  th:replace="~{post/standard/public/fragments/feed
-                          :: items(${feed})}"></th:block>
+        <th:block th:unless="${#lists.isEmpty(feed.posts)}">
+            <th:block th:replace="~{post/standard/public/fragments/feed
+                    :: items(${feed})}"></th:block>
+        </th:block>
     </section>
 
     <th:block th:fragment="items(feed)">

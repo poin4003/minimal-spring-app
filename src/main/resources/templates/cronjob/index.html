@@ -35,11 +35,13 @@
         </th:block>
     </div>
 
-    <div th:if="${page.openMetadataModal}"
-         th:replace="~{fragments/app-tools
+    <th:block th:if="${page.openMetadataModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('cronjob-metadata-modal')}"></div>
-    <div th:if="${page.openDetailModal}"
-         th:replace="~{fragments/app-tools
+    </th:block>
+    <th:block th:if="${page.openDetailModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('cronjob-detail-modal')}"></div>
+    </th:block>
 </body>
 </html>

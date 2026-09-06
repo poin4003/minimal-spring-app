@@ -190,17 +190,21 @@
         </th:block>
     </div>
 
-    <div th:if="${page.openPreviewModal}"
-         th:replace="~{fragments/app-tools
+    <th:block th:if="${page.openPreviewModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('media-preview-modal')}"></div>
-    <div th:if="${page.openMetadataModal}"
-         th:replace="~{fragments/app-tools
+    </th:block>
+    <th:block th:if="${page.openMetadataModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('media-metadata-modal')}"></div>
-    <div th:if="${page.openDeleteModal}"
-         th:replace="~{fragments/app-tools
+    </th:block>
+    <th:block th:if="${page.openDeleteModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('media-delete-modal')}"></div>
-    <div th:if="${page.openRetryModal}"
-         th:replace="~{fragments/app-tools
+    </th:block>
+    <th:block th:if="${page.openRetryModal}">
+        <div th:replace="~{fragments/app-tools
                 :: autoModal('media-retry-modal')}"></div>
+    </th:block>
 </body>
 </html>

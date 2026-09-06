@@ -152,9 +152,10 @@
                         :: modal(${page.rejectModal})}"></div>
             </div>
 
-            <div th:if="${page.openModalId != null}"
-                 th:replace="~{fragments/app-tools
+            <th:block th:if="${page.openModalId != null}">
+                <div th:replace="~{fragments/app-tools
                         :: autoModal(${page.openModalId})}"></div>
+            </th:block>
         </th:block>
     </div>
 </body>

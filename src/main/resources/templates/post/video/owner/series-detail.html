@@ -110,9 +110,10 @@
             <div th:replace="~{post/video/owner/fragments/series-action-modal
                     :: modal(${page.actionModal})}"></div>
         </div>
-        <div th:if="${page.openModalId != null}"
-             th:replace="~{fragments/app-tools
+        <th:block th:if="${page.openModalId != null}">
+            <div th:replace="~{fragments/app-tools
                     :: autoModal(${page.openModalId})}"></div>
+        </th:block>
     </th:block>
 </div>
 </body>
