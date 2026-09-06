@@ -11,14 +11,16 @@
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
                 <div class="col-12 col-xxl-9 d-grid gap-4">
-                    <div th:if="${page.profileHeader != null}"
-                         th:replace="~{profile/fragments/public-header
+                    <th:block th:if="${page.profileHeader != null}">
+                        <div th:replace="~{profile/fragments/public-header
                                 :: header(${page.profileHeader})}"></div>
-                    <div th:unless="${page.profileHeader != null}"
-                         th:replace="~{post/fragments/quick-create
-                            :: quickCreate(${page.createPath},
-                                    ${#messages.msg('post.composer.open')},
-                                    'image')}"></div>
+                    </th:block>
+                    <th:block th:unless="${page.profileHeader != null}">
+                        <div th:replace="~{post/fragments/quick-create
+                                :: quickCreate(${page.createPath},
+                                        ${#messages.msg('post.composer.open')},
+                                        'image')}"></div>
+                    </th:block>
                     <div th:replace="~{post/standard/public/fragments/feed
                             :: feed(${page.feed})}"></div>
                 </div>

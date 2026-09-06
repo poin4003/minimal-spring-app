@@ -11,14 +11,16 @@
         <th:block th:fragment="pageContent">
             <div id="video-library-workspace"
                  class="video-library-page mx-auto d-grid gap-4">
-                <div th:if="${page.profileHeader != null}"
-                     th:replace="~{profile/fragments/public-header
+                <th:block th:if="${page.profileHeader != null}">
+                    <div th:replace="~{profile/fragments/public-header
                             :: header(${page.profileHeader})}"></div>
-                <div th:unless="${page.profileHeader != null}"
-                     th:replace="~{post/fragments/quick-create
-                        :: quickCreate(${page.createVideoPath},
-                                ${#messages.msg('video.owner.create')},
-                                'camera-video')}"></div>
+                </th:block>
+                <th:block th:unless="${page.profileHeader != null}">
+                    <div th:replace="~{post/fragments/quick-create
+                            :: quickCreate(${page.createVideoPath},
+                                    ${#messages.msg('video.owner.create')},
+                                    'camera-video')}"></div>
+                </th:block>
 
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom pb-3">
                     <nav class="nav nav-underline gap-4" th:aria-label="#{video.public.tabs}">

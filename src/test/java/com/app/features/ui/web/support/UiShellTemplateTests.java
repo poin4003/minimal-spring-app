@@ -228,6 +228,18 @@ class UiShellTemplateTests {
     }
 
     @Test
+    void skipsPublicProfileHeaderWhenNoAuthorIsSelected() {
+        WebContext context = context(false);
+        context.setVariable("header", null);
+
+        String html = templateEngine.process(
+                "test/public-profile-header",
+                context);
+
+        assertThat(html).doesNotContain("public-profile-header");
+    }
+
+    @Test
     void rendersReactiveMediaUploadQueue() {
         WebContext context = context(false);
         context.setVariable("_csrf", new DefaultCsrfToken(

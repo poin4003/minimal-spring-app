@@ -10,16 +10,18 @@
             :: layout(${page.shell}, 'bg-body-tertiary social-edge-to-edge-mobile short-public-page', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="app-page-stack">
-                <div th:if="${page.profileHeader != null}"
-                     class="mx-3 mx-md-0"
-                     th:replace="~{profile/fragments/public-header
-                            :: header(${page.profileHeader})}"></div>
-                <div th:unless="${page.profileHeader != null}"
-                     class="px-3 px-md-0"
-                     th:replace="~{post/fragments/quick-create
-                            :: quickCreate(${page.createPath},
-                                    ${#messages.msg('short.public.create')},
-                                    'play-btn')}"></div>
+                <th:block th:if="${page.profileHeader != null}">
+                    <div class="mx-3 mx-md-0"
+                         th:replace="~{profile/fragments/public-header
+                                :: header(${page.profileHeader})}"></div>
+                </th:block>
+                <th:block th:unless="${page.profileHeader != null}">
+                    <div class="px-3 px-md-0"
+                         th:replace="~{post/fragments/quick-create
+                                :: quickCreate(${page.createPath},
+                                        ${#messages.msg('short.public.create')},
+                                        'play-btn')}"></div>
+                </th:block>
 
                 <div th:replace="~{post/short/public/fragments/gallery
                         :: gallery(${page.gallery})}"></div>
