@@ -12,69 +12,65 @@
             <main class="post-search-page"
                   x-data="searchForm"
                   th:data-initial-query="${page.query}">
-                <div class="row justify-content-center">
-                    <div class="col-12 col-xxl-10">
-                        <form class="post-search-form mx-auto mb-4"
-                              method="get"
-                              th:action="${page.searchPath}"
-                              th:hx-post="${page.resultsPath}"
-                              hx-target="#post-search-results"
-                              hx-swap="innerHTML"
-                              hx-indicator="#post-search-loading"
-                              hx-disabled-elt="find button"
-                              hx-params="query"
-                              hx-push-url="false"
-                              hx-replace-url="false"
-                              hx-sync="this:replace"
-                              x-ref="form"
-                              x-on:submit="submit($event)">
-                            <label class="visually-hidden"
-                                   for="post-search-query"
-                                   th:text="#{ai.search.query.label}">
-                                Search query
-                            </label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-body">
-                                    <i class="bi bi-search"
-                                       aria-hidden="true"></i>
-                                </span>
-                                <input id="post-search-query"
-                                       class="form-control"
-                                       type="search"
-                                       name="q"
-                                       maxlength="2000"
-                                       required
-                                       autocomplete="off"
-                                       x-ref="query"
-                                       x-model="query"
-                                       th:placeholder="#{ai.search.query.placeholder}">
-                                <input type="hidden"
-                                       name="query"
-                                       x-bind:value="query">
-                                <button class="btn btn-primary px-3 px-md-4"
-                                        type="submit"
-                                        th:attr="aria-label=#{ai.search.submit}">
-                                    <i class="bi bi-arrow-right"
-                                       aria-hidden="true"></i>
-                                </button>
-                            </div>
-                        </form>
-
-                        <div id="post-search-loading"
-                             class="htmx-indicator d-flex align-items-center gap-2
-                                    text-body-secondary py-3">
-                            <span class="spinner-border spinner-border-sm"
-                                  aria-hidden="true"></span>
-                            <span th:text="#{ai.search.loading}">
-                                Finding related posts...
-                            </span>
-                        </div>
-
-                        <section id="post-search-results"
-                                 class="post-search-results"
-                                 aria-live="polite"></section>
+                <form class="post-search-form mx-auto mb-3"
+                      method="get"
+                      th:action="${page.searchPath}"
+                      th:hx-post="${page.resultsPath}"
+                      hx-target="#post-search-results"
+                      hx-swap="innerHTML"
+                      hx-indicator="#post-search-loading"
+                      hx-disabled-elt="find button"
+                      hx-params="query"
+                      hx-push-url="false"
+                      hx-replace-url="false"
+                      hx-sync="this:replace"
+                      x-ref="form"
+                      x-on:submit="submit($event)">
+                    <label class="visually-hidden"
+                           for="post-search-query"
+                           th:text="#{ai.search.query.label}">
+                        Search query
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-body">
+                            <i class="bi bi-search"
+                               aria-hidden="true"></i>
+                        </span>
+                        <input id="post-search-query"
+                               class="form-control"
+                               type="search"
+                               name="q"
+                               maxlength="2000"
+                               required
+                               autocomplete="off"
+                               x-ref="query"
+                               x-model="query"
+                               th:placeholder="#{ai.search.query.placeholder}">
+                        <input type="hidden"
+                               name="query"
+                               x-bind:value="query">
+                        <button class="btn btn-primary px-3 px-md-4"
+                                type="submit"
+                                th:attr="aria-label=#{ai.search.submit}">
+                            <i class="bi bi-arrow-right"
+                               aria-hidden="true"></i>
+                        </button>
                     </div>
+                </form>
+
+                <div id="post-search-loading"
+                     class="post-search-loading htmx-indicator align-items-center
+                            gap-2 text-body-secondary py-2">
+                    <span class="spinner-border spinner-border-sm"
+                          aria-hidden="true"></span>
+                    <span th:text="#{ai.search.loading}">
+                        Finding related posts...
+                    </span>
                 </div>
+
+                <section id="post-search-results"
+                         class="post-search-results"
+                         aria-live="polite"></section>
             </main>
         </th:block>
     </div>

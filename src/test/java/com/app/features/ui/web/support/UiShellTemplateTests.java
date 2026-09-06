@@ -57,7 +57,8 @@ class UiShellTemplateTests {
                 .doesNotContain("id=\"app-sidebar\"")
                 .contains("id=\"app-page-content\"")
                 .contains("data-app-body-class=\"app-shell bg-body-tertiary\"")
-                .contains("hx-history=\"false\"")
+                .contains("hx-history-elt")
+                .doesNotContain("hx-history=\"false\"")
                 .doesNotContain("id=\"app-sidebar-navigation\"");
     }
 
@@ -80,7 +81,8 @@ class UiShellTemplateTests {
                 .doesNotContain("id=\"app-social-workspace\"")
                 .contains("id=\"app-social-page-content\"")
                 .contains("data-app-body-class=\"bg-body-tertiary short-public-page\"")
-                .contains("hx-history=\"false\"");
+                .contains("hx-history-elt")
+                .doesNotContain("hx-history=\"false\"");
     }
 
     @Test

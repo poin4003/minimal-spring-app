@@ -48,7 +48,7 @@ class UiFrontendArchitectureTests {
                 .contains("th:fragment=\"adminHead\"")
                 .contains("th:fragment=\"socialHead\"")
                 .contains("th:fragment=\"authScripts\"")
-                .contains("\"historyCacheSize\":0")
+                .contains("\"historyCacheSize\":3")
                 .contains("\"refreshOnHistoryMiss\":true")
                 .contains("/js/media-preview.js")
                 .contains("/js/media-upload.js")

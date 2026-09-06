@@ -265,6 +265,19 @@
         border-radius: 0 !important;
     }
 
+    .standard-post-page .post-media-collage[data-media-count="2"] {
+        aspect-ratio: 4 / 3;
+    }
+
+    .standard-post-page .post-media-collage[data-media-count="3"],
+    .standard-post-page .post-media-collage[data-media-count="4"] {
+        aspect-ratio: 4 / 5;
+    }
+
+    .standard-post-page .post-media-collage-item {
+        background-color: var(--bs-black) !important;
+    }
+
     .post-owner-page main.social-container {
         padding-top: 0 !important;
     }
