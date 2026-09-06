@@ -5,6 +5,7 @@ import java.util.List;
 import com.app.features.post.videopost.web.enums.VideoLibraryTab;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.view.SocialShellView;
+import com.app.features.user.web.view.PublicProfileHeaderView;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -17,6 +18,7 @@ public class PublicVideoLibraryPageView {
 
     private final String title;
     private final SocialShellView shell;
+    private final PublicProfileHeaderView profileHeader;
     private final VideoLibraryTab activeTab;
     private final String videosPath;
     private final String seriesPath;

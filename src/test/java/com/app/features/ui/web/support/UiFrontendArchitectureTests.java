@@ -123,6 +123,19 @@ class UiFrontendArchitectureTests {
                 .contains("contain: layout paint");
     }
 
+    @Test
+    void linksPublicPostAvatarsToAuthorProfiles() throws IOException {
+        assertThat(resource(
+                "/templates/post/standard/public/fragments/card.html"))
+                .contains("th:href=\"${card.authorPath}\"");
+        assertThat(resource(
+                "/templates/post/short/public/fragments/metadata.html"))
+                .contains("th:href=\"${card.authorPath}\"");
+        assertThat(resource(
+                "/templates/post/video/public/detail.html"))
+                .contains("th:href=\"${page.authorPath}\"");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as(path).isNotNull();

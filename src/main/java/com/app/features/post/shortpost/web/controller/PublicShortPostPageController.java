@@ -33,6 +33,8 @@ import com.app.features.post.shortpost.web.view.PublicShortGalleryView;
 import com.app.features.post.shortpost.web.view.PublicShortListPageView;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.support.SocialShellFactory;
+import com.app.features.user.web.enums.PublicProfileContentType;
+import com.app.features.user.web.support.PublicProfileViewFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -64,6 +66,7 @@ public class PublicShortPostPageController {
     private final SocialShellFactory socialShellFactory;
     private final ShortPostService shortPostSvc;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
+    private final PublicProfileViewFactory publicProfileViewFactory;
 
     @GetMapping
     public String index(
@@ -87,6 +90,9 @@ public class PublicShortPostPageController {
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
+                .profileHeader(publicProfileViewFactory.build(
+                        filter.getAuthorId(),
+                        PublicProfileContentType.SHORTS))
                 .createPath(currentUser == null
                         ? null
                         : getMyShortsPath() + "/create")
@@ -206,6 +212,8 @@ public class PublicShortPostPageController {
                 .detailPath(buildDetailPath(
                         post.getPost().getId(),
                         pageNumber))
+                .authorPath(publicProfileViewFactory.buildProfilePath(
+                        post.getPost().getAuthor().getId()))
                 .build();
     }
 

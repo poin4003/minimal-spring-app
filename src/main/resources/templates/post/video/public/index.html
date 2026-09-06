@@ -11,7 +11,11 @@
         <th:block th:fragment="pageContent">
             <div id="video-library-workspace"
                  class="video-library-page mx-auto d-grid gap-4">
-                <div th:replace="~{post/fragments/quick-create
+                <div th:if="${page.profileHeader != null}"
+                     th:replace="~{profile/fragments/public-header
+                            :: header(${page.profileHeader})}"></div>
+                <div th:unless="${page.profileHeader != null}"
+                     th:replace="~{post/fragments/quick-create
                         :: quickCreate(${page.createVideoPath},
                                 ${#messages.msg('video.owner.create')},
                                 'camera-video')}"></div>
@@ -50,6 +54,10 @@
                                    hx-push-url='false',
                                    hx-replace-url='true'">
                         <input type="hidden" name="tab" th:value="${page.activeTab}">
+                        <input th:if="${page.profileHeader != null}"
+                               type="hidden"
+                               name="authorId"
+                               th:value="${page.profileHeader.profile.id}">
                         <input class="form-control form-control-sm"
                                type="search"
                                name="title"

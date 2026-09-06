@@ -7,6 +7,7 @@ import java.util.UUID;
 import com.app.features.user.entity.UserInfoEntity;
 import com.app.features.user.schema.payload.UpdateProfilePayload;
 import com.app.features.user.schema.result.ProfileResult;
+import com.app.features.user.schema.result.UserPublicResult;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -14,6 +15,8 @@ import jakarta.validation.constraints.NotNull;
 public interface ProfileService {
 
     ProfileResult getProfile(@NotNull UUID userId);
+
+    UserPublicResult getPublicProfile(@NotNull UUID userId);
 
     ProfileResult updateProfile(
             @NotNull UUID userId,

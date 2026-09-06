@@ -30,6 +30,9 @@ import com.app.features.media.web.view.MediaUploadTransportView;
 import com.app.features.post.enums.PostType;
 import com.app.features.ui.web.view.SocialShellView;
 import com.app.features.ui.web.view.UiShellView;
+import com.app.features.user.schema.result.UserPublicResult;
+import com.app.features.user.web.enums.PublicProfileContentType;
+import com.app.features.user.web.view.PublicProfileHeaderView;
 
 class UiShellTemplateTests {
 
@@ -196,6 +199,32 @@ class UiShellTemplateTests {
                 .contains("post-quick-create")
                 .contains("bi-image")
                 .contains("hx-push-url=\"true\"");
+    }
+
+    @Test
+    void rendersPublicProfileNavigation() {
+        UserPublicResult profile = new UserPublicResult();
+        profile.setFullName("Sample Author");
+        profile.setAvatarUrl("/media/avatar");
+        WebContext context = context(false);
+        context.setVariable("header", PublicProfileHeaderView.builder()
+                .profile(profile)
+                .activeContentType(PublicProfileContentType.POSTS)
+                .postsPath("/posts?authorId=sample")
+                .shortsPath("/shorts?authorId=sample")
+                .videosPath("/videos?authorId=sample")
+                .build());
+
+        String html = templateEngine.process(
+                "test/public-profile-header",
+                context);
+
+        assertThat(html)
+                .contains("Sample Author")
+                .contains("src=\"/media/avatar\"")
+                .contains("href=\"/posts?authorId=sample\"")
+                .contains("href=\"/shorts?authorId=sample\"")
+                .contains("href=\"/videos?authorId=sample\"");
     }
 
     @Test

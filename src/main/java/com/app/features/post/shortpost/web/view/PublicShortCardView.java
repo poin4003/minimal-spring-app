@@ -11,4 +11,5 @@ public class PublicShortCardView {
 
     private final PublicShortPostResult post;
     private final String detailPath;
+    private final String authorPath;
 }

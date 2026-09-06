@@ -4,16 +4,27 @@
 <body>
     <div th:fragment="metadata(card, compact)"
          class="short-media-overlay"
-         th:classappend="${compact} ? ' short-media-overlay-compact' : ''">
+        th:classappend="${compact} ? ' short-media-overlay-compact' : ''">
         <div class="d-flex align-items-center gap-2">
-            <img th:if="${card.post.post.author.avatarUrl != null}"
-                 th:src="${card.post.post.author.avatarUrl}"
-                 th:alt="${card.post.post.author.fullName}"
-                 class="rounded-circle border object-fit-cover short-overlay-avatar">
-            <span th:unless="${card.post.post.author.avatarUrl != null}"
-                  class="rounded-circle border bg-dark bg-opacity-50 d-inline-flex align-items-center justify-content-center short-overlay-avatar">
-                <i class="bi bi-person" aria-hidden="true"></i>
-            </span>
+            <a th:href="${card.authorPath}"
+               class="d-inline-flex flex-shrink-0 position-relative z-3 rounded-circle short-author-link"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
+               hx-swap="outerHTML show:top"
+               hx-push-url="true"
+               hx-replace-url="false"
+               th:attr="aria-label=${card.post.post.author.fullName}">
+                <img th:if="${card.post.post.author.avatarUrl != null}"
+                     th:src="${card.post.post.author.avatarUrl}"
+                     th:alt="${card.post.post.author.fullName}"
+                     class="rounded-circle border object-fit-cover short-overlay-avatar">
+                <span th:unless="${card.post.post.author.avatarUrl != null}"
+                      class="rounded-circle border bg-dark bg-opacity-50 d-inline-flex align-items-center justify-content-center short-overlay-avatar">
+                    <i class="bi bi-person" aria-hidden="true"></i>
+                </span>
+            </a>
 
             <span class="min-w-0">
                 <strong class="d-block text-truncate"

@@ -14,6 +14,7 @@ public class PublicPostCardView {
 
     private final PublicStandardPostResult post;
     private final String detailPath;
+    private final String authorPath;
     private final String mediaGalleryPartialPath;
     private final PostMediaResult singlePlayableMedia;
     private final List<PostDetailMediaItemView> detailMedia;

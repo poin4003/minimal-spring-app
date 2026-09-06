@@ -17,5 +17,6 @@ public class PublicVideoDetailPageView {
     private final SocialShellView shell;
     private final UiBreadcrumbView breadcrumb;
     private final PublicVideoPostResult video;
+    private final String authorPath;
     private final PublicVideoPlaylistView playlist;
 }

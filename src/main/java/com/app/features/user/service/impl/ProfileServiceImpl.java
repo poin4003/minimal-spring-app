@@ -18,9 +18,11 @@ import com.app.features.media.entity.MediaEntity;
 import com.app.features.media.enums.MediaKind;
 import com.app.features.media.service.MediaService;
 import com.app.features.user.entity.UserInfoEntity;
+import com.app.features.user.mapper.UserPublicResultMapper;
 import com.app.features.user.repository.UserInfoRepository;
 import com.app.features.user.schema.payload.UpdateProfilePayload;
 import com.app.features.user.schema.result.ProfileResult;
+import com.app.features.user.schema.result.UserPublicResult;
 import com.app.features.user.service.ProfileService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,12 +34,22 @@ public class ProfileServiceImpl implements ProfileService {
 
     private final UserInfoRepository userInfoRepo;
     private final MediaService mediaSvc;
+    private final UserPublicResultMapper userPublicResultMapper;
     private final ModelMapper mapper;
 
     @Override
     @Transactional(readOnly = true)
     public ProfileResult getProfile(UUID userId) {
         return toResult(requireProfile(userId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public UserPublicResult getPublicProfile(UUID userId) {
+        UserInfoEntity profile = requireProfile(userId);
+        return userPublicResultMapper.toResult(
+                profile.getUser(),
+                profile);
     }
 
     @Override

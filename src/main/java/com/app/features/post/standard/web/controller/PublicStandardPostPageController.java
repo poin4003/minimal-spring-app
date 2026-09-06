@@ -38,6 +38,8 @@ import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
 import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
 import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.support.SocialShellFactory;
+import com.app.features.user.web.enums.PublicProfileContentType;
+import com.app.features.user.web.support.PublicProfileViewFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -66,6 +68,7 @@ public class PublicStandardPostPageController {
     private final SocialShellFactory socialShellFactory;
     private final StandardPostService standardPostSvc;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
+    private final PublicProfileViewFactory publicProfileViewFactory;
 
     @GetMapping
     public String index(
@@ -86,10 +89,13 @@ public class PublicStandardPostPageController {
                 query);
         PublicPostListPageView page = PublicPostListPageView.builder()
                 .title(messageResolver.get("post.public.feed.title"))
-                .shell(socialShellFactory.build(
-                        currentUser,
-                        request.getRequestURI()))
-                .createPath(currentUser == null
+                        .shell(socialShellFactory.build(
+                                currentUser,
+                                request.getRequestURI()))
+                        .profileHeader(publicProfileViewFactory.build(
+                                filter.getAuthorId(),
+                                PublicProfileContentType.POSTS))
+                        .createPath(currentUser == null
                         ? null
                         : getMyPostsPath() + "/create")
                 .feed(feed)
@@ -141,6 +147,11 @@ public class PublicStandardPostPageController {
                                 .post(post)
                                 .detailPath(buildDetailPath(
                                         post.getPost().getId()))
+                                .authorPath(publicProfileViewFactory
+                                        .buildProfilePath(
+                                                post.getPost()
+                                                        .getAuthor()
+                                                        .getId()))
                                 .detailMedia(buildDetailMedia(
                                         post.getPost().getId(),
                                         post.getMedia()))
@@ -269,6 +280,11 @@ public class PublicStandardPostPageController {
                                 .post(post)
                                 .detailPath(buildDetailPath(
                                         post.getPost().getId()))
+                                .authorPath(publicProfileViewFactory
+                                        .buildProfilePath(
+                                                post.getPost()
+                                                        .getAuthor()
+                                                        .getId()))
                                 .mediaGalleryPartialPath(
                                         buildMediaGalleryPartialPath(
                                                 post.getPost().getId()))

@@ -18,14 +18,25 @@
                     <div class="card-body p-4">
                         <h1 class="h3 mb-3" th:text="${page.video.title}">Video title</h1>
                         <div class="d-flex align-items-center gap-3 mb-4">
-                            <img th:if="${page.video.post.author.avatarUrl != null}"
-                                 th:src="${page.video.post.author.avatarUrl}"
-                                 class="rounded-circle border object-fit-cover video-author-avatar"
-                                 alt="">
-                            <span th:unless="${page.video.post.author.avatarUrl != null}"
-                                  class="rounded-circle border d-inline-flex align-items-center justify-content-center video-author-avatar">
-                                <i class="bi bi-person" aria-hidden="true"></i>
-                            </span>
+                            <a th:href="${page.authorPath}"
+                               class="d-inline-flex flex-shrink-0 rounded-circle"
+                               data-app-page-navigation
+                               hx-boost="true"
+                               hx-target="#app-social-page-content"
+                               hx-select="#app-social-page-content"
+                               hx-swap="outerHTML show:top"
+                               hx-push-url="true"
+                               hx-replace-url="false"
+                               th:attr="aria-label=${page.video.post.author.fullName}">
+                                <img th:if="${page.video.post.author.avatarUrl != null}"
+                                     th:src="${page.video.post.author.avatarUrl}"
+                                     class="rounded-circle border object-fit-cover video-author-avatar"
+                                     alt="">
+                                <span th:unless="${page.video.post.author.avatarUrl != null}"
+                                      class="rounded-circle border d-inline-flex align-items-center justify-content-center video-author-avatar">
+                                    <i class="bi bi-person" aria-hidden="true"></i>
+                                </span>
+                            </a>
                             <div>
                                 <strong th:text="${page.video.post.author.fullName != null and !page.video.post.author.fullName.isBlank()
                                         ? page.video.post.author.fullName

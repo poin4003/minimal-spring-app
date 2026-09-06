@@ -46,6 +46,8 @@ import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.component.view.UiHtmxNavigationView;
 import com.app.features.ui.web.component.view.UiPaginationView;
 import com.app.features.ui.web.support.SocialShellFactory;
+import com.app.features.user.web.enums.PublicProfileContentType;
+import com.app.features.user.web.support.PublicProfileViewFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -87,6 +89,7 @@ public class PublicVideoPageController {
     private final VideoSeriesItemPageSupport videoSeriesItemPageSupport;
     private final UiPaginationFactory uiPaginationFactory;
     private final UiPaginationPathBuilder uiPaginationPathBuilder;
+    private final PublicProfileViewFactory publicProfileViewFactory;
 
     @GetMapping
     public String index(
@@ -94,6 +97,7 @@ public class PublicVideoPageController {
             HttpServletRequest request,
             @RequestParam(defaultValue = "VIDEOS") VideoLibraryTab tab,
             @RequestParam(required = false) String title,
+            @RequestParam(required = false) UUID authorId,
             @Valid UiPageQuery query,
             Model model) {
         Page<PublicVideoPostResult> videoPage = null;
@@ -103,6 +107,7 @@ public class PublicVideoPageController {
         if (tab == VideoLibraryTab.SERIES) {
             VideoSeriesFilterCriteria criteria = new VideoSeriesFilterCriteria();
             criteria.setTitle(title);
+            criteria.setOwnerId(authorId);
             seriesPage = videoSeriesSvc.getPublishedSeries(
                     criteria,
                     query.toPageable(SERIES_PAGE_DEFAULTS));
@@ -111,6 +116,7 @@ public class PublicVideoPageController {
             PublicVideoPostFilterCriteria criteria =
                     new PublicVideoPostFilterCriteria();
             criteria.setTitle(title);
+            criteria.setAuthorId(authorId);
             videoPage = videoPostSvc.getPublishedPosts(
                     criteria,
                     query.toPageable(VIDEO_PAGE_DEFAULTS));
@@ -132,10 +138,17 @@ public class PublicVideoPageController {
                         .shell(socialShellFactory.build(
                                 currentUser,
                                 request.getRequestURI()))
+                        .profileHeader(publicProfileViewFactory.build(
+                                authorId,
+                                PublicProfileContentType.VIDEOS))
                         .activeTab(tab)
-                        .videosPath(buildTabPath(VideoLibraryTab.VIDEOS))
-                        .seriesPath(buildTabPath(VideoLibraryTab.SERIES))
-                        .searchPath(buildTabPath(tab))
+                        .videosPath(buildTabPath(
+                                VideoLibraryTab.VIDEOS,
+                                authorId))
+                        .seriesPath(buildTabPath(
+                                VideoLibraryTab.SERIES,
+                                authorId))
+                        .searchPath(buildTabPath(tab, authorId))
                         .createVideoPath(currentUser == null
                                 ? null
                                 : getMyVideosPath() + "/create")
@@ -182,6 +195,8 @@ public class PublicVideoPageController {
                 .breadcrumb(buildBreadcrumb(
                         messageResolver.get("video.public.detail.title")))
                 .video(video)
+                .authorPath(publicProfileViewFactory.buildProfilePath(
+                        video.getPost().getAuthor().getId()))
                 .playlist(seriesId == null
                         ? null
                         : buildPlaylist(
@@ -310,10 +325,16 @@ public class PublicVideoPageController {
                 .build();
     }
 
-    private String buildTabPath(VideoLibraryTab tab) {
-        return UriComponentsBuilder.fromPath(getVideosPath())
-                .queryParam("tab", tab.name())
-                .build()
+    private String buildTabPath(
+            VideoLibraryTab tab,
+            UUID authorId) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromPath(getVideosPath())
+                .queryParam("tab", tab.name());
+        if (authorId != null) {
+            builder.queryParam("authorId", authorId);
+        }
+        return builder.build()
                 .encode()
                 .toUriString();
     }

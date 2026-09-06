@@ -2,18 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
-    <a th:fragment="card(card)"
-       th:href="${card.detailPath}"
-       class="card h-100 border-0 bg-transparent text-body text-decoration-none short-gallery-card"
-       data-app-page-navigation
-       hx-boost="true"
-       hx-target="#app-social-page-content"
-       hx-select="#app-social-page-content"
-       hx-swap="outerHTML show:top"
-       hx-push-url="true"
-       hx-replace-url="false"
-       data-media-gallery-card
-       x-data="mediaHoverPreview">
+    <article th:fragment="card(card)"
+             class="card h-100 border-0 bg-transparent text-body position-relative short-gallery-card"
+             data-media-gallery-card
+             x-data="mediaHoverPreview">
         <div class="ratio rounded overflow-hidden bg-black position-relative short-gallery-cover">
             <img th:if="${card.post.media.media.thumbnailUrl != null}"
                  th:src="${card.post.media.media.thumbnailUrl}"
@@ -35,6 +27,22 @@
             <div th:replace="~{post/short/public/fragments/metadata
                     :: metadata(${card}, true)}"></div>
         </div>
-    </a>
+
+        <a th:href="${card.detailPath}"
+           class="stretched-link"
+           data-app-page-navigation
+           hx-boost="true"
+           hx-target="#app-social-page-content"
+           hx-select="#app-social-page-content"
+           hx-swap="outerHTML show:top"
+           hx-push-url="true"
+           hx-replace-url="false"
+           th:attr="aria-label=#{post.public.viewDetail}">
+            <span class="visually-hidden"
+                  th:text="#{post.public.viewDetail}">
+                View short
+            </span>
+        </a>
+    </article>
 </body>
 </html>

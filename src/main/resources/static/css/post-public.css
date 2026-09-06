@@ -22,6 +22,24 @@
     flex: 0 0 7rem;
 }
 
+.public-profile-header {
+    overflow: hidden;
+}
+
+.public-profile-avatar {
+    width: 5rem;
+    height: 5rem;
+    flex: 0 0 5rem;
+}
+
+.public-profile-tabs {
+    border-top: var(--app-border-subtle);
+}
+
+.short-author-link {
+    pointer-events: auto;
+}
+
 .post-public-card {
     width: 100%;
     min-width: 0;
@@ -221,6 +239,18 @@
 }
 
 @media (max-width: 767.98px) {
+    .public-profile-header {
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
+    }
+
+    .public-profile-avatar {
+        width: 4rem;
+        height: 4rem;
+        flex-basis: 4rem;
+    }
+
     .social-edge-to-edge-mobile main.social-container {
         --bs-gutter-x: 0;
         padding-top: 0.5rem !important;

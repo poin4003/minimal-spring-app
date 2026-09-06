@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <section th:fragment="header(header)"
+             class="app-surface-panel public-profile-header">
+        <div class="app-section-body d-flex align-items-center gap-3 gap-md-4">
+            <img th:if="${header.profile.avatarUrl != null}"
+                 th:src="${header.profile.avatarUrl}"
+                 th:alt="${header.profile.fullName}"
+                 class="rounded-circle border object-fit-cover public-profile-avatar">
+            <span th:unless="${header.profile.avatarUrl != null}"
+                  class="rounded-circle border bg-body-tertiary d-inline-flex align-items-center justify-content-center public-profile-avatar">
+                <i class="bi bi-person fs-2" aria-hidden="true"></i>
+            </span>
+
+            <h1 class="h3 text-truncate mb-0"
+                th:text="${header.profile.fullName != null
+                        and !header.profile.fullName.isBlank()
+                        ? header.profile.fullName
+                        : #messages.msg('post.public.unknownAuthor')}">
+                Author
+            </h1>
+        </div>
+
+        <nav class="nav nav-underline gap-3 px-3 px-md-4 public-profile-tabs"
+             th:aria-label="#{post.owner.contentTypes}">
+            <a class="nav-link"
+               th:classappend="${header.activeContentType.name() == 'POSTS'} ? ' active' : ''"
+               th:href="${header.postsPath}"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
+               hx-swap="outerHTML show:top"
+               hx-push-url="true"
+               hx-replace-url="false"
+               th:text="#{post.owner.type.standard}">
+                Posts
+            </a>
+            <a class="nav-link"
+               th:classappend="${header.activeContentType.name() == 'SHORTS'} ? ' active' : ''"
+               th:href="${header.shortsPath}"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
+               hx-swap="outerHTML show:top"
+               hx-push-url="true"
+               hx-replace-url="false"
+               th:text="#{post.owner.type.short}">
+                Shorts
+            </a>
+            <a class="nav-link"
+               th:classappend="${header.activeContentType.name() == 'VIDEOS'} ? ' active' : ''"
+               th:href="${header.videosPath}"
+               data-app-page-navigation
+               hx-boost="true"
+               hx-target="#app-social-page-content"
+               hx-select="#app-social-page-content"
+               hx-swap="outerHTML show:top"
+               hx-push-url="true"
+               hx-replace-url="false"
+               th:text="#{post.owner.type.video}">
+                Videos
+            </a>
+        </nav>
+    </section>
+</body>
+</html>
