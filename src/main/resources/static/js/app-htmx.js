@@ -267,6 +267,9 @@
         document.addEventListener(eventName, function (event) {
             setRequestTargetBusy(event.detail.target, false);
             window.AppUi.hideLoader();
+            if (!requestCanSwap(event)) {
+                return;
+            }
             dispatchUiEvent("app-request-error", { type: "connection" });
             dispatchUiEvent("app-modal-request-failed", {
                 element: event.detail.elt

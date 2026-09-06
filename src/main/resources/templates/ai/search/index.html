@@ -9,11 +9,12 @@
     <div th:replace="~{fragments/social-shell
             :: layout(${page.shell}, 'bg-body-tertiary', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
-            <main x-data="searchForm"
+            <main class="post-search-page"
+                  x-data="searchForm"
                   th:data-initial-query="${page.query}">
                 <div class="row justify-content-center">
                     <div class="col-12 col-xxl-10">
-                        <form class="post-search-form mb-4"
+                        <form class="post-search-form mx-auto mb-4"
                               method="get"
                               th:action="${page.searchPath}"
                               th:hx-post="${page.resultsPath}"
@@ -24,6 +25,7 @@
                               hx-params="query"
                               hx-push-url="false"
                               hx-replace-url="false"
+                              hx-sync="this:replace"
                               x-ref="form"
                               x-on:submit="submit($event)">
                             <label class="visually-hidden"
@@ -31,7 +33,7 @@
                                    th:text="#{ai.search.query.label}">
                                 Search query
                             </label>
-                            <div class="input-group input-group-lg">
+                            <div class="input-group">
                                 <span class="input-group-text bg-body">
                                     <i class="bi bi-search"
                                        aria-hidden="true"></i>
@@ -69,6 +71,7 @@
                         </div>
 
                         <section id="post-search-results"
+                                 class="post-search-results"
                                  aria-live="polite"></section>
                     </div>
                 </div>

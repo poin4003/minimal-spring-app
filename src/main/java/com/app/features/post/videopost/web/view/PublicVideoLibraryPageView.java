@@ -21,6 +21,7 @@ public class PublicVideoLibraryPageView {
     private final String videosPath;
     private final String seriesPath;
     private final String searchPath;
+    private final String createVideoPath;
     private final String titleQuery;
     private final List<PublicVideoCardView> videos;
     private final List<VideoSeriesCardView> series;

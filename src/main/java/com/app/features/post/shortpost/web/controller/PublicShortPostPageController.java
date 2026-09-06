@@ -32,8 +32,6 @@ import com.app.features.post.shortpost.web.view.PublicShortDetailPageView;
 import com.app.features.post.shortpost.web.view.PublicShortGalleryView;
 import com.app.features.post.shortpost.web.view.PublicShortListPageView;
 import com.app.features.ui.web.component.support.UiPaginationPathBuilder;
-import com.app.features.ui.web.component.view.UiBreadcrumbItemView;
-import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.support.SocialShellFactory;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -155,7 +153,6 @@ public class PublicShortPostPageController {
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
-                .breadcrumb(buildDetailBreadcrumb())
                 .feed(buildDetailFeed(
                         request,
                         postId,
@@ -257,22 +254,6 @@ public class PublicShortPostPageController {
                 .shorts(cards)
                 .activePostId(activePostId)
                 .nextPagePath(nextPagePath)
-                .build();
-    }
-
-    private UiBreadcrumbView buildDetailBreadcrumb() {
-        return UiBreadcrumbView.builder()
-                .items(List.of(
-                        UiBreadcrumbItemView.builder()
-                                .label(messageResolver.get(
-                                        "short.public.feed.title"))
-                                .path(getShortsPath())
-                                .build(),
-                        UiBreadcrumbItemView.builder()
-                                .label(messageResolver.get(
-                                        "short.public.detail.title"))
-                                .active(true)
-                                .build()))
                 .build();
     }
 

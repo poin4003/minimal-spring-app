@@ -89,6 +89,9 @@ public class PublicStandardPostPageController {
                 .shell(socialShellFactory.build(
                         currentUser,
                         request.getRequestURI()))
+                .createPath(currentUser == null
+                        ? null
+                        : getMyPostsPath() + "/create")
                 .feed(feed)
                 .build();
 
@@ -288,5 +291,9 @@ public class PublicStandardPostPageController {
 
     private String getFeedPath() {
         return appProperties.getUi().getFeedPath();
+    }
+
+    private String getMyPostsPath() {
+        return appProperties.getUi().getMyPostsPath();
     }
 }

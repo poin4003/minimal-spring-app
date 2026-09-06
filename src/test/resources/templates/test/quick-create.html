@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:replace="~{post/fragments/quick-create
+            :: quickCreate('/my/posts/create',
+                    ${#messages.msg('post.composer.open')},
+                    'image')}"></div>
+</body>
+</html>

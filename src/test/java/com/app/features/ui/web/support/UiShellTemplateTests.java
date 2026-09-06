@@ -184,6 +184,19 @@ class UiShellTemplateTests {
     }
 
     @Test
+    void rendersSharedQuickCreateAction() {
+        String html = templateEngine.process(
+                "test/quick-create",
+                context(false));
+
+        assertThat(html)
+                .contains("href=\"/my/posts/create\"")
+                .contains("post-quick-create")
+                .contains("bi-image")
+                .contains("hx-push-url=\"true\"");
+    }
+
+    @Test
     void rendersReactiveMediaUploadQueue() {
         WebContext context = context(false);
         context.setVariable("_csrf", new DefaultCsrfToken(

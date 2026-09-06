@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:lang="${#locale.language}">
+<body>
+    <a th:fragment="quickCreate(path, label, icon)"
+       th:if="${path != null}"
+       th:href="${path}"
+       class="app-surface-panel post-quick-create d-flex align-items-center gap-3 text-decoration-none text-body"
+       data-app-page-navigation
+       hx-boost="true"
+       hx-target="#app-social-page-content"
+       hx-select="#app-social-page-content"
+       hx-swap="outerHTML show:top"
+       hx-push-url="true"
+       hx-replace-url="false">
+        <span class="post-quick-create-leading d-inline-grid place-items-center rounded-circle bg-primary text-white flex-shrink-0">
+            <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        </span>
+        <span class="flex-grow-1 text-secondary text-truncate"
+              th:text="${label}">
+            Create
+        </span>
+        <span class="post-quick-create-action d-inline-grid place-items-center text-secondary flex-shrink-0">
+            <i class="bi"
+               th:classappend="${' bi-' + icon}"
+               aria-hidden="true"></i>
+        </span>
+    </a>
+</body>
+</html>

@@ -12,10 +12,15 @@
     padding-bottom: 0 !important;
 }
 
+.short-detail-page .social-content-column {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .short-detail-feed {
     position: relative;
-    height: calc(100dvh - var(--social-header-height) - 3.375rem);
-    min-height: 32rem;
+    height: calc(100dvh - var(--social-header-height));
+    min-height: 0;
     overflow-y: auto;
     overscroll-behavior-y: contain;
     scroll-snap-type: y mandatory;
@@ -154,7 +159,6 @@
             100dvh
             - var(--social-header-height)
             - var(--social-mobile-navigation-height)
-            - 3.5rem
         );
     }
 }
@@ -171,7 +175,4 @@
         max-height: 76vh;
     }
 
-    .short-detail-feed {
-        min-height: 24rem;
-    }
 }

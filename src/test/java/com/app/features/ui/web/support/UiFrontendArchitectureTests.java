@@ -89,6 +89,40 @@ class UiFrontendArchitectureTests {
                 .doesNotContain("addEventListener(\"htmx:");
     }
 
+    @Test
+    void keepsShortDetailFocusedAndSharesQuickCreateUi()
+            throws IOException {
+        String shortDetail = resource(
+                "/templates/post/short/public/detail.html");
+        String standardList = resource(
+                "/templates/post/standard/public/index.html");
+        String shortList = resource(
+                "/templates/post/short/public/index.html");
+        String videoList = resource(
+                "/templates/post/video/public/index.html");
+
+        assertThat(shortDetail)
+                .contains("post/short/public/fragments/detail-feed")
+                .doesNotContain("components/breadcrumb");
+        assertThat(standardList).contains("post/fragments/quick-create");
+        assertThat(shortList).contains("post/fragments/quick-create");
+        assertThat(videoList).contains("post/fragments/quick-create");
+    }
+
+    @Test
+    void keepsSearchRequestsCompactAndReplaceable() throws IOException {
+        String searchTemplate = resource(
+                "/templates/ai/search/index.html");
+        String searchStyles = resource("/static/css/post-search.css");
+
+        assertThat(searchTemplate)
+                .contains("hx-sync=\"this:replace\"")
+                .doesNotContain("input-group input-group-lg");
+        assertThat(searchStyles)
+                .contains("width: min(100%, 46rem)")
+                .contains("contain: layout paint");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as(path).isNotNull();

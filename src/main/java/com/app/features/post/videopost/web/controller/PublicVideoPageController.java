@@ -136,6 +136,9 @@ public class PublicVideoPageController {
                         .videosPath(buildTabPath(VideoLibraryTab.VIDEOS))
                         .seriesPath(buildTabPath(VideoLibraryTab.SERIES))
                         .searchPath(buildTabPath(tab))
+                        .createVideoPath(currentUser == null
+                                ? null
+                                : getMyVideosPath() + "/create")
                         .titleQuery(title)
                         .videos(videoPage == null
                                 ? List.of()
@@ -351,5 +354,9 @@ public class PublicVideoPageController {
 
     private String getVideosPath() {
         return appProperties.getUi().getVideosPath();
+    }
+
+    private String getMyVideosPath() {
+        return appProperties.getUi().getMyVideosPath();
     }
 }

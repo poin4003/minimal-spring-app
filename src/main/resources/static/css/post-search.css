@@ -2,6 +2,11 @@
     position: sticky;
     z-index: 10;
     top: calc(var(--social-header-height) + 1rem);
+    width: min(100%, 46rem);
+    padding: 0.5rem;
+    border: var(--app-border);
+    border-radius: var(--bs-border-radius-lg);
+    background-color: var(--app-surface-panel);
 }
 
 .post-search-form .input-group {
@@ -11,6 +16,10 @@
 
 .post-search-section + .post-search-section {
     margin-top: 2.5rem;
+}
+
+.post-search-results {
+    min-width: 0;
 }
 
 .post-search-horizontal-list {
@@ -25,27 +34,29 @@
 
 .post-search-standard-item {
     width: clamp(19rem, 38vw, 28rem);
+    height: 25rem;
 }
 
 .post-search-short-item {
     width: clamp(11rem, 18vw, 14rem);
+    height: 31rem;
 }
 
 .post-search-video-item {
     width: clamp(19rem, 34vw, 27rem);
+    height: 24rem;
 }
 
 .post-search-result-card {
+    contain: layout paint;
     transition:
         border-color 160ms ease,
-        box-shadow 160ms ease,
-        transform 160ms ease;
+        box-shadow 160ms ease;
 }
 
 .post-search-result-card:hover {
     border-color: var(--bs-primary);
     box-shadow: var(--bs-box-shadow);
-    transform: translateY(-2px);
 }
 
 .post-search-standard-media {
@@ -133,6 +144,11 @@
 
 .post-search-content-short {
     -webkit-line-clamp: 3;
+}
+
+.post-search-result-card .card-body {
+    min-height: 0;
+    overflow: hidden;
 }
 
 [data-post-search-state][hidden],

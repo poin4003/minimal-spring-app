@@ -31,7 +31,7 @@ public class SocialShellFactory {
 
         return SocialShellView.builder()
                 .socialTitle(ui.getSocialTitle())
-                .socialPath(ui.getSocialPath())
+                .socialPath(ui.getFeedPath())
                 .loginPath(ui.getLoginPath())
                 .registrationPath(ui.getRegistrationPath())
                 .logoutPath(ui.getLogoutPath())

@@ -10,7 +10,11 @@
             :: layout(${page.shell}, 'bg-body-tertiary social-edge-to-edge-mobile standard-post-page', ~{::pageContent})}">
         <th:block th:fragment="pageContent">
             <div class="row justify-content-center">
-                <div class="col-12 col-xxl-9">
+                <div class="col-12 col-xxl-9 d-grid gap-4">
+                    <div th:replace="~{post/fragments/quick-create
+                            :: quickCreate(${page.createPath},
+                                    ${#messages.msg('post.composer.open')},
+                                    'image')}"></div>
                     <div th:replace="~{post/standard/public/fragments/feed
                             :: feed(${page.feed})}"></div>
                 </div>

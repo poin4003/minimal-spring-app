@@ -1,6 +1,5 @@
 package com.app.features.post.shortpost.web.view;
 
-import com.app.features.ui.web.component.view.UiBreadcrumbView;
 import com.app.features.ui.web.view.SocialShellView;
 
 import lombok.Builder;
@@ -14,6 +13,5 @@ public class PublicShortDetailPageView {
 
     private final String title;
     private final SocialShellView shell;
-    private final UiBreadcrumbView breadcrumb;
     private final PublicShortDetailFeedView feed;
 }
