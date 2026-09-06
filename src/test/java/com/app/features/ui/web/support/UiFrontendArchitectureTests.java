@@ -136,6 +136,13 @@ class UiFrontendArchitectureTests {
                 .contains("th:href=\"${page.authorPath}\"");
     }
 
+    @Test
+    void scrollsWindowToTopForPrimarySocialNavigation() throws IOException {
+        assertThat(resource(
+                "/templates/fragments/social-navigation.html"))
+                .contains("hx-swap=\"outerHTML show:window:top\"");
+    }
+
     private String resource(String path) throws IOException {
         try (InputStream input = getClass().getResourceAsStream(path)) {
             assertThat(input).as(path).isNotNull();
