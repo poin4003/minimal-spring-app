@@ -2,6 +2,37 @@
 <html xmlns:th="http://www.thymeleaf.org"
       th:lang="${#locale.language}">
 <body>
+    <th:block th:fragment="coreHead">
+        <meta charset="UTF-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1.0">
+        <link rel="icon"
+              th:href="@{/favicon.ico}"
+              type="image/x-icon">
+        <script th:src="@{/js/app-ui.js}"></script>
+        <link rel="stylesheet"
+              th:href="@{/vendor/bootstrap/css/bootstrap.min.css}">
+        <link rel="stylesheet" th:href="@{/css/app-ui.css}">
+    </th:block>
+
+    <th:block th:fragment="adminHead">
+        <th:block th:replace="~{fragments/app-tools :: coreHead}"></th:block>
+        <link rel="stylesheet" th:href="@{/css/shell.css}">
+        <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
+    </th:block>
+
+    <th:block th:fragment="socialHead">
+        <th:block th:replace="~{fragments/app-tools :: coreHead}"></th:block>
+        <link rel="stylesheet" th:href="@{/css/social-shell.css}">
+        <th:block th:replace="~{fragments/app-tools :: frontendScripts}"></th:block>
+    </th:block>
+
+    <th:block th:fragment="authScripts">
+        <script defer th:src="@{/vendor/alpine/alpine.min.js}"></script>
+        <script defer th:src="@{/vendor/htmx/htmx.min.js}"></script>
+        <script defer th:src="@{/js/app-htmx.js}"></script>
+    </th:block>
+
     <form th:fragment="themeToggle(themeUpdatePath)"
           class="mb-0"
           x-data="themeToggle"

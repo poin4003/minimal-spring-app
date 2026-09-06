@@ -44,12 +44,33 @@ class UiFrontendArchitectureTests {
                 .isLessThan(toolsTemplate.indexOf("/js/app-htmx.js"));
         assertThat(toolsTemplate)
                 .contains("th:fragment=\"frontendScripts\"")
+                .contains("th:fragment=\"coreHead\"")
+                .contains("th:fragment=\"adminHead\"")
+                .contains("th:fragment=\"socialHead\"")
+                .contains("th:fragment=\"authScripts\"")
                 .contains("\"historyCacheSize\":0")
                 .contains("\"refreshOnHistoryMiss\":true")
                 .contains("/js/media-preview.js")
                 .contains("/js/media-upload.js")
                 .doesNotContain("head-support")
                 .doesNotContain("th:fragment=\"htmxScripts\"");
+    }
+
+    @Test
+    void keepsMediaDependenciesOutOfAuthPages() throws IOException {
+        String registerTemplate = resource(
+                "/templates/auth/register.html");
+        String forgotPasswordTemplate = resource(
+                "/templates/auth/forgot-password.html");
+
+        assertThat(registerTemplate)
+                .contains("app-tools :: coreHead")
+                .contains("app-tools :: authScripts")
+                .doesNotContain("app-tools :: frontendScripts");
+        assertThat(forgotPasswordTemplate)
+                .contains("app-tools :: coreHead")
+                .contains("app-tools :: authScripts")
+                .doesNotContain("app-tools :: frontendScripts");
     }
 
     @Test

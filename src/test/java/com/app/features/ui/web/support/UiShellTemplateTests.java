@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -90,6 +91,53 @@ class UiShellTemplateTests {
                 .contains("class=\"social-shell-layout min-vh-100\"")
                 .contains("id=\"app-social-workspace\"")
                 .containsOnlyOnce("id=\"app-social-page-content\"");
+    }
+
+    @Test
+    void rendersSharedShellHeadAssetsOnce() {
+        String adminHtml = templateEngine.process(
+                "test/admin-head",
+                context(false));
+        String socialHtml = templateEngine.process(
+                "test/social-head",
+                context(false));
+
+        assertThat(adminHtml)
+                .containsOnlyOnce("name=\"viewport\"")
+                .containsOnlyOnce("/js/app-ui.js")
+                .containsOnlyOnce("/css/shell.css")
+                .doesNotContain("/css/social-shell.css");
+        assertThat(socialHtml)
+                .containsOnlyOnce("name=\"viewport\"")
+                .containsOnlyOnce("/js/app-ui.js")
+                .containsOnlyOnce("/css/social-shell.css")
+                .doesNotContain("/css/shell.css");
+    }
+
+    @Test
+    void rendersSharedOwnerActions() {
+        WebContext context = context(false);
+        context.setVariable("card", Map.of(
+                "editable", true,
+                "editPath", "/my/posts/sample/edit",
+                "actions", List.of(Map.of(
+                        "modalPath", "/my/posts/sample/archive",
+                        "buttonClass", "btn-outline-secondary",
+                        "iconClass", "bi bi-archive",
+                        "label", "Archive"))));
+
+        String html = templateEngine.process(
+                "test/owner-actions",
+                context);
+
+        assertThat(html)
+                .contains("class=\"btn-group btn-group-sm test-group\"")
+                .contains("href=\"/my/posts/sample/edit\"")
+                .contains("hx-push-url=\"true\"")
+                .contains("hx-get=\"/my/posts/sample/archive\"")
+                .contains("hx-target=\"#app-modal-host\"")
+                .contains("hx-push-url=\"false\"")
+                .contains("btn-outline-secondary test-button");
     }
 
     @Test
