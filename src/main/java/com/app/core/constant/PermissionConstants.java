@@ -22,4 +22,10 @@ public final class PermissionConstants {
     public static final String POST_VIEW_OWN = "POST:VIEW:OWN";
     public static final String POST_UPDATE_OWN = "POST:UPDATE:OWN";
     public static final String POST_MODERATE = "POST:MODERATE";
+
+    // Catalog Management
+    public static final String CATALOG_CREATE = "CATALOG:CREATE";
+    public static final String CATALOG_VIEW_OWN = "CATALOG:VIEW:OWN";
+    public static final String CATALOG_UPDATE_OWN = "CATALOG:UPDATE:OWN";
+    public static final String CATALOG_CONFIGURE = "CATALOG:CONFIGURE";
 }

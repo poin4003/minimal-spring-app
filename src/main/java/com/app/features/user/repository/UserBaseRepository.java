@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 
+import com.app.features.rbac.entity.RoleEntity_;
 import com.app.features.user.entity.UserBaseEntity;
+import com.app.features.user.entity.UserBaseEntity_;
 import com.app.features.user.enums.UserStatusEnum;
 
 import jakarta.persistence.LockModeType;
@@ -23,9 +25,15 @@ public interface UserBaseRepository extends JpaRepository<UserBaseEntity, UUID> 
             String email,
             UserStatusEnum status);
 
-    @EntityGraph(attributePaths = { "roles", "roles.permissions" })
+    @EntityGraph(attributePaths = {
+            UserBaseEntity_.ROLES,
+            UserBaseEntity_.ROLES + "." + RoleEntity_.PERMISSIONS
+    })
     Optional<UserBaseEntity> findByEmail(String email);
 
-    @EntityGraph(attributePaths = { "roles", "roles.permissions" })
+    @EntityGraph(attributePaths = {
+            UserBaseEntity_.ROLES,
+            UserBaseEntity_.ROLES + "." + RoleEntity_.PERMISSIONS
+    })
     Optional<UserBaseEntity> findWithAuthoritiesById(UUID id);
 }

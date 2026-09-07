@@ -4,7 +4,7 @@ public enum PostType {
     STANDARD,
     SHORT,
     VIDEO,
-    PRODUCT,
+    CATALOG,
     WIKI,
     BLOG
 }

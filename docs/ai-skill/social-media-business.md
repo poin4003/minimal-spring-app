@@ -101,7 +101,7 @@ Allowed transitions:
 ## Post Content
 - Every content item has one `PostEntity` root containing ownership, type, moderation status, publication time, and common audit state.
 - Type-specific data belongs to dedicated relational detail tables rather than nullable columns on one large post table.
-- Supported post types are `STANDARD`, `SHORT`, `VIDEO`, `PRODUCT`, `WIKI`, and `BLOG`.
+- Supported post types are `STANDARD`, `SHORT`, `VIDEO`, `CATALOG`, `WIKI`, and `BLOG`.
 - Common media attachments use an ordered relation that can distinguish roles such as cover, content, gallery, trailer, and episode media.
 - Maximum text length, media count, duration, aspect ratio, and type-specific limits must be configurable.
 - Editing and resubmitting published posts are outside the initial scope.
@@ -135,16 +135,17 @@ Allowed transitions:
 - Playback progress is browser-local state keyed by the current user or browser and episode.
 - Playback progress is not persisted in the database during the initial implementation.
 
-## Products
-- Products provide descriptive catalog content only and do not introduce commerce workflows.
-- Product scope excludes SKU, SPU, inventory, stock, cart, checkout, payment, shipping, and orders.
-- Product categories are relational, dynamic, and may be organized hierarchically.
-- Stable fields such as price, title, description, and primary media remain normal relational fields.
+## Catalog Posts
+- Catalog posts provide descriptive product or service content and do not introduce commerce workflows.
+- Catalog scope excludes SKU, SPU, inventory, stock, cart, checkout, payment, shipping, and orders.
+- Catalog categories are relational, dynamic, optional on a post, and may be organized hierarchically.
+- Stable fields such as title, description, and primary media remain normal relational fields.
 - Flexible queryable properties use typed attribute definitions and typed attribute values.
-- Attribute definitions declare a stable key, display label, value type, optional unit, options, and whether the attribute is filterable.
+- Attribute definitions declare a stable key, display label, value type, optional unit, options, and whether the attribute is searchable.
+- Category-attribute mappings declare whether an attribute is required, filterable, multi-valued, or accepts a custom option.
 - Attribute values use relational typed columns or option relations rather than filterable JSON.
 - JSON is allowed only for non-filterable display metadata.
-- Product filtering uses specifications and typed attribute predicates while retaining the shared paging infrastructure.
+- Catalog filtering uses specifications and typed attribute predicates while retaining the shared paging infrastructure.
 
 ## Wikis
 - A wiki may use an uploaded Markdown media file as its source.
@@ -262,7 +263,7 @@ Allowed transitions:
 5. [x] Common post kernel, moderation, and media attachments.
 6. [x] Standard posts and shorts.
 7. [ ] Movies, seasons, and episodes.
-8. [ ] Products, categories, typed attributes, and flexible filters.
+8. [ ] Catalog posts, categories, typed attributes, and flexible filters.
 9. [ ] Wikis and blogs with sanitized Markdown.
 10. [ ] Public profiles and typed content galleries.
 11. [ ] Two-level text comments and replies.

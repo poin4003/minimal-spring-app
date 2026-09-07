@@ -96,8 +96,8 @@ erDiagram
     MOVIE_POST ||--o{ MOVIE_SEASON : contains
     MOVIE_SEASON ||--o{ MOVIE_EPISODE : contains
     POST_MEDIA ||--o| MOVIE_EPISODE : plays
-    POST ||--|| PRODUCT_POST : has
-    PRODUCT_CATEGORY ||--o{ PRODUCT_POST : groups
+    POST ||--|| CATALOG_POST : has
+    CATALOG_CATEGORY ||--o{ CATALOG_POST : groups
 ```
 
 ## 6. Enum Blueprint
@@ -109,7 +109,7 @@ public enum PostType {
     STANDARD,
     SHORT,
     VIDEO,
-    PRODUCT,
+    CATALOG,
     WIKI,
     BLOG
 }
@@ -795,25 +795,26 @@ nullable `season_id`.
 
 Playback progress chỉ lưu trong browser `localStorage`, không thêm table.
 
-### Product
+### Catalog
 
 ```text
-product_post(
+catalog_post(
     post_id,
     category_id,
     title,
-    description,
-    price,
-    currency
+    description
 )
 ```
 
-Flexible filterable attributes dùng relational model:
+Offer và flexible filterable attributes dùng relational model:
 
 ```text
-product_attribute_definition
-product_attribute_option
-product_attribute_value
+catalog_attribute
+catalog_attribute_option
+catalog_category_attribute
+catalog_post_attribute_value
+catalog_offer
+catalog_offer_attribute_value
 ```
 
 Definition chứa:
@@ -823,9 +824,12 @@ key
 label
 value_type
 unit
-filterable
+searchable
 status
 ```
+
+Category-attribute mapping chứa `required`, `filterable`,
+`multiple_values_allowed`, `custom_option_allowed` và `sort_order`.
 
 Value dùng typed columns:
 
@@ -833,6 +837,7 @@ Value dùng typed columns:
 text_value
 number_value
 boolean_value
+date_value
 option_id
 ```
 

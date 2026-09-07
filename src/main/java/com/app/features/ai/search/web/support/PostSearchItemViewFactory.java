@@ -61,7 +61,7 @@ public class PostSearchItemViewFactory {
             case STANDARD -> appProperties.getUi().getFeedPath();
             case SHORT -> appProperties.getUi().getShortsPath();
             case VIDEO -> appProperties.getUi().getVideosPath();
-            case PRODUCT, WIKI, BLOG -> null;
+            case CATALOG, WIKI, BLOG -> null;
         };
         if (basePath == null) {
             return null;

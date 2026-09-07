@@ -56,7 +56,7 @@ public class PostSearchCandidateFactory {
                             videoPost.getTitle(),
                             videoPost.getDescription()))
                     .orElseThrow(() -> missingPostDetail(post));
-            case PRODUCT, WIKI, BLOG -> null;
+            case CATALOG, WIKI, BLOG -> null;
         };
         if (!StringUtils.hasText(content)) {
             return Optional.empty();

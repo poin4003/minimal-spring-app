@@ -124,7 +124,7 @@ public class PostSearchResultsServiceImpl
             case STANDARD -> "ai.search.section.standard";
             case SHORT -> "ai.search.section.short";
             case VIDEO -> "ai.search.section.video";
-            case PRODUCT, WIKI, BLOG -> throw new IllegalArgumentException(
+            case CATALOG, WIKI, BLOG -> throw new IllegalArgumentException(
                     "Unsupported search section: " + postType);
         };
     }
