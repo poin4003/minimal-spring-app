@@ -29,4 +29,6 @@ public interface CatalogPostAttributeValueRepository
     List<CatalogPostAttributeValueEntity>
             findAllByCatalogPost_PostIdInOrderByCatalogPost_PostIdAscPositionAsc(
                     Collection<UUID> postIds);
+
+    boolean existsByAttribute_Id(UUID attributeId);
 }

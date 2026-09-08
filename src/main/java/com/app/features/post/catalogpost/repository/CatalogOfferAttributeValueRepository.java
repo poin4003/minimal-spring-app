@@ -29,4 +29,6 @@ public interface CatalogOfferAttributeValueRepository
     List<CatalogOfferAttributeValueEntity>
             findAllByCatalogOffer_IdInOrderByCatalogOffer_IdAscPositionAsc(
                     Collection<UUID> offerIds);
+
+    boolean existsByAttribute_Id(UUID attributeId);
 }

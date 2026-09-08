@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <title th:text="${page.title}">Catalog options</title>
+    <th:block th:replace="~{fragments/app-tools :: adminHead}"></th:block>
+</head>
+<body class="app-shell bg-body-tertiary">
+<div th:replace="~{fragments/app-shell
+        :: layout(${page.shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
+    <th:block th:fragment="pageContent">
+        <div class="app-page-stack">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <a class="small text-decoration-none" th:href="${page.basePath}"
+                       th:text="#{catalog.navigation.backToAttributes}">Back to attributes</a>
+                    <h1 class="h3 mt-2 mb-1" th:text="${page.attribute.name}">Attribute</h1>
+                    <p class="text-secondary mb-0">
+                        <code th:text="${page.attribute.key}">key</code>
+                        <span class="ms-2" th:text="#{catalog.option.page.description}">
+                            Configure canonical choices.
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <section class="card app-panel-card">
+                <div class="card-header bg-transparent">
+                    <h2 class="h5 mb-0"
+                        th:text="${page.editId == null
+                                ? #messages.msg('catalog.option.create.title')
+                                : #messages.msg('catalog.option.edit.title')}">Option form</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post"
+                          th:action="${page.editId == null
+                                  ? page.basePath + '/' + page.attribute.id + '/options'
+                                  : page.basePath + '/' + page.attribute.id + '/options/' + page.editId}"
+                          th:object="${form}">
+                        <input th:if="${_csrf != null}" type="hidden"
+                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="page" th:value="${query.page}">
+                        <input type="hidden" name="size" th:value="${query.size}">
+                        <input type="hidden" name="sortBy" th:value="${query.sortBy}">
+                        <input type="hidden" name="sortDirection"
+                               th:value="${query.sortDirection}">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label" for="option-code"
+                                       th:text="#{catalog.field.code}">Code</label>
+                                <input id="option-code" class="form-control" type="text"
+                                       th:field="*{code}" maxlength="100" required
+                                       th:readonly="${page.editId != null}">
+                                <div class="text-danger small mt-1"
+                                     th:if="${page.fieldErrors['code'] != null}"
+                                     th:text="${page.fieldErrors['code']}"></div>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label" for="option-label"
+                                       th:text="#{catalog.field.label}">Label</label>
+                                <input id="option-label" class="form-control" type="text"
+                                       th:field="*{label}" maxlength="150" required>
+                                <div class="text-danger small mt-1"
+                                     th:if="${page.fieldErrors['label'] != null}"
+                                     th:text="${page.fieldErrors['label']}"></div>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label" for="option-order"
+                                       th:text="#{catalog.field.sortOrder}">Order</label>
+                                <input id="option-order" class="form-control" type="number"
+                                       min="0" th:field="*{sortOrder}" required>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary"
+                                    th:text="${page.editId == null
+                                            ? #messages.msg('catalog.action.create')
+                                            : #messages.msg('action.saveChanges')}">Save</button>
+                            <a th:if="${page.editId != null}" class="btn btn-outline-secondary"
+                               th:href="${page.basePath + '/' + page.attribute.id + '/options'}"
+                               th:text="#{action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="catalog-option-list" class="card app-panel-card">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr>
+                            <th th:text="#{catalog.field.code}">Code</th>
+                            <th th:text="#{catalog.field.label}">Label</th>
+                            <th th:text="#{catalog.field.sortOrder}">Order</th>
+                            <th th:text="#{field.status}">Status</th>
+                            <th class="text-end" th:text="#{catalog.field.actions}">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(page.options)}">
+                            <td colspan="5" class="text-center text-secondary py-4"
+                                th:text="#{catalog.option.empty}">No options.</td>
+                        </tr>
+                        <tr th:each="option : ${page.options}">
+                            <td><code th:text="${option.code}">code</code></td>
+                            <td class="fw-semibold" th:text="${option.label}">Label</td>
+                            <td th:text="${option.sortOrder}">0</td>
+                            <td><span class="badge"
+                                      th:classappend="${option.status.name() == 'ACTIVE'
+                                              ? ' text-bg-success' : ' text-bg-secondary'}"
+                                      th:text="${option.status}">ACTIVE</span></td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-primary"
+                                       th:href="${page.basePath + '/' + page.attribute.id
+                                               + '/options?editId=' + option.id}"
+                                       th:text="#{catalog.action.edit}">Edit</a>
+                                    <form method="post"
+                                          th:action="${page.basePath + '/' + page.attribute.id
+                                                  + '/options/' + option.id + '/status'}">
+                                        <input th:if="${_csrf != null}" type="hidden"
+                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="status"
+                                               th:value="${option.status.name() == 'ACTIVE'
+                                                       ? 'INACTIVE' : 'ACTIVE'}">
+                                        <button type="submit" class="btn"
+                                                th:classappend="${option.status.name() == 'ACTIVE'
+                                                        ? ' btn-outline-danger' : ' btn-outline-success'}"
+                                                th:text="${option.status.name() == 'ACTIVE'
+                                                        ? #messages.msg('catalog.action.inactivate')
+                                                        : #messages.msg('catalog.action.activate')}">
+                                            Toggle
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-end">
+                    <div th:replace="~{fragments/components/pagination
+                            :: pagination(${page.pagination})}"></div>
+                </div>
+            </section>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

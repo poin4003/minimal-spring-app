@@ -8,6 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.app.core.constant.DefaultRoleConstants;
@@ -193,7 +194,10 @@ class CatalogPersistenceFoundationTests {
                 .isPresent();
         assertThat(catalogAttributeRepo.findByKey("color")).isPresent();
         assertThat(catalogAttributeOptionRepo
-                .findAllByAttribute_IdOrderBySortOrderAsc(color.getId()))
+                .findAllByAttribute_Id(
+                        color.getId(),
+                        PageRequest.of(0, 20))
+                .getContent())
                 .containsExactly(white);
         assertThat(catalogCategoryAttributeRepo
                 .findAllByCategory_IdOrderBySortOrderAsc(category.getId()))

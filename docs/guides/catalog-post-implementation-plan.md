@@ -154,15 +154,17 @@ catalog chỉ xóa relation bằng foreign-key cascade, không xóa bài review.
   và seed RBAC cho supplier.
 - Repository cùng fetch plan nền cho toàn bộ catalog aggregate.
 - Permission constants, role `SUPPLIER` và integration test persistence nền.
+- Specification, schema, mapper và service quản lý category, attribute, option.
+- Admin UI cấu hình category tree, option và category-attribute schema.
+- Form schema chỉ trả definition đang `ACTIVE` cho supplier flow.
 - Common post lifecycle, moderation, media attachment và owner/public pattern để
   tái sử dụng.
 
 Chưa có:
 
-- Specification cho catalog listing và filter.
-- Payload, result, mapper và policy validation.
+- Specification cho catalog post listing và typed filter.
+- Payload, result, mapper và policy validation cho catalog aggregate.
 - Service create/update/detail/list/lifecycle.
-- Admin service/UI cho category, attribute và option.
 - Moderation detail cho catalog.
 - Public/owner catalog pages.
 - UI gắn catalog reference vào standard/short/video.
@@ -592,6 +594,8 @@ Kết quả mong đợi:
 - Repository integration test xác nhận mapping và constraint chính.
 
 ### Đợt 2: Category, attribute và option
+
+Trạng thái: hoàn thành.
 
 Deliverables:
 

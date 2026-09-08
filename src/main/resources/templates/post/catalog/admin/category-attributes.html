@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <title th:text="${page.title}">Category schema</title>
+    <th:block th:replace="~{fragments/app-tools :: adminHead}"></th:block>
+</head>
+<body class="app-shell bg-body-tertiary">
+<div th:replace="~{fragments/app-shell
+        :: layout(${page.shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
+    <th:block th:fragment="pageContent">
+        <div class="app-page-stack">
+            <div>
+                <a class="small text-decoration-none" th:href="${page.basePath}"
+                   th:text="#{catalog.navigation.backToCategories}">Back to categories</a>
+                <h1 class="h3 mt-2 mb-1" th:text="${page.category.name}">Category</h1>
+                <p class="text-secondary mb-0" th:text="#{catalog.categorySchema.page.description}">
+                    Choose the canonical attributes used by this category.
+                </p>
+            </div>
+
+            <div id="catalog-category-schema-list" class="app-page-stack">
+            <section class="card app-panel-card">
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-2 align-items-end"
+                          th:object="${attributeFilter}">
+                        <div class="col-md-6">
+                            <label class="form-label" for="schema-attribute-filter"
+                                   th:text="#{action.search}">Search</label>
+                            <input id="schema-attribute-filter" class="form-control"
+                                   type="search" th:field="*{text}"
+                                   th:placeholder="#{catalog.attribute.searchPlaceholder}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label" for="schema-attribute-status"
+                                   th:text="#{field.status}">Status</label>
+                            <select id="schema-attribute-status" class="form-select"
+                                    th:field="*{status}">
+                                <option value="" th:text="#{catalog.filter.allStatuses}">All</option>
+                                <option th:each="status : ${T(com.app.core.enums.RecordStatus).values()}"
+                                        th:value="${status}" th:text="${status}">ACTIVE</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-grid">
+                            <button class="btn btn-outline-primary" type="submit"
+                                    th:text="#{action.search}">Search</button>
+                        </div>
+                    </form>
+                </div>
+                <form method="post"
+                      th:action="${page.basePath + '/' + page.category.id + '/attributes'}"
+                      th:object="${form}">
+                    <input th:if="${_csrf != null}" type="hidden"
+                           th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <input type="hidden" name="text"
+                           th:value="${attributeFilter.text}">
+                    <input type="hidden" name="status"
+                           th:value="${attributeFilter.status}">
+                    <input type="hidden" name="valueType"
+                           th:value="${attributeFilter.valueType}">
+                    <input type="hidden" name="searchable"
+                           th:value="${attributeFilter.searchable}">
+                    <input type="hidden" name="page" th:value="${query.page}">
+                    <input type="hidden" name="size" th:value="${query.size}">
+                    <input type="hidden" name="sortBy" th:value="${query.sortBy}">
+                    <input type="hidden" name="sortDirection"
+                           th:value="${query.sortDirection}">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead><tr>
+                                <th th:text="#{catalog.categorySchema.use}">Use</th>
+                                <th th:text="#{catalog.field.attribute}">Attribute</th>
+                                <th th:text="#{catalog.field.valueType}">Type</th>
+                                <th th:text="#{catalog.categorySchema.required}">Required</th>
+                                <th th:text="#{catalog.categorySchema.filterable}">Filterable</th>
+                                <th th:text="#{catalog.categorySchema.multiple}">Multiple</th>
+                                <th th:text="#{catalog.categorySchema.customOption}">Custom option</th>
+                                <th th:text="#{catalog.field.sortOrder}">Order</th>
+                            </tr></thead>
+                            <tbody>
+                            <tr th:if="${#lists.isEmpty(form.assignments)}">
+                                <td colspan="8" class="text-center text-secondary py-4"
+                                    th:text="#{catalog.categorySchema.empty}">No attributes.</td>
+                            </tr>
+                            <tr th:each="assignment, stat : *{assignments}"
+                                th:classappend="${assignment.status.name() == 'INACTIVE'}
+                                        ? ' opacity-50' : ''">
+                                <td>
+                                    <input type="hidden"
+                                           th:field="*{assignments[__${stat.index}__].attributeId}">
+                                    <input type="hidden"
+                                           th:field="*{assignments[__${stat.index}__].key}">
+                                    <input type="hidden"
+                                           th:field="*{assignments[__${stat.index}__].name}">
+                                    <input type="hidden"
+                                           th:field="*{assignments[__${stat.index}__].valueType}">
+                                    <input type="hidden"
+                                           th:field="*{assignments[__${stat.index}__].status}">
+                                    <input class="form-check-input" type="checkbox"
+                                           th:field="*{assignments[__${stat.index}__].selected}"
+                                           th:disabled="${assignment.status.name() == 'INACTIVE'
+                                                   and !assignment.selected}">
+                                </td>
+                                <td>
+                                    <div class="fw-semibold" th:text="${assignment.name}">Name</div>
+                                    <code th:text="${assignment.key}">key</code>
+                                    <span th:if="${assignment.status.name() == 'INACTIVE'}"
+                                          class="badge text-bg-secondary ms-1"
+                                          th:text="${assignment.status}">INACTIVE</span>
+                                </td>
+                                <td th:text="${assignment.valueType}">TEXT</td>
+                                <td><input class="form-check-input" type="checkbox"
+                                           th:field="*{assignments[__${stat.index}__].required}"></td>
+                                <td><input class="form-check-input" type="checkbox"
+                                           th:field="*{assignments[__${stat.index}__].filterable}"></td>
+                                <td><input class="form-check-input" type="checkbox"
+                                           th:field="*{assignments[__${stat.index}__].multipleValuesAllowed}"></td>
+                                <td><input class="form-check-input" type="checkbox"
+                                           th:field="*{assignments[__${stat.index}__].customOptionAllowed}"
+                                           th:disabled="${assignment.valueType.name() != 'OPTION'}"></td>
+                                <td><input class="form-control form-control-sm" type="number" min="0"
+                                           th:field="*{assignments[__${stat.index}__].sortOrder}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer bg-transparent d-flex flex-wrap
+                                align-items-center justify-content-between gap-3">
+                        <div th:replace="~{fragments/components/pagination
+                                :: pagination(${page.pagination})}"></div>
+                        <button type="submit" class="btn btn-primary"
+                                th:text="#{action.saveChanges}">Save changes</button>
+                    </div>
+                </form>
+            </section>
+            </div>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

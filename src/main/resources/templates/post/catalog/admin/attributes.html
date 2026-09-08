@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head>
+    <title th:text="${page.title}">Catalog attributes</title>
+    <th:block th:replace="~{fragments/app-tools :: adminHead}"></th:block>
+</head>
+<body class="app-shell bg-body-tertiary">
+<div th:replace="~{fragments/app-shell
+        :: layout(${page.shell}, 'app-shell bg-body-tertiary', ~{::pageContent})}">
+    <th:block th:fragment="pageContent">
+        <div class="app-page-stack">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div>
+                    <h1 class="h3 mb-1" th:text="#{catalog.attribute.page.heading}">Attributes</h1>
+                    <p class="text-secondary mb-0" th:text="#{catalog.attribute.page.description}">
+                        Configure reusable catalog attributes.
+                    </p>
+                </div>
+                <a class="btn btn-outline-primary"
+                   th:href="${page.categoryPath}"
+                   th:text="#{catalog.navigation.categories}">Categories</a>
+            </div>
+
+            <section class="card app-panel-card">
+                <div class="card-header bg-transparent">
+                    <h2 class="h5 mb-0"
+                        th:text="${page.editId == null
+                                ? #messages.msg('catalog.attribute.create.title')
+                                : #messages.msg('catalog.attribute.edit.title')}">Attribute form</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post"
+                          th:action="${page.editId == null
+                                  ? page.basePath
+                                  : page.basePath + '/' + page.editId}"
+                          th:object="${form}">
+                        <input th:if="${_csrf != null}" type="hidden"
+                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="attribute-key"
+                                       th:text="#{catalog.field.key}">Key</label>
+                                <input id="attribute-key" class="form-control" type="text"
+                                       th:field="*{key}" maxlength="100" required
+                                       th:readonly="${page.editId != null}">
+                                <div class="form-text" th:text="#{catalog.attribute.keyHelp}">
+                                    Stable technical identifier.
+                                </div>
+                                <div class="text-danger small mt-1"
+                                     th:if="${page.fieldErrors['key'] != null}"
+                                     th:text="${page.fieldErrors['key']}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="attribute-name"
+                                       th:text="#{catalog.field.name}">Name</label>
+                                <input id="attribute-name" class="form-control" type="text"
+                                       th:field="*{name}" maxlength="150" required>
+                                <div class="text-danger small mt-1"
+                                     th:if="${page.fieldErrors['name'] != null}"
+                                     th:text="${page.fieldErrors['name']}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="attribute-type"
+                                       th:text="#{catalog.field.valueType}">Value type</label>
+                                <select id="attribute-type" class="form-select"
+                                        th:field="*{valueType}" required>
+                                    <option th:each="type : ${page.valueTypes}"
+                                            th:value="${type}" th:text="${type}">TEXT</option>
+                                </select>
+                                <div class="text-danger small mt-1"
+                                     th:if="${page.fieldErrors['valueType'] != null}"
+                                     th:text="${page.fieldErrors['valueType']}"></div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="attribute-unit"
+                                       th:text="#{catalog.field.unit}">Unit</label>
+                                <input id="attribute-unit" class="form-control" type="text"
+                                       th:field="*{unit}" maxlength="32">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label" for="attribute-description"
+                                       th:text="#{catalog.field.description}">Description</label>
+                                <textarea id="attribute-description" class="form-control" rows="3"
+                                          th:field="*{description}"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input id="attribute-searchable" class="form-check-input"
+                                           type="checkbox" th:field="*{searchable}">
+                                    <label class="form-check-label" for="attribute-searchable"
+                                           th:text="#{catalog.field.searchable}">Searchable</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary"
+                                    th:text="${page.editId == null
+                                            ? #messages.msg('catalog.action.create')
+                                            : #messages.msg('action.saveChanges')}">Save</button>
+                            <a th:if="${page.editId != null}" class="btn btn-outline-secondary"
+                               th:href="${page.basePath}" th:text="#{action.cancel}">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section id="catalog-attribute-list" class="card app-panel-card">
+                <div class="card-body border-bottom">
+                    <form method="get" class="row g-2 align-items-end" th:object="${filter}">
+                        <div class="col-lg-5">
+                            <label class="form-label" for="attribute-filter"
+                                   th:text="#{action.search}">Search</label>
+                            <input id="attribute-filter" class="form-control" type="search"
+                                   th:field="*{text}" th:placeholder="#{catalog.attribute.searchPlaceholder}">
+                        </div>
+                        <div class="col-lg-3">
+                            <label class="form-label" for="attribute-filter-type"
+                                   th:text="#{catalog.field.valueType}">Type</label>
+                            <select id="attribute-filter-type" class="form-select" th:field="*{valueType}">
+                                <option value="" th:text="#{catalog.filter.allTypes}">All</option>
+                                <option th:each="type : ${page.valueTypes}"
+                                        th:value="${type}" th:text="${type}">TEXT</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2">
+                            <label class="form-label" for="attribute-filter-status"
+                                   th:text="#{field.status}">Status</label>
+                            <select id="attribute-filter-status" class="form-select" th:field="*{status}">
+                                <option value="" th:text="#{catalog.filter.allStatuses}">All</option>
+                                <option th:each="status : ${T(com.app.core.enums.RecordStatus).values()}"
+                                        th:value="${status}" th:text="${status}">ACTIVE</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 d-grid">
+                            <button class="btn btn-outline-primary" type="submit"
+                                    th:text="#{action.search}">Search</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead><tr>
+                            <th th:text="#{catalog.field.key}">Key</th>
+                            <th th:text="#{catalog.field.name}">Name</th>
+                            <th th:text="#{catalog.field.valueType}">Type</th>
+                            <th th:text="#{catalog.field.unit}">Unit</th>
+                            <th th:text="#{catalog.field.searchable}">Searchable</th>
+                            <th th:text="#{field.status}">Status</th>
+                            <th class="text-end" th:text="#{catalog.field.actions}">Actions</th>
+                        </tr></thead>
+                        <tbody>
+                        <tr th:if="${#lists.isEmpty(page.attributes)}">
+                            <td colspan="7" class="text-center text-secondary py-4"
+                                th:text="#{catalog.attribute.empty}">No attributes.</td>
+                        </tr>
+                        <tr th:each="attribute : ${page.attributes}">
+                            <td><code th:text="${attribute.key}">key</code></td>
+                            <td class="fw-semibold" th:text="${attribute.name}">Name</td>
+                            <td th:text="${attribute.valueType}">TEXT</td>
+                            <td th:text="${attribute.unit ?: '-'}">-</td>
+                            <td th:text="${attribute.searchable
+                                    ? #messages.msg('catalog.value.yes')
+                                    : #messages.msg('catalog.value.no')}">Yes</td>
+                            <td><span class="badge"
+                                      th:classappend="${attribute.status.name() == 'ACTIVE'
+                                              ? ' text-bg-success' : ' text-bg-secondary'}"
+                                      th:text="${attribute.status}">ACTIVE</span></td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-primary"
+                                       th:href="${page.basePath + '?editId=' + attribute.id}"
+                                       th:text="#{catalog.action.edit}">Edit</a>
+                                    <a th:if="${attribute.valueType.name() == 'OPTION'}"
+                                       class="btn btn-outline-secondary"
+                                       th:href="${page.basePath + '/' + attribute.id + '/options'}"
+                                       th:text="#{catalog.attribute.manageOptions}">Options</a>
+                                    <form method="post"
+                                          th:action="${page.basePath + '/' + attribute.id + '/status'}">
+                                        <input th:if="${_csrf != null}" type="hidden"
+                                               th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                        <input type="hidden" name="status"
+                                               th:value="${attribute.status.name() == 'ACTIVE'
+                                                       ? 'INACTIVE' : 'ACTIVE'}">
+                                        <button type="submit" class="btn"
+                                                th:classappend="${attribute.status.name() == 'ACTIVE'
+                                                        ? ' btn-outline-danger' : ' btn-outline-success'}"
+                                                th:text="${attribute.status.name() == 'ACTIVE'
+                                                        ? #messages.msg('catalog.action.inactivate')
+                                                        : #messages.msg('catalog.action.activate')}">
+                                            Toggle
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-transparent d-flex justify-content-end">
+                    <div th:replace="~{fragments/components/pagination
+                            :: pagination(${page.pagination})}"></div>
+                </div>
+            </section>
+        </div>
+    </th:block>
+</div>
+</body>
+</html>

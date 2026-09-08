@@ -52,6 +52,18 @@
         "messageKey": "menu.postAiModeration",
         "icon": "robot",
         "path": "/admin/posts/ai-moderation"
+      },
+      {
+        "id": "catalog-categories",
+        "messageKey": "menu.catalogCategories",
+        "icon": "diagram-3",
+        "path": "/admin/catalog/categories"
+      },
+      {
+        "id": "catalog-attributes",
+        "messageKey": "menu.catalogAttributes",
+        "icon": "sliders",
+        "path": "/admin/catalog/attributes"
       }
     ]
   },
